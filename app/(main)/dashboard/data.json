@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "header": "Executive Summary",
+    "type": "Executive Summary",
+    "status": "Done",
+    "target": "1000",
+    "limit": "2000",
+    "reviewer": "Eddie Lake"
+  },
+  {
+    "id": 2,
+    "header": "Technical Approach",
+    "type": "Technical Approach",
+    "status": "In Progress",
+    "target": "5000",
+    "limit": "10000",
+    "reviewer": "Assign reviewer"
+  },
+  {
+    "id": 3,
+    "header": "Project Timeline",
+    "type": "Narrative",
+    "status": "Not Started",
+    "target": "200",
+    "limit": "500",
+    "reviewer": "Jamik Tashpulatov"
+  }
+]

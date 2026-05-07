@@ -16,14 +16,12 @@ export default function EstimateDetailsPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
-        <div className="flex flex-1 flex-col rounded-xl border border-dashed border-red-500 p-1">
-          {isCreated ? (
-            <EstimateSection />
-          ) : (
-            <EstimateEmptyState onCreateClick={() => setIsDialogOpen(true)} />
-          )}
-        </div>
+      <div className="flex flex-1 flex-col rounded-xl border border-dashed border-red-500 p-1">
+        {isCreated ? (
+          <EstimateSection />
+        ) : (
+          <EstimateEmptyState onCreateClick={() => setIsDialogOpen(true)} />
+        )}
       </div>
 
       <CreateSectionDialog

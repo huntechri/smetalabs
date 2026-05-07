@@ -1,5 +1,5 @@
 import { EstimateTabPlaceholder } from "@/features/estimates/estimate-tabs/components/estimate-tab-placeholder"
 
-export default function EstimateDocumentsPage() {
-  return <EstimateTabPlaceholder title="Документы" />
+export function PurchasesView() {
+  return <EstimateTabPlaceholder title="Purchases" />
 }

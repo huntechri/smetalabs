@@ -1,5 +1,5 @@
-import { EstimateTabPlaceholder } from "@/features/estimates/components/estimate-tab-placeholder"
+import { PurchasesView } from "@/features/purchases/components/purchases-view"
 
 export default function EstimatePurchasesPage() {
-  return <EstimateTabPlaceholder title="Закупки" />
+  return <PurchasesView />
 }

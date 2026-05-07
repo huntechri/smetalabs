@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { EstimateSection } from "@/features/estimates/components/estimate-section"
-import { EstimateEmptyState } from "@/features/estimates/components/estimate-empty-state"
-import { CreateSectionDialog } from "@/features/estimates/components/create-section-dialog"
+import { CreateSectionDialog } from "@/features/estimates/estimate-details/components/create-section-dialog"
+import { EstimateEmptyState } from "@/features/estimates/estimate-details/components/estimate-empty-state"
+import { EstimateSection } from "@/features/estimates/estimate-details/components/estimate-section"
 
 export default function EstimateDetailsPage() {
   const [isCreated, setIsCreated] = useState(false)

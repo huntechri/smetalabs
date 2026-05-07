@@ -15,8 +15,8 @@ export default function EstimateDetailsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="flex flex-1 flex-col rounded-xl border border-dashed border-red-500 p-1">
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border border-dashed border-red-500 p-1">
         {isCreated ? (
           <EstimateSection />
         ) : (

@@ -11,12 +11,12 @@ export default function MainLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="[--header-height:calc(--spacing(14))]">
-      <SidebarProvider className="flex flex-col">
+    <div className="h-svh overflow-hidden [--header-height:calc(--spacing(14))]">
+      <SidebarProvider className="flex h-full min-h-0 flex-col">
         <SiteHeader />
-        <div className="flex flex-1">
+        <div className="flex h-[calc(100svh-var(--header-height))] min-h-0">
           <AppSidebar />
-          <SidebarInset>
+          <SidebarInset className="min-h-0 overflow-hidden">
             {/* Сюда Next.js будет подставлять контент из /dashboard, /projects и т.д. */}
             {children}
           </SidebarInset>

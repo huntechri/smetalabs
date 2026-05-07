@@ -1,3 +1,36 @@
-export default function EstimateDetailsPage({ params }: { params: { projectId: string; estimateId: string } }) {
-  return null;
+"use client"
+
+import { useState } from "react"
+import { EstimateSection } from "@/features/estimates/components/estimate-section"
+import { EstimateEmptyState } from "@/features/estimates/components/estimate-empty-state"
+import { CreateSectionDialog } from "@/features/estimates/components/create-section-dialog"
+
+export default function EstimateDetailsPage() {
+  const [isCreated, setIsCreated] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  const handleCreateSection = (data: { name: string; number: string }) => {
+    console.log("Creating section:", data)
+    setIsCreated(true)
+  }
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col gap-6 px-4 py-6 lg:px-6">
+        <div className="flex flex-1 flex-col rounded-xl border border-dashed border-red-500 p-1">
+          {isCreated ? (
+            <EstimateSection />
+          ) : (
+            <EstimateEmptyState onCreateClick={() => setIsDialogOpen(true)} />
+          )}
+        </div>
+      </div>
+
+      <CreateSectionDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onConfirm={handleCreateSection}
+      />
+    </div>
+  )
 }

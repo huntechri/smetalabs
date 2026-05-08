@@ -35,6 +35,13 @@ export function EditableBadge({
     setEditing(true)
   }
 
+  const handleBadgeKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      enterEdit()
+    }
+  }
+
   const commit = () => {
     setEditing(false)
     if (editable && draft !== String(value)) {
@@ -82,6 +89,9 @@ export function EditableBadge({
         strong && "font-semibold",
         className
       )}
+      role={editable ? "button" : undefined}
+      tabIndex={editable ? 0 : undefined}
+      onKeyDown={editable ? handleBadgeKeyDown : undefined}
       onClick={enterEdit}
     >
       {label && <span className="text-muted-foreground">{label}:</span>}

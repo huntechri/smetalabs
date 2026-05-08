@@ -71,4 +71,3 @@ smetalabs/
 | `pnpm lint` | ESLint |
 | `pnpm format` | Prettier (форматирование) |
 | `pnpm typecheck` | Проверка типов TypeScript |
-

@@ -1,3 +1,5 @@
+"use client"
+
 import { TrendDown, TrendUp } from "@phosphor-icons/react"
 
 import { Badge } from "@/components/ui/badge"

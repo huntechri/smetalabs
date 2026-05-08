@@ -320,7 +320,7 @@ export function EstimateSection() {
                             }
                             value={work.price}
                           />
-                          <EditableBadge strong label="Total" value={formatMoney(workTotal)} />
+                          <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums"><span className="text-muted-foreground">Total:</span><span>{formatMoney(workTotal)}</span></Badge>
                         </div>
                         <div className="hidden rounded-md border border-dashed border-green-300 p-1 xl:block">
                           <ActionButtons />
@@ -396,7 +396,7 @@ export function EstimateSection() {
                                       }
                                       value={material.price}
                                     />
-                                    <EditableBadge strong label="Total" value={formatMoney(getMaterialTotal(material))} />
+                                    <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums"><span className="text-muted-foreground">Total:</span><span>{formatMoney(getMaterialTotal(material))}</span></Badge>
                                   </dl>
                                 </CardContent>
                               </Card>

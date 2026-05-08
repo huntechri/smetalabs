@@ -91,6 +91,9 @@ smetalabs/
 │   │
 │   └── api/                             # API-роуты (ЕЩЁ НЕ СОЗДАНЫ — появится при разработке)
 │
+├── types/                               # Общие типы
+│   └── purchase.ts                      #   Тип PurchaseRow
+│
 ├── components/                          # Общие компоненты проекта
 │   ├── ui/                              # ⛔ shadcn/ui компоненты — НЕ ТРОГАТЬ, не кастомизировать
 │   │   ├── avatar.tsx                   #   (кроме случаев осознанного расширения через пропсы)
@@ -162,12 +165,20 @@ smetalabs/
 │   │           ├── estimate-tab-placeholder.tsx # Заглушка для вкладки
 │   │           └── estimate-tab-toolbar.tsx     # Тулбар вкладки сметы
 │   │
-│   ├── purchases/                       # Фича «Закупки»
+│   ├── purchases/                       # Фича «Закупки» (✅ эталонная структура фичи)
+│   │   ├── __mocks__/
+│   │   │   └── purchases.ts             #   Мок-данные (10 позиций закупок)
 │   │   ├── components/
-│   │   │   └── purchases-view.tsx       # Представление списка закупок
+│   │   │   └── purchases-view.tsx       #   Обёртка со скроллом (делегирует в PurchaseSection)
+│   │   ├── hooks/
+│   │   │   └── use-purchases.ts         #   Хук с состоянием (useState, useMemo)
 │   │   └── purchase-details/
 │   │       └── components/
-│   │           └── purchase-section.tsx # Секция закупки
+│   │           ├── purchase-section.tsx  #   Композиция (хук → map → PurchaseRow)
+│   │           ├── purchase-row.tsx      #   Строка закупки — собирает всё вместе
+│   │           ├── purchase-name.tsx     #   Название позиции
+│   │           ├── purchase-value.tsx    #   Бейдж «label: value» (Badge из shadcn/ui)
+│   │           └── purchase-metric-group.tsx  # Группа Plan / Actual / Deviation
 │   │
 │   └── ... (новые фичи создавать здесь по доменному принципу)
 │
@@ -175,7 +186,9 @@ smetalabs/
 │   └── use-mobile.ts                    # Хук определения мобильного устройства
 │
 ├── lib/                                 # Утилиты и библиотечный код
-│   └── utils.ts                         # cn() — мёрдж Tailwind-классов
+│   ├── utils.ts                         #   cn() — мёрдж Tailwind-классов
+│   ├── formatters.ts                    #   formatMoney() — форматирование валют
+│   └── calculations.ts                  #   getTotal() — вычисление суммы (qty × price)
 │
 ├── public/                              # Статические файлы
 │   └── images/
@@ -317,6 +330,73 @@ features/{domain}/
 **Когда компонент класть рядом со страницей (co-location):**
 - **НИКОГДА.** Все компоненты — в `features/`. App Router `page.tsx` не должен содержать логику, только композицию фич.
 
+#### 💡 Пример: архитектура фичи `purchases` (эталон)
+
+Фича «Закупки» — первая фича с полной многослойной структурой. Используй её как шаблон для всех новых фич.
+
+```
+features/purchases/
+├── __mocks__/                         # Временные моки (удалятся после появления БД)
+│   └── purchases.ts                   #   Массив PurchaseRow[]
+│
+├── components/                        # UI верхнего уровня (обёртки, view-компоненты)
+│   └── purchases-view.tsx             #   Обёртка со скроллом. Только JSX + пропсы.
+│                                      #   Не содержит бизнес-логики.
+│
+├── hooks/                             # Хуки фичи (состояние, useMemo, эффекты)
+│   └── use-purchases.ts               #   Возвращает { purchases }
+│                                      #   Пока — моки. Позже — запрос к API/БД.
+│
+└── purchase-details/                  # Поддомен «Детали закупки»
+    └── components/                    #   Мелкие UI-компоненты поддомена
+        ├── purchase-section.tsx        #     Композиция: хук → map → PurchaseRow
+        ├── purchase-row.tsx            #     Строка: собирает имя + метрики
+        ├── purchase-name.tsx           #     Название позиции (текст в рамке)
+        ├── purchase-value.tsx          #     Бейдж «label: value» (использует Badge из ui/)
+        └── purchase-metric-group.tsx   #     Группа метрик (Plan / Actual / Deviation)
+```
+
+**Поток данных внутри фичи:**
+
+```
+purchases-view.tsx                   ← page.tsx рендерит этот компонент
+  └─→ PurchaseSection                 ← хук + map
+        ├─→ usePurchases()            ← хук (сейчас моки, потом API)
+        └─→ PurchaseRow (×N)          ← для каждой строки
+              ├─→ PurchaseName        ← чистое отображение
+              ├─→ PurchaseMetricGroup ← группировка метрик
+              │     └─→ PurchaseValue (×N)  ← бейдж label:value
+              ├─→ formatMoney()       ← lib/formatters.ts
+              └─→ getTotal()          ← lib/calculations.ts
+```
+
+**Ключевые принципы:**
+- **Один компонент — один файл.** Каждый `Purchase*` — в отдельном `.tsx`.
+- **Именованные экспорты.** Никаких `export default` в фичах.
+- **Минимум логики в компонентах.** Только JSX, пропсы и условный рендеринг.
+- **Хуки — на своём уровне.** Компоненты не содержат useState/useMemo.
+- **Моки — временные.** `__mocks__/` — признак этапа вёрстки. Удалятся при переходе к реальным данным.
+
+#### 🗺️ Layers Rules — краткая таблица слоёв
+
+| Слой | Назначение | Содержит | Где лежит |
+|---|---|---|---|
+| **`types/`** | Общие типы | TypeScript-типы, интерфейсы | `types/{domain}.ts` |
+| **`lib/`** | Чистые утилиты (без React) | Форматирование, вычисления, хелперы | `lib/{name}.ts` |
+| **`hooks/`** | Общие React-хуки | useMobile, useMediaQuery и т.д. | `hooks/{name}.ts` |
+| **`components/`** | Инфраструктурные компоненты | Провайдеры, ErrorBoundary | `components/{name}.tsx` |
+| **`components/ui/`** | shadcn/ui (не трогать) | Примитивы дизайн-системы | Только через CLI `npx shadcn add` |
+| **`features/{f}/components/`** | UI фичи | JSX + пропсы, без бизнес-логики | `features/{f}/components/{name}.tsx` |
+| **`features/{f}/hooks/`** | Хуки фичи | Состояние, useMemo, запросы | `features/{f}/hooks/{name}.ts` |
+| **`features/{f}/__mocks__/`** | Моки (этап вёрстки) | Тестовые данные | `features/{f}/__mocks__/{name}.ts` |
+
+**Правило выбора слоя:**
+1. Тип используется в 2+ фичах? → `types/`
+2. Чистая функция без React? → `lib/`
+3. Хук с useState/useMemo/useEffect? → `hooks/` или `features/{f}/hooks/`
+4. JSX с пропсами, без состояния? → `features/{f}/components/`
+5. Провайдер/обёртка уровня приложения? → `components/`
+
 ---
 
 ### 2.3 Бизнес-логика
@@ -327,7 +407,7 @@ features/{domain}/
 |---|---|---|
 | **Хуки** (useState/useEffect логика) | `hooks/` (общие) или `features/{domain}/hooks/` | `use-mobile.ts` |
 | **Сервисы** (бизнес-операции) | `services/` (ЕЩЁ НЕТ) | `services/projects.ts` |
-| **Утилиты** (чистые функции) | `lib/` (общие) или `features/{domain}/utils.ts` | `lib/utils.ts` |
+| **Утилиты** (чистые функции) | `lib/` (общие) или `features/{domain}/utils.ts` | `lib/utils.ts`, `lib/formatters.ts`, `lib/calculations.ts` |
 | **Валидация** (Zod-схемы) | `lib/validations.ts` (общие) или `features/{domain}/validations.ts` | Zod схемы для форм |
 | **Константы** | `lib/constants.ts` (общие) или `features/{domain}/constants.ts` | Значения enum, статусы |
 | **Конфигурация** | `lib/config.ts` или переменные окружения | API URL, фича-флаги |
@@ -337,6 +417,16 @@ features/{domain}/
 1. **Общие хуки → `hooks/`**, доменно-специфичные → `features/{domain}/hooks/`
 2. **Формат:** каждый хук в отдельном файле, имя файла = имя хука: `use-project-list.ts`
 3. **Утилиты:** чистые функции без сайд-эффектов. Если нужен доступ к БД/API — это сервис.
+
+**Текущие утилиты `lib/`:**
+- `utils.ts` — `cn()` мёрдж Tailwind-классов (clsx + tailwind-merge)
+- `formatters.ts` — `formatMoney(value: number)` форматирование валюты (₽, разряды)
+- `calculations.ts` — `getTotal(quantity, price)` умножение количества на цену
+
+**Правило для `lib/`:**
+- Только чистые функции. Нет импортов React, нет JSX, нет сайд-эффектов.
+- Если утилита используется только в одной фиче → `features/{domain}/utils.ts`
+- Если используется в 2+ фичах → `lib/`
 
 ---
 
@@ -401,9 +491,14 @@ services/                       # Бизнес-логика (когда появ
 
 ### 2.5 Типы
 
-> **Текущее состояние:** Директория `types/` отсутствует. Типы определяются inline или в файлах фич.
+> **Текущее состояние:** Директория `types/` создана. Пока содержит только `purchase.ts`.
 
-#### План
+```
+types/
+└── purchase.ts             # PurchaseRow (id, title, planQuantity, planPrice, factQuantity, factPrice)
+```
+
+#### План расширения
 
 ```
 types/
@@ -420,6 +515,7 @@ types/
 3. **Типы из БД (Drizzle) → `types/database.ts` (выводятся из schema)**
 4. **Не дублировать типы:** если тип используется в 2+ фичах — в `types/`
 5. **Zod-схемы ≠ типы:** тип можно вывести из схемы `z.infer<typeof schema>`, схема — в `lib/validations.ts`
+6. **Один домен = один файл:** `types/purchase.ts` для PurchaseRow, `types/estimate.ts` для Estimate и т.д.
 
 ---
 
@@ -589,13 +685,32 @@ types/
 3. Добавить ссылку в features/nav-main.tsx (или nav-secondary.tsx)
 ```
 
-### 5.2 Добавить новую фичу
+### 5.2 Добавить новую фичу (по образцу purchases)
 
 ```
-1. Создать features/{domain}/components/{domain}-view.tsx
-2. При необходимости: features/{domain}/components/{domain}-card.tsx
-3. При необходимости: features/{domain}/hooks/use-{domain}.ts
-4. Страница в app/ только собирает фичи: <NewFeatureView />
+1. Создать types/{domain}.ts               — типы (если нужны нескольким фичам)
+2. Создать features/{domain}/__mocks__/    — мок-данные (временно, для вёрстки)
+3. Создать features/{domain}/hooks/        — хук (состояние, сейчас моки, потом API)
+4. Создать features/{domain}/components/   — view-компонент (обёртка)
+5. При необходимости — поддомен:
+   features/{domain}/{subdomain}/components/  — мелкие UI-компоненты
+6. При необходимости — общие утилиты:
+   lib/formatters.ts, lib/calculations.ts  — если функция нужна 2+ фичам
+7. Страница в app/ только собирает фичи: <NewFeatureView />
+```
+
+**Пример для новой фичи «Поставщики»:**
+```
+types/supplier.ts                  ← тип Supplier
+features/suppliers/
+├── __mocks__/suppliers.ts         ← мок-список поставщиков
+├── hooks/use-suppliers.ts         ← хук
+├── components/suppliers-view.tsx   ← обёртка
+└── supplier-details/
+    └── components/
+        ├── supplier-section.tsx
+        ├── supplier-row.tsx
+        └── ...
 ```
 
 ### 5.3 Добавить вкладку внутри сметы

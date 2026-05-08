@@ -38,9 +38,9 @@ export function CreateSectionDialog({
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Создать новый раздел</DialogTitle>
+            <DialogTitle>Create New Section</DialogTitle>
             <DialogDescription>
-              Введите номер и название раздела для начала работы со сметой.
+              Enter the section number and name to start working on your estimate.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -58,19 +58,19 @@ export function CreateSectionDialog({
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
-                Название
+                Name
               </Label>
               <Input
                 id="name"
                 name="name"
-                placeholder="Подготовительные работы"
+                placeholder="Preparation works"
                 className="col-span-3"
                 required
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Создать</Button>
+            <Button type="submit">Create</Button>
           </DialogFooter>
         </form>
       </DialogContent>

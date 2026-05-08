@@ -112,7 +112,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* Секции Projects и Secondary убраны, так как все пути теперь в NavMain */}
+        {/* Projects and Secondary sections removed, all paths are now in NavMain */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

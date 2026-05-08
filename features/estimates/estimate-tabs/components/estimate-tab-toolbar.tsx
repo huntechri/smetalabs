@@ -20,26 +20,26 @@ type ToolbarAction = {
 
 const tabActions: Record<string, ToolbarAction[]> = {
   estimate: [
-    { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
-    { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
-    { label: "Коэффициент", icon: <PlusIcon data-icon="inline-start" /> },
+    { label: "Import", icon: <FileArrowDownIcon data-icon="inline-start" /> },
+    { label: "Export", icon: <ExportIcon data-icon="inline-start" /> },
+    { label: "Coefficient", icon: <PlusIcon data-icon="inline-start" /> },
   ],
   purchases: [
-    { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
-    { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
+    { label: "Import", icon: <FileArrowDownIcon data-icon="inline-start" /> },
+    { label: "Export", icon: <ExportIcon data-icon="inline-start" /> },
   ],
   execution: [
-    { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
-    { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
-    { label: "Допработа", icon: <PlusIcon data-icon="inline-start" /> },
+    { label: "Import", icon: <FileArrowDownIcon data-icon="inline-start" /> },
+    { label: "Export", icon: <ExportIcon data-icon="inline-start" /> },
+    { label: "Extra work", icon: <PlusIcon data-icon="inline-start" /> },
   ],
   finances: [
-    { label: "Платеж", icon: <PlusIcon data-icon="inline-start" /> },
-    { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
+    { label: "Payment", icon: <PlusIcon data-icon="inline-start" /> },
+    { label: "Export", icon: <ExportIcon data-icon="inline-start" /> },
   ],
   documents: [
-    { label: "Документ", icon: <PlusIcon data-icon="inline-start" /> },
-    { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
+    { label: "Document", icon: <PlusIcon data-icon="inline-start" /> },
+    { label: "Import", icon: <FileArrowDownIcon data-icon="inline-start" /> },
   ],
 }
 
@@ -77,11 +77,11 @@ export function EstimateTabToolbar() {
 
   const placeholder = useMemo(() => {
     const labels: Record<string, string> = {
-      documents: "Поиск по документам",
-      estimate: "Поиск по смете",
-      execution: "Поиск по выполнению",
-      finances: "Поиск по финансам",
-      purchases: "Поиск по закупкам",
+      documents: "Search documents",
+      estimate: "Search estimate",
+      execution: "Search execution",
+      finances: "Search finances",
+      purchases: "Search purchases",
     }
 
     return labels[activeTab]
@@ -119,7 +119,7 @@ export function EstimateTabToolbar() {
             value={search}
           />
           <Button type="submit" variant="outline">
-            Найти
+            Search
           </Button>
         </div>
       </form>

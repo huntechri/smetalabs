@@ -112,7 +112,7 @@ const works: Work[] = [
   },
 ]
 
-const stages = ["Этап 1: черновые работы"]
+const stages = ["Stage 1: Rough work"]
 
 const currency = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 0,
@@ -246,8 +246,8 @@ export function EstimateSection() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 rounded-md border border-dashed border-orange-300 p-2 sm:min-w-56">
-              <SummaryValue label="Работы" value={totals.workTotal} />
-              <SummaryValue label="Материалы" value={totals.materialTotal} />
+              <SummaryValue label="Works" value={totals.workTotal} />
+              <SummaryValue label="Materials" value={totals.materialTotal} />
             </div>
           </button>
         </CollapsibleTrigger>
@@ -273,8 +273,8 @@ export function EstimateSection() {
                             <button
                               aria-label={
                                 isExpanded
-                                  ? "Свернуть работу"
-                                  : "Развернуть работу"
+                                  ? "Collapse work"
+                                  : "Expand work"
                               }
                               type="button"
                             >
@@ -306,7 +306,7 @@ export function EstimateSection() {
                         <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 xl:w-auto xl:min-w-80">
                           <WorkInputField
                             inputMode="decimal"
-                            label="Кол-во"
+                            label="Qty"
                             onChange={(value) =>
                               updateWork(work.id, { quantity: Number(value) })
                             }
@@ -315,7 +315,7 @@ export function EstimateSection() {
                           />
                           <WorkInputField
                             inputMode="decimal"
-                            label="Цена"
+                            label="Price"
                             onChange={(value) =>
                               updateWork(work.id, { price: Number(value) })
                             }
@@ -324,7 +324,7 @@ export function EstimateSection() {
                           <WorkInputField
                             readOnly
                             className="col-span-2 sm:col-span-1"
-                            label="Сумма"
+                            label="Total"
                             value={formatMoney(workTotal)}
                             strong
                           />
@@ -376,7 +376,7 @@ export function EstimateSection() {
                                 <CardContent>
                                   <dl className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
                                     <MaterialInputField
-                                      label="Кол-во"
+                                      label="Qty"
                                       onChange={(value) =>
                                         updateMaterial(work.id, material.id, {
                                           quantity: Number(value),
@@ -386,7 +386,7 @@ export function EstimateSection() {
                                     />
                                     <MaterialInputField
                                       inputMode="decimal"
-                                      label="Расход"
+                                      label="Consumption"
                                       onChange={(value) =>
                                         updateMaterial(work.id, material.id, {
                                           waste: parseDecimalInput(value),
@@ -396,7 +396,7 @@ export function EstimateSection() {
                                     />
                                     <MaterialInputField
                                       inputMode="decimal"
-                                      label="Цена"
+                                      label="Price"
                                       onChange={(value) =>
                                         updateMaterial(work.id, material.id, {
                                           price: Number(value),
@@ -406,7 +406,7 @@ export function EstimateSection() {
                                     />
                                     <MaterialInputField
                                       readOnly
-                                      label="Итого"
+                                      label="Total"
                                       value={formatMoney(
                                         getMaterialTotal(material)
                                       )}
@@ -424,7 +424,7 @@ export function EstimateSection() {
                               variant="outline"
                             >
                               <PlusIcon data-icon="inline-start" />
-                              Материал
+                              Material
                             </FramedButton>
                           </div>
                         </div>
@@ -442,16 +442,16 @@ export function EstimateSection() {
         <div className="flex flex-wrap items-center gap-2">
           <FramedButton frameClassName="border-yellow-300" variant="outline">
             <PlusIcon data-icon="inline-start" />
-            Раздел
+            Section
           </FramedButton>
           <FramedButton frameClassName="border-yellow-300" variant="outline">
             <PlusIcon data-icon="inline-start" />
-            Работа
+            Work
           </FramedButton>
         </div>
         <FramedButton frameClassName="border-yellow-300" variant="destructive">
           <TrashIcon data-icon="inline-start" />
-          Удалить раздел
+          Delete section
         </FramedButton>
       </div>
     </section>
@@ -534,7 +534,7 @@ function WorkNameField({
   return (
     <label className="min-w-48 flex-1 rounded-md border border-dashed border-green-300 p-2">
       <span className="mb-1 block text-xs text-muted-foreground uppercase">
-        Наименование
+        Name
       </span>
       <Textarea
         className="min-h-16"
@@ -595,7 +595,7 @@ function MaterialNameField({
   return (
     <label className="block min-w-0 rounded-md border border-dashed border-blue-300 p-2">
       <span className="mb-1 block text-xs text-muted-foreground uppercase">
-        Наименование
+        Name
       </span>
       <Textarea
         className="min-h-16"
@@ -612,7 +612,7 @@ function MaterialActions({ title }: { title: string }) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            aria-label={`Действия материала ${title}`}
+            aria-label={`Material actions for ${title}`}
             size="icon-sm"
             type="button"
             variant="ghost"
@@ -622,9 +622,9 @@ function MaterialActions({ title }: { title: string }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
-            <DropdownMenuItem>Редактировать</DropdownMenuItem>
-            <DropdownMenuItem>Дублировать</DropdownMenuItem>
-            <DropdownMenuItem variant="destructive">Удалить</DropdownMenuItem>
+            <DropdownMenuItem>Edit</DropdownMenuItem>
+            <DropdownMenuItem>Duplicate</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -645,7 +645,7 @@ function ActionButtons() {
   return (
     <div className="flex items-center gap-1">
       <FramedButton
-        aria-label="Редактировать работу"
+        aria-label="Edit work"
         frameClassName="border-green-300"
         size="icon-sm"
         variant="ghost"
@@ -653,7 +653,7 @@ function ActionButtons() {
         <PencilSimpleIcon />
       </FramedButton>
       <FramedButton
-        aria-label="Дублировать работу"
+        aria-label="Duplicate work"
         frameClassName="border-green-300"
         size="icon-sm"
         variant="ghost"
@@ -661,7 +661,7 @@ function ActionButtons() {
         <CopyIcon />
       </FramedButton>
       <FramedButton
-        aria-label="Настройки работы"
+        aria-label="Work settings"
         frameClassName="border-green-300"
         size="icon-sm"
         variant="ghost"

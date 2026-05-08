@@ -3,10 +3,10 @@ import { ButtonGroup } from "@/components/ui/button-group"
 
 export function ProjectsView() {
   return (
-    /* Внешний — отступы от краёв (shadcn паттерн) */
+    /* Outer — padding from edges (shadcn pattern) */
     <div className="h-full px-4 lg:px-6">
 
-      {/* Внутренний — визуальный контейнер */}
+      {/* Inner — visual container */}
       <div className="h-full rounded-lg border border-dashed p-6 flex flex-col gap-4">
 
         {/* ButtonGroup */}
@@ -16,7 +16,7 @@ export function ProjectsView() {
           <Button variant="outline">Button 3</Button>
         </ButtonGroup>
 
-        {/* Два вложенных пустых контейнера */}
+        {/* Two nested empty containers */}
         <div className="rounded-lg border border-dashed p-6">
           <div className="rounded-lg border border-dashed p-6" />
         </div>

@@ -1,0 +1,629 @@
+# SmetaLabs — Карта проекта (Filemap)
+
+> **Стек:** Next.js 16 · shadcn/ui (radix-mira) · Tailwind v4 · TypeScript
+>
+> **Состояние:** Старт проекта, только вёрстка. Бэкенд, API, работа с БД — отсутствуют.
+>
+> **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
+
+---
+
+## Оглавление
+
+1. [Дерево проекта](#1-дерево-проекта)
+2. [Архитектурные слои и правила](#2-архитектурные-слои-и-правила)
+   - [2.1 Роутинг (app/)](#21-роутинг-app)
+   - [2.2 Компоненты](#22-компоненты)
+   - [2.3 Бизнес-логика](#23-бизнес-логика)
+   - [2.4 Работа с данными](#24-работа-с-данными)
+   - [2.5 Типы](#25-типы)
+   - [2.6 Статические ресурсы](#26-статические-ресурсы)
+3. [Именование](#3-именование)
+4. [Flow данных](#4-flow-данных)
+5. [Типовые сценарии](#5-типовые-сценарии)
+
+---
+
+## 1. Дерево проекта
+
+```
+smetalabs/
+├── .gitignore
+├── .prettierrc                          # Конфиг Prettier (Tailwind-плагин)
+├── .prettierignore
+├── README.md                            # Технический README (шаблонный)
+├── package.json                         # Зависимости и скрипты
+├── pnpm-lock.yaml                       # Лок-файл (pnpm)
+├── tsconfig.json                        # Конфиг TypeScript
+├── next.config.mjs                      # Конфиг Next.js
+├── postcss.config.mjs                   # Конфиг PostCSS (Tailwind)
+│
+├── app/                                 # Роутинг Next.js (App Router)
+│   ├── layout.tsx                       # Корневой layout (шрифты, ThemeProvider, TooltipProvider)
+│   ├── globals.css                      # Глобальные стили, CSS-переменные, импорты Tailwind/shadcn
+│   ├── page.tsx                         # Корневая страница (редирект на /dashboard)
+│   ├── favicon.ico                      # Фавиконка
+│   │
+│   ├── (auth)/                          # Route Group: страницы авторизации
+│   │   ├── layout.tsx                   # Layout авторизации (центрированный, без sidebar)
+│   │   ├── login/page.tsx               # Страница входа
+│   │   ├── singup/page.tsx              # Страница регистрации
+│   │   └── forgot-password/page.tsx     # Восстановление пароля
+│   │
+│   ├── (main)/                          # Route Group: основной интерфейс (с sidebar)
+│   │   ├── layout.tsx                   # Layout с SidebarProvider, AppSidebar, SiteHeader
+│   │   ├── page.tsx                     # Редирект на /dashboard
+│   │   ├── dashboard/                   # Дашборд (главная страница после входа)
+│   │   │   ├── page.tsx                 # Страница дашборда
+│   │   │   └── data.json               # Мок-данные для таблицы
+│   │   ├── projects/                    # Проекты
+│   │   │   ├── page.tsx                 # Список проектов
+│   │   │   └── [projectId]/            # Конкретный проект
+│   │   │       ├── page.tsx             # Детальная страница проекта
+│   │   │       └── estimates/          # Сметы проекта
+│   │   │           └── [estimateId]/   # Конкретная смета
+│   │   │               ├── layout.tsx   # Layout сметы (табы навигации + тулбар)
+│   │   │               ├── page.tsx     # Основная вкладка сметы
+│   │   │               ├── documents/  # Вкладка «Документы»
+│   │   │               │   └── page.tsx
+│   │   │               ├── execution/  # Вкладка «Выполнение»
+│   │   │               │   └── page.tsx
+│   │   │               ├── finances/   # Вкладка «Финансы»
+│   │   │               │   └── page.tsx
+│   │   │               └── purchases/  # Вкладка «Закупки»
+│   │   │                   └── page.tsx
+│   │   ├── directories/                # Справочники
+│   │   │   ├── counterparties/page.tsx # Контрагенты
+│   │   │   ├── materials/page.tsx      # Материалы
+│   │   │   ├── suppliers/page.tsx      # Поставщики
+│   │   │   └── works/page.tsx          # Виды работ
+│   │   ├── procurements/               # Закупки (общий список)
+│   │   │   └── page.tsx
+│   │   ├── team/                       # Команда
+│   │   │   └── page.tsx
+│   │   └── templates/                  # Шаблоны смет
+│   │       ├── page.tsx                # Список шаблонов
+│   │       └── [templateId]/           # Конкретный шаблон
+│   │           └── page.tsx
+│   │
+│   ├── admin/                           # Админ-панель (без группы роутов — отдельный layout)
+│   │   └── page.tsx
+│   │
+│   └── api/                             # API-роуты (ЕЩЁ НЕ СОЗДАНЫ — появится при разработке)
+│
+├── components/                          # Общие компоненты проекта
+│   ├── ui/                              # ⛔ shadcn/ui компоненты — НЕ ТРОГАТЬ, не кастомизировать
+│   │   ├── avatar.tsx                   #   (кроме случаев осознанного расширения через пропсы)
+│   │   ├── badge.tsx
+│   │   ├── breadcrumb.tsx
+│   │   ├── button.tsx, button-group.tsx
+│   │   ├── card.tsx
+│   │   ├── chart.tsx
+│   │   ├── checkbox.tsx
+│   │   ├── collapsible.tsx
+│   │   ├── dialog.tsx
+│   │   ├── drawer.tsx
+│   │   ├── dropdown-menu.tsx
+│   │   ├── empty.tsx
+│   │   ├── field.tsx
+│   │   ├── input.tsx
+│   │   ├── label.tsx
+│   │   ├── select.tsx
+│   │   ├── separator.tsx
+│   │   ├── sheet.tsx
+│   │   ├── sidebar.tsx
+│   │   ├── skeleton.tsx
+│   │   ├── sonner.tsx
+│   │   ├── table.tsx
+│   │   ├── tabs.tsx
+│   │   ├── textarea.tsx
+│   │   ├── toggle.tsx, toggle-group.tsx
+│   │   ├── tooltip.tsx
+│   │   └── aspect-ratio.tsx
+│   ├── theme-provider.tsx               # Провайдер тёмной/светлой темы (next-themes)
+│   └── nav-documents.tsx                # ⚠️ Боковая навигация «Documents» (временная, унаследована из шаблона)
+│
+├── features/                            # Фичи (бизнес-логика, сгруппированная по доменам)
+│   ├── app-sidebar.tsx                  # Боковая панель приложения
+│   ├── site-header.tsx                  # Верхняя панель (header)
+│   ├── search-form.tsx                  # Форма поиска (в header)
+│   ├── nav-main.tsx                     # Основная навигация sidebar
+│   ├── nav-projects.tsx                 # Навигация «Проекты» в sidebar
+│   ├── nav-secondary.tsx                # Вторичная навигация sidebar
+│   ├── nav-user.tsx                     # Меню пользователя в sidebar
+│   │
+│   ├── auth/                            # Фича «Авторизация»
+│   │   └── components/
+│   │       ├── login-form.tsx           # Форма входа
+│   │       ├── signup-form.tsx          # Форма регистрации
+│   │       └── forgot-password-form.tsx # Форма восстановления
+│   │
+│   ├── dashboard/                       # Фича «Дашборд»
+│   │   ├── chart-area-interactive.tsx   # Интерактивный график
+│   │   ├── data-table.tsx              # Таблица данных
+│   │   └── section-cards-dashboard.tsx  # Карточки статистики
+│   │
+│   ├── projects/                        # Фича «Проекты»
+│   │   └── components/
+│   │       ├── projects-view.tsx        # Представление списка проектов
+│   │       ├── project-card.tsx         # Карточка одного проекта
+│   │       └── section-cards.tsx        # Карточки статистики (раздел проектов)
+│   │
+│   ├── estimates/                       # Фича «Сметы»
+│   │   ├── components/
+│   │   │   └── estimate-navigation-tabs.tsx  # Табы навигации по смете
+│   │   ├── estimate-details/
+│   │   │   └── components/
+│   │   │       ├── estimate-section.tsx        # Секция сметы (работа/материал)
+│   │   │       ├── create-section-dialog.tsx   # Диалог создания секции
+│   │   │       └── estimate-empty-state.tsx    # Пустое состояние сметы
+│   │   └── estimate-tabs/
+│   │       └── components/
+│   │           ├── estimate-tab-placeholder.tsx # Заглушка для вкладки
+│   │           └── estimate-tab-toolbar.tsx     # Тулбар вкладки сметы
+│   │
+│   ├── purchases/                       # Фича «Закупки»
+│   │   ├── components/
+│   │   │   └── purchases-view.tsx       # Представление списка закупок
+│   │   └── purchase-details/
+│   │       └── components/
+│   │           └── purchase-section.tsx # Секция закупки
+│   │
+│   └── ... (новые фичи создавать здесь по доменному принципу)
+│
+├── hooks/                               # Общие хуки
+│   └── use-mobile.ts                    # Хук определения мобильного устройства
+│
+├── lib/                                 # Утилиты и библиотечный код
+│   └── utils.ts                         # cn() — мёрдж Tailwind-классов
+│
+├── public/                              # Статические файлы
+│   └── images/
+│       └── auth-bg.png                  # Фон страницы авторизации
+│
+└── docs/                                # Документация проекта
+    ├── design-system.md                 # Дизайн-система (цвета, типографика, компоненты)
+    └── filemap.md                       # ← этот файл
+```
+
+---
+
+## 2. Архитектурные слои и правила
+
+### 2.1 Роутинг (`app/`)
+
+#### Когда создавать Route Group `(group)/`
+
+Route Group используются для группировки страниц с общим layout **без влияния на URL**:
+
+| Ситуация | Решение |
+|---|---|
+| Нужен другой layout (с sidebar / без) | Новая группа: `(auth)/`, `(main)/` |
+| Нужен middleware/different providers | Новая группа |
+| Просто логическая группировка страниц | **Не нужна группа** — достаточно вложенных папок |
+
+**Пример:** `/admin` — сейчас лежит вне групп, т.к. имеет собственную структуру. Когда появится админский sidebar/layout — обернуть в `(admin)/`.
+
+#### Когда создавать `layout.tsx`
+
+| Ситуация | Решение |
+|---|---|
+| Общий UI для группы страниц (шапка, sidebar, табы) | `layout.tsx` |
+| Вложенный навигационный контекст (табы внутри сметы) | `layout.tsx` на уровне `[estimateId]/` |
+| Каждая страница уникальна, общего UI нет | **Не нужен** layout |
+
+**Текущие layout'ы:**
+- `app/layout.tsx` — шрифты, тема, tooltip-провайдер (глобально)
+- `app/(auth)/layout.tsx` — центрирование формы входа
+- `app/(main)/layout.tsx` — sidebar + header
+- `app/(main)/projects/[projectId]/estimates/[estimateId]/layout.tsx` — табы навигации по вкладкам сметы
+
+#### Когда создавать `page.tsx`
+
+**Всегда** для маршрута, который должен рендерить контент. Один `page.tsx` на конечный URL-сегмент.
+
+#### Шаблон `page.tsx`
+
+```tsx
+// ✅ Минимальная страница
+export default function Page() {
+  return (
+    <div className="flex flex-1 flex-col">
+      <div className="@container/main flex flex-1 flex-col gap-2">
+        {/* Контент страницы */}
+      </div>
+    </div>
+  )
+}
+```
+
+**Правила для page.tsx:**
+- Экспорт по умолчанию — `export default function Page()`
+- **page.tsx — это композиция**, а не логика. Только собирает фичи-компоненты
+- Вся бизнес-логика — в `features/`
+- Загрузка данных — через Server Components на уровне page (когда появится БД)
+
+#### Динамические маршруты `[param]`
+
+| URL | Файловая структура |
+|---|---|
+| `/projects` | `projects/page.tsx` |
+| `/projects/42` | `projects/[projectId]/page.tsx` |
+| `/projects/42/estimates/7` | `projects/[projectId]/estimates/[estimateId]/page.tsx` |
+
+**Правила:**
+- `[projectId]`, `[estimateId]` — kebab-case внутри скобок
+- ID всегда строка в URL, преобразование в number — на уровне получения данных
+- Для slug-ов (текстовых идентификаторов) — тоже `[slug]`
+
+#### Параллельные маршруты и перехваты
+
+**Пока не используются.** При появлении модалок с отдельным URL (например, создание проекта в модалке) — использовать `@modal` параллельный маршрут + `(.)` перехват.
+
+---
+
+### 2.2 Компоненты
+
+#### Иерархия размещения
+
+```
+components/ui/       ← shadcn/ui (НЕ ТРОГАТЬ без веской причины)
+components/          ← общие компоненты уровня приложения (theme-provider, etc.)
+features/{domain}/   ← компоненты, специфичные для бизнес-домена
+```
+
+#### `components/ui/` — НЕ ТРОГАТЬ
+
+Это сгенерированные shadcn/ui компоненты. **Кастомизация только через пропсы, `className` и CSS-переменные** — не через правку исходников.
+
+**Исключение:** осознанное расширение пропсов (например, добавление `size` в `Avatar`) после обсуждения с командой.
+
+#### `components/` — общие компоненты приложения
+
+Сюда класть компоненты, которые:
+- Используются **более чем в одной фиче**
+- Не привязаны к конкретному бизнес-домену
+- Являются инфраструктурными (провайдеры, обёртки)
+
+**Что сейчас здесь:**
+- `theme-provider.tsx` — ✅ правильно, инфраструктура
+- `nav-documents.tsx` — ⚠️ временный, унаследован из шаблона. При рефакторинге → `features/`
+
+**Что создавать здесь в будущем:**
+- `components/error-boundary.tsx` — глобальный Error Boundary
+- `components/loading-spinner.tsx` — общий спиннер загрузки
+- `components/confirm-dialog.tsx` — переиспользуемый диалог подтверждения (если нужно)
+- `components/page-header.tsx` — общий заголовок страницы
+
+#### `features/{domain}/` — основной код
+
+**Правило:** каждый бизнес-домен → отдельная папка в `features/`.
+
+Структура фичи:
+```
+features/{domain}/
+├── components/           # Компоненты фичи
+├── {subdomain}/          # Поддомен (если фича большая)
+│   └── components/
+├── hooks/                # Хуки фичи (когда появятся)
+└── utils.ts              # Утилиты фичи (когда появятся)
+```
+
+**Когда создавать подпапку в фиче:**
+- Фича имеет несколько смысловых частей (например, `estimates/estimate-details/` и `estimates/estimate-tabs/`)
+- Каждая часть содержит 2+ компонента
+- Иначе — плоский список в `components/`
+
+**Когда компонент класть рядом со страницей (co-location):**
+- **НИКОГДА.** Все компоненты — в `features/`. App Router `page.tsx` не должен содержать логику, только композицию фич.
+
+---
+
+### 2.3 Бизнес-логика
+
+#### Где что лежит
+
+| Что | Где | Пример |
+|---|---|---|
+| **Хуки** (useState/useEffect логика) | `hooks/` (общие) или `features/{domain}/hooks/` | `use-mobile.ts` |
+| **Сервисы** (бизнес-операции) | `services/` (ЕЩЁ НЕТ) | `services/projects.ts` |
+| **Утилиты** (чистые функции) | `lib/` (общие) или `features/{domain}/utils.ts` | `lib/utils.ts` |
+| **Валидация** (Zod-схемы) | `lib/validations.ts` (общие) или `features/{domain}/validations.ts` | Zod схемы для форм |
+| **Константы** | `lib/constants.ts` (общие) или `features/{domain}/constants.ts` | Значения enum, статусы |
+| **Конфигурация** | `lib/config.ts` или переменные окружения | API URL, фича-флаги |
+
+#### Правила
+
+1. **Общие хуки → `hooks/`**, доменно-специфичные → `features/{domain}/hooks/`
+2. **Формат:** каждый хук в отдельном файле, имя файла = имя хука: `use-project-list.ts`
+3. **Утилиты:** чистые функции без сайд-эффектов. Если нужен доступ к БД/API — это сервис.
+
+---
+
+### 2.4 Работа с данными
+
+> **Текущее состояние:** Бэкенд и БД отсутствуют. Все данные — моковые. Правила ниже — как будет строиться при переходе к реальным данным.
+
+#### Приоритетный подход: Server Components + Server Actions
+
+```
+1. Server Components — для получения данных на сервере и передачи в клиентские компоненты
+2. Server Actions  — для мутаций (формы, кнопки действий)
+3. API Routes      — только для внешних потребителей (вебхуки, мобильное приложение)
+```
+
+#### Где создавать
+
+| Потребность | Где создавать |
+|---|---|
+| **Server Action** (мутация данных) | `app/actions/{domain}.ts` — рядом с роутами |
+| **Прямой запрос к БД** | `lib/db/` — для Drizzle ORM; `lib/db/queries/{domain}.ts` — для запросов |
+| **API Route** (внешний доступ) | `app/api/{domain}/route.ts` |
+| **Сервисный слой** (бизнес-логика) | `services/{domain}.ts` |
+
+#### Структура (план на будущее)
+
+```
+app/
+├── actions/                    # Server Actions
+│   ├── projects.ts             #   createProject, updateProject, deleteProject
+│   ├── estimates.ts            #   createEstimate, addSection, updateSection
+│   └── auth.ts                 #   login, signup, logout
+│
+├── api/                        # REST API (для внешних потребителей)
+│   └── projects/
+│       └── route.ts            #   GET /api/projects
+│
+lib/
+├── db/                         # Работа с БД
+│   ├── index.ts               #   Подключение (Drizzle)
+│   ├── schema.ts               #   Схема таблиц
+│   └── queries/                #   Типизированные запросы
+│       ├── projects.ts
+│       └── estimates.ts
+│
+services/                       # Бизнес-логика (когда появится потребность в слое абстракции)
+├── projects.ts
+└── estimates.ts
+```
+
+#### Правила выбора стратегии
+
+| Ситуация | Использовать |
+|---|---|
+| Форма создания/редактирования на странице | **Server Action** |
+| Список данных для SSR | **Server Component** с прямым запросом к БД |
+| Мобильное приложение / внешний API | **API Route** |
+| Реалтайм-обновления | **Server Actions + revalidatePath / revalidateTag** |
+| Вебхуки от внешних сервисов | **API Route** |
+
+---
+
+### 2.5 Типы
+
+> **Текущее состояние:** Директория `types/` отсутствует. Типы определяются inline или в файлах фич.
+
+#### План
+
+```
+types/
+├── index.ts                # Общие типы (User, Project, Estimate, etc.)
+├── database.ts             # Типы из Drizzle (выводятся автоматически)
+├── api.ts                  # Типы запросов/ответов API
+└── {domain}.ts             # Доменно-специфичные типы
+```
+
+#### Правила
+
+1. **Общие типы (User, Project, Estimate) → `types/index.ts`**
+2. **Типы, используемые только внутри фичи → `features/{domain}/types.ts`**
+3. **Типы из БД (Drizzle) → `types/database.ts` (выводятся из schema)**
+4. **Не дублировать типы:** если тип используется в 2+ фичах — в `types/`
+5. **Zod-схемы ≠ типы:** тип можно вывести из схемы `z.infer<typeof schema>`, схема — в `lib/validations.ts`
+
+---
+
+### 2.6 Статические ресурсы
+
+| Что | Куда |
+|---|---|
+| Изображения | `public/images/` |
+| Иконки (кастомные) | `public/icons/` |
+| Документы/файлы | `public/files/` |
+| Шрифты | Подключать через `next/font` в `app/layout.tsx` (local или Google Fonts) |
+
+---
+
+## 3. Именование
+
+### 3.1 Файлы
+
+| Тип | Регистр | Пример |
+|---|---|---|
+| Компоненты (React) | **PascalCase** | `ProjectCard.tsx`, `LoginForm.tsx` |
+| Хуки | **kebab-case** или **camelCase** | `use-mobile.ts` или `useMobile.ts` |
+| Утилиты, сервисы, конфиги | **kebab-case** | `utils.ts`, `auth-service.ts`, `db-schema.ts` |
+| Папки с компонентами | **kebab-case** или **camelCase** | `projects/`, `estimate-details/` |
+| Route-сегменты | **kebab-case** | `forgot-password/`, `[projectId]/` |
+
+### 3.2 Компоненты: `index.tsx` vs именованный файл
+
+| Правило | Пример |
+|---|---|
+| **Именованный файл ВСЕГДА** | `project-card.tsx` ✅ |
+| **НЕ использовать `index.tsx`** | `projects/index.tsx` ❌ |
+
+**Причина:** `index.tsx` создаёт путаницу в IDE (10 вкладок с именем `index.tsx`). Именованные файлы — однозначная идентификация.
+
+### 3.3 Директории
+
+| Правило | Пример |
+|---|---|
+| Доменные фичи — **существительное во множественном числе** | `projects/`, `estimates/`, `purchases/` |
+| Поддомены — **существительное в единственном** | `estimate-details/`, `purchase-details/` |
+| Route-сегменты — **kebab-case, на английском** | `forgot-password/`, `estimate-tabs/` |
+| Компонентные папки — всегда `components/` (множественное) | `features/projects/components/` |
+
+### 3.4 Экспорты
+
+| Правило | Пример |
+|---|---|
+| Компонент — **именованный экспорт** | `export function ProjectCard()` |
+| Страница (page.tsx) — **экспорт по умолчанию** | `export default function Page()` |
+| Layout — **экспорт по умолчанию** | `export default function MainLayout()` |
+| Утилиты/хелперы — **именованный экспорт** | `export function cn()` |
+
+---
+
+## 4. Flow данных
+
+### Схема слоёв
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                      БАЗА ДАННЫХ                         │
+│                   (PostgreSQL + Drizzle)                  │
+│                    lib/db/schema.ts                       │
+│                    lib/db/queries/                        │
+└────────────────────────┬────────────────────────────────┘
+                         │
+          ┌──────────────┴──────────────┐
+          ▼                              ▼
+┌──────────────────┐          ┌──────────────────┐
+│  SERVER ACTIONS  │          │   API ROUTES     │
+│ app/actions/     │          │ app/api/         │
+│                  │          │                  │
+│ • Мутации данных │          │ • Внешние        │
+│ • Валидация (Zod)│          │   потребители    │
+│ • revalidatePath │          │ • Вебхуки        │
+└────────┬─────────┘          └────────┬─────────┘
+         │                             │
+         └──────────────┬──────────────┘
+                        ▼
+          ┌──────────────────────────┐
+          │   REACT SERVER           │
+          │   COMPONENTS (RSC)       │
+          │                          │
+          │ • Получение данных       │
+          │ • Рендеринг на сервере   │
+          │ • Передача данных вниз   │
+          │   через props            │
+          └────────────┬─────────────┘
+                       │
+                       ▼
+          ┌──────────────────────────┐
+          │   CLIENT COMPONENTS      │
+          │   ("use client")          │
+          │                          │
+          │ • Интерактивность        │
+          │ • Состояние (useState)   │
+          │ • Браузерные API         │
+          │ • Вызов Server Actions   │
+          │   через startTransition  │
+          └──────────────────────────┘
+```
+
+### Пояснение слоёв
+
+#### 1. База данных
+- **Драйвер:** Drizzle ORM
+- **Схема:** `lib/db/schema.ts` — описание таблиц
+- **Запросы:** `lib/db/queries/` — типизированные функции чтения
+- **Не обращаться к БД из клиентских компонентов**
+
+#### 2. Server Actions (`app/actions/`)
+- **Для:** мутаций данных (создание, обновление, удаление)
+- **Вызываются:** из Client Components через `startTransition` или `action={}`
+- **Содержат:** валидацию (Zod), бизнес-логику, запись в БД, `revalidatePath`
+- **Пример:** `createProject(data: FormData)` — создаёт проект, ревалидирует /projects
+
+#### 3. API Routes (`app/api/`)
+- **Для:** внешних потребителей (мобильное приложение, сторонние интеграции)
+- **Только когда нужен REST API вне Next.js-приложения**
+- Для внутренних нужд — **всегда Server Actions**
+
+#### 4. React Server Components (по умолчанию)
+- **Страницы (page.tsx) — всегда Server Components**
+- Получают данные напрямую из БД (вызов функций из `lib/db/queries/`)
+- Передают данные клиентским компонентам через **props**
+- Не могут использовать хуки, useState, useEffect
+
+#### 5. Client Components (`"use client"`)
+- Директива `"use client"` в первой строке файла
+- **Граница интерактивности:** useState, useEffect, onClick, браузерные API
+- Вызывают Server Actions для мутаций
+- **Не получают данные напрямую из БД** — только через props от RSC
+
+### Принцип «сервер вниз»
+
+```
+Страница (RSC) получает данные из БД
+   │
+   ├─→ передаёт через props в FeatureComponent (RSC или Client)
+   │      │
+   │      ├─→ передаёт через props в дочерние Client Components
+   │      │      │
+   │      │      └─→ пользователь взаимодействует → вызывает Server Action
+   │      │             │
+   │      │             └─→ Server Action мутирует данные → revalidatePath
+   │      │
+   │      └─→ (ревалидация, страница перерендеривается с новыми данными)
+```
+
+### Почему так
+
+1. **Меньше клиентского JS** — страницы рендерятся на сервере
+2. **SEO** — контент доступен поисковикам
+3. **Безопасность** — запросы к БД на сервере, не на клиенте
+4. **Производительность** — данные ближе к месту использования
+
+---
+
+## 5. Типовые сценарии
+
+### 5.1 Добавить новую страницу в (main)
+
+```
+1. Создать app/(main)/new-section/page.tsx
+2. Создать features/new-section/components/new-section-view.tsx
+3. Добавить ссылку в features/nav-main.tsx (или nav-secondary.tsx)
+```
+
+### 5.2 Добавить новую фичу
+
+```
+1. Создать features/{domain}/components/{domain}-view.tsx
+2. При необходимости: features/{domain}/components/{domain}-card.tsx
+3. При необходимости: features/{domain}/hooks/use-{domain}.ts
+4. Страница в app/ только собирает фичи: <NewFeatureView />
+```
+
+### 5.3 Добавить вкладку внутри сметы
+
+```
+1. Создать app/(main)/projects/[projectId]/estimates/[estimateId]/new-tab/page.tsx
+2. Создать features/estimates/estimate-tabs/components/new-tab-content.tsx
+3. Добавить значение таба в features/estimates/components/estimate-navigation-tabs.tsx
+```
+
+### 5.4 Создать форму с валидацией
+
+```
+1. Zod-схема в lib/validations.ts (или features/{domain}/validations.ts)
+2. Клиентский компонент формы в features/{domain}/components/{domain}-form.tsx
+3. Server Action в app/actions/{domain}.ts
+4. page.tsx: <NewForm action={createAction} />
+```
+
+### 5.5 Подключить БД (в будущем)
+
+```
+1. lib/db/schema.ts — описать таблицы Drizzle
+2. lib/db/index.ts — экспортировать клиент БД
+3. lib/db/queries/{domain}.ts — запросы на чтение
+4. app/actions/{domain}.ts — мутации
+```
+
+---
+
+> **Главное правило:** Открыл этот документ → нашёл нужный раздел → понял, куда класть код → положил. Если не понял → обсуждаем с командой и дополняем документ.

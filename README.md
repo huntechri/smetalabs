@@ -1,21 +1,73 @@
-# Next.js template
+# SmetaLab
 
-This is a Next.js template with shadcn/ui.
+Дашборд для управления строительными сметами и эстимейтами. Проекты, сметы, закупки, финансы — всё в одном интерфейсе.
 
-## Adding components
+> ⚠️ **Ранняя стадия:** фронтенд, вёрстка и структура. Бэкенд и работа с данными — в планах.
 
-To add components to your app, run the following command:
+## Стек
+
+| Категория | Технологии |
+|---|---|
+| Фреймворк | [Next.js 16](https://nextjs.org/) (App Router) |
+| UI | [shadcn/ui](https://ui.shadcn.com/) (radix-mira) |
+| Стили | [Tailwind CSS v4](https://tailwindcss.com/) |
+| Язык | TypeScript |
+| Пакетный менеджер | pnpm |
+| Таблицы | @tanstack/react-table |
+| Графики | Recharts |
+| Drag & Drop | @dnd-kit |
+| Иконки | Phosphor Icons, Tabler Icons |
+
+## Быстрый старт
 
 ```bash
-npx shadcn@latest add button
+# 1. Клонировать
+git clone <repo-url>
+cd smetalabs
+
+# 2. Установить зависимости (требуется pnpm)
+pnpm install
+
+# 3. Запустить dev-сервер
+pnpm dev
 ```
 
-This will place the ui components in the `components` directory.
+Открыть [http://localhost:3000](http://localhost:3000).
 
-## Using components
+**Требования:** Node.js ≥22, pnpm ≥9.
 
-To use the components in your app, import them as follows:
+## Структура проекта
 
-```tsx
-import { Button } from "@/components/ui/button";
 ```
+smetalabs/
+├── app/                    # Роутинг Next.js (App Router)
+│   ├── (auth)/             # Авторизация (логин, регистрация, сброс пароля)
+│   └── (main)/             # Основной интерфейс
+│       ├── dashboard/      # Дашборд
+│       ├── projects/       # Проекты и сметы
+│       ├── directories/    # Справочники (контрагенты, материалы, поставщики)
+│       └── procurements/   # Закупки
+├── features/               # Фиче-компоненты (бизнес-логика интерфейса)
+├── components/ui/          # UI-компоненты shadcn/ui
+├── hooks/                  # Кастомные хуки
+├── lib/                    # Утилиты
+└── public/                 # Статика
+```
+
+Подробная карта проекта: [`docs/filemap.md`](docs/filemap.md) — описаны все слои, правила именования и сценарии.
+
+## Документация
+
+- [Дизайн-система](docs/design-system.md) — цвета, токены, типографика
+- [Карта проекта (filemap)](docs/filemap.md) — структура, слои, правила
+
+## Скрипты
+
+| Команда | Назначение |
+|---|---|
+| `pnpm dev` | Dev-сервер с Turbopack |
+| `pnpm build` | Production-сборка |
+| `pnpm start` | Запуск production-сервера |
+| `pnpm lint` | ESLint |
+| `pnpm format` | Prettier (форматирование) |
+| `pnpm typecheck` | Проверка типов TypeScript |

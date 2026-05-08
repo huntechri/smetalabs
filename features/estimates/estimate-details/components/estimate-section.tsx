@@ -320,13 +320,7 @@ export function EstimateSection() {
                             }
                             value={work.price}
                           />
-                          <WorkInputField
-                            readOnly
-                            className="col-span-2 sm:col-span-1"
-                            label="Total"
-                            value={formatMoney(workTotal)}
-                            strong
-                          />
+                          <EditableBadge strong label="Total" value={formatMoney(workTotal)} />
                         </div>
                         <div className="hidden rounded-md border border-dashed border-green-300 p-1 xl:block">
                           <ActionButtons />
@@ -402,14 +396,7 @@ export function EstimateSection() {
                                       }
                                       value={material.price}
                                     />
-                                    <MaterialInputField
-                                      readOnly
-                                      label="Total"
-                                      value={formatMoney(
-                                        getMaterialTotal(material)
-                                      )}
-                                      strong
-                                    />
+                                    <EditableBadge strong label="Total" value={formatMoney(getMaterialTotal(material))} />
                                   </dl>
                                 </CardContent>
                               </Card>

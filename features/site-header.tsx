@@ -11,10 +11,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useSidebar } from "@/components/ui/sidebar"
-import { List } from "@phosphor-icons/react"
+import { List, MoonIcon, SunIcon } from "@phosphor-icons/react"
+import { useTheme } from "next-themes"
 
 export function SiteHeader() {
   const { toggleSidebar } = useSidebar()
+  const { resolvedTheme, setTheme } = useTheme()
 
   return (
     <header className="sticky top-0 z-50 flex w-full items-center border-b bg-background">
@@ -42,6 +44,18 @@ export function SiteHeader() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() =>
+            setTheme(resolvedTheme === "dark" ? "light" : "dark")
+          }
+          className="ml-auto"
+        >
+          <SunIcon className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <MoonIcon className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <span className="sr-only">Toggle theme</span>
+        </Button>
       </div>
     </header>
   )

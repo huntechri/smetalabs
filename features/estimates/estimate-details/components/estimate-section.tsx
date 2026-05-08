@@ -16,6 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { EditableBadge } from "@/components/ui/editable-badge"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
@@ -304,8 +305,7 @@ export function EstimateSection() {
 
                       <div className="flex w-full flex-col gap-3 rounded-md border border-dashed border-green-400 p-2 xl:w-auto xl:flex-row xl:items-center xl:justify-end">
                         <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 xl:w-auto xl:min-w-80">
-                          <WorkInputField
-                            inputMode="decimal"
+                          <EditableBadge
                             label="Qty"
                             onChange={(value) =>
                               updateWork(work.id, { quantity: Number(value) })
@@ -313,21 +313,14 @@ export function EstimateSection() {
                             suffix={work.unit}
                             value={work.quantity}
                           />
-                          <WorkInputField
-                            inputMode="decimal"
+                          <EditableBadge
                             label="Price"
                             onChange={(value) =>
                               updateWork(work.id, { price: Number(value) })
                             }
                             value={work.price}
                           />
-                          <WorkInputField
-                            readOnly
-                            className="col-span-2 sm:col-span-1"
-                            label="Total"
-                            value={formatMoney(workTotal)}
-                            strong
-                          />
+                          <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums"><span className="text-muted-foreground">Total:</span><span>{formatMoney(workTotal)}</span></Badge>
                         </div>
                         <div className="hidden rounded-md border border-dashed border-green-300 p-1 xl:block">
                           <ActionButtons />
@@ -375,7 +368,7 @@ export function EstimateSection() {
 
                                 <CardContent>
                                   <dl className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                                    <MaterialInputField
+                                    <EditableBadge
                                       label="Qty"
                                       onChange={(value) =>
                                         updateMaterial(work.id, material.id, {
@@ -384,18 +377,17 @@ export function EstimateSection() {
                                       }
                                       value={material.quantity}
                                     />
-                                    <MaterialInputField
-                                      inputMode="decimal"
+                                    <EditableBadge
                                       label="Consumption"
                                       onChange={(value) =>
                                         updateMaterial(work.id, material.id, {
                                           waste: parseDecimalInput(value),
                                         })
                                       }
-                                      value={formatConsumption(material.waste)}
+                                      formatDisplay={(v) => formatConsumption(Number(v))}
+                                      value={material.waste}
                                     />
-                                    <MaterialInputField
-                                      inputMode="decimal"
+                                    <EditableBadge
                                       label="Price"
                                       onChange={(value) =>
                                         updateMaterial(work.id, material.id, {
@@ -404,14 +396,7 @@ export function EstimateSection() {
                                       }
                                       value={material.price}
                                     />
-                                    <MaterialInputField
-                                      readOnly
-                                      label="Total"
-                                      value={formatMoney(
-                                        getMaterialTotal(material)
-                                      )}
-                                      strong
-                                    />
+                                    <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums"><span className="text-muted-foreground">Total:</span><span>{formatMoney(getMaterialTotal(material))}</span></Badge>
                                   </dl>
                                 </CardContent>
                               </Card>

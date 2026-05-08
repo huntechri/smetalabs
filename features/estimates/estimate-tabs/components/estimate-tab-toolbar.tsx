@@ -119,7 +119,8 @@ export function EstimateTabToolbar() {
             value={search}
           />
           <Button type="submit" variant="outline">
-            Search
+            <MagnifyingGlassIcon className="sm:hidden" data-icon="inline-start" />
+            <span className="hidden sm:inline">Search</span>
           </Button>
         </div>
       </form>

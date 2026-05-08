@@ -267,9 +267,9 @@ export function EstimateSection() {
                   onOpenChange={() => toggleWork(work.id)}
                 >
                   <div className="border-b border-dashed border-green-500 last:border-b-0">
-                    <div className="m-3 flex flex-col gap-3 rounded-md border border-dashed border-green-500 p-3 transition-colors hover:bg-muted/50 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="m-3 flex flex-col gap-3 rounded-md border border-dashed border-green-500 p-3 transition-colors hover:bg-muted/50 lg:flex-row lg:items-center lg:justify-between">
                       <div className="flex min-w-0 flex-1 flex-wrap items-start gap-3">
-                        <div className="flex w-full items-center gap-3 xl:w-auto">
+                        <div className="flex w-full items-center gap-3 lg:w-auto">
                           <CollapsibleTrigger asChild>
                             <button
                               aria-label={
@@ -291,7 +291,7 @@ export function EstimateSection() {
                             </button>
                           </CollapsibleTrigger>
                           <WorkNumber value={work.number} />
-                          <div className="ml-auto rounded-md border border-dashed border-green-300 p-1 xl:hidden">
+                          <div className="ml-auto rounded-md border border-dashed border-green-300 p-1 lg:hidden">
                             <ActionButtons />
                           </div>
                         </div>
@@ -303,8 +303,8 @@ export function EstimateSection() {
                         />
                       </div>
 
-                      <div className="flex w-full flex-col gap-3 rounded-md border border-dashed border-green-400 p-2 xl:w-auto xl:flex-row xl:items-center xl:justify-end">
-                        <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 xl:w-auto xl:min-w-80">
+                      <div className="flex w-full flex-col gap-3 rounded-md border border-dashed border-green-400 p-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
+                        <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-80">
                           <EditableBadge
                             label="Qty"
                             onChange={(value) =>
@@ -322,7 +322,7 @@ export function EstimateSection() {
                           />
                           <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums"><span className="text-muted-foreground">Total:</span><span>{formatMoney(workTotal)}</span></Badge>
                         </div>
-                        <div className="hidden rounded-md border border-dashed border-green-300 p-1 xl:block">
+                        <div className="hidden rounded-md border border-dashed border-green-300 p-1 lg:block">
                           <ActionButtons />
                         </div>
                       </div>
@@ -331,7 +331,7 @@ export function EstimateSection() {
                     <CollapsibleContent>
                       <div className="border-t border-dashed border-purple-500 bg-muted/20 px-4 py-4">
                         <div className="rounded-md border border-dashed border-purple-400 p-3">
-                          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                             {work.materials.map((material, index) => (
                               <Card
                                 key={material.id}

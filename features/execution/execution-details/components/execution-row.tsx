@@ -2,10 +2,16 @@ import type { ExecutionRow } from "@/types/execution"
 import { getTotal } from "@/lib/calculations"
 import { formatMoney } from "@/lib/formatters"
 import { ExecutionName } from "./execution-name"
-import { ExecutionValue } from "./execution-value"
+import { EditableBadge } from "@/components/ui/editable-badge"
 import { ExecutionMetricGroup } from "./execution-metric-group"
 
-export function ExecutionRow({ row }: { row: ExecutionRow }) {
+export function ExecutionRow({
+  row,
+  onUpdate,
+}: {
+  row: ExecutionRow
+  onUpdate: (id: string, updates: Partial<ExecutionRow>) => void
+}) {
   const planTotal = getTotal(row.planQuantity, row.planPrice)
   const factTotal = getTotal(row.factQuantity, row.factPrice)
   const deviationTotal = planTotal - factTotal
@@ -19,36 +25,59 @@ export function ExecutionRow({ row }: { row: ExecutionRow }) {
 
         <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)]">
           <ExecutionMetricGroup title="Plan">
-            <ExecutionValue label="Qty" value={row.planQuantity} />
-            <ExecutionValue
-              label="Price"
-              value={formatMoney(row.planPrice)}
+            <EditableBadge
+              label="Qty"
+              value={row.planQuantity}
+              onChange={(v) =>
+                onUpdate(row.id, { planQuantity: Number(v) })
+              }
             />
-            <ExecutionValue
+            <EditableBadge
+              label="Price"
+              value={row.planPrice}
+              onChange={(v) =>
+                onUpdate(row.id, { planPrice: Number(v) })
+              }
+              formatDisplay={(v) => formatMoney(Number(v))}
+            />
+            <EditableBadge
               label="Total"
               strong
-              value={formatMoney(planTotal)}
+              value={planTotal}
+              formatDisplay={(v) => formatMoney(Number(v))}
             />
           </ExecutionMetricGroup>
 
           <ExecutionMetricGroup title="Actual">
-            <ExecutionValue label="Qty" value={row.factQuantity} />
-            <ExecutionValue
-              label="Price"
-              value={formatMoney(row.factPrice)}
+            <EditableBadge
+              label="Qty"
+              value={row.factQuantity}
+              onChange={(v) =>
+                onUpdate(row.id, { factQuantity: Number(v) })
+              }
             />
-            <ExecutionValue
+            <EditableBadge
+              label="Price"
+              value={row.factPrice}
+              onChange={(v) =>
+                onUpdate(row.id, { factPrice: Number(v) })
+              }
+              formatDisplay={(v) => formatMoney(Number(v))}
+            />
+            <EditableBadge
               label="Total"
               strong
-              value={formatMoney(factTotal)}
+              value={factTotal}
+              formatDisplay={(v) => formatMoney(Number(v))}
             />
           </ExecutionMetricGroup>
 
           <ExecutionMetricGroup title="Deviation">
-            <ExecutionValue
+            <EditableBadge
               label="Total"
               strong
-              value={formatMoney(deviationTotal)}
+              value={deviationTotal}
+              formatDisplay={(v) => formatMoney(Number(v))}
             />
           </ExecutionMetricGroup>
         </div>

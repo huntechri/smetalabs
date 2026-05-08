@@ -1,3 +1,5 @@
+"use client"
+
 import { useExecution } from "@/features/execution/hooks/use-execution"
 import { ExecutionRow } from "./execution-row"
 

@@ -92,7 +92,8 @@ smetalabs/
 │   └── api/                             # API-роуты (ЕЩЁ НЕ СОЗДАНЫ — появится при разработке)
 │
 ├── types/                               # Общие типы
-│   └── purchase.ts                      #   Тип PurchaseRow
+│   ├── purchase.ts                      #   Тип PurchaseRow
+│   └── execution.ts                     #   Тип ExecutionRow
 │
 ├── components/                          # Общие компоненты проекта
 │   ├── ui/                              # ⛔ shadcn/ui компоненты — НЕ ТРОГАТЬ, не кастомизировать
@@ -179,6 +180,21 @@ smetalabs/
 │   │           ├── purchase-name.tsx     #   Название позиции
 │   │           ├── purchase-value.tsx    #   Бейдж «label: value» (Badge из shadcn/ui)
 │   │           └── purchase-metric-group.tsx  # Группа Plan / Actual / Deviation
+│   │
+│   ├── execution/                       # Фича «Выполнение» (✅ эталонная структура, идентична purchases)
+│   │   ├── __mocks__/
+│   │   │   └── execution.ts             #   Мок-данные выполнения
+│   │   ├── components/
+│   │   │   └── execution-view.tsx       #   Обёртка со скроллом
+│   │   ├── hooks/
+│   │   │   └── use-execution.ts         #   Хук с состоянием (useState, useMemo)
+│   │   └── execution-details/
+│   │       └── components/
+│   │           ├── execution-section.tsx  #   Композиция (хук → map → ExecutionRow)
+│   │           ├── execution-row.tsx      #   Строка выполнения — собирает всё вместе
+│   │           ├── execution-name.tsx     #   Название позиции
+│   │           ├── execution-value.tsx    #   Бейдж «label: value»
+│   │           └── execution-metric-group.tsx  # Группа метрик
 │   │
 │   └── ... (новые фичи создавать здесь по доменному принципу)
 │
@@ -491,11 +507,12 @@ services/                       # Бизнес-логика (когда появ
 
 ### 2.5 Типы
 
-> **Текущее состояние:** Директория `types/` создана. Пока содержит только `purchase.ts`.
+> **Текущее состояние:** Директория `types/` создана. Содержит `purchase.ts` и `execution.ts`.
 
 ```
 types/
-└── purchase.ts             # PurchaseRow (id, title, planQuantity, planPrice, factQuantity, factPrice)
+├── purchase.ts             # PurchaseRow (id, title, planQuantity, planPrice, factQuantity, factPrice)
+└── execution.ts            # ExecutionRow (структура идентична PurchaseRow)
 ```
 
 #### План расширения
@@ -712,6 +729,22 @@ features/suppliers/
         ├── supplier-row.tsx
         └── ...
 ```
+
+**Фича «Выполнение» (execution)** — создана по тому же эталону, что и `purchases`. Структура полностью идентична:
+```
+types/execution.ts                     ← тип ExecutionRow
+features/execution/
+├── __mocks__/execution.ts             ← мок-данные
+├── hooks/use-execution.ts             ← хук
+├── components/execution-view.tsx       ← обёртка
+└── execution-details/components/      ← детальные компоненты
+    ├── execution-section.tsx
+    ├── execution-row.tsx
+    ├── execution-name.tsx
+    ├── execution-value.tsx
+    └── execution-metric-group.tsx
+```
+При добавлении аналогичных фич (финансы, документы и т.д.) — использовать ту же структуру.
 
 ### 5.3 Добавить вкладку внутри сметы
 

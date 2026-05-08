@@ -1,5 +1,5 @@
-import { EstimateTabPlaceholder } from "@/features/estimates/estimate-tabs/components/estimate-tab-placeholder"
+import { ExecutionView } from "@/features/execution/components/execution-view"
 
 export default function EstimateExecutionPage() {
-  return <EstimateTabPlaceholder title="Выполнение" />
+  return <ExecutionView />
 }

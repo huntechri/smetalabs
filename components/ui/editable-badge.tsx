@@ -65,7 +65,7 @@ export function EditableBadge({
   if (editing) {
     return (
       <Input
-        className={cn("h-5 w-16 text-xs tabular-nums px-1", className)}
+        className={cn("h-5 w-20 md:w-24 text-xs tabular-nums px-1", className)}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}

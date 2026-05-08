@@ -7,7 +7,7 @@ interface EstimateEmptyStateProps {
 
 export function EstimateEmptyState({ onCreateClick }: EstimateEmptyStateProps) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-gray-400 p-12 text-center">
+    <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-gray-400 p-6 sm:p-8 md:p-12 text-center">
       <div className="flex flex-col items-center gap-4">
         {/* Placeholder icon */}
         <div className="flex size-16 items-center justify-center rounded-full border border-dashed border-gray-400">

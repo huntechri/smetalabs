@@ -18,7 +18,7 @@ export function ExecutionRow({
 
   return (
     <div className="border-b border-dashed border-green-500 last:border-b-0">
-      <div className="m-3 grid gap-3 rounded-md border border-dashed border-green-500 p-3 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]">
+      <div className="m-3 grid gap-3 rounded-md border border-dashed border-green-500 p-3 transition-colors hover:bg-muted/50 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]">
         <div className="flex min-w-0 flex-col gap-3 rounded-md border border-dashed border-green-300 p-2">
           <ExecutionName value={row.title} unit={row.unit} />
         </div>

@@ -4,7 +4,6 @@ import { formatMoney } from "@/lib/formatters"
 import { GlobalPurchasesName } from "./global-purchases-name"
 import { EditableBadge } from "@/components/ui/editable-badge"
 import { GlobalPurchasesMetricGroup } from "./global-purchases-metric-group"
-import { Image as ImageIcon } from "@phosphor-icons/react"
 
 export function GlobalPurchasesRow({
   row,
@@ -24,13 +23,7 @@ export function GlobalPurchasesRow({
           <GlobalPurchasesName value={row.title} unit={row.unit} />
         </div>
 
-        <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)]">
-          <GlobalPurchasesMetricGroup title="Image">
-            <div className="size-14 rounded-md border border-dashed border-slate-300 bg-muted/30 flex items-center justify-center shrink-0">
-              <ImageIcon className="size-4 text-muted-foreground" />
-            </div>
-          </GlobalPurchasesMetricGroup>
-
+        <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[1fr_minmax(80px,0.4fr)]">
           <GlobalPurchasesMetricGroup title="Actual">
             <EditableBadge
               label="Qty"

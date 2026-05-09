@@ -37,6 +37,7 @@ export function GlobalPurchasesRow({
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const [selectedStatus, setSelectedStatus] = useState("Ordered")
+  const [selectedObject, setSelectedObject] = useState("None")
 
   return (
     <div className="border-b border-dashed border-green-500 last:border-b-0">
@@ -45,7 +46,7 @@ export function GlobalPurchasesRow({
           <GlobalPurchasesName value={row.title} unit={row.unit} />
         </div>
 
-        <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[1fr_minmax(80px,0.4fr)]">
+        <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[1fr_minmax(200px,0.5fr)_minmax(140px,0.35fr)]">
           <GlobalPurchasesMetricGroup title="Actual">
             <EditableBadge
               label="Qty"
@@ -110,6 +111,33 @@ export function GlobalPurchasesRow({
                       onClick={() => setSelectedStatus(status)}
                     >
                       {status}
+                    </DropdownMenuItem>
+                  ),
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </GlobalPurchasesMetricGroup>
+
+          <GlobalPurchasesMetricGroup title="Object">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Badge
+                  variant="outline"
+                  className="gap-1 rounded-md px-1.5 py-0.5 font-normal cursor-pointer hover:bg-muted"
+                >
+                  <span className="text-muted-foreground">Object:</span>
+                  <span>{selectedObject}</span>
+                  <CaretDown className="size-2.5" />
+                </Badge>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {["Object A", "Object B", "Object C", "None"].map(
+                  (obj) => (
+                    <DropdownMenuItem
+                      key={obj}
+                      onClick={() => setSelectedObject(obj)}
+                    >
+                      {obj}
                     </DropdownMenuItem>
                   ),
                 )}

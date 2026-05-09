@@ -14,27 +14,27 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const estimateTabs = [
   {
-    label: "Estimate",
+    label: "Смета",
     path: "",
     value: "estimate",
   },
   {
-    label: "Purchases",
+    label: "Закупки",
     path: "purchases",
     value: "purchases",
   },
   {
-    label: "Execution",
+    label: "Исполнение",
     path: "execution",
     value: "execution",
   },
   {
-    label: "Finances",
+    label: "Финансы",
     path: "finances",
     value: "finances",
   },
   {
-    label: "Documents",
+    label: "Документы",
     path: "documents",
     value: "documents",
   },
@@ -77,7 +77,7 @@ export function EstimateNavigationTabs() {
             }}
           >
             <SelectTrigger className="flex w-fit" size="sm">
-              <SelectValue placeholder="Estimate section" />
+              <SelectValue placeholder="Раздел сметы" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>

@@ -36,17 +36,17 @@ export function ForgotPasswordForm({
                 />
               </Field>
               <Field>
-                <Button type="submit">Send Reset Link</Button>
+                <Button type="submit">Отправить ссылку</Button>
               </Field>
               <FieldDescription className="text-center">
-                Remember your password? <Link href="/login" className="underline underline-offset-4">Login</Link>
+                Вспомнили пароль? <Link href="/login" className="underline underline-offset-4">Войти</Link>
               </FieldDescription>
             </FieldGroup>
           </form>
           <div className="relative hidden bg-muted md:block">
             <img
               src="/images/auth-bg.png"
-              alt="Image"
+              alt="Изображение"
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
             />
           </div>
@@ -54,7 +54,7 @@ export function ForgotPasswordForm({
       </Card>
       <FieldDescription className="px-6 text-center">
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+        and <a href="#">Политика конфиденциальности</a>.
       </FieldDescription>
     </div>
   )

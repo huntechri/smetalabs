@@ -26,11 +26,8 @@ export function GlobalPurchasesRow({
 
         <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)]">
           <GlobalPurchasesMetricGroup title="Plan">
-            <div className="relative aspect-square w-full max-w-[120px] rounded-md border border-dashed border-slate-300 bg-muted/30 flex items-center justify-center">
-              <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                <ImageIcon className="size-6" />
-                <span className="text-[10px] leading-tight text-center">Image</span>
-              </div>
+            <div className="size-14 rounded-md border border-dashed border-slate-300 bg-muted/30 flex items-center justify-center shrink-0">
+              <ImageIcon className="size-4 text-muted-foreground" />
             </div>
           </GlobalPurchasesMetricGroup>
 

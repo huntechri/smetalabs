@@ -27,7 +27,7 @@ const filterOptions = ["Все объекты", "Объект А", "Объект
 const actions = [
   { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
   { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
-  { label: "Новая закупка", icon: <PlusIcon data-icon="inline-start" /> },
+  { label: "Закупка", icon: <PlusIcon data-icon="inline-start" /> },
 ]
 
 export function GlobalPurchasesToolbar() {

@@ -24,16 +24,16 @@ export function ExecutionRow({
         </div>
 
         <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)]">
-          <ExecutionMetricGroup title="Plan">
+          <ExecutionMetricGroup title="План">
             <EditableBadge
-              label="Qty"
+              label="Кол-во"
               value={row.planQuantity}
               onChange={(v) =>
                 onUpdate(row.id, { planQuantity: Number(v) })
               }
             />
             <EditableBadge
-              label="Price"
+              label="Цена"
               value={row.planPrice}
               onChange={(v) =>
                 onUpdate(row.id, { planPrice: Number(v) })
@@ -41,23 +41,23 @@ export function ExecutionRow({
               formatDisplay={(v) => formatMoney(Number(v))}
             />
             <EditableBadge
-              label="Total"
+              label="Итого"
               strong
               value={planTotal}
               formatDisplay={(v) => formatMoney(Number(v))}
             />
           </ExecutionMetricGroup>
 
-          <ExecutionMetricGroup title="Actual">
+          <ExecutionMetricGroup title="Факт">
             <EditableBadge
-              label="Qty"
+              label="Кол-во"
               value={row.factQuantity}
               onChange={(v) =>
                 onUpdate(row.id, { factQuantity: Number(v) })
               }
             />
             <EditableBadge
-              label="Price"
+              label="Цена"
               value={row.factPrice}
               onChange={(v) =>
                 onUpdate(row.id, { factPrice: Number(v) })
@@ -65,16 +65,16 @@ export function ExecutionRow({
               formatDisplay={(v) => formatMoney(Number(v))}
             />
             <EditableBadge
-              label="Total"
+              label="Итого"
               strong
               value={factTotal}
               formatDisplay={(v) => formatMoney(Number(v))}
             />
           </ExecutionMetricGroup>
 
-          <ExecutionMetricGroup title="Deviation">
+          <ExecutionMetricGroup title="Отклонение">
             <EditableBadge
-              label="Total"
+              label="Итого"
               strong
               value={deviationTotal}
               formatDisplay={(v) => formatMoney(Number(v))}

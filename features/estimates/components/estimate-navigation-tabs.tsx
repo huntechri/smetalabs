@@ -77,7 +77,7 @@ export function EstimateNavigationTabs() {
             }}
           >
             <SelectTrigger className="flex w-fit" size="sm">
-              <SelectValue placeholder="Estimate section" />
+              <SelectValue placeholder="Раздел сметы" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>

@@ -38,7 +38,7 @@ export function CreateSectionDialog({
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create New Section</DialogTitle>
+            <DialogTitle>Создать новый раздел</DialogTitle>
             <DialogDescription>
               Enter the section number and name to start working on your estimate.
             </DialogDescription>
@@ -63,14 +63,14 @@ export function CreateSectionDialog({
               <Input
                 id="name"
                 name="name"
-                placeholder="Preparation works"
+                placeholder="Подготовительные работы"
                 className="col-span-3"
                 required
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Create</Button>
+            <Button type="submit">Создать</Button>
           </DialogFooter>
         </form>
       </DialogContent>

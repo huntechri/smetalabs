@@ -76,8 +76,8 @@ export function EstimateSection() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 rounded-md border border-dashed border-orange-300 p-2 sm:min-w-56">
-              <SummaryValue label="Works" value={totals.workTotal} />
-              <SummaryValue label="Materials" value={totals.materialTotal} />
+              <SummaryValue label="Работы" value={totals.workTotal} />
+              <SummaryValue label="Материалы" value={totals.materialTotal} />
             </div>
           </button>
         </CollapsibleTrigger>
@@ -135,7 +135,7 @@ export function EstimateSection() {
                       <div className="flex w-full flex-col gap-3 rounded-md border border-dashed border-green-400 p-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
                         <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-80">
                           <EditableBadge
-                            label="Qty"
+                            label="Кол-во"
                             onChange={(value) =>
                               updateWork(work.id, { quantity: Number(value) })
                             }
@@ -143,7 +143,7 @@ export function EstimateSection() {
                             value={work.quantity}
                           />
                           <EditableBadge
-                            label="Price"
+                            label="Цена"
                             onChange={(value) =>
                               updateWork(work.id, { price: Number(value) })
                             }
@@ -198,7 +198,7 @@ export function EstimateSection() {
                                 <CardContent>
                                   <dl className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
                                     <EditableBadge
-                                      label="Qty"
+                                      label="Кол-во"
                                       onChange={(value) =>
                                         updateMaterial(work.id, material.id, {
                                           quantity: Number(value),
@@ -207,7 +207,7 @@ export function EstimateSection() {
                                       value={material.quantity}
                                     />
                                     <EditableBadge
-                                      label="Consumption"
+                                      label="Расход"
                                       onChange={(value) =>
                                         updateMaterial(work.id, material.id, {
                                           waste: parseDecimalInput(value),
@@ -217,7 +217,7 @@ export function EstimateSection() {
                                       value={material.waste}
                                     />
                                     <EditableBadge
-                                      label="Price"
+                                      label="Цена"
                                       onChange={(value) =>
                                         updateMaterial(work.id, material.id, {
                                           price: Number(value),
@@ -349,9 +349,9 @@ function MaterialActions({ title }: { title: string }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
-            <DropdownMenuItem>Edit</DropdownMenuItem>
-            <DropdownMenuItem>Duplicate</DropdownMenuItem>
-            <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+            <DropdownMenuItem>Редактировать</DropdownMenuItem>
+            <DropdownMenuItem>Дублировать</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive">Удалить</DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -372,7 +372,7 @@ function ActionButtons() {
   return (
     <div className="flex items-center gap-1">
       <FramedButton
-        aria-label="Edit work"
+        aria-label="Редактировать работу"
         frameClassName="border-green-300"
         size="icon-sm"
         variant="ghost"
@@ -380,7 +380,7 @@ function ActionButtons() {
         <PencilSimpleIcon />
       </FramedButton>
       <FramedButton
-        aria-label="Duplicate work"
+        aria-label="Дублировать работу"
         frameClassName="border-green-300"
         size="icon-sm"
         variant="ghost"
@@ -388,7 +388,7 @@ function ActionButtons() {
         <CopyIcon />
       </FramedButton>
       <FramedButton
-        aria-label="Work settings"
+        aria-label="Настройки работы"
         frameClassName="border-green-300"
         size="icon-sm"
         variant="ghost"

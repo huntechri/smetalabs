@@ -22,7 +22,7 @@ export function SignupForm({
           <form className="p-6 md:p-8">
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
-                <h1 className="text-2xl font-bold">Create your account</h1>
+                <h1 className="text-2xl font-bold">Создать аккаунт</h1>
                 <p className="text-sm text-balance text-muted-foreground">
                   Enter your email below to create your account
                 </p>
@@ -43,7 +43,7 @@ export function SignupForm({
               <Field>
                 <Field className="grid grid-cols-2 gap-4">
                   <Field>
-                    <FieldLabel htmlFor="password">Password</FieldLabel>
+                    <FieldLabel htmlFor="password">Пароль</FieldLabel>
                     <Input id="password" type="password" required />
                   </Field>
                   <Field>
@@ -58,7 +58,7 @@ export function SignupForm({
                 </FieldDescription>
               </Field>
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button type="submit">Создать аккаунт</Button>
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
@@ -71,7 +71,7 @@ export function SignupForm({
                       fill="currentColor"
                     />
                   </svg>
-                  <span className="sr-only">Sign up with Apple</span>
+                  <span className="sr-only">Регистрация через Apple</span>
                 </Button>
                 <Button variant="outline" type="button">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -80,7 +80,7 @@ export function SignupForm({
                       fill="currentColor"
                     />
                   </svg>
-                  <span className="sr-only">Sign up with Google</span>
+                  <span className="sr-only">Регистрация через Google</span>
                 </Button>
                 <Button variant="outline" type="button">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -89,11 +89,11 @@ export function SignupForm({
                       fill="currentColor"
                     />
                   </svg>
-                  <span className="sr-only">Sign up with Meta</span>
+                  <span className="sr-only">Регистрация через Meta</span>
                 </Button>
               </Field>
               <FieldDescription className="text-center">
-                Already have an account? <Link href="/login" className="underline underline-offset-4">Sign in</Link>
+                Уже есть аккаунт? <Link href="/login" className="underline underline-offset-4">Войти</Link>
               </FieldDescription>
             </FieldGroup>
           </form>
@@ -108,7 +108,7 @@ export function SignupForm({
       </Card>
       <FieldDescription className="px-6 text-center">
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+        and <a href="#">Политика конфиденциальности</a>.
       </FieldDescription>
     </div>
   )

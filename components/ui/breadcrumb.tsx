@@ -7,7 +7,7 @@ import { CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react"
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
   return (
     <nav
-      aria-label="breadcrumb"
+      aria-label="Навигация"
       data-slot="breadcrumb"
       className={cn(className)}
       {...props}

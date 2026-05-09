@@ -33,7 +33,7 @@ export function SectionCards() {
             Trending up this month <TrendUp className="size-4" />
           </div>
           <div className="text-muted-foreground">
-            Visitors for the last 6 months
+            Посетители за последние 6 месяцев
           </div>
         </CardFooter>
       </Card>

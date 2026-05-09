@@ -166,7 +166,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   },
   {
     accessorKey: "type",
-    header: "Section Type",
+    header: "Тип раздела",
     cell: ({ row }) => (
       <div className="w-32">
         <Badge variant="outline" className="px-1.5 text-muted-foreground">
@@ -621,21 +621,21 @@ export function DataTable({
 }
 
 const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
+  { month: "Январь", desktop: 186, mobile: 80 },
+  { month: "Февраль", desktop: 305, mobile: 200 },
+  { month: "Март", desktop: 237, mobile: 120 },
+  { month: "Апрель", desktop: 73, mobile: 190 },
+  { month: "Май", desktop: 209, mobile: 130 },
+  { month: "Июнь", desktop: 214, mobile: 140 },
 ]
 
 const chartConfig = {
   desktop: {
-    label: "Desktop",
+    label: "ПК",
     color: "var(--primary)",
   },
   mobile: {
-    label: "Mobile",
+    label: "Мобильные",
     color: "var(--primary)",
   },
 } satisfies ChartConfig
@@ -730,13 +730,13 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                   <SelectContent>
                     <SelectGroup>
                       <SelectItem value="Table of Contents">
-                        Table of Contents
+                        Содержание
                       </SelectItem>
                       <SelectItem value="Executive Summary">
-                        Executive Summary
+                        Резюме
                       </SelectItem>
                       <SelectItem value="Technical Approach">
-                        Technical Approach
+                        Технический подход
                       </SelectItem>
                       <SelectItem value="Design">Дизайн</SelectItem>
                       <SelectItem value="Capabilities">Возможности</SelectItem>

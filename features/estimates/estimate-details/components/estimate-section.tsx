@@ -103,8 +103,8 @@ export function EstimateSection() {
                             <button
                               aria-label={
                                 isExpanded
-                                  ? "Collapse work"
-                                  : "Expand work"
+                                  ? "Свернуть работу"
+                                  : "Развернуть работу"
                               }
                               type="button"
                             >

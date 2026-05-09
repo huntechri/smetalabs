@@ -63,4 +63,4 @@ export const estimateWorks: Work[] = [
   },
 ]
 
-export const stages = ["Stage 1: Rough work"]
+export const stages = ["Этап 1: Черновые работы"]

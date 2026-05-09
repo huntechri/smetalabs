@@ -91,7 +91,7 @@ export function LoginForm({
           <div className="relative hidden bg-muted md:block">
             <img
               src="/images/auth-bg.png"
-              alt="Image"
+              alt="Изображение"
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
             />
           </div>

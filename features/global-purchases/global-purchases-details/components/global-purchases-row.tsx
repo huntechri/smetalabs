@@ -47,7 +47,7 @@ export function GlobalPurchasesRow({
         </div>
 
         <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[1fr_minmax(200px,0.5fr)_minmax(140px,0.35fr)]">
-          <GlobalPurchasesMetricGroup title="Факт">
+          <GlobalPurchasesMetricGroup title="Стоимость">
             <EditableBadge
               label="Кол-во"
               value={row.factQuantity}
@@ -71,7 +71,7 @@ export function GlobalPurchasesRow({
             />
           </GlobalPurchasesMetricGroup>
 
-          <GlobalPurchasesMetricGroup title="Отклонение">
+          <GlobalPurchasesMetricGroup title="Параметры">
             <Popover>
               <PopoverTrigger asChild>
                 <Badge

@@ -93,8 +93,8 @@ smetalabs/
 │
 ├── types/                               # Общие типы
 │   ├── purchase.ts                      #   Тип PurchaseRow
-│   └── execution.ts                     #   Тип ExecutionRow
-│
+│   ├── execution.ts                     #   Тип ExecutionRow
+│   ├── estimate.ts                      #   Типы Work, Material
 ├── components/                          # Общие компоненты проекта
 │   ├── ui/                              # ⛔ shadcn/ui компоненты — НЕ ТРОГАТЬ, не кастомизировать
 │   │   ├── avatar.tsx                   #   (кроме случаев осознанного расширения через пропсы)
@@ -153,9 +153,13 @@ smetalabs/
 │   │       ├── project-card.tsx         # Карточка одного проекта
 │   │       └── section-cards.tsx        # Карточки статистики (раздел проектов)
 │   │
-│   ├── estimates/                       # Фича «Сметы»
+│   ├── estimates/                       # Фича «Сметы» (✅ полная структура)
+│   │   ├── __mocks__/
+│   │   │   └── estimates.ts             #   Мок-данные (работы + материалы)
 │   │   ├── components/
 │   │   │   └── estimate-navigation-tabs.tsx  # Табы навигации по смете
+│   │   ├── hooks/
+│   │   │   └── use-estimates.ts         #   Хук с состоянием (useState, useMemo)
 │   │   ├── estimate-details/
 │   │   │   └── components/
 │   │   │       ├── estimate-section.tsx        # Секция сметы (работа/материал)

@@ -24,7 +24,7 @@ export function ProjectCard({ title, description, image, link }: ProjectCardProp
             </CardContent>
             <CardFooter>
                 <Button asChild>
-                    <a href={link}>View Project</a>
+                    <a href={link}>Просмотр проекта</a>
                 </Button>
             </CardFooter>
         </Card>

@@ -54,14 +54,14 @@ export function EstimateMaterialCard({
       <CardContent>
         <dl className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
           <EditableBadge
-            label="Qty"
+            label="Кол-во"
             onChange={(value) =>
               onUpdate(material.id, { quantity: Number(value) })
             }
             value={material.quantity}
           />
           <EditableBadge
-            label="Consumption"
+            label="Расход"
             onChange={(value) =>
               onUpdate(material.id, {
                 waste: parseDecimalInput(value),
@@ -71,7 +71,7 @@ export function EstimateMaterialCard({
             value={material.waste}
           />
           <EditableBadge
-            label="Price"
+            label="Цена"
             onChange={(value) =>
               onUpdate(material.id, { price: Number(value) })
             }
@@ -81,7 +81,7 @@ export function EstimateMaterialCard({
             variant="outline"
             className="gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums"
           >
-            <span className="text-muted-foreground">Total:</span>
+            <span className="text-muted-foreground">Итого:</span>
             <span>
               {formatMoney(
                 getTotal(material.quantity, material.price)

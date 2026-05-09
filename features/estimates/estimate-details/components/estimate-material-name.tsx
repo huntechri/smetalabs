@@ -10,7 +10,7 @@ export function EstimateMaterialName({
   return (
     <label className="block min-w-0 rounded-md border border-dashed border-blue-300 p-2">
       <span className="mb-1 block text-xs text-muted-foreground uppercase">
-        Name
+        Название
       </span>
       <Textarea
         className="min-h-16"

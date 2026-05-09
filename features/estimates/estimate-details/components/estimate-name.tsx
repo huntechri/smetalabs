@@ -10,7 +10,7 @@ export function EstimateName({
   return (
     <label className="min-w-48 flex-1 rounded-md border border-dashed border-green-300 p-2">
       <span className="mb-1 block text-xs text-muted-foreground uppercase">
-        Name
+        Название
       </span>
       <Textarea
         className="min-h-16"

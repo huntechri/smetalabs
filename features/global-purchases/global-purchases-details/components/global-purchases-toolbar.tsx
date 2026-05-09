@@ -34,7 +34,7 @@ export function GlobalPurchasesToolbar() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") ?? "")
-  const [filterObject, setFilterObject] = useState("All Objects")
+  const [filterObject, setFilterObject] = useState("Все объекты")
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
 
   useEffect(() => {

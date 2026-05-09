@@ -62,9 +62,9 @@ export function EstimateSection() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 rounded-md border border-dashed border-orange-300 p-2 sm:min-w-56">
-              <EstimateSummaryValue label="Works" value={totals.workTotal} />
+              <EstimateSummaryValue label="Работы" value={totals.workTotal} />
               <EstimateSummaryValue
-                label="Materials"
+                label="Материалы"
                 value={totals.materialTotal}
               />
             </div>
@@ -92,11 +92,11 @@ export function EstimateSection() {
         <div className="flex flex-wrap items-center gap-2">
           <FramedButton frameClassName="border-yellow-300" variant="outline">
             <PlusIcon data-icon="inline-start" />
-            Section
+            Раздел
           </FramedButton>
           <FramedButton frameClassName="border-yellow-300" variant="outline">
             <PlusIcon data-icon="inline-start" />
-            Work
+            Работа
           </FramedButton>
         </div>
         <FramedButton
@@ -104,7 +104,7 @@ export function EstimateSection() {
           variant="destructive"
         >
           <TrashIcon data-icon="inline-start" />
-          Delete section
+          Удалить раздел
         </FramedButton>
       </div>
     </section>

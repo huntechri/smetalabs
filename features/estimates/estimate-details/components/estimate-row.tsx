@@ -45,7 +45,7 @@ export function EstimateRow({
             <div className="flex w-full items-center gap-3 lg:w-auto">
               <CollapsibleTrigger asChild>
                 <button
-                  aria-label={isExpanded ? "Collapse work" : "Expand work"}
+                  aria-label={isExpanded ? "Свернуть работу" : "Развернуть работу"}
                   type="button"
                 >
                   <Frame className="border-green-300">
@@ -75,7 +75,7 @@ export function EstimateRow({
           <div className="flex w-full flex-col gap-3 rounded-md border border-dashed border-green-400 p-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
             <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-80">
               <EditableBadge
-                label="Qty"
+                label="Кол-во"
                 onChange={(value) =>
                   onUpdateWork(work.id, { quantity: Number(value) })
                 }
@@ -83,7 +83,7 @@ export function EstimateRow({
                 value={work.quantity}
               />
               <EditableBadge
-                label="Price"
+                label="Цена"
                 onChange={(value) =>
                   onUpdateWork(work.id, { price: Number(value) })
                 }
@@ -93,7 +93,7 @@ export function EstimateRow({
                 variant="outline"
                 className="gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums"
               >
-                <span className="text-muted-foreground">Total:</span>
+                <span className="text-muted-foreground">Итого:</span>
                 <span>{formatMoney(workTotal)}</span>
               </Badge>
             </div>
@@ -126,7 +126,7 @@ export function EstimateRow({
                   variant="outline"
                 >
                   <PlusIcon data-icon="inline-start" />
-                  Material
+                  Материал
                 </FramedButton>
               </div>
             </div>

@@ -36,51 +36,51 @@ const data = {
   },
   navMain: [
     {
-      title: "Dashboard",
+      title: "Дашборд",
       url: "/dashboard",
       icon: <SquaresFour />,
       isActive: true,
     },
     {
-      title: "Projects",
+      title: "Проекты",
       url: "/projects",
       icon: <FolderSimple />,
     },
     {
-      title: "Procurements",
+      title: "Закупки",
       url: "/procurements",
       icon: <Package />,
     },
     {
-      title: "Team",
+      title: "Команда",
       url: "/team",
       icon: <Users />,
     },
     {
-      title: "Directories",
+      title: "Справочники",
       url: "/directories",
       icon: <Folders />,
       items: [
         {
-          title: "Counterparties",
+          title: "Контрагенты",
           url: "/directories/counterparties",
         },
         {
-          title: "Materials",
+          title: "Материалы",
           url: "/directories/materials",
         },
         {
-          title: "Suppliers",
+          title: "Поставщики",
           url: "/directories/suppliers",
         },
         {
-          title: "Works",
+          title: "Работы",
           url: "/directories/works",
         },
       ],
     },
     {
-      title: "Templates",
+      title: "Шаблоны",
       url: "/templates",
       icon: <Files />,
     },
@@ -103,7 +103,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">SmetaLab</span>
-                  <span className="truncate text-xs">SaaS Platform</span>
+                  <span className="truncate text-xs">SaaS Платформа</span>
                 </div>
               </a>
             </SidebarMenuButton>

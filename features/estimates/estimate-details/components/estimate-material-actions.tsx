@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -15,7 +17,7 @@ export function EstimateMaterialActions({ title }: { title: string }) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            aria-label={`Material actions for ${title}`}
+            aria-label={`Действия с материалом ${title}`}
             size="icon-sm"
             type="button"
             variant="ghost"
@@ -25,9 +27,9 @@ export function EstimateMaterialActions({ title }: { title: string }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
-            <DropdownMenuItem>Edit</DropdownMenuItem>
-            <DropdownMenuItem>Duplicate</DropdownMenuItem>
-            <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+            <DropdownMenuItem>Редактировать</DropdownMenuItem>
+            <DropdownMenuItem>Дублировать</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive">Удалить</DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>

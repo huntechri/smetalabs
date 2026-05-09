@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
+import { Calendar } from "@/components/ui/calendar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import {
   CalendarDots,
   ExportIcon,
@@ -21,8 +23,6 @@ import {
 } from "@phosphor-icons/react"
 
 const filterOptions = ["All Objects", "Object A", "Object B", "Object C", "None"]
-
-const dateFilterOptions = ["All Dates", "Today", "This Week", "This Month", "Custom..."]
 
 const actions = [
   { label: "Import", icon: <FileArrowDownIcon data-icon="inline-start" /> },
@@ -35,7 +35,7 @@ export function GlobalPurchasesToolbar() {
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") ?? "")
   const [filterObject, setFilterObject] = useState("All Objects")
-  const [dateFilter, setDateFilter] = useState("All Dates")
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>()
 
   useEffect(() => {
     setSearch(searchParams.get("q") ?? "")
@@ -104,23 +104,16 @@ export function GlobalPurchasesToolbar() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <Popover>
+            <PopoverTrigger asChild>
               <Button size="sm" type="button" variant="outline" aria-label="Date filter">
                 <CalendarDots />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {dateFilterOptions.map((option) => (
-                <DropdownMenuItem
-                  key={option}
-                  onClick={() => setDateFilter(option)}
-                >
-                  {option}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} />
+            </PopoverContent>
+          </Popover>
         </ButtonGroup>
       </div>
     </div>

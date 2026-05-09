@@ -36,7 +36,7 @@ export function GlobalPurchasesRow({
   const deviationTotal = planTotal - factTotal
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
-  const [selectedStatus, setSelectedStatus] = useState("Заказано")
+  const [selectedSupplier, setSelectedSupplier] = useState("Поставщик 1")
   const [selectedObject, setSelectedObject] = useState("Нет")
 
   return (
@@ -98,17 +98,17 @@ export function GlobalPurchasesRow({
                   variant="outline"
                   className="gap-1 rounded-md px-1.5 py-0.5 font-normal cursor-pointer hover:bg-muted"
                 >
-                  <span className="text-muted-foreground">Статус:</span>
-                  <span>{selectedStatus}</span>
+                  <span className="text-muted-foreground">Поставщик:</span>
+                  <span>{selectedSupplier}</span>
                   <CaretDown className="size-2.5" />
                 </Badge>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                {["Заказано", "В пути", "Доставлено", "Отменено"].map(
+                {["Поставщик 1", "Поставщик 2", "Поставщик 3", "Без поставщика"].map(
                   (status) => (
                     <DropdownMenuItem
                       key={status}
-                      onClick={() => setSelectedStatus(status)}
+                      onClick={() => setSelectedSupplier(status)}
                     >
                       {status}
                     </DropdownMenuItem>

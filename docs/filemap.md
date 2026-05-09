@@ -113,6 +113,8 @@ smetalabs/
 │   │   ├── editable-badge.tsx
 │   │   ├── empty.tsx
 │   │   ├── field.tsx
+│   │   ├── frame.tsx                    #   Декоративная обёртка с dashed border
+│   │   ├── framed-button.tsx            #   Button, обёрнутый в Frame
 │   │   ├── input.tsx
 │   │   ├── label.tsx
 │   │   ├── popover.tsx
@@ -157,7 +159,7 @@ smetalabs/
 │   │       ├── project-card.tsx         # Карточка одного проекта
 │   │       └── section-cards.tsx        # Карточки статистики (раздел проектов)
 │   │
-│   ├── estimates/                       # Фича «Сметы» (✅ полная структура)
+│   ├── estimates/                       # Фича «Сметы» (✅ полная структура — декомпозирована)
 │   │   ├── __mocks__/
 │   │   │   └── estimates.ts             #   Мок-данные (работы + материалы)
 │   │   ├── components/
@@ -166,7 +168,17 @@ smetalabs/
 │   │   │   └── use-estimates.ts         #   Хук с состоянием (useState, useMemo)
 │   │   ├── estimate-details/
 │   │   │   └── components/
-│   │   │       ├── estimate-section.tsx        # Секция сметы (работа/материал)
+│   │   │       ├── estimate-section.tsx        # Секция сметы — композиция (112 строк)
+│   │   │       ├── estimate-row.tsx            # Строка работы (collapsible + метрики + материалы)
+│   │   │       ├── estimate-name.tsx           # Поле названия работы (textarea)
+│   │   │       ├── estimate-value.tsx          # Бейдж «label: value»
+│   │   │       ├── estimate-metric-group.tsx   # Группа метрик с заголовком
+│   │   │       ├── estimate-material-card.tsx  # Карточка материала (Card + метрики)
+│   │   │       ├── estimate-material-name.tsx  # Поле названия материала
+│   │   │       ├── estimate-material-actions.tsx # Меню материала (Edit/Duplicate/Delete)
+│   │   │       ├── estimate-work-number.tsx    # Номер работы (№ + value)
+│   │   │       ├── estimate-work-actions.tsx   # Кнопки действий работы
+│   │   │       ├── estimate-summary-value.tsx  # Сводные итоги (label + value)
 │   │   │       ├── create-section-dialog.tsx   # Диалог создания секции
 │   │   │       └── estimate-empty-state.tsx    # Пустое состояние сметы
 │   │   └── estimate-tabs/

@@ -67,7 +67,6 @@ cat /home/openclaw/.openclaw/workspace/smetalabs/package.json
 - `features/dashboard/section-cards-dashboard.tsx`
 - `features/projects/components/project-card.tsx`
 - `features/projects/components/projects-view.tsx`
-- `features/projects/components/section-cards.tsx`
 - `features/auth/components/login-form.tsx`
 - `features/auth/components/signup-form.tsx`
 - `features/auth/components/forgot-password-form.tsx`

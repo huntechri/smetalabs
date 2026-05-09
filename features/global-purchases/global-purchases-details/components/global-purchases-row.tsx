@@ -1,9 +1,28 @@
+import { useState } from "react"
 import type { GlobalPurchaseRow } from "@/types/global-purchases"
 import { getTotal } from "@/lib/calculations"
 import { formatMoney } from "@/lib/formatters"
 import { GlobalPurchasesName } from "./global-purchases-name"
 import { EditableBadge } from "@/components/ui/editable-badge"
 import { GlobalPurchasesMetricGroup } from "./global-purchases-metric-group"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
+import { CalendarDots, CaretDown } from "@phosphor-icons/react"
+
+function formatDate(date: Date | undefined): string {
+  if (!date) return "Select"
+  const d = String(date.getDate()).padStart(2, "0")
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const y = date.getFullYear()
+  return `${d}.${m}.${y}`
+}
 
 export function GlobalPurchasesRow({
   row,
@@ -15,6 +34,9 @@ export function GlobalPurchasesRow({
   const planTotal = getTotal(row.planQuantity, row.planPrice)
   const factTotal = getTotal(row.factQuantity, row.factPrice)
   const deviationTotal = planTotal - factTotal
+
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>()
+  const [selectedStatus, setSelectedStatus] = useState("Ordered")
 
   return (
     <div className="border-b border-dashed border-green-500 last:border-b-0">
@@ -49,12 +71,50 @@ export function GlobalPurchasesRow({
           </GlobalPurchasesMetricGroup>
 
           <GlobalPurchasesMetricGroup title="Deviation">
-            <EditableBadge
-              label="Total"
-              strong
-              value={deviationTotal}
-              formatDisplay={(v) => formatMoney(Number(v))}
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Badge
+                  variant="outline"
+                  className="gap-1 rounded-md px-1.5 py-0.5 font-normal cursor-pointer hover:bg-muted"
+                >
+                  <CalendarDots className="size-2.5" />
+                  <span className="text-muted-foreground">Date:</span>
+                  <span>{formatDate(selectedDate)}</span>
+                </Badge>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                />
+              </PopoverContent>
+            </Popover>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Badge
+                  variant="outline"
+                  className="gap-1 rounded-md px-1.5 py-0.5 font-normal cursor-pointer hover:bg-muted"
+                >
+                  <span className="text-muted-foreground">Status:</span>
+                  <span>{selectedStatus}</span>
+                  <CaretDown className="size-2.5" />
+                </Badge>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {["Ordered", "In Transit", "Delivered", "Cancelled"].map(
+                  (status) => (
+                    <DropdownMenuItem
+                      key={status}
+                      onClick={() => setSelectedStatus(status)}
+                    >
+                      {status}
+                    </DropdownMenuItem>
+                  ),
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </GlobalPurchasesMetricGroup>
         </div>
       </div>

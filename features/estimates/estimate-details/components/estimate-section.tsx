@@ -17,7 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { EditableBadge } from "@/components/ui/editable-badge"
-import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { stages } from "@/features/estimates/__mocks__/estimates"
@@ -292,53 +291,6 @@ function SummaryValue({
   )
 }
 
-function WorkInputField({
-  className,
-  inputMode,
-  label,
-  onChange,
-  readOnly = false,
-  strong = false,
-  suffix,
-  type = "text",
-  value,
-}: {
-  className?: string
-  inputMode?: ComponentProps<typeof Input>["inputMode"]
-  label: string
-  onChange?: (value: string) => void
-  readOnly?: boolean
-  strong?: boolean
-  suffix?: string
-  type?: ComponentProps<typeof Input>["type"]
-  value: number | string
-}) {
-  return (
-    <label
-      className={cn("min-w-0 rounded-md border border-dashed p-2", className)}
-    >
-      <span className="mb-1 block text-xs text-muted-foreground uppercase">
-        {label}
-      </span>
-      <div className="flex min-w-0 items-center gap-1">
-        <Input
-          className={cn(strong && "font-semibold")}
-          inputMode={inputMode}
-          onChange={(event) => onChange?.(event.target.value)}
-          readOnly={readOnly}
-          type={type}
-          value={value}
-        />
-        {suffix ? (
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {suffix}
-          </span>
-        ) : null}
-      </div>
-    </label>
-  )
-}
-
 function WorkNameField({
   onChange,
   value,
@@ -356,46 +308,6 @@ function WorkNameField({
         onChange={(event) => onChange(event.target.value)}
         value={value}
       />
-    </label>
-  )
-}
-
-function MaterialInputField({
-  inputMode = "decimal",
-  label,
-  onChange,
-  readOnly = false,
-  strong = false,
-  suffix,
-  value,
-}: {
-  inputMode?: ComponentProps<typeof Input>["inputMode"]
-  label: string
-  onChange?: (value: string) => void
-  readOnly?: boolean
-  strong?: boolean
-  suffix?: string
-  value: number | string
-}) {
-  return (
-    <label className="min-w-0 rounded-md border border-dashed border-blue-300 p-2">
-      <span className="mb-1 block text-xs text-muted-foreground uppercase">
-        {label}
-      </span>
-      <div className="flex min-w-0 items-center gap-1">
-        <Input
-          className={cn(strong && "font-semibold")}
-          inputMode={inputMode}
-          onChange={(event) => onChange?.(event.target.value)}
-          readOnly={readOnly}
-          value={value}
-        />
-        {suffix ? (
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {suffix}
-          </span>
-        ) : null}
-      </div>
     </label>
   )
 }

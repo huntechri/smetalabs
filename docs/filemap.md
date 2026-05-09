@@ -207,7 +207,7 @@ smetalabs/
 │
 ├── lib/                                 # Утилиты и библиотечный код
 │   ├── utils.ts                         #   cn() — мёрдж Tailwind-классов
-│   ├── formatters.ts                    #   formatMoney() — форматирование валют
+│   ├── formatters.ts                    #   formatMoney(), formatConsumption(), parseDecimalInput()
 │   └── calculations.ts                  #   getTotal() — вычисление суммы (qty × price)
 │
 ├── public/                              # Статические файлы

@@ -25,9 +25,9 @@ const filterOptions = ["All Objects", "Object A", "Object B", "Object C", "None"
 const dateFilterOptions = ["All Dates", "Today", "This Week", "This Month", "Custom..."]
 
 const actions = [
-  { label: "Import", icon: <FileArrowDownIcon /> },
-  { label: "Export", icon: <ExportIcon /> },
-  { label: "New Purchase", icon: <PlusIcon /> },
+  { label: "Import", icon: <FileArrowDownIcon data-icon="inline-start" /> },
+  { label: "Export", icon: <ExportIcon data-icon="inline-start" /> },
+  { label: "New Purchase", icon: <PlusIcon data-icon="inline-start" /> },
 ]
 
 export function GlobalPurchasesToolbar() {
@@ -82,8 +82,9 @@ export function GlobalPurchasesToolbar() {
       <div className="flex rounded-md border border-dashed border-teal-400 p-2">
         <ButtonGroup className="flex-wrap">
           {actions.map((action) => (
-            <Button key={action.label} size="sm" type="button" variant="outline" aria-label={action.label}>
+            <Button key={action.label} size="sm" type="button" variant="outline">
               {action.icon}
+              {action.label}
             </Button>
           ))}
           <DropdownMenu>

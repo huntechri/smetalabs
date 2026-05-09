@@ -9,12 +9,8 @@ export function ProjectsView() {
   const { projects } = useProjects()
 
   return (
-    /* Outer — padding from edges (shadcn pattern) */
-    <div className="h-full min-h-0 px-4 lg:px-6">
-
-      {/* Inner — visual container */}
-      <div className="h-full min-h-0 rounded-lg border border-dashed p-6 flex flex-col gap-4">
-
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border border-dashed border-red-500 p-1">
         {/* ButtonGroup — фильтры */}
         <ButtonGroup className="flex-wrap">
           <Button variant="outline">Все</Button>
@@ -36,7 +32,6 @@ export function ProjectsView() {
             ))}
           </div>
         </div>
-
       </div>
     </div>
   )

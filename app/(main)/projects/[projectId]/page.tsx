@@ -10,12 +10,8 @@ export default function ProjectDetailsPage({
   const { projectId } = use(params)
 
   return (
-    /* Outer — padding from edges (shadcn pattern) */
-    <div className="h-full min-h-0 px-4 lg:px-6">
-
-      {/* Inner — visual container */}
-      <div className="h-full min-h-0 rounded-lg border border-dashed p-6 flex flex-col gap-4">
-
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border border-dashed border-red-500 p-1">
         {/* Project header stub */}
         <div className="rounded-lg border border-dashed p-4">
           <h1 className="font-heading text-sm font-medium">
@@ -27,14 +23,13 @@ export default function ProjectDetailsPage({
         </div>
 
         {/* Content stub */}
-        <div className="flex-1 rounded-lg border border-dashed p-6 flex items-center justify-center">
+        <div className="rounded-lg border border-dashed p-6 flex items-center justify-center mt-4">
           <div className="text-center">
             <p className="text-xs text-muted-foreground">
               Контент страницы проекта появится позже
             </p>
           </div>
         </div>
-
       </div>
     </div>
   )

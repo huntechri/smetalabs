@@ -22,3 +22,11 @@ export function formatConsumption(value: number) {
 export function parseDecimalInput(value: string) {
   return Number(value.replace(",", "."))
 }
+
+export function formatDate(date: Date | undefined): string {
+  if (!date) return "Выбрать"
+  const d = String(date.getDate()).padStart(2, "0")
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const y = date.getFullYear()
+  return `${d}.${m}.${y}`
+}

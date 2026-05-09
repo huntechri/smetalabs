@@ -1,7 +1,7 @@
 import { useState } from "react"
 import type { GlobalPurchaseRow } from "@/types/global-purchases"
 import { getTotal } from "@/lib/calculations"
-import { formatMoney } from "@/lib/formatters"
+import { formatMoney, formatDate } from "@/lib/formatters"
 import { GlobalPurchasesName } from "./global-purchases-name"
 import { EditableBadge } from "@/components/ui/editable-badge"
 import { GlobalPurchasesMetricGroup } from "./global-purchases-metric-group"
@@ -15,14 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { CalendarDots, CaretDown } from "@phosphor-icons/react"
-
-function formatDate(date: Date | undefined): string {
-  if (!date) return "Выбрать"
-  const d = String(date.getDate()).padStart(2, "0")
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const y = date.getFullYear()
-  return `${d}.${m}.${y}`
-}
 
 export function GlobalPurchasesRow({
   row,

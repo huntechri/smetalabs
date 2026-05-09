@@ -197,9 +197,9 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
         onSubmit={(e) => {
           e.preventDefault()
           toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Saving ${row.original.header}`,
+            loading: `Сохранение ${row.original.header}`,
             success: "Готово",
-            error: "Error",
+            error: "Ошибка",
           })
         }}
       >
@@ -222,9 +222,9 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
         onSubmit={(e) => {
           e.preventDefault()
           toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Saving ${row.original.header}`,
+            loading: `Сохранение ${row.original.header}`,
             success: "Готово",
-            error: "Error",
+            error: "Ошибка",
           })
         }}
       >
@@ -291,7 +291,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-32">
           <DropdownMenuItem>Редактировать</DropdownMenuItem>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
+          <DropdownMenuItem>Создать копию</DropdownMenuItem>
           <DropdownMenuItem>Избранное</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive">Удалить</DropdownMenuItem>

@@ -1,6 +1,6 @@
 "use client"
 
-import { type ComponentProps, useMemo, useState } from "react"
+import { type ComponentProps } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -20,6 +20,10 @@ import { EditableBadge } from "@/components/ui/editable-badge"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
+import { stages } from "@/features/estimates/__mocks__/estimates"
+import { useEstimates } from "@/features/estimates/hooks/use-estimates"
+import { getTotal } from "@/lib/calculations"
+import { formatConsumption, formatMoney, parseDecimalInput } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import {
   CaretRightIcon,
@@ -31,191 +35,17 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react"
 
-type Material = {
-  id: string
-  title: string
-  unit: string
-  quantity: number
-  waste: number
-  price: number
-}
-
-type Work = {
-  id: string
-  number: string
-  title: string
-  unit: string
-  quantity: number
-  price: number
-  materials: Material[]
-}
-
-const works: Work[] = [
-  {
-    id: "work-1",
-    number: "1",
-    title: "Монтаж перегородки из ГКЛ в 2 слоя",
-    unit: "м2",
-    quantity: 42,
-    price: 980,
-    materials: [
-      {
-        id: "mat-1",
-        title: "Гипсокартон влагостойкий 12,5 мм",
-        unit: "лист",
-        quantity: 58,
-        waste: 7,
-        price: 620,
-      },
-      {
-        id: "mat-2",
-        title: "Профиль стоечный 50x50",
-        unit: "шт",
-        quantity: 74,
-        waste: 5,
-        price: 245,
-      },
-      {
-        id: "mat-3",
-        title: "Саморезы по металлу 25 мм",
-        unit: "упак.",
-        quantity: 6,
-        waste: 0,
-        price: 390,
-      },
-    ],
-  },
-  {
-    id: "work-2",
-    number: "2",
-    title: "Шпаклевка стен под окраску",
-    unit: "м2",
-    quantity: 86,
-    price: 430,
-    materials: [
-      {
-        id: "mat-4",
-        title: "Шпаклевка финишная",
-        unit: "меш.",
-        quantity: 15,
-        waste: 10,
-        price: 780,
-      },
-      {
-        id: "mat-5",
-        title: "Грунтовка глубокого проникновения",
-        unit: "кан.",
-        quantity: 4,
-        waste: 0,
-        price: 1150,
-      },
-    ],
-  },
-]
-
-const stages = ["Stage 1: Rough work"]
-
-const currency = new Intl.NumberFormat("ru-RU", {
-  maximumFractionDigits: 0,
-  style: "currency",
-  currency: "RUB",
-})
-
-function formatMoney(value: number) {
-  return currency.format(value).replace("RUB", "₽")
-}
-
-function getWorkTotal(work: Work) {
-  return work.quantity * work.price
-}
-
-function getMaterialTotal(material: Material) {
-  return material.quantity * material.price
-}
-
-function formatConsumption(value: number) {
-  if (value > 0 && value < 0.001) {
-    return "0,001"
-  }
-
-  return new Intl.NumberFormat("ru-RU", {
-    maximumFractionDigits: 3,
-    minimumFractionDigits: 0,
-  }).format(value)
-}
-
-function parseDecimalInput(value: string) {
-  return Number(value.replace(",", "."))
-}
-
 export function EstimateSection() {
-  const [workRows, setWorkRows] = useState(works)
-  const [expandedStages, setExpandedStages] = useState(true)
-  const [expandedWorks, setExpandedWorks] = useState<Set<string>>(
-    new Set([works[0].id])
-  )
-
-  const totals = useMemo(() => {
-    const workTotal = workRows.reduce(
-      (sum, work) => sum + getWorkTotal(work),
-      0
-    )
-    const materialTotal = workRows.reduce(
-      (sum, work) =>
-        sum +
-        work.materials.reduce(
-          (materialsSum, material) => materialsSum + getMaterialTotal(material),
-          0
-        ),
-      0
-    )
-
-    return {
-      materialTotal,
-      workTotal,
-    }
-  }, [workRows])
-
-  const toggleWork = (id: string) => {
-    setExpandedWorks((current) => {
-      const next = new Set(current)
-
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-
-      return next
-    })
-  }
-
-  const updateWork = (id: string, updates: Partial<Work>) => {
-    setWorkRows((current) =>
-      current.map((work) => (work.id === id ? { ...work, ...updates } : work))
-    )
-  }
-
-  const updateMaterial = (
-    workId: string,
-    materialId: string,
-    updates: Partial<Material>
-  ) => {
-    setWorkRows((current) =>
-      current.map((work) =>
-        work.id === workId
-          ? {
-              ...work,
-              materials: work.materials.map((material) =>
-                material.id === materialId
-                  ? { ...material, ...updates }
-                  : material
-              ),
-            }
-          : work
-      )
-    )
-  }
+  const {
+    workRows,
+    expandedStages,
+    setExpandedStages,
+    expandedWorks,
+    totals,
+    toggleWork,
+    updateWork,
+    updateMaterial,
+  } = useEstimates()
 
   return (
     <section className="flex flex-col overflow-hidden rounded-lg border border-dashed border-gray-400 bg-card text-card-foreground shadow-sm">
@@ -258,7 +88,7 @@ export function EstimateSection() {
           <div className="flex flex-col">
             {workRows.map((work) => {
               const isExpanded = expandedWorks.has(work.id)
-              const workTotal = getWorkTotal(work)
+              const workTotal = getTotal(work.quantity, work.price)
 
               return (
                 <Collapsible
@@ -396,7 +226,7 @@ export function EstimateSection() {
                                       }
                                       value={material.price}
                                     />
-                                    <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums"><span className="text-muted-foreground">Total:</span><span>{formatMoney(getMaterialTotal(material))}</span></Badge>
+                                    <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums"><span className="text-muted-foreground">Total:</span><span>{formatMoney(getTotal(material.quantity, material.price))}</span></Badge>
                                   </dl>
                                 </CardContent>
                               </Card>

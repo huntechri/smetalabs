@@ -93,7 +93,8 @@ smetalabs/
 │
 ├── types/                               # Общие типы
 │   ├── purchase.ts                      #   Тип PurchaseRow
-│   └── execution.ts                     #   Тип ExecutionRow
+│   ├── execution.ts                     #   Тип ExecutionRow
+│   └── project.ts                       #   Тип Project
 │
 ├── components/                          # Общие компоненты проекта
 │   ├── ui/                              # ⛔ shadcn/ui компоненты — НЕ ТРОГАТЬ, не кастомизировать
@@ -148,10 +149,13 @@ smetalabs/
 │   │   └── section-cards-dashboard.tsx  # Карточки статистики
 │   │
 │   ├── projects/                        # Фича «Проекты»
+│   │   ├── __mocks__/
+│   │   │   └── projects.ts             #   Мок-данные (6 проектов)
+│   │   ├── hooks/
+│   │   │   └── use-projects.ts          #   Хук с состоянием (useState)
 │   │   └── components/
-│   │       ├── projects-view.tsx        # Представление списка проектов
-│   │       ├── project-card.tsx         # Карточка одного проекта
-│   │       └── section-cards.tsx        # Карточки статистики (раздел проектов)
+│   │       ├── projects-view.tsx        #   View-компонент (сетка карточек)
+│   │       └── project-card.tsx         #   Карточка одного проекта
 │   │
 │   ├── estimates/                       # Фича «Сметы»
 │   │   ├── components/
@@ -507,12 +511,13 @@ services/                       # Бизнес-логика (когда появ
 
 ### 2.5 Типы
 
-> **Текущее состояние:** Директория `types/` создана. Содержит `purchase.ts` и `execution.ts`.
+> **Текущее состояние:** Директория `types/` создана. Содержит `purchase.ts`, `execution.ts` и `project.ts`.
 
 ```
 types/
 ├── purchase.ts             # PurchaseRow (id, title, planQuantity, planPrice, factQuantity, factPrice)
-└── execution.ts            # ExecutionRow (структура идентична PurchaseRow)
+├── execution.ts            # ExecutionRow (структура идентична PurchaseRow)
+└── project.ts              # Project (id, title, description, image, link)
 ```
 
 #### План расширения
@@ -745,6 +750,17 @@ features/execution/
     └── execution-metric-group.tsx
 ```
 При добавлении аналогичных фич (финансы, документы и т.д.) — использовать ту же структуру.
+
+**Фича «Проекты» (projects)** — отрефакторена по тому же эталону:
+```
+types/project.ts                          ← тип Project
+features/projects/
+├── __mocks__/projects.ts                  ← мок-данные (6 проектов)
+├── hooks/use-projects.ts                  ← хук
+└── components/
+    ├── projects-view.tsx                  ← view-компонент (сетка + фильтры)
+    └── project-card.tsx                   ← карточка проекта
+```
 
 ### 5.3 Добавить вкладку внутри сметы
 

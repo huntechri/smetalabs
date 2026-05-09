@@ -2,13 +2,9 @@ import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import Image from "next/image"
+import type { Project } from "@/types/project"
 
-interface ProjectCardProps {
-    title: string
-    description: string
-    image: string
-    link: string
-}
+type ProjectCardProps = Pick<Project, "title" | "description" | "image" | "link">
 
 export function ProjectCard({ title, description, image, link }: ProjectCardProps) {
     return (

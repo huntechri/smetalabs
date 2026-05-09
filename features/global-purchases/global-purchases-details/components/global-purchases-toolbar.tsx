@@ -4,13 +4,24 @@ import { type FormEvent, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
   ExportIcon,
   FileArrowDownIcon,
+  Funnel,
   MagnifyingGlassIcon,
   PlusIcon,
+  SortAscending,
+  SortDescending,
 } from "@phosphor-icons/react"
+
+const filterOptions = ["All Objects", "Object A", "Object B", "Object C", "None"]
 
 const actions = [
   { label: "Import", icon: <FileArrowDownIcon data-icon="inline-start" /> },
@@ -22,6 +33,8 @@ export function GlobalPurchasesToolbar() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") ?? "")
+  const [filterObject, setFilterObject] = useState("All Objects")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
 
   useEffect(() => {
     setSearch(searchParams.get("q") ?? "")
@@ -73,6 +86,39 @@ export function GlobalPurchasesToolbar() {
               {action.label}
             </Button>
           ))}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" type="button" variant="outline">
+                <Funnel data-icon="inline-start" />
+                Filter
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {filterOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option}
+                  onClick={() => setFilterObject(option)}
+                >
+                  {option}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            size="sm"
+            type="button"
+            variant="outline"
+            onClick={() =>
+              setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))
+            }
+          >
+            {sortDirection === "asc" ? (
+              <SortAscending data-icon="inline-start" />
+            ) : (
+              <SortDescending data-icon="inline-start" />
+            )}
+            Date {sortDirection === "asc" ? "↑" : "↓"}
+          </Button>
         </ButtonGroup>
       </div>
     </div>

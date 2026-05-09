@@ -15,6 +15,7 @@ const pageLinks = [
   { emoji: "👥", label: "Team", href: "/team" },
   { emoji: "📋", label: "Templates", href: "/templates" },
   { emoji: "📦", label: "Directories", href: "/directories/materials" },
+  { emoji: "🌍", label: "Global Purchases", href: "/procurements" },
 ]
 
 export default function Page() {

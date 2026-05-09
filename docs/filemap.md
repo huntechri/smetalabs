@@ -77,7 +77,7 @@ smetalabs/
 │   │   │   ├── materials/page.tsx      # Материалы
 │   │   │   ├── suppliers/page.tsx      # Поставщики
 │   │   │   └── works/page.tsx          # Виды работ
-│   │   ├── procurements/               # Закупки (общий список)
+│   │   ├── procurements/               # Глобальные закупки (общий список с тулбаром и фильтрами)
 │   │   │   └── page.tsx
 │   │   ├── team/                       # Команда
 │   │   │   └── page.tsx
@@ -94,6 +94,7 @@ smetalabs/
 ├── types/                               # Общие типы
 │   ├── purchase.ts                      #   Тип PurchaseRow
 │   ├── execution.ts                     #   Тип ExecutionRow
+│   ├── global-purchases.ts              #   Тип GlobalPurchaseRow
 │   ├── estimate.ts                      #   Типы Work, Material
 ├── components/                          # Общие компоненты проекта
 │   ├── ui/                              # ⛔ shadcn/ui компоненты — НЕ ТРОГАТЬ, не кастомизировать
@@ -101,6 +102,7 @@ smetalabs/
 │   │   ├── badge.tsx
 │   │   ├── breadcrumb.tsx
 │   │   ├── button.tsx, button-group.tsx
+│   │   ├── calendar.tsx
 │   │   ├── card.tsx
 │   │   ├── chart.tsx
 │   │   ├── checkbox.tsx
@@ -108,10 +110,12 @@ smetalabs/
 │   │   ├── dialog.tsx
 │   │   ├── drawer.tsx
 │   │   ├── dropdown-menu.tsx
+│   │   ├── editable-badge.tsx
 │   │   ├── empty.tsx
 │   │   ├── field.tsx
 │   │   ├── input.tsx
 │   │   ├── label.tsx
+│   │   ├── popover.tsx
 │   │   ├── select.tsx
 │   │   ├── separator.tsx
 │   │   ├── sheet.tsx
@@ -199,6 +203,21 @@ smetalabs/
 │   │           ├── execution-name.tsx     #   Название позиции
 │   │           ├── execution-value.tsx    #   Бейдж «label: value»
 │   │           └── execution-metric-group.tsx  # Группа метрик
+│   │
+│   ├── global-purchases/                # Фича «Глобальные закупки» (копия execution, с доработками)
+│   │   ├── __mocks__/
+│   │   │   └── global-purchases.ts      #   Мок-данные (10 материалов)
+│   │   ├── hooks/
+│   │   │   └── use-global-purchases.ts  #   Хук с состоянием
+│   │   └── global-purchases-details/
+│   │       └── components/
+│   │           ├── global-purchases-view.tsx     # Обёртка со скроллом
+│   │           ├── global-purchases-section.tsx  # Композиция (хук → map → Row)
+│   │           ├── global-purchases-row.tsx      # Строка: наименование + стоимость + параметры + объект
+│   │           ├── global-purchases-name.tsx     # Наименование + ед. изм
+│   │           ├── global-purchases-metric-group.tsx  # Группа метрик
+│   │           ├── global-purchases-value.tsx    # Бейдж «label: value»
+│   │           └── global-purchases-toolbar.tsx  # Тулбар (поиск + кнопки + фильтры)
 │   │
 │   └── ... (новые фичи создавать здесь по доменному принципу)
 │

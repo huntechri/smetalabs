@@ -711,6 +711,49 @@ import Link from "next/link"
 
 Для сохранения пропорций изображений/видео.
 
+### 4.30 Calendar (DatePicker)
+
+**Импорт:** `@/components/ui/calendar`
+**Экспорт:** `Calendar`, `CalendarDayButton`
+
+Календарь на основе `react-day-picker` v9. Используется внутри Popover для выбора даты.
+
+**Пример с Popover:**
+
+```tsx
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+
+<Popover>
+  <PopoverTrigger asChild>
+    <Button variant="outline" size="sm"><CalendarDots /></Button>
+  </PopoverTrigger>
+  <PopoverContent className="w-auto p-0" align="start">
+    <Calendar mode="single" selected={date} onSelect={setDate} />
+  </PopoverContent>
+</Popover>
+```
+
+### 4.31 Popover
+
+**Импорт:** `@/components/ui/popover`
+**Экспорт:** `Popover`, `PopoverTrigger`, `PopoverContent`
+
+Всплывающий контейнер для календаря, меню и другого контента.
+
+### 4.32 EditableBadge
+
+**Импорт:** `@/components/ui/editable-badge`
+
+Бейдж с возможностью inline-редактирования значения. Используется в строках закупок и выполнения для Qty, Price, Total.
+
+**Пропсы:**
+- `label` — текст лейбла (например "Кол-во")
+- `value` — текущее значение
+- `onChange` — callback при изменении
+- `formatDisplay` — функция форматирования (например formatMoney)
+- `strong` — жирный шрифт для итоговых значений
+
 ---
 
 ## 5. Layout Patterns

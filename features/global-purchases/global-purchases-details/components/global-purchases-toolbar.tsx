@@ -12,21 +12,22 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
+  CalendarDots,
   ExportIcon,
   FileArrowDownIcon,
   Funnel,
   MagnifyingGlassIcon,
   PlusIcon,
-  SortAscending,
-  SortDescending,
 } from "@phosphor-icons/react"
 
 const filterOptions = ["All Objects", "Object A", "Object B", "Object C", "None"]
 
+const dateFilterOptions = ["All Dates", "Today", "This Week", "This Month", "Custom..."]
+
 const actions = [
-  { label: "Import", icon: <FileArrowDownIcon data-icon="inline-start" /> },
-  { label: "Export", icon: <ExportIcon data-icon="inline-start" /> },
-  { label: "New Purchase", icon: <PlusIcon data-icon="inline-start" /> },
+  { label: "Import", icon: <FileArrowDownIcon /> },
+  { label: "Export", icon: <ExportIcon /> },
+  { label: "New Purchase", icon: <PlusIcon /> },
 ]
 
 export function GlobalPurchasesToolbar() {
@@ -34,7 +35,7 @@ export function GlobalPurchasesToolbar() {
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") ?? "")
   const [filterObject, setFilterObject] = useState("All Objects")
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
+  const [dateFilter, setDateFilter] = useState("All Dates")
 
   useEffect(() => {
     setSearch(searchParams.get("q") ?? "")
@@ -81,16 +82,14 @@ export function GlobalPurchasesToolbar() {
       <div className="flex rounded-md border border-dashed border-teal-400 p-2">
         <ButtonGroup className="flex-wrap">
           {actions.map((action) => (
-            <Button key={action.label} size="sm" type="button" variant="outline">
+            <Button key={action.label} size="sm" type="button" variant="outline" aria-label={action.label}>
               {action.icon}
-              {action.label}
             </Button>
           ))}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" type="button" variant="outline">
-                <Funnel data-icon="inline-start" />
-                Filter
+              <Button size="sm" type="button" variant="outline" aria-label="Filter">
+                <Funnel />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
@@ -104,21 +103,23 @@ export function GlobalPurchasesToolbar() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            size="sm"
-            type="button"
-            variant="outline"
-            onClick={() =>
-              setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))
-            }
-          >
-            {sortDirection === "asc" ? (
-              <SortAscending data-icon="inline-start" />
-            ) : (
-              <SortDescending data-icon="inline-start" />
-            )}
-            Date {sortDirection === "asc" ? "↑" : "↓"}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" type="button" variant="outline" aria-label="Date filter">
+                <CalendarDots />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {dateFilterOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option}
+                  onClick={() => setDateFilter(option)}
+                >
+                  {option}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </ButtonGroup>
       </div>
     </div>

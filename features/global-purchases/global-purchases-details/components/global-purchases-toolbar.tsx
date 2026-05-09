@@ -22,12 +22,12 @@ import {
   PlusIcon,
 } from "@phosphor-icons/react"
 
-const filterOptions = ["All Objects", "Object A", "Object B", "Object C", "None"]
+const filterOptions = ["Все объекты", "Объект А", "Объект Б", "Объект В", "Без объекта"]
 
 const actions = [
-  { label: "Import", icon: <FileArrowDownIcon data-icon="inline-start" /> },
-  { label: "Export", icon: <ExportIcon data-icon="inline-start" /> },
-  { label: "New Purchase", icon: <PlusIcon data-icon="inline-start" /> },
+  { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
+  { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
+  { label: "Новая закупка", icon: <PlusIcon data-icon="inline-start" /> },
 ]
 
 export function GlobalPurchasesToolbar() {
@@ -66,15 +66,15 @@ export function GlobalPurchasesToolbar() {
         <div className="flex min-w-0 items-center gap-2">
           <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
           <Input
-            aria-label="Search procurements"
+            aria-label="Поиск закупок"
             className="h-8"
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search procurements"
+            placeholder="Поиск закупок"
             value={search}
           />
           <Button type="submit" variant="outline">
             <MagnifyingGlassIcon className="sm:hidden" data-icon="inline-start" />
-            <span className="hidden sm:inline">Search</span>
+            <span className="hidden sm:inline">Поиск</span>
           </Button>
         </div>
       </form>
@@ -89,7 +89,7 @@ export function GlobalPurchasesToolbar() {
           ))}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" type="button" variant="outline" aria-label="Filter">
+              <Button size="sm" type="button" variant="outline" aria-label="Фильтр">
                 <Funnel />
               </Button>
             </DropdownMenuTrigger>
@@ -106,7 +106,7 @@ export function GlobalPurchasesToolbar() {
           </DropdownMenu>
           <Popover>
             <PopoverTrigger asChild>
-              <Button size="sm" type="button" variant="outline" aria-label="Date filter">
+              <Button size="sm" type="button" variant="outline" aria-label="Фильтр по дате">
                 <CalendarDots />
               </Button>
             </PopoverTrigger>

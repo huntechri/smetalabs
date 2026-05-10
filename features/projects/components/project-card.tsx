@@ -82,8 +82,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
             {statusCfg.label}
           </Badge>
 
-          {/* Progress badge */}
-          <Badge variant="secondary">{project.progress}%</Badge>
         </div>
 
         {/* Title */}

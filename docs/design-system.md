@@ -758,6 +758,35 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 
 ---
 
+### 4.33 Frame
+
+**Импорт:** `@/components/ui/frame`
+
+Декоративная обёртка с dashed border. Используется на этапе вёрстки для визуального выделения границ компонентов.
+
+```tsx
+<Frame className="p-2">
+  <p>Содержимое внутри dashed-рамки</p>
+</Frame>
+```
+
+---
+
+### 4.34 FramedButton
+
+**Импорт:** `@/components/ui/framed-button`
+
+Кнопка, обёрнутая в `Frame`. Композиция Button + декоративная dashed-рамка.
+
+```tsx
+<FramedButton variant="outline" size="sm">
+  <PlusIcon />
+  <span>Добавить</span>
+</FramedButton>
+```
+
+---
+
 ## 5. Layout Patterns
 
 ### 5.1 Sidebar + Main (основной layout приложения)

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import type { SupplierStatus } from "@/types/directory-supplier"
 import { Button } from "@/components/ui/button"
+import { ButtonGroup } from "@/components/ui/button-group"
 import {
   Dialog,
   DialogContent,
@@ -134,10 +135,12 @@ export function DirectorySuppliersCreateDialog({
         </div>
 
         <DialogFooter showCloseButton={false}>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Отмена
-          </Button>
-          <Button onClick={handleCreate}>Создать</Button>
+          <ButtonGroup>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleCreate}>Создать</Button>
+          </ButtonGroup>
         </DialogFooter>
       </DialogContent>
     </Dialog>

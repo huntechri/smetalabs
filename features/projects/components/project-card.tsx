@@ -70,7 +70,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     <Card className="border-dashed border-amber-500">
       <CardHeader>
         {/* Status badges row */}
-        <div className="flex flex-row items-center gap-2">
+        <div className="flex flex-row items-center gap-2 rounded-md border border-dashed border-green-400 p-1.5">
           {/* Status badge with dot */}
           <Badge
             variant={statusCfg.badgeVariant}
@@ -85,10 +85,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
         </div>
 
         {/* Title */}
-        <CardTitle>{project.title}</CardTitle>
+        <div className="rounded-md border border-dashed border-green-300 p-2">
+          <CardTitle>{project.title}</CardTitle>
+        </div>
 
         {/* Customer + Address */}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 rounded-md border border-dashed border-green-300 p-2">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <BuildingApartment className="size-3 shrink-0" />
             <span>{project.customer}</span>
@@ -101,7 +103,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </CardHeader>
 
       <CardContent>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 rounded-md border border-dashed border-blue-400 p-2">
           {/* Budget block */}
           <div className="rounded-lg border border-dashed border-amber-500 p-3">
             <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
@@ -145,7 +147,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       <Separator />
 
       <CardFooter>
-        <div className="flex gap-2">
+        <div className="flex gap-2 rounded-md border border-dashed border-purple-400 p-1.5">
           <Button variant="outline" size="xs">
             <ArrowSquareOut />
             Открыть

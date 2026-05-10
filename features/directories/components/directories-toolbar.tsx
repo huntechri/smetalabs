@@ -11,6 +11,7 @@ export type DirectoryAction = {
   label: string
   icon: React.ReactNode
   variant?: React.ComponentProps<typeof Button>["variant"]
+  onClick?: () => void
 }
 
 export type DirectoriesToolbarProps = {
@@ -79,6 +80,7 @@ export function DirectoriesToolbar({
               size="sm"
               type="button"
               variant={action.variant ?? "outline"}
+              onClick={action.onClick}
             >
               {action.icon}
               {action.label}

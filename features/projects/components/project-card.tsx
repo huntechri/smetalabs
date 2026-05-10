@@ -149,15 +149,15 @@ export function ProjectCard({ project }: ProjectCardProps) {
       <CardFooter>
         <div className="flex gap-2 rounded-md border border-dashed border-purple-400 p-1.5">
           <Button variant="outline" size="xs">
-            <ArrowSquareOut />
+            <ArrowSquareOut data-icon="inline-start" />
             Открыть
           </Button>
           <Button variant="outline" size="xs">
-            <NotePencil />
+            <NotePencil data-icon="inline-start" />
             Ред.
           </Button>
           <Button variant="destructive" size="xs">
-            <Trash />
+            <Trash data-icon="inline-start" />
             Удалить
           </Button>
         </div>

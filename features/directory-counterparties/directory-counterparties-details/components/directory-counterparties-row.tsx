@@ -12,25 +12,22 @@ export function DirectoryCounterpartiesRow({ row }: { row: DirectoryCounterparty
           <DirectoryCounterpartiesName value={row.name} />
         </div>
 
-        <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[minmax(160px,1fr)_minmax(140px,1fr)_minmax(140px,1fr)_minmax(160px,1fr)]">
-          <DirectoryCounterpartiesMetricGroup title="Цвет">
-            <div className="flex items-center gap-1.5">
-              <div
-                className="h-5 w-5 rounded-full border border-dashed border-muted-foreground/30"
-                style={{ backgroundColor: row.color }}
-              />
-              <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
-                <span>{row.color}</span>
-              </Badge>
-            </div>
+        <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[minmax(140px,1fr)_minmax(140px,1fr)_minmax(140px,1fr)_minmax(160px,1fr)]">
+          <DirectoryCounterpartiesMetricGroup title="Тип">
+            <Badge
+              variant={row.type === "customer" ? "default" : "secondary"}
+              className="gap-1 rounded-md px-1.5 py-0.5 font-normal"
+            >
+              {row.type === "customer" ? "Заказчик" : "Подрядчик"}
+            </Badge>
           </DirectoryCounterpartiesMetricGroup>
 
           <DirectoryCounterpartiesMetricGroup title="Статус">
             <Badge
-              variant={row.status === "juridical" ? "default" : "secondary"}
+              variant={row.legalStatus === "juridical" ? "default" : "secondary"}
               className="gap-1 rounded-md px-1.5 py-0.5 font-normal"
             >
-              {row.status === "juridical" ? "Юр. лицо" : "Физ. лицо"}
+              {row.legalStatus === "juridical" ? "Юр. лицо" : "Физ. лицо"}
             </Badge>
           </DirectoryCounterpartiesMetricGroup>
 

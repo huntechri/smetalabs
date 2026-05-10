@@ -1,10 +1,30 @@
-export type CounterpartyStatus = "juridical" | "individual"
+export type CounterpartyType = "customer" | "contractor"
+export type LegalStatus = "juridical" | "individual"
+
+export type BankDetails = {
+  bankName: string
+  bik: string
+  corrAccount: string
+  accountNumber: string
+}
+
+export type PassportData = {
+  series: string
+  number: string
+  issuedBy: string
+  issueDate: string
+  departmentCode: string
+  registrationAddress: string
+}
 
 export type DirectoryCounterpartyRow = {
   id: string
-  name: string          // Наименование
-  color: string         // hex-цвет контрагента
-  status: CounterpartyStatus
-  inn: string           // ИНН (10 цифр для физлиц, 12 для юрлиц)
-  phone: string         // Телефон
+  name: string
+  type: CounterpartyType
+  legalStatus: LegalStatus
+  inn: string
+  phone: string
+  legalAddress?: string
+  bankDetails?: BankDetails
+  passport?: PassportData
 }

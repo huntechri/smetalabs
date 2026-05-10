@@ -12,6 +12,7 @@ export function SuppliersToolbar() {
     {
       label: "Добавить",
       icon: <PlusIcon data-icon="inline-start" />,
+      onClick: () => setDialogOpen(true),
     },
   ]
 

@@ -101,9 +101,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </CardHeader>
 
       <CardContent>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
           {/* Budget block */}
-          <div className="rounded-lg border border-dashed border-amber-500 p-3">
+          <div className="rounded-lg border border-dashed border-amber-500 p-2 sm:p-3">
             <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
               <CurrencyRub className="size-3 shrink-0" />
               <span>Бюджет</span>
@@ -114,7 +114,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
 
           {/* Dates block */}
-          <div className="rounded-lg border border-dashed border-amber-500 p-3">
+          <div className="rounded-lg border border-dashed border-amber-500 p-2 sm:p-3">
             <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
               <CalendarBlank className="size-3 shrink-0" />
               <span>Сроки</span>
@@ -125,7 +125,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
 
           {/* Progress block */}
-          <div className="rounded-lg border border-dashed border-amber-500 p-3">
+          <div className="rounded-lg border border-dashed border-amber-500 p-2 sm:p-3">
             <div className="mb-1 text-[0.625rem] text-muted-foreground">
               Прогресс
             </div>
@@ -145,18 +145,18 @@ export function ProjectCard({ project }: ProjectCardProps) {
       <Separator />
 
       <CardFooter>
-        <div className="flex gap-2">
-          <Button variant="outline" size="xs">
+        <div className="flex flex-wrap gap-1.5">
+          <Button variant="outline" size="xs" className="min-w-0">
             <ArrowSquareOut />
-            Открыть
+            <span className="hidden sm:inline">Открыть</span>
           </Button>
-          <Button variant="outline" size="xs">
+          <Button variant="outline" size="xs" className="min-w-0">
             <NotePencil />
-            Ред.
+            <span className="hidden sm:inline">Ред.</span>
           </Button>
-          <Button variant="destructive" size="xs">
+          <Button variant="destructive" size="xs" className="min-w-0">
             <Trash />
-            Удалить
+            <span className="hidden sm:inline">Удалить</span>
           </Button>
         </div>
       </CardFooter>

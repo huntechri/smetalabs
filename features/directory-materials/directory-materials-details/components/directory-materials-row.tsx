@@ -1,4 +1,5 @@
 import type { DirectoryMaterialRow } from "@/types/directory-material"
+import { ImageIcon } from "lucide-react"
 import { DirectoryMaterialsName } from "./directory-materials-name"
 import { DirectoryMaterialsValue } from "./directory-materials-value"
 import { DirectoryMaterialsMetricGroup } from "./directory-materials-metric-group"
@@ -24,8 +25,18 @@ export function DirectoryMaterialsRow({ row }: { row: DirectoryMaterialRow }) {
             />
           </DirectoryMaterialsMetricGroup>
 
-          <DirectoryMaterialsMetricGroup title="Поставщик">
-            <DirectoryMaterialsValue label="Пост." value={row.supplier} />
+          <DirectoryMaterialsMetricGroup title="Изображение">
+            {row.imageUrl ? (
+              <img
+                src={row.imageUrl}
+                alt={row.title}
+                className="h-14 w-14 rounded-md border border-dashed border-muted-foreground/30 object-cover"
+              />
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-md border border-dashed border-muted-foreground/30 bg-muted">
+                <ImageIcon className="h-5 w-5 text-muted-foreground" />
+              </div>
+            )}
           </DirectoryMaterialsMetricGroup>
 
           <DirectoryMaterialsMetricGroup title="Категория">

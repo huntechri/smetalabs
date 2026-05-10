@@ -39,6 +39,8 @@ smetalabs/
 ├── tsconfig.json                        # Конфиг TypeScript
 ├── next.config.mjs                      # Конфиг Next.js
 ├── postcss.config.mjs                   # Конфиг PostCSS (Tailwind)
+├── components.json                      # Конфиг shadcn/ui CLI
+├── eslint.config.mjs                    # Конфиг ESLint
 │
 ├── app/                                 # Роутинг Next.js (App Router)
 │   ├── layout.tsx                       # Корневой layout (шрифты, ThemeProvider, TooltipProvider)
@@ -623,7 +625,7 @@ services/                       # Бизнес-логика (когда появ
 
 ### 2.5 Типы
 
-> **Текущее состояние:** Директория `types/` создана. Содержит `purchase.ts` и `execution.ts`.
+> **Текущее состояние:** Директория `types/` содержит 8 файлов типов: `purchase.ts`, `execution.ts`, `global-purchases.ts`, `estimate.ts`, `directory-material.ts`, `directory-work.ts`, `directory-supplier.ts`, `directory-counterparty.ts`.
 
 ```
 types/

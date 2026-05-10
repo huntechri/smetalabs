@@ -6,7 +6,7 @@ export const directoryMaterialRows: DirectoryMaterialRow[] = [
     title: "Гипсокартон влагостойкий 12,5 мм",
     unit: "лист",
     price: 620,
-    supplier: "СтройМастер",
+    imageUrl: "",
     category: "Стеновые материалы",
   },
   {
@@ -14,7 +14,7 @@ export const directoryMaterialRows: DirectoryMaterialRow[] = [
     title: "Профиль стоечный 50×50",
     unit: "шт",
     price: 245,
-    supplier: "МеталлПрофиль",
+    imageUrl: "",
     category: "Стеновые материалы",
   },
   {
@@ -22,7 +22,7 @@ export const directoryMaterialRows: DirectoryMaterialRow[] = [
     title: "Саморезы по металлу 25 мм",
     unit: "упак",
     price: 390,
-    supplier: "КрепёжТорг",
+    imageUrl: "",
     category: "Крепёж",
   },
   {
@@ -30,7 +30,7 @@ export const directoryMaterialRows: DirectoryMaterialRow[] = [
     title: "Шпаклевка финишная",
     unit: "меш",
     price: 780,
-    supplier: "СтройМастер",
+    imageUrl: "",
     category: "Отделочные",
   },
   {
@@ -38,7 +38,7 @@ export const directoryMaterialRows: DirectoryMaterialRow[] = [
     title: "Грунтовка глубокого проникновения",
     unit: "кан",
     price: 1150,
-    supplier: "Лакокраска",
+    imageUrl: "",
     category: "Отделочные",
   },
   {
@@ -46,7 +46,7 @@ export const directoryMaterialRows: DirectoryMaterialRow[] = [
     title: "Кабель ВВГнг-LS 3×2.5",
     unit: "м",
     price: 85,
-    supplier: "ЭлектроСнаб",
+    imageUrl: "",
     category: "Электрика",
   },
   {
@@ -54,7 +54,7 @@ export const directoryMaterialRows: DirectoryMaterialRow[] = [
     title: "Труба гофрированная ПВХ 25 мм",
     unit: "м",
     price: 38,
-    supplier: "ЭлектроСнаб",
+    imageUrl: "",
     category: "Электрика",
   },
   {
@@ -62,7 +62,7 @@ export const directoryMaterialRows: DirectoryMaterialRow[] = [
     title: "Краска фасадная",
     unit: "л",
     price: 380,
-    supplier: "Лакокраска",
+    imageUrl: "",
     category: "Отделочные",
   },
   {
@@ -70,7 +70,7 @@ export const directoryMaterialRows: DirectoryMaterialRow[] = [
     title: "Утеплитель минеральная вата",
     unit: "м³",
     price: 4800,
-    supplier: "ТеплоСтрой",
+    imageUrl: "",
     category: "Изоляция",
   },
   {
@@ -78,7 +78,7 @@ export const directoryMaterialRows: DirectoryMaterialRow[] = [
     title: "Кирпич керамический",
     unit: "тыс. шт",
     price: 15000,
-    supplier: "СтройМастер",
+    imageUrl: "",
     category: "Стеновые материалы",
   },
 ]

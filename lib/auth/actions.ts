@@ -29,7 +29,7 @@ export async function loginAction(
 
   if (!parsed.success) {
     return {
-      error: parsed.error.errors[0]?.message ?? "Ошибка валидации",
+      error: parsed.error.issues[0]?.message ?? "Ошибка валидации",
       email: formData.get("email") as string,
     }
   }
@@ -83,7 +83,7 @@ export async function signupAction(
 
   if (!parsed.success) {
     return {
-      error: parsed.error.errors[0]?.message ?? "Ошибка валидации",
+      error: parsed.error.issues[0]?.message ?? "Ошибка валидации",
       email: formData.get("email") as string,
     }
   }
@@ -126,7 +126,7 @@ export async function forgotPasswordAction(
 
   if (!parsed.success) {
     return {
-      error: parsed.error.errors[0]?.message ?? "Ошибка валидации",
+      error: parsed.error.issues[0]?.message ?? "Ошибка валидации",
       email: formData.get("email") as string,
     }
   }

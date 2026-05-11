@@ -50,7 +50,7 @@ export function PermissionsMatrix() {
   }
 
   return (
-    <Card className="overflow-x-auto">
+    <Card className="overflow-auto">
       <CardHeader>
         <CardTitle>Матрица прав доступа</CardTitle>
         <CardDescription>

@@ -23,6 +23,17 @@ export default function Page() {
     <div className="flex min-h-svh flex-col items-center justify-center gap-8 p-8">
       <h1 className="text-2xl font-semibold tracking-tight">🧭 Навигация разработчика</h1>
 
+      {/* 🔐 Auth Debug */}
+      <div className="flex items-center gap-3 rounded-xl border border-dashed border-amber-400/50 bg-amber-400/5 px-6 py-4">
+        <span className="text-sm text-muted-foreground">🔐</span>
+        <Button variant="secondary" size="sm" asChild>
+          <a href="/login">Войти</a>
+        </Button>
+        <Button variant="outline" size="sm" asChild>
+          <a href="/signup">Регистрация</a>
+        </Button>
+      </div>
+
       <div className="flex flex-col gap-6">
         <section>
           <h2 className="mb-3 text-center text-sm font-medium text-muted-foreground">

@@ -2,9 +2,9 @@
 
 > **Стек:** Next.js 16 · shadcn/ui (radix-mira) · Tailwind v4 · TypeScript
 >
-> **Состояние:** Старт проекта, только вёрстка. Бэкенд, API, работа с БД — отсутствуют.
+> **Состояние:** Активная разработка. Фронтенд на моках. Добавлен backend/auth слой: Drizzle ORM, Supabase Auth (Server Actions, middleware), RBAC-схема.
 >
-> **Последнее обновление:** 2026-05-11 (account-settings feature)
+> **Последнее обновление:** 2026-05-11 (feature/auth-setup)
 >
 > **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
 
@@ -41,6 +41,8 @@ smetalabs/
 ├── postcss.config.mjs                   # Конфиг PostCSS (Tailwind)
 ├── components.json                      # Конфиг shadcn/ui CLI
 ├── eslint.config.mjs                    # Конфиг ESLint
+├── drizzle.config.ts                    # Конфиг Drizzle Kit (схема, миграции, БД)
+├── proxy.ts                             # Middleware: Supabase Auth (сессии, редиректы)
 │
 ├── app/                                 # Роутинг Next.js (App Router)
 │   ├── layout.tsx                       # Корневой layout (шрифты, ThemeProvider, TooltipProvider)
@@ -50,8 +52,8 @@ smetalabs/
 │   │
 │   ├── (auth)/                          # Route Group: страницы авторизации
 │   │   ├── layout.tsx                   # Layout авторизации (центрированный, без sidebar)
-│   │   ├── login/page.tsx               # Страница входа
-│   │   ├── singup/page.tsx              # Страница регистрации
+│   │   ├── login/page.tsx               # Страница входа (Server Action: loginAction)
+│   │   ├── signup/page.tsx              # Страница регистрации (Server Action: signupAction)
 │   │   └── forgot-password/page.tsx     # Восстановление пароля
 │   │
 │   ├── (main)/                          # Route Group: основной интерфейс (с sidebar)
@@ -96,7 +98,19 @@ smetalabs/
 │   ├── admin/                           # Админ-панель (без группы роутов — отдельный layout)
 │   │   └── page.tsx
 │   │
+│   ├── auth/                            # Auth-роуты (callback OAuth / email confirm)
+│   │   └── callback/
+│   │       └── route.ts                 #   GET: verifyOtp + redirect (token_hash, type)
+│   │
 │   └── api/                             # API-роуты (ЕЩЁ НЕ СОЗДАНЫ — появится при разработке)
+│
+├── db/                                 # Работа с БД (Drizzle ORM + PostgreSQL)
+│   ├── index.ts                         #   Клиент Drizzle (postgres-js, drizzle({schema}))
+│   ├── seed.ts                          #   Заполнение RBAC-данными (роли, права, связи)
+│   └── schema/
+│       ├── index.ts                     #   Реэкспорт всех схем
+│       ├── profiles.ts                  #   Таблица profiles (расширение auth.users)
+│       └── rbac.ts                      #   Таблицы roles, permissions, role_permissions
 │
 ├── types/                               # Общие типы
 │   ├── purchase.ts                      #   Тип PurchaseRow
@@ -362,7 +376,16 @@ smetalabs/
 ├── lib/                                 # Утилиты и библиотечный код
 │   ├── utils.ts                         #   cn() — мёрдж Tailwind-классов
 │   ├── formatters.ts                    #   formatMoney(), formatConsumption(), parseDecimalInput()
-│   └── calculations.ts                  #   getTotal() — вычисление суммы (qty × price)
+│   ├── calculations.ts                  #   getTotal() — вычисление суммы (qty × price)
+│   │
+│   ├── supabase/                        #   Supabase-клиенты (пакет @supabase/ssr)
+│   │   ├── server.ts                      #     createClient() — серверный клиент (cookies)
+│   │   ├── client.ts                      #     createClient() — браузерный клиент
+│   │   └── proxy.ts                       #     updateSession() — обновление сессий в middleware
+│   │
+│   └── auth/                            #   Серверные auth-утилиты
+│       ├── actions.ts                     #     Server Actions: loginAction, signupAction, signOutAction
+│       └── permissions.ts                 #     Проверки прав: getUserRoles, hasRole, canWrite, requireAuth
 │
 ├── public/                              # Статические файлы
 │   └── images/
@@ -561,6 +584,10 @@ purchases-view.tsx                   ← page.tsx рендерит этот ко
 |---|---|---|---|
 | **`types/`** | Общие типы | TypeScript-типы, интерфейсы | `types/{domain}.ts` |
 | **`lib/`** | Чистые утилиты (без React) | Форматирование, вычисления, хелперы | `lib/{name}.ts` |
+| **`lib/supabase/`** | Supabase-клиенты | Серверный, браузерный, proxy (middleware) | `lib/supabase/{server,client,proxy}.ts` |
+| **`lib/auth/`** | Серверная auth-логика | Server Actions (login, signup, logout), проверки прав | `lib/auth/{actions,permissions}.ts` |
+| **`proxy.ts`** | Middleware (корень) | Supabase Auth: обновление сессий, редиректы, защита роутов | `proxy.ts` (в корне проекта) |
+| **`db/`** | Работа с БД (Drizzle ORM) | Клиент, схема таблиц, seed-данные | `db/{index,schema/*,seed}.ts` |
 | **`hooks/`** | Общие React-хуки | useMobile, useMediaQuery и т.д. | `hooks/{name}.ts` |
 | **`components/`** | Инфраструктурные компоненты | Провайдеры, ErrorBoundary | `components/{name}.tsx` |
 | **`components/ui/`** | shadcn/ui (не трогать) | Примитивы дизайн-системы | Только через CLI `npx shadcn add` |
@@ -610,7 +637,9 @@ purchases-view.tsx                   ← page.tsx рендерит этот ко
 
 ### 2.4 Работа с данными
 
-> **Текущее состояние:** Бэкенд и БД отсутствуют. Все данные — моковые. Правила ниже — как будет строиться при переходе к реальным данным.
+> **Текущее состояние:** Слой БД (Drizzle ORM + PostgreSQL) и auth-слой (Supabase Auth) добавлены в `feature/auth-setup`. Схема RBAC и profiles готова. Server Actions для login/signup реализованы. Middleware защищает роуты.
+>
+> Остальные данные пока на моках. Правила ниже — целевая архитектура при полном переходе к реальным данным.
 
 #### Приоритетный подход: Server Components + Server Actions
 
@@ -624,35 +653,55 @@ purchases-view.tsx                   ← page.tsx рендерит этот ко
 
 | Потребность | Где создавать |
 |---|---|
-| **Server Action** (мутация данных) | `app/actions/{domain}.ts` — рядом с роутами |
-| **Прямой запрос к БД** | `lib/db/` — для Drizzle ORM; `lib/db/queries/{domain}.ts` — для запросов |
+| **Server Action** (auth) | `lib/auth/actions.ts` — loginAction, signupAction, signOutAction (✅ реализовано) |
+| **Server Action** (бизнес-данные) | `app/actions/{domain}.ts` — рядом с роутами (план) |
+| **Прямой запрос к БД** | `db/` — клиент (`db/index.ts`), схема (`db/schema/`), seed (`db/seed.ts`) |
+| **Auth-проверки** | `lib/auth/permissions.ts` — getUserRoles, hasRole, canWrite, requireAuth (✅ реализовано) |
+| **Supabase-клиенты** | `lib/supabase/` — server.ts (cookies), client.ts (браузер), proxy.ts (middleware) |
 | **API Route** (внешний доступ) | `app/api/{domain}/route.ts` |
-| **Сервисный слой** (бизнес-логика) | `services/{domain}.ts` |
+| **Сервисный слой** (бизнес-логика) | `services/{domain}.ts` (план) |
 
-#### Структура (план на будущее)
+#### Структура (текущая + план)
 
 ```
 app/
-├── actions/                    # Server Actions
+├── actions/                    # Server Actions (план — бизнес-данные)
 │   ├── projects.ts             #   createProject, updateProject, deleteProject
-│   ├── estimates.ts            #   createEstimate, addSection, updateSection
-│   └── auth.ts                 #   login, signup, logout
+│   └── estimates.ts            #   createEstimate, addSection, updateSection
+│
+├── auth/                       # Auth-роуты (✅ реализовано)
+│   └── callback/
+│       └── route.ts            #   GET: OAuth + email confirm handler
 │
 ├── api/                        # REST API (для внешних потребителей)
 │   └── projects/
 │       └── route.ts            #   GET /api/projects
 │
-lib/
-├── db/                         # Работа с БД
-│   ├── index.ts               #   Подключение (Drizzle)
-│   ├── schema.ts               #   Схема таблиц
-│   └── queries/                #   Типизированные запросы
-│       ├── projects.ts
-│       └── estimates.ts
+db/                             # Работа с БД (✅ реализовано — основа)
+├── index.ts                    #   Клиент Drizzle (postgres-js + schema)
+├── seed.ts                     #   Seed RBAC-данных (роли, права)
+├── drizzle.config.ts           #   (в корне проекта)
+└── schema/
+    ├── index.ts                #   Реэкспорт
+    ├── profiles.ts             #   Таблица profiles
+    └── rbac.ts                 #   Таблицы roles, permissions, role_permissions
 │
-services/                       # Бизнес-логика (когда появится потребность в слое абстракции)
+lib/
+├── supabase/                   # Supabase-клиенты (✅ реализовано)
+│   ├── server.ts               #   createClient() — сервер (cookies)
+│   ├── client.ts               #   createClient() — браузер
+│   └── proxy.ts                #   updateSession() — middleware
+│
+├── auth/                       # Серверная auth-логика (✅ реализовано)
+│   ├── actions.ts              #   loginAction, signupAction, signOutAction
+│   └── permissions.ts          #   getUserRoles, hasRole, canWrite, requireAuth
+│
+services/                       # Бизнес-логика (план)
 ├── projects.ts
 └── estimates.ts
+
+proxy.ts                        # Middleware: Supabase Auth (✅ реализовано)
+                                #   Защита роутов, редиректы, обновление сессий
 ```
 
 #### Правила выбора стратегии
@@ -756,21 +805,33 @@ types/
 
 ```
 ┌─────────────────────────────────────────────────────────┐
+│                   MIDDLEWARE (proxy.ts)                  │
+│                                                          │
+│  • Supabase Auth: обновление сессий (cookies)            │
+│  • Защита роутов: /login /signup → только гостям         │
+│  • Защита роутов: /dashboard /admin → только auth        │
+│  • Пропуск: /auth/callback (OAuth / email confirm)       │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────┴────────────────────────────────┐
 │                      БАЗА ДАННЫХ                         │
 │                   (PostgreSQL + Drizzle)                  │
-│                    lib/db/schema.ts                       │
-│                    lib/db/queries/                        │
+│                    db/schema/                             │
+│                    db/index.ts                            │
+│                    db/queries/ (план)                     │
 └────────────────────────┬────────────────────────────────┘
                          │
           ┌──────────────┴──────────────┐
           ▼                              ▼
 ┌──────────────────┐          ┌──────────────────┐
 │  SERVER ACTIONS  │          │   API ROUTES     │
-│ app/actions/     │          │ app/api/         │
-│                  │          │                  │
-│ • Мутации данных │          │ • Внешние        │
-│ • Валидация (Zod)│          │   потребители    │
-│ • revalidatePath │          │ • Вебхуки        │
+│ lib/auth/actions │          │ app/api/         │
+│ app/actions/     │          │                  │
+│                  │          │ • Внешние        │
+│ • Мутации данных │          │   потребители    │
+│ • Валидация (Zod)│          │ • Вебхуки        │
+│ • Аутентификация │          │                  │
+│ • revalidatePath │          │                  │
 └────────┬─────────┘          └────────┬─────────┘
          │                             │
          └──────────────┬──────────────┘
@@ -795,22 +856,53 @@ types/
           │ • Браузерные API         │
           │ • Вызов Server Actions   │
           │   через startTransition  │
+          │ • Supabase Browser Client│
           └──────────────────────────┘
 ```
 
 ### Пояснение слоёв
 
+#### 0. Middleware (`proxy.ts`)
+- **Файл:** `proxy.ts` (корень проекта, Next.js Middleware)
+- **Назначение:** Supabase Auth — обновление сессий через cookies
+- **Защита роутов:**
+  - `/login`, `/signup`, `/forgot-password` — только для неаутентифицированных (редирект → `/dashboard`)
+  - `/admin` — только для аутентифицированных (редирект → `/login`)
+  - `/auth/callback` — всегда разрешён (OAuth / email confirm)
+  - Все остальные роуты (кроме `/`) — требуют аутентификации
+- **Публичный роут:** `/` (корень) — открыт для developer navigator
+
 #### 1. База данных
 - **Драйвер:** Drizzle ORM
-- **Схема:** `lib/db/schema.ts` — описание таблиц
-- **Запросы:** `lib/db/queries/` — типизированные функции чтения
+- **Клиент:** `db/index.ts` — drizzle(postgres(url), {schema})
+- **Схема:** `db/schema/` — profiles.ts + rbac.ts (✅ реализовано)
+- **Запросы:** `db/queries/` — типизированные функции чтения (план)
+- **Seed:** `db/seed.ts` — RBAC-данные (роли, права, связи)
+- **Конфиг:** `drizzle.config.ts` — Drizzle Kit (миграции, генерация)
 - **Не обращаться к БД из клиентских компонентов**
 
-#### 2. Server Actions (`app/actions/`)
-- **Для:** мутаций данных (создание, обновление, удаление)
+#### 2. Server Actions (`lib/auth/actions.ts` + `app/actions/`)
+- **Auth:** `lib/auth/actions.ts` — loginAction, signupAction, signOutAction (✅ реализовано)
+  - Zod-валидация (Zod v4: `.issues` вместо `.errors`)
+  - Динамический origin: `getOrigin()` из заголовков (Vercel preview + production)
+  - Редирект после login/signup → `/dashboard`
+  - Редирект после signOut → `/login`
+- **Бизнес-данные:** `app/actions/` (план)
 - **Вызываются:** из Client Components через `startTransition` или `action={}`
 - **Содержат:** валидацию (Zod), бизнес-логику, запись в БД, `revalidatePath`
-- **Пример:** `createProject(data: FormData)` — создаёт проект, ревалидирует /projects
+
+#### 2b. Auth-проверки (`lib/auth/permissions.ts`)
+- `getUserRoles()` — роли текущего пользователя из таблицы `user_roles`
+- `hasRole(role)`, `hasAnyRole(roles)` — проверка одной/нескольких ролей
+- `canWrite()` — owner, admin, manager
+- `canManageTeam()` — owner, admin
+- `requireAuth()` — бросает ошибку если не аутентифицирован
+- `requireRole(role)` — бросает ошибку если нет роли
+
+#### 2c. Supabase-клиенты (`lib/supabase/`)
+- `server.ts` — createClient() с серверными cookies (для RSC, Server Actions, Route Handlers)
+- `client.ts` — createClient() с браузерным API (для Client Components)
+- `proxy.ts` — updateSession(request) для middleware (`proxy.ts` в корне)
 
 #### 3. API Routes (`app/api/`)
 - **Для:** внешних потребителей (мобильное приложение, сторонние интеграции)
@@ -862,6 +954,7 @@ types/
 1. Создать app/(main)/new-section/page.tsx
 2. Создать features/new-section/components/new-section-view.tsx
 3. Добавить ссылку в features/nav-main.tsx (или nav-secondary.tsx)
+4. Страница автоматически защищена middleware (proxy.ts) — требует аутентификации
 ```
 
 ### 5.2 Добавить новую фичу (по образцу purchases)
@@ -918,6 +1011,16 @@ features/execution/
 
 ### 5.4 Создать форму с валидацией
 
+**Для auth-форм (✅ эталон — login, signup):**
+```
+1. Zod-схема в lib/auth/actions.ts (рядом с Server Action)
+2. Клиентский компонент формы в features/auth/components/{name}-form.tsx
+3. Server Action в lib/auth/actions.ts с "use server"
+4. page.tsx: <Form action={action} />
+5. Auth-проверки: lib/auth/permissions.ts
+```
+
+**Для бизнес-форм (план):**
 ```
 1. Zod-схема в lib/validations.ts (или features/{domain}/validations.ts)
 2. Клиентский компонент формы в features/{domain}/components/{domain}-form.tsx
@@ -925,14 +1028,62 @@ features/execution/
 4. page.tsx: <NewForm action={createAction} />
 ```
 
-### 5.5 Подключить БД (в будущем)
+### 5.5 Подключить БД
 
+**✅ Уже реализовано (основа):**
 ```
-1. lib/db/schema.ts — описать таблицы Drizzle
-2. lib/db/index.ts — экспортировать клиент БД
-3. lib/db/queries/{domain}.ts — запросы на чтение
+db/schema/profiles.ts    — таблица profiles (расширение auth.users)
+db/schema/rbac.ts        — таблицы roles, permissions, role_permissions
+db/index.ts              — клиент Drizzle (postgres-js, drizzle({schema}))
+db/seed.ts               — заполнение RBAC-данными
+drizzle.config.ts        — конфиг Drizzle Kit
+```
+
+**План расширения:**
+```
+1. db/schema/{domain}.ts — описать таблицы Drizzle для каждого домена
+2. db/schema/index.ts — добавить реэкспорт
+3. db/queries/{domain}.ts — запросы на чтение
 4. app/actions/{domain}.ts — мутации
 ```
+
+### 5.6 Аутентификация и защита роутов
+
+**Как работает middleware (`proxy.ts`):**
+```
+proxy.ts (Next.js Middleware)
+  └─→ lib/supabase/proxy.ts: updateSession(request)
+        ├─→ Обновляет сессию через cookies (Supabase SSR)
+        ├─→ /auth/callback — всегда пропускает (OAuth / email)
+        ├─→ /login, /signup, /forgot-password — только гости
+        │     └─→ если user → редирект /dashboard
+        ├─→ /admin — только аутентифицированные
+        │     └─→ если нет user → редирект /login
+        └─→ Все остальные роуты — требуют аутентификации
+              └─→ / — публичный (developer navigator)
+```
+
+**Как добавить новый защищённый роут:**
+- Роуты в `(main)/` — защищены автоматически (middleware)
+- Админ-роуты в `admin/` — защищены автоматически
+- Публичный роут → добавить в `publicPaths` массива в `lib/supabase/proxy.ts`
+
+**Как добавить проверку прав на странице:**
+```tsx
+// app/(main)/admin/page.tsx
+import { requireRole } from "@/lib/auth/permissions"
+
+export default async function AdminPage() {
+  await requireRole("admin")
+  return <AdminView />
+}
+```
+
+**Auth-роуты (login/signup):**
+- `/login` — форма входа, `loginAction` (Zod-валидация, Supabase Auth)
+- `/signup` — форма регистрации, `signupAction`
+- `/forgot-password` — форма восстановления (UI-only пока)
+- `/auth/callback` — обработчик OAuth и email-подтверждений
 
 ---
 

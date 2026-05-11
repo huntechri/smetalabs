@@ -60,7 +60,7 @@ export function PermissionsMatrix() {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-48">Права</TableHead>

@@ -109,12 +109,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </CardHeader>
 
       <CardContent>
-        <Frame className="grid min-w-0 grid-cols-2 gap-3 border-blue-400 p-2">
+        <Frame className="grid grid-cols-1 gap-3 border-blue-400 p-2 min-w-0 @xs:grid-cols-2">
           {/* Budget block */}
-          <Frame className="min-w-0 overflow-hidden border-amber-500 p-3">
+          <Frame className="border-amber-500 p-3 min-w-0">
             <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
               <CurrencyRub className="size-3 shrink-0" />
-              <span className="truncate">Бюджет</span>
+              <span>Бюджет</span>
             </div>
             <div className="truncate text-xs font-medium">
               {formatMoney(project.budget)}
@@ -122,10 +122,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </Frame>
 
           {/* Dates block */}
-          <Frame className="min-w-0 overflow-hidden border-amber-500 p-3">
+          <Frame className="border-amber-500 p-3 min-w-0">
             <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
               <CalendarBlank className="size-3 shrink-0" />
-              <span className="truncate">Сроки</span>
+              <span>Сроки</span>
             </div>
             <div className="truncate text-xs font-medium">
               {formatDateRange(project.startDate, project.endDate)}
@@ -133,11 +133,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </Frame>
 
           {/* Progress block */}
-          <Frame className="col-span-2 min-w-0 overflow-hidden border-amber-500 p-3">
-            <div className="mb-1 truncate text-[0.625rem] text-muted-foreground">
+          <Frame className="col-span-2 border-amber-500 p-3 min-w-0">
+            <div className="mb-1 text-[0.625rem] text-muted-foreground">
               Прогресс
             </div>
-            <div className="mb-1.5 truncate text-xs font-medium">
+            <div className="mb-1.5 text-xs font-medium">
               {project.progress}%
             </div>
             <div className="h-1.5 w-full rounded-full bg-muted">

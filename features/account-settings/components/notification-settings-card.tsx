@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -11,9 +12,11 @@ import {
 } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { mockNotifications } from "../__mocks__/account-settings"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useSettings, useUpdateNotifications } from "../hooks/use-account-settings"
+import type { NotificationSettings } from "../types"
 
-const notificationLabels: Record<string, string> = {
+const notificationLabels: Record<keyof NotificationSettings, string> = {
   projectUpdates: "Обновления проектов",
   estimateUpdates: "Обновления смет",
   procurementUpdates: "Обновления закупок",
@@ -22,7 +25,80 @@ const notificationLabels: Record<string, string> = {
   weeklySummary: "Еженедельная сводка",
 }
 
+const notifKeys = Object.keys(notificationLabels) as (keyof NotificationSettings)[]
+
+const defaultNotifs: NotificationSettings = {
+  projectUpdates: false,
+  estimateUpdates: false,
+  procurementUpdates: false,
+  teamInvitations: false,
+  billingNotifications: false,
+  weeklySummary: false,
+}
+
 export function NotificationSettingsCard() {
+  const { settings, loading, error, refetch } = useSettings()
+  const { updateNotifications, loading: saving, error: saveError } =
+    useUpdateNotifications()
+
+  const [notifs, setNotifs] = useState<NotificationSettings>(defaultNotifs)
+
+  useEffect(() => {
+    if (settings?.notifications) {
+      setNotifs({
+        ...defaultNotifs,
+        ...settings.notifications,
+      })
+    }
+  }, [settings])
+
+  const handleToggle = (key: keyof NotificationSettings, checked: boolean) => {
+    setNotifs((prev) => ({ ...prev, [key]: checked }))
+  }
+
+  const handleSave = async () => {
+    await updateNotifications(notifs)
+  }
+
+  // ── Loading state ──
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-3.5 w-64" />
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between py-1.5">
+              <Skeleton className="h-4 w-44" />
+              <Skeleton className="h-5 w-9 rounded-full" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // ── Error state ──
+  if (error && !settings?.notifications) {
+    return (
+      <Card className="border-destructive/50">
+        <CardHeader>
+          <CardTitle>Уведомления</CardTitle>
+          <CardDescription className="text-destructive">
+            Ошибка загрузки: {error}
+          </CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button variant="outline" onClick={refetch}>
+            Повторить
+          </Button>
+        </CardFooter>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -32,7 +108,7 @@ export function NotificationSettingsCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
-        {Object.entries(notificationLabels).map(([key, label]) => (
+        {notifKeys.map((key) => (
           <div
             key={key}
             className="flex items-center justify-between py-1.5"
@@ -41,22 +117,24 @@ export function NotificationSettingsCard() {
               htmlFor={`notif-${key}`}
               className="cursor-pointer font-normal"
             >
-              {label}
+              {notificationLabels[key]}
             </Label>
             <Switch
               id={`notif-${key}`}
-              defaultChecked={
-                mockNotifications[key as keyof typeof mockNotifications]
-              }
+              checked={notifs[key]}
+              onCheckedChange={(checked) => handleToggle(key, checked)}
             />
           </div>
         ))}
+        {saveError && (
+          <p className="text-xs text-destructive">
+            Ошибка сохранения: {saveError}
+          </p>
+        )}
       </CardContent>
       <CardFooter className="border-t pt-4">
-        <Button
-          onClick={() => console.log("Save notification settings")}
-        >
-          Сохранить
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? "Сохранение..." : "Сохранить"}
         </Button>
       </CardFooter>
     </Card>

@@ -124,6 +124,8 @@ smetalabs/
 │   ├── directory-supplier.ts            #   Тип DirectorySupplierRow
 │   ├── directory-counterparty.ts        #   Тип DirectoryCounterpartyRow
 │   │                                     #   + CounterpartyType, LegalStatus, BankDetails, PassportData
+│   ├── project.ts                       #   Тип Project
+│   └── roles.ts                         #   Тип Role, ROLE_LABELS, ROLE_DESCRIPTIONS
 ├── components/                          # Общие компоненты проекта
 │   ├── ui/                              # ⛔ shadcn/ui компоненты — НЕ ТРОГАТЬ, не кастомизировать
 │   │   ├── avatar.tsx                   #   (кроме случаев осознанного расширения через пропсы)
@@ -335,32 +337,37 @@ smetalabs/
 │   │           └── directory-counterparties-create-dialog.tsx  # Диалог создания с условными полями
 │   │                                                           # (юрлицо → реквизиты, физлицо → паспорт)
 │   │
-│   ├── access-control/                   # Фича «Права доступа — матрица RBAC» (UI-only)
+│   ├── access-control/                   # Фича «Права доступа — матрица RBAC» (подключена к API)
 │   │   ├── types.ts                      #   AccessRole, PermissionGroup, PermissionKey, RoleDefinition, PermissionDefinition
 │   │   ├── __mocks__/
-│   │   │   └── permissions.ts            #   Мок-роли, матрица прав по умолчанию
+│   │   │   └── permissions.ts            #   Мок-данные (fallback при ошибке API)
+│   │   ├── hooks/
+│   │   │   └── use-access-control.ts      #   Хук: загрузка ролей/прав через API, assignRole, removeRole
 │   │   └── components/
 │   │       └── permissions-matrix.tsx     #   Таблица прав (Table + Checkbox), кнопки Сбросить/Сохранить
 │   │
-│   ├── account-settings/               # Фича «Настройки аккаунта» (multi-tenant SaaS)
+│   ├── account-settings/               # Фича «Настройки аккаунта» (multi-tenant SaaS, подключена к API)
 │   │                                   #
 │   │                                   # Архитектура: 6 независимых карточек-компонентов, каждая —
-│   │                                   # самодостаточный UI-блок с собственным мок-состоянием.
-│   │                                   # AccountSettingsView собирает их в вертикальную композицию.
+│   │                                   # самодостаточный UI-блок. AccountSettingsView собирает их
+│   │                                   # в вертикальную композицию. Данные — через API + Server Actions.
 │   │                                   #
 │   │                                   # Multi-tenant: Profile (личные данные пользователя) и
 │   │                                   # Workspace (данные компании) — раздельные карточки.
 │   │                                   # Labels нейтральные для multi-region SaaS.
 │   │                                   #
 │   │                                   # Каждая карточка: Card (shadcn) → поля (Input/Select/Switch)
-│   │                                   # → Footer с Save-кнопкой (UI-only console.log).
-│   │                                   # Уведомления: Switch (новый shadcn-примитив) для 6 триггеров.
+│   │                                   # → Footer с Save-кнопкой → Server Action в app/actions/settings.ts
+│   │                                   # Бэкенд: таблица user_settings (JSONB), GET /api/settings.
+│   │                                   # Уведомления: Switch для 6 триггеров.
 │   │                                   # Sensitive: border-destructive, все кнопки — заглушки.
 │   │                                   # Роут: settings/account, переход через sidebar (nav-user).
 │   │
 │   │   ├── types.ts                    #   AccountProfile, WorkspaceSettings, AccountPreferences...
 │   │   ├── __mocks__/
 │   │   │   └── account-settings.ts     #   Мок-данные всех 6 карточек
+│   │   ├── hooks/
+│   │   │   └── use-account-settings.ts  #   Хук useSettings: GET /api/settings + Server Actions
 │   │   └── components/
 │   │       ├── account-settings-view.tsx        # Композиция: сборка 6 карточек в gap-6
 │   │       ├── profile-settings-card.tsx        # Аватар + поля + Select языка/таймзоны
@@ -370,10 +377,12 @@ smetalabs/
 │   │       ├── security-settings-card.tsx       # Пароль/2FA/сессии/последний вход
 │   │       └── sensitive-actions-card.tsx       # border-destructive, 4 кнопки (1 disabled)
 │   │
-│   ├── workspace-settings/            # Фича «Workspace / Team Settings» (UI-only, multi-tenant)
+│   ├── workspace-settings/            # Фича «Workspace / Team Settings» (multi-tenant, подключена к API)
 │   │   ├── types.ts                     #   WorkspaceRole, WorkspaceMember, WorkspaceInvitation, WorkspaceOverview
 │   │   ├── __mocks__/
-│   │   │   └── workspace-settings.ts    #   Моки: 7 участников, 3 приглашения, 3 домена, overview
+│   │   │   └── workspace-settings.ts    #   Моки (fallback при ошибке API)
+│   │   ├── hooks/
+│   │   │   └── use-workspace-settings.ts #  Хук useWorkspaceMembers: GET /api/team/members
 │   │   └── components/
 │   │       ├── workspace-settings-view.tsx       # Композиция: сборка 8 секций
 │   │       ├── workspace-overview-card.tsx       # Карточка обзора workspace

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -19,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { mockWorkspace } from "../__mocks__/account-settings"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useSettings, useUpdateWorkspace } from "../hooks/use-account-settings"
 
 const companyTypes = [
   { value: "ООО", label: "ООО" },
@@ -52,7 +54,98 @@ const timezones = [
 ]
 
 export function WorkspaceSettingsCard() {
-  const workspace = mockWorkspace
+  const { settings, loading, error, refetch } = useSettings()
+  const { updateWorkspace, loading: saving, error: saveError } = useUpdateWorkspace()
+
+  const [workspaceName, setWorkspaceName] = useState("")
+  const [companyLegalName, setCompanyLegalName] = useState("")
+  const [companyType, setCompanyType] = useState("ООО")
+  const [registrationNumber, setRegistrationNumber] = useState("")
+  const [taxNumber, setTaxNumber] = useState("")
+  const [legalAddress, setLegalAddress] = useState("")
+  const [billingEmail, setBillingEmail] = useState("")
+  const [companyPhone, setCompanyPhone] = useState("")
+  const [defaultCurrency, setDefaultCurrency] = useState("RUB")
+  const [defaultLocale, setDefaultLocale] = useState("ru-RU")
+  const [defaultTimezone, setDefaultTimezone] = useState("Europe/Moscow")
+
+  useEffect(() => {
+    if (settings?.workspace) {
+      const w = settings.workspace
+      setWorkspaceName(w.workspaceName ?? "")
+      setCompanyLegalName(w.companyLegalName ?? "")
+      setCompanyType(w.companyType ?? "ООО")
+      setRegistrationNumber(w.registrationNumber ?? "")
+      setTaxNumber(w.taxNumber ?? "")
+      setLegalAddress(w.legalAddress ?? "")
+      setBillingEmail(w.billingEmail ?? "")
+      setCompanyPhone(w.companyPhone ?? "")
+      setDefaultCurrency(w.defaultCurrency ?? "RUB")
+      setDefaultLocale(w.defaultLocale ?? "ru-RU")
+      setDefaultTimezone(w.defaultTimezone ?? "Europe/Moscow")
+    }
+  }, [settings])
+
+  const handleSave = async () => {
+    await updateWorkspace({
+      workspaceName,
+      companyLegalName,
+      companyType,
+      registrationNumber,
+      taxNumber,
+      legalAddress,
+      billingEmail,
+      companyPhone,
+      defaultCurrency,
+      defaultLocale,
+      defaultTimezone,
+    })
+  }
+
+  // ── Loading state ──
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-52" />
+          <Skeleton className="h-3.5 w-72" />
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-1.5">
+                <Skeleton className="h-3.5 w-28" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-3.5 w-32" />
+            <Skeleton className="h-16 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // ── Error state ──
+  if (error && !settings?.workspace) {
+    return (
+      <Card className="border-destructive/50">
+        <CardHeader>
+          <CardTitle>Рабочее пространство</CardTitle>
+          <CardDescription className="text-destructive">
+            Ошибка загрузки: {error}
+          </CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button variant="outline" onClick={refetch}>
+            Повторить
+          </Button>
+        </CardFooter>
+      </Card>
+    )
+  }
 
   return (
     <Card>
@@ -68,7 +161,8 @@ export function WorkspaceSettingsCard() {
             <Label htmlFor="workspaceName">Название workspace</Label>
             <Input
               id="workspaceName"
-              defaultValue={workspace.workspaceName}
+              value={workspaceName}
+              onChange={(e) => setWorkspaceName(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -77,12 +171,13 @@ export function WorkspaceSettingsCard() {
             </Label>
             <Input
               id="companyLegalName"
-              defaultValue={workspace.companyLegalName}
+              value={companyLegalName}
+              onChange={(e) => setCompanyLegalName(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="companyType">Тип компании</Label>
-            <Select defaultValue={workspace.companyType}>
+            <Select value={companyType} onValueChange={setCompanyType}>
               <SelectTrigger id="companyType" className="w-full">
                 <SelectValue placeholder="Выберите тип" />
               </SelectTrigger>
@@ -101,19 +196,25 @@ export function WorkspaceSettingsCard() {
             </Label>
             <Input
               id="registrationNumber"
-              defaultValue={workspace.registrationNumber}
+              value={registrationNumber}
+              onChange={(e) => setRegistrationNumber(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="taxNumber">ИНН / Налоговый номер</Label>
-            <Input id="taxNumber" defaultValue={workspace.taxNumber} />
+            <Input
+              id="taxNumber"
+              value={taxNumber}
+              onChange={(e) => setTaxNumber(e.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="billingEmail">Email для счетов</Label>
             <Input
               id="billingEmail"
               type="email"
-              defaultValue={workspace.billingEmail}
+              value={billingEmail}
+              onChange={(e) => setBillingEmail(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -121,12 +222,13 @@ export function WorkspaceSettingsCard() {
             <Input
               id="companyPhone"
               type="tel"
-              defaultValue={workspace.companyPhone}
+              value={companyPhone}
+              onChange={(e) => setCompanyPhone(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="defaultCurrency">Валюта по умолчанию</Label>
-            <Select defaultValue={workspace.defaultCurrency}>
+            <Select value={defaultCurrency} onValueChange={setDefaultCurrency}>
               <SelectTrigger id="defaultCurrency" className="w-full">
                 <SelectValue placeholder="Выберите валюту" />
               </SelectTrigger>
@@ -141,7 +243,7 @@ export function WorkspaceSettingsCard() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="defaultLocale">Локаль по умолчанию</Label>
-            <Select defaultValue={workspace.defaultLocale}>
+            <Select value={defaultLocale} onValueChange={setDefaultLocale}>
               <SelectTrigger id="defaultLocale" className="w-full">
                 <SelectValue placeholder="Выберите локаль" />
               </SelectTrigger>
@@ -156,7 +258,7 @@ export function WorkspaceSettingsCard() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="defaultTimezone">Часовой пояс по умолчанию</Label>
-            <Select defaultValue={workspace.defaultTimezone}>
+            <Select value={defaultTimezone} onValueChange={setDefaultTimezone}>
               <SelectTrigger id="defaultTimezone" className="w-full">
                 <SelectValue placeholder="Выберите часовой пояс" />
               </SelectTrigger>
@@ -174,16 +276,20 @@ export function WorkspaceSettingsCard() {
           <Label htmlFor="legalAddress">Юридический адрес</Label>
           <Textarea
             id="legalAddress"
-            defaultValue={workspace.legalAddress}
+            value={legalAddress}
+            onChange={(e) => setLegalAddress(e.target.value)}
             rows={2}
           />
         </div>
+        {saveError && (
+          <p className="text-xs text-destructive">
+            Ошибка сохранения: {saveError}
+          </p>
+        )}
       </CardContent>
       <CardFooter className="border-t pt-4">
-        <Button
-          onClick={() => console.log("Save workspace settings")}
-        >
-          Сохранить
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? "Сохранение..." : "Сохранить"}
         </Button>
       </CardFooter>
     </Card>

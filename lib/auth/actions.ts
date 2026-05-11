@@ -2,8 +2,17 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { z } from "zod"
+
+/** Get current origin from request headers (works on Vercel preview + production) */
+async function getOrigin() {
+  const headersList = await headers()
+  const host = headersList.get("host") ?? "localhost:3000"
+  const proto = headersList.get("x-forwarded-proto") ?? "http"
+  return `${proto}://${host}`
+}
 
 // ── Login ──
 const loginSchema = z.object({
@@ -88,11 +97,13 @@ export async function signupAction(
     }
   }
 
+  const origin = await getOrigin()
+
   const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/auth/callback`,
+      emailRedirectTo: `${origin}/auth/callback`,
     },
   })
 
@@ -131,10 +142,12 @@ export async function forgotPasswordAction(
     }
   }
 
+  const origin = await getOrigin()
+
   const { error } = await supabase.auth.resetPasswordForEmail(
     parsed.data.email,
     {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/auth/callback`,
+      redirectTo: `${origin}/auth/callback`,
     }
   )
 

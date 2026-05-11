@@ -21,6 +21,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { CaretUpDown, Sparkle, CheckCircle, CreditCard, Bell, SignOut } from "@phosphor-icons/react"
+import Link from "next/link"
 
 export function NavUser({
   user,
@@ -80,9 +81,11 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <CheckCircle />
-                Аккаунт
+              <DropdownMenuItem asChild>
+                <Link href="/settings/account">
+                  <CheckCircle />
+                  Аккаунт
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <CreditCard />

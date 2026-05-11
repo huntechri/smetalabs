@@ -27,10 +27,10 @@ export default function Page() {
       <div className="flex items-center gap-3 rounded-xl border border-dashed border-amber-400/50 bg-amber-400/5 px-6 py-4">
         <span className="text-sm text-muted-foreground">🔐</span>
         <Button variant="secondary" size="sm" asChild>
-          <a href="/auth/login">Войти</a>
+          <a href="/login">Войти</a>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <a href="/auth/signup">Регистрация</a>
+          <a href="/signup">Регистрация</a>
         </Button>
       </div>
 

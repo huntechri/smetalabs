@@ -38,7 +38,7 @@ export function SignupForm({
               чтобы завершить регистрацию.
             </p>
             <Button asChild variant="outline">
-              <Link href="/auth/login">Вернуться ко входу</Link>
+              <Link href="/login">Вернуться ко входу</Link>
             </Button>
           </CardContent>
         </Card>

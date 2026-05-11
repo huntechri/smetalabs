@@ -109,7 +109,7 @@ export function LoginForm({
               <FieldDescription className="text-center">
                 Нет аккаунта?{" "}
                 <Link
-                  href="/singup"
+                  href="/signup"
                   className="underline underline-offset-4"
                 >
                   Зарегистрироваться

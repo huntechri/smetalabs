@@ -37,13 +37,16 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims
   const { pathname } = request.nextUrl
 
-  // ── Auth routes (/auth/*) — only for unauthenticated users ──
-  if (pathname.startsWith("/auth")) {
-    // Allow /auth/callback through unconditionally (OAuth callback)
-    if (pathname.startsWith("/auth/callback")) {
-      return supabaseResponse
-    }
-    // If user is already logged in, redirect to dashboard
+  // ── Auth callback — always allow (OAuth / email confirm) ──
+  if (pathname.startsWith("/auth/callback")) {
+    return supabaseResponse
+  }
+
+  // ── Auth pages (/login, /signup, /forgot-password) — only for unauthenticated ──
+  const authPaths = ["/login", "/signup", "/signup", "/forgot-password"]
+  const isAuthPage = authPaths.some((p) => pathname === p)
+
+  if (isAuthPage) {
     if (user) {
       const url = request.nextUrl.clone()
       url.pathname = "/dashboard"
@@ -56,23 +59,22 @@ export async function updateSession(request: NextRequest) {
   if (pathname.startsWith("/admin")) {
     if (!user) {
       const url = request.nextUrl.clone()
-      url.pathname = "/auth/login"
+      url.pathname = "/login"
       return NextResponse.redirect(url)
     }
-    // Role check will be done in the page/action via getUserRoles
     return supabaseResponse
   }
 
   // ── Protected routes — require authentication ──
   // Home page (/) is public (developer navigator)
-  const publicPaths = ["/", "/auth"]
+  const publicPaths = ["/"]
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + "/")
   )
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
-    url.pathname = "/auth/login"
+    url.pathname = "/login"
     return NextResponse.redirect(url)
   }
 

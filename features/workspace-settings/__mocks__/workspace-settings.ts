@@ -1,0 +1,140 @@
+import type {
+  AllowedDomain,
+  WorkspaceInvitation,
+  WorkspaceMember,
+  WorkspaceOverview,
+} from "../types"
+
+export const workspaceOverview: WorkspaceOverview = {
+  name: "SmetaLabs Studio",
+  slug: "smetalabs-studio",
+  companyName: "SmetaLabs LLC",
+  ownerName: "Алексей Петров",
+  planName: "Pro",
+  memberLimit: 15,
+  currentMembers: 7,
+}
+
+export const workspaceMembers: WorkspaceMember[] = [
+  {
+    id: "m1",
+    name: "Алексей Петров",
+    email: "a.petrov@smetalabs.ru",
+    avatarUrl: undefined,
+    role: "owner",
+    status: "active",
+    joinedAt: "2024-01-15T10:00:00Z",
+    lastActiveAt: "2026-05-11T15:30:00Z",
+  },
+  {
+    id: "m2",
+    name: "Мария Иванова",
+    email: "m.ivanova@smetalabs.ru",
+    avatarUrl: undefined,
+    role: "admin",
+    status: "active",
+    joinedAt: "2024-02-01T08:00:00Z",
+    lastActiveAt: "2026-05-11T16:00:00Z",
+  },
+  {
+    id: "m3",
+    name: "Дмитрий Соколов",
+    email: "d.sokolov@smetalabs.ru",
+    avatarUrl: undefined,
+    role: "admin",
+    status: "active",
+    joinedAt: "2024-03-10T09:15:00Z",
+    lastActiveAt: "2026-05-11T14:45:00Z",
+  },
+  {
+    id: "m4",
+    name: "Елена Кузнецова",
+    email: "e.kuznetsova@smetalabs.ru",
+    avatarUrl: undefined,
+    role: "manager",
+    status: "active",
+    joinedAt: "2024-04-20T11:30:00Z",
+    lastActiveAt: "2026-05-11T12:00:00Z",
+  },
+  {
+    id: "m5",
+    name: "Андрей Волков",
+    email: "a.volkov@smetalabs.ru",
+    avatarUrl: undefined,
+    role: "manager",
+    status: "suspended",
+    joinedAt: "2024-06-01T07:00:00Z",
+    lastActiveAt: "2026-04-28T09:00:00Z",
+  },
+  {
+    id: "m6",
+    name: "Ольга Смирнова",
+    email: "o.smirnova@smetalabs.ru",
+    avatarUrl: undefined,
+    role: "estimator",
+    status: "active",
+    joinedAt: "2024-07-15T13:00:00Z",
+    lastActiveAt: "2026-05-11T10:20:00Z",
+  },
+  {
+    id: "m7",
+    name: "Сергей Морозов",
+    email: "s.morozov@smetalabs.ru",
+    avatarUrl: undefined,
+    role: "viewer",
+    status: "invited",
+    joinedAt: "2026-05-01T08:00:00Z",
+    lastActiveAt: "—",
+  },
+]
+
+export const pendingInvitations: WorkspaceInvitation[] = [
+  {
+    id: "inv1",
+    email: "n.belova@stroyproekt.ru",
+    role: "manager",
+    invitedBy: "Мария Иванова",
+    invitedAt: "2026-05-08T10:00:00Z",
+    expiresAt: "2026-05-15T10:00:00Z",
+    status: "pending",
+  },
+  {
+    id: "inv2",
+    email: "i.fedorov@stroyproekt.ru",
+    role: "estimator",
+    invitedBy: "Мария Иванова",
+    invitedAt: "2026-05-09T14:30:00Z",
+    expiresAt: "2026-05-16T14:30:00Z",
+    status: "pending",
+  },
+  {
+    id: "inv3",
+    email: "k.zhukova@partner.com",
+    role: "viewer",
+    invitedBy: "Дмитрий Соколов",
+    invitedAt: "2026-04-25T09:00:00Z",
+    expiresAt: "2026-05-02T09:00:00Z",
+    status: "expired",
+  },
+]
+
+export const allowedDomains: AllowedDomain[] = [
+  {
+    id: "d1",
+    domain: "smetalabs.ru",
+    addedBy: "Алексей Петров",
+    addedAt: "2024-01-15T10:00:00Z",
+  },
+  {
+    id: "d2",
+    domain: "stroyproekt.ru",
+    addedBy: "Мария Иванова",
+    addedAt: "2024-05-20T14:00:00Z",
+  },
+  {
+    id: "d3",
+    domain: "buildteam.org",
+    addedBy: "Дмитрий Соколов",
+    addedAt: "2025-03-10T11:00:00Z",
+  },
+]

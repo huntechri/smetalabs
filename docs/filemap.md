@@ -368,6 +368,21 @@ smetalabs/
 │   │       ├── security-settings-card.tsx       # Пароль/2FA/сессии/последний вход
 │   │       └── sensitive-actions-card.tsx       # border-destructive, 4 кнопки (1 disabled)
 │   │
+│   ├── workspace-settings/            # Фича «Workspace / Team Settings» (UI-only, multi-tenant)
+│   │   ├── types.ts                     #   WorkspaceRole, WorkspaceMember, WorkspaceInvitation, WorkspaceOverview
+│   │   ├── __mocks__/
+│   │   │   └── workspace-settings.ts    #   Моки: 7 участников, 3 приглашения, 3 домена, overview
+│   │   └── components/
+│   │       ├── workspace-settings-view.tsx       # Композиция: сборка 8 секций
+│   │       ├── workspace-overview-card.tsx       # Карточка обзора workspace
+│   │       ├── workspace-members-table.tsx       # Таблица участников (Role Select, Status Badge, actions)
+│   │       ├── invite-member-card.tsx            # Форма приглашения участника
+│   │       ├── invite-link-card.tsx              # Invite-ссылка + Switch + Select
+│   │       ├── allowed-domains-card.tsx          # Список разрешённых доменов + Input
+│   │       ├── pending-invitations-table.tsx     # Таблица ожидающих приглашений
+│   │       ├── workspace-roles-summary-card.tsx  # Сводка ролей с описаниями
+│   │       └── workspace-actions-card.tsx        # Leave, Transfer, Archive, Remove
+│   │
 │   └── ... (новые фичи создавать здесь по доменному принципу)
 │
 ├── hooks/                               # Общие хуки

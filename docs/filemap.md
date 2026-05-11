@@ -4,7 +4,7 @@
 >
 > **Состояние:** Старт проекта, только вёрстка. Бэкенд, API, работа с БД — отсутствуют.
 >
-> **Последнее обновление:** 2026-05-11 (access-control feature)
+> **Последнее обновление:** 2026-05-11 (account-settings feature)
 >
 > **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
 
@@ -133,6 +133,7 @@ smetalabs/
 │   │   ├── sidebar.tsx
 │   │   ├── skeleton.tsx
 │   │   ├── sonner.tsx
+│   │   ├── switch.tsx
 │   │   ├── table.tsx
 │   │   ├── tabs.tsx
 │   │   ├── textarea.tsx
@@ -321,6 +322,19 @@ smetalabs/
 │   │   │   └── permissions.ts            #   Мок-роли, матрица прав по умолчанию
 │   │   └── components/
 │   │       └── permissions-matrix.tsx     #   Таблица прав (Table + Checkbox), кнопки Сбросить/Сохранить
+│   │
+│   ├── account-settings/               # Фича «Настройки аккаунта» (6 карточек: Profile, Workspace, Preferences, Notifications, Security, Sensitive)
+│   │   ├── types.ts                    #   AccountProfile, WorkspaceSettings, AccountPreferences, NotificationSettings, SecurityInfo
+│   │   ├── __mocks__/
+│   │   │   └── account-settings.ts     #   Мок-данные настроек
+│   │   └── components/
+│   │       ├── account-settings-view.tsx        # Обёртка с сеткой карточек
+│   │       ├── profile-settings-card.tsx        # Карточка профиля
+│   │       ├── workspace-settings-card.tsx      # Карточка настроек workspace
+│   │       ├── preferences-settings-card.tsx    # Карточка предпочтений
+│   │       ├── notification-settings-card.tsx   # Карточка уведомлений
+│   │       ├── security-settings-card.tsx       # Карточка безопасности
+│   │       └── sensitive-actions-card.tsx       # Карточка критических действий
 │   │
 │   └── ... (новые фичи создавать здесь по доменному принципу)
 │

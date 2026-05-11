@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/db'
 import { roles, permissions, rolePermissions } from '@/db/schema/rbac'
-import { eq } from 'drizzle-orm'
 
 /**
  * GET /api/access-control/roles
@@ -16,9 +15,28 @@ import { eq } from 'drizzle-orm'
  * }
  */
 export async function GET(_request: NextRequest) {
+  // ── Step 0: Check DATABASE_URL ──
+  if (!process.env.DATABASE_URL) {
+    console.error('[GET /api/access-control/roles] DATABASE_URL is not set')
+    return NextResponse.json(
+      {
+        error: {
+          code: 'CONFIG_ERROR',
+          message: 'DATABASE_URL не настроен',
+        },
+      },
+      { status: 500 }
+    )
+  }
+
+  console.log(
+    `[GET /api/access-control/roles] DATABASE_URL present, host: ${new URL(process.env.DATABASE_URL).hostname}`
+  )
+
+  // ── Step 1: Fetch roles ──
+  let allRoles
   try {
-    // Получаем все роли
-    const allRoles = await db
+    allRoles = await db
       .select({
         id: roles.id,
         name: roles.name,
@@ -28,18 +46,53 @@ export async function GET(_request: NextRequest) {
         createdAt: roles.createdAt,
       })
       .from(roles)
-      .orderBy(roles.createdAt)
 
-    // Получаем все role_permissions связи
-    const allRolePerms = await db
+    console.log(
+      `[GET /api/access-control/roles] roles fetched: ${allRoles?.length ?? 0} rows`
+    )
+  } catch (err) {
+    console.error('[GET /api/access-control/roles] roles query failed:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при загрузке ролей',
+        },
+      },
+      { status: 500 }
+    )
+  }
+
+  // ── Step 2: Fetch role_permissions ──
+  let allRolePerms: Array<{ roleId: string; permissionId: string }>
+  try {
+    allRolePerms = await db
       .select({
         roleId: rolePermissions.roleId,
         permissionId: rolePermissions.permissionId,
       })
       .from(rolePermissions)
 
-    // Получаем все permissions
-    const allPermissions = await db
+    console.log(
+      `[GET /api/access-control/roles] rolePermissions fetched: ${allRolePerms?.length ?? 0} rows`
+    )
+  } catch (err) {
+    console.error('[GET /api/access-control/roles] rolePermissions query failed:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при загрузке связей ролей и разрешений',
+        },
+      },
+      { status: 500 }
+    )
+  }
+
+  // ── Step 3: Fetch permissions ──
+  let allPermissions
+  try {
+    allPermissions = await db
       .select({
         id: permissions.id,
         key: permissions.key,
@@ -49,10 +102,26 @@ export async function GET(_request: NextRequest) {
       })
       .from(permissions)
 
-    // Строим карту permissionId → permission
-    const permMap = new Map(
-      allPermissions.map((p) => [p.id, p])
+    console.log(
+      `[GET /api/access-control/roles] permissions fetched: ${allPermissions?.length ?? 0} rows`
     )
+  } catch (err) {
+    console.error('[GET /api/access-control/roles] permissions query failed:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при загрузке разрешений',
+        },
+      },
+      { status: 500 }
+    )
+  }
+
+  // ── Step 4: Build response ──
+  try {
+    // Строим карту permissionId → permission
+    const permMap = new Map(allPermissions.map((p) => [p.id, p]))
 
     // Группируем rolePermissions по roleId
     const rolePermMap = new Map<string, string[]>()
@@ -82,19 +151,23 @@ export async function GET(_request: NextRequest) {
       }
     })
 
+    console.log(
+      `[GET /api/access-control/roles] response built: ${data.length} roles`
+    )
+
     return NextResponse.json({
       data,
       meta: {
         total: data.length,
       },
     })
-  } catch (error) {
-    console.error('GET /api/access-control/roles error:', error)
+  } catch (err) {
+    console.error('[GET /api/access-control/roles] response building failed:', err)
     return NextResponse.json(
       {
         error: {
           code: 'INTERNAL_ERROR',
-          message: 'Ошибка при получении ролей',
+          message: 'Ошибка при формировании ответа',
         },
       },
       { status: 500 }

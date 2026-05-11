@@ -1,3 +1,6 @@
+"use client"
+
+import { useActionState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,16 +13,24 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
+import { loginAction, type LoginState } from "@/lib/auth/actions"
+
+const initialState: LoginState = {}
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [state, formAction, isPending] = useActionState(
+    loginAction,
+    initialState
+  )
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
+          <form action={formAction} className="p-6 md:p-8">
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Welcome back</h1>
@@ -31,9 +42,11 @@ export function LoginForm({
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="m@example.com"
                   required
+                  defaultValue={state.email}
                 />
               </Field>
               <Field>
@@ -46,10 +59,20 @@ export function LoginForm({
                     Забыли пароль?
                   </Link>
                 </div>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                />
               </Field>
+              {state.error && (
+                <p className="text-sm text-destructive">{state.error}</p>
+              )}
               <Field>
-                <Button type="submit">Войти</Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Вход..." : "Войти"}
+                </Button>
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
@@ -84,7 +107,13 @@ export function LoginForm({
                 </Button>
               </Field>
               <FieldDescription className="text-center">
-                Нет аккаунта? <Link href="/singup" className="underline underline-offset-4">Зарегистрироваться</Link>
+                Нет аккаунта?{" "}
+                <Link
+                  href="/singup"
+                  className="underline underline-offset-4"
+                >
+                  Зарегистрироваться
+                </Link>
               </FieldDescription>
             </FieldGroup>
           </form>
@@ -98,8 +127,9 @@ export function LoginForm({
         </CardContent>
       </Card>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Политика конфиденциальности</a>.
+        By clicking continue, you agree to our{" "}
+        <a href="#">Terms of Service</a> and{" "}
+        <a href="#">Политика конфиденциальности</a>.
       </FieldDescription>
     </div>
   )

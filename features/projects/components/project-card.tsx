@@ -68,7 +68,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const statusCfg = STATUS_CONFIG[project.status]
 
   return (
-    <Card className="border-dashed border-amber-500">
+    <Frame className="border-amber-500">
+      <Card>
       <CardHeader>
         {/* Status badges row */}
         <Frame className="items-center gap-2 border-green-400 p-1.5">
@@ -173,6 +174,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </Frame>
         </Frame>
       </CardFooter>
-    </Card>
+      </Card>
+    </Frame>
   )
 }

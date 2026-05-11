@@ -1,10 +1,8 @@
 'use server'
 
 import { z } from 'zod'
-import { eq, and } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
-import { db } from '@/db'
-import { roles, userRoles } from '@/db/schema/rbac'
+import { supabase } from '@/db'
 import { canManageTeam, requireAuth } from '@/lib/auth/permissions'
 
 // ── Zod schemas ──
@@ -34,26 +32,33 @@ export async function assignRole(
   const parsed = AssignRoleSchema.parse(input)
 
   // Проверяем, существует ли уже такая связь
-  const existing = await db
-    .select()
-    .from(userRoles)
-    .where(
-      and(
-        eq(userRoles.userId, parsed.userId),
-        eq(userRoles.roleId, parsed.roleId)
-      )
-    )
-    .then((r) => r[0])
+  const { data: existing, error: checkErr } = await supabase
+    .from('user_roles')
+    .select('user_id')
+    .eq('user_id', parsed.userId)
+    .eq('role_id', parsed.roleId)
 
-  if (existing) {
+  if (checkErr) {
+    console.error('[assignRole] check existing failed:', checkErr)
+    throw new Error('Ошибка при проверке существующей роли')
+  }
+
+  if (existing && existing.length > 0) {
     return { success: true, message: 'Роль уже назначена' }
   }
 
-  await db.insert(userRoles).values({
-    userId: parsed.userId,
-    roleId: parsed.roleId,
-    assignedBy: user.id,
-  })
+  const { error: insertErr } = await supabase
+    .from('user_roles')
+    .insert({
+      user_id: parsed.userId,
+      role_id: parsed.roleId,
+      assigned_by: user.id,
+    })
+
+  if (insertErr) {
+    console.error('[assignRole] insert failed:', insertErr)
+    throw new Error('Ошибка при назначении роли')
+  }
 
   revalidatePath('/team')
   revalidatePath('/settings/access')
@@ -76,11 +81,17 @@ export async function removeRole(
   const parsed = RemoveRoleSchema.parse(input)
 
   // Проверяем, не заблокирована ли роль (locked = true)
-  const role = await db
-    .select({ name: roles.name, locked: roles.locked })
-    .from(roles)
-    .where(eq(roles.id, parsed.roleId))
-    .then((r) => r[0])
+  const { data: roleData, error: roleErr } = await supabase
+    .from('roles')
+    .select('name, locked')
+    .eq('id', parsed.roleId)
+
+  if (roleErr) {
+    console.error('[removeRole] roles query failed:', roleErr)
+    throw new Error('Ошибка при проверке роли')
+  }
+
+  const role = roleData?.[0]
 
   if (!role) {
     throw new Error('Роль не найдена')
@@ -95,14 +106,16 @@ export async function removeRole(
     throw new Error('Нельзя изменить свою собственную роль')
   }
 
-  await db
-    .delete(userRoles)
-    .where(
-      and(
-        eq(userRoles.userId, parsed.userId),
-        eq(userRoles.roleId, parsed.roleId)
-      )
-    )
+  const { error: deleteErr } = await supabase
+    .from('user_roles')
+    .delete()
+    .eq('user_id', parsed.userId)
+    .eq('role_id', parsed.roleId)
+
+  if (deleteErr) {
+    console.error('[removeRole] delete failed:', deleteErr)
+    throw new Error('Ошибка при снятии роли')
+  }
 
   revalidatePath('/team')
   revalidatePath('/settings/access')

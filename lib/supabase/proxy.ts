@@ -65,9 +65,14 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
+  // ── API routes — handle their own auth (no middleware redirect) ──
+  if (pathname.startsWith("/api/")) {
+    return supabaseResponse
+  }
+
   // ── Protected routes — require authentication ──
-  // Home page (/) is public (developer navigator)
-  const publicPaths = ["/"]
+  // Home page (/) and auth pages are public
+  const publicPaths = ["/", "/auth"]
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + "/")
   )

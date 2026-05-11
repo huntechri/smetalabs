@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { db } from '@/db'
-import { userRoles, roles } from '@/db/schema/rbac'
-import { profiles } from '@/db/schema/profiles'
-import { eq } from 'drizzle-orm'
+import { supabase } from '@/db'
 
 /**
  * GET /api/team/members
@@ -18,82 +15,173 @@ import { eq } from 'drizzle-orm'
  * }
  */
 export async function GET(_request: NextRequest) {
+  // ── Step 1: Auth check (через SSR-клиент с cookies) ──
+  let ssrClient
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'UNAUTHORIZED',
-            message: 'Требуется аутентификация',
-          },
+    ssrClient = await createClient()
+  } catch (err) {
+    console.error('[GET /api/team/members] createClient failed:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при создании клиента',
         },
-        { status: 401 }
-      )
+      },
+      { status: 500 }
+    )
+  }
+
+  let user
+  try {
+    const result = await ssrClient.auth.getUser()
+    user = result.data?.user ?? null
+    if (result.error) {
+      console.error('[GET /api/team/members] getUser returned error:', result.error)
     }
+  } catch (err) {
+    console.error('[GET /api/team/members] getUser threw:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при проверке аутентификации',
+        },
+      },
+      { status: 500 }
+    )
+  }
 
-    // Получаем все профили (участники workspace)
-    const allProfiles = await db
-      .select({
-        id: profiles.id,
-        fullName: profiles.fullName,
-        avatarUrl: profiles.avatarUrl,
-        phone: profiles.phone,
-        position: profiles.position,
-        createdAt: profiles.createdAt,
-      })
-      .from(profiles)
+  if (!user) {
+    return NextResponse.json(
+      {
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Требуется аутентификация',
+        },
+      },
+      { status: 401 }
+    )
+  }
 
-    // Получаем все user_roles с именами ролей
-    const allUserRoles = await db
-      .select({
-        userId: userRoles.userId,
-        roleId: userRoles.roleId,
-        roleName: roles.name,
-        roleLabel: roles.label,
-      })
-      .from(userRoles)
-      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+  // ── Step 2: Fetch profiles (service_role bypasses RLS) ──
+  let allProfiles
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url, phone, position, created_at')
 
-    // Группируем роли по userId
+    if (error) throw error
+    allProfiles = data ?? []
+
+    console.log(
+      `[GET /api/team/members] profiles fetched: ${allProfiles.length} rows`
+    )
+  } catch (err: any) {
+    console.error('[GET /api/team/members] profiles query failed:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при загрузке профилей',
+          details: err?.message,
+        },
+      },
+      { status: 500 }
+    )
+  }
+
+  // ── Step 3: Fetch user_roles + roles (отдельные запросы + сборка в JS) ──
+  let allUserRoles
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('user_id, role_id')
+
+    if (error) throw error
+    allUserRoles = (data ?? []) as Array<{ user_id: string; role_id: string }>
+
+    console.log(
+      `[GET /api/team/members] user_roles fetched: ${allUserRoles.length} rows`
+    )
+  } catch (err: any) {
+    console.error('[GET /api/team/members] user_roles query failed:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при загрузке ролей пользователей',
+          details: err?.message,
+        },
+      },
+      { status: 500 }
+    )
+  }
+
+  // Fetch all roles to resolve role_id → name/label
+  let rolesMap: Map<string, { name: string; label: string }>
+  try {
+    const { data, error } = await supabase
+      .from('roles')
+      .select('id, name, label')
+
+    if (error) throw error
+
+    rolesMap = new Map(
+      (data ?? []).map((r: any) => [r.id, { name: r.name, label: r.label }])
+    )
+  } catch (err: any) {
+    console.error('[GET /api/team/members] roles query failed:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при загрузке ролей',
+          details: err?.message,
+        },
+      },
+      { status: 500 }
+    )
+  }
+
+  // ── Step 4: Build response (JS assembly) ──
+  try {
     const userRoleMap = new Map<
       string,
       Array<{ roleId: string; name: string; label: string }>
     >()
     for (const ur of allUserRoles) {
-      const existing = userRoleMap.get(ur.userId) ?? []
+      const roleInfo = rolesMap.get(ur.role_id)
+      if (!roleInfo) continue
+
+      const existing = userRoleMap.get(ur.user_id) ?? []
       existing.push({
-        roleId: ur.roleId,
-        name: ur.roleName,
-        label: ur.roleLabel,
+        roleId: ur.role_id,
+        name: roleInfo.name,
+        label: roleInfo.label,
       })
-      userRoleMap.set(ur.userId, existing)
+      userRoleMap.set(ur.user_id, existing)
     }
 
-    // Собираем результат: профили + роли
-    const data = allProfiles.map((profile) => {
+    const rolePriority: Record<string, number> = {
+      owner: 0,
+      admin: 1,
+      manager: 2,
+      estimator: 3,
+      viewer: 4,
+    }
+
+    const data = allProfiles.map((profile: any) => {
       const profileRoles = userRoleMap.get(profile.id) ?? []
-      // Определяем основную роль (первая или с наивысшим приоритетом)
-      const rolePriority: Record<string, number> = {
-        owner: 0,
-        admin: 1,
-        manager: 2,
-        estimator: 3,
-        viewer: 4,
-      }
       const sorted = [...profileRoles].sort(
         (a, b) => (rolePriority[a.name] ?? 99) - (rolePriority[b.name] ?? 99)
       )
 
       return {
         id: profile.id,
-        name: profile.fullName ?? 'Без имени',
-        email: null, // email берётся из auth.users (не хранится в profiles)
-        avatarUrl: profile.avatarUrl,
+        name: profile.full_name ?? 'Без имени',
+        email: null,
+        avatarUrl: profile.avatar_url,
         phone: profile.phone,
         position: profile.position,
         primaryRole: sorted[0]?.name ?? null,
@@ -103,10 +191,14 @@ export async function GET(_request: NextRequest) {
           name: r.name,
           label: r.label,
         })),
-        status: 'active', // TODO: брать из workspace_members.status
-        joinedAt: profile.createdAt,
+        status: 'active',
+        joinedAt: profile.created_at,
       }
     })
+
+    console.log(
+      `[GET /api/team/members] response built: ${data.length} members`
+    )
 
     return NextResponse.json({
       data,
@@ -114,13 +206,13 @@ export async function GET(_request: NextRequest) {
         total: data.length,
       },
     })
-  } catch (error) {
-    console.error('GET /api/team/members error:', error)
+  } catch (err: any) {
+    console.error('[GET /api/team/members] response building failed:', err)
     return NextResponse.json(
       {
         error: {
           code: 'INTERNAL_ERROR',
-          message: 'Ошибка при получении списка участников',
+          message: 'Ошибка при формировании ответа',
         },
       },
       { status: 500 }

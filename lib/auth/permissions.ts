@@ -1,12 +1,5 @@
 import { createClient as createSupabaseClient } from '@/lib/supabase/server'
-import { db } from '@/db'
-import {
-  roles,
-  permissions,
-  rolePermissions,
-  userRoles,
-} from '@/db/schema/rbac'
-import { eq, and, inArray } from 'drizzle-orm'
+import { supabase } from '@/db'
 
 // ═══════════════════════════════════════════════════════════════
 // 1. Базовые функции — role-based (обратная совместимость)
@@ -17,28 +10,42 @@ import { eq, and, inArray } from 'drizzle-orm'
  * Возвращает null если не аутентифицирован.
  */
 async function getCurrentUserId(): Promise<string | null> {
-  const supabase = await createSupabaseClient()
+  const client = await createSupabaseClient()
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await client.auth.getUser()
   return user?.id ?? null
 }
 
 /**
  * Получить роли текущего пользователя из user_roles.
  * Возвращает массив имён ролей (например, ["owner", "admin"]).
+ *
+ * Использует отдельные запросы + сборку в JS вместо Drizzle JOIN.
  */
 export async function getUserRoles(): Promise<string[]> {
   const userId = await getCurrentUserId()
   if (!userId) return []
 
-  const userRoleRows = await db
-    .select({ name: roles.name })
-    .from(userRoles)
-    .innerJoin(roles, eq(userRoles.roleId, roles.id))
-    .where(eq(userRoles.userId, userId))
+  // 1. Получаем role_id для пользователя
+  const { data: userRoleRows, error: err1 } = await supabase
+    .from('user_roles')
+    .select('role_id')
+    .eq('user_id', userId)
 
-  return userRoleRows.map((r) => r.name).filter(Boolean)
+  if (err1 || !userRoleRows?.length) return []
+
+  const roleIds = userRoleRows.map((r) => r.role_id)
+
+  // 2. Получаем имена ролей по id
+  const { data: roleRows, error: err2 } = await supabase
+    .from('roles')
+    .select('name')
+    .in('id', roleIds)
+
+  if (err2) return []
+
+  return roleRows.map((r) => r.name).filter(Boolean)
 }
 
 /**
@@ -58,12 +65,12 @@ export async function hasAnyRole(rolesList: string[]): Promise<boolean> {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 2. Permission-based функции (Drizzle JOIN)
+// 2. Permission-based функции (отдельные запросы + сборка в JS)
 // ═══════════════════════════════════════════════════════════════
 
 /**
  * Получить ВСЕ permissions текущего пользователя
- * через Drizzle JOIN: user_roles → role_permissions → permissions.
+ * через последовательные запросы: user_roles → role_permissions → permissions.
  *
  * Возвращает массив ключей разрешений (например, ["projects.read", "estimates.create"]).
  */
@@ -71,14 +78,36 @@ export async function getUserPermissions(): Promise<string[]> {
   const userId = await getCurrentUserId()
   if (!userId) return []
 
-  const rows = await db
-    .selectDistinct({ key: permissions.key })
-    .from(userRoles)
-    .innerJoin(rolePermissions, eq(userRoles.roleId, rolePermissions.roleId))
-    .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
-    .where(eq(userRoles.userId, userId))
+  // 1. Получаем role_id для пользователя
+  const { data: userRoleRows, error: err1 } = await supabase
+    .from('user_roles')
+    .select('role_id')
+    .eq('user_id', userId)
 
-  return rows.map((r) => r.key)
+  if (err1 || !userRoleRows?.length) return []
+
+  const roleIds = userRoleRows.map((r) => r.role_id)
+
+  // 2. Получаем permission_id через role_permissions
+  const { data: rpRows, error: err2 } = await supabase
+    .from('role_permissions')
+    .select('permission_id')
+    .in('role_id', roleIds)
+
+  if (err2 || !rpRows?.length) return []
+
+  // Дедупликация permission_id
+  const permissionIds = [...new Set(rpRows.map((r) => r.permission_id))]
+
+  // 3. Получаем ключи разрешений
+  const { data: permRows, error: err3 } = await supabase
+    .from('permissions')
+    .select('key')
+    .in('id', permissionIds)
+
+  if (err3) return []
+
+  return permRows.map((r) => r.key)
 }
 
 let _cachedPermissions: string[] | null = null

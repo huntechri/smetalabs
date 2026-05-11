@@ -1,7 +1,5 @@
 import "dotenv/config"
-import { db } from "./index"
-import { roles, permissions, rolePermissions } from "./schema/rbac"
-import { eq, and } from "drizzle-orm"
+import { supabase } from "./index"
 
 // ── Seed data (mirrors features/access-control/__mocks__/permissions.ts) ──
 
@@ -76,21 +74,26 @@ async function seed() {
   // ── 1. Seed roles ──
   const roleMap = new Map<string, string>()
   for (const role of accessRoles) {
-    const existing = await db
-      .select()
-      .from(roles)
-      .where(eq(roles.name, role.id))
-      .then((r) => r[0])
+    const { data: existing } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("name", role.id)
 
-    if (existing) {
-      roleMap.set(role.id, existing.id)
+    if (existing && existing.length > 0) {
+      roleMap.set(role.id, existing[0].id)
       console.log(`  ⏭  Role "${role.label}" already exists`)
     } else {
-      const [inserted] = await db
-        .insert(roles)
-        .values({ name: role.id, label: role.label, locked: role.locked })
-        .returning({ id: roles.id })
-      roleMap.set(role.id, inserted.id)
+      const { data: inserted, error } = await supabase
+        .from("roles")
+        .insert({ name: role.id, label: role.label, locked: role.locked })
+        .select("id")
+
+      if (error) {
+        console.error(`  ❌ Failed to insert role "${role.label}":`, error)
+        process.exit(1)
+      }
+
+      roleMap.set(role.id, inserted![0].id)
       console.log(`  ✅ Role "${role.label}" created`)
     }
   }
@@ -98,20 +101,25 @@ async function seed() {
   // ── 2. Seed permissions ──
   const permMap = new Map<string, string>()
   for (const perm of permissionDefs) {
-    const existing = await db
-      .select()
-      .from(permissions)
-      .where(eq(permissions.key, perm.key))
-      .then((r) => r[0])
+    const { data: existing } = await supabase
+      .from("permissions")
+      .select("id")
+      .eq("key", perm.key)
 
-    if (existing) {
-      permMap.set(perm.key, existing.id)
+    if (existing && existing.length > 0) {
+      permMap.set(perm.key, existing[0].id)
     } else {
-      const [inserted] = await db
-        .insert(permissions)
-        .values({ key: perm.key, label: perm.label, groupName: perm.group })
-        .returning({ id: permissions.id })
-      permMap.set(perm.key, inserted.id)
+      const { data: inserted, error } = await supabase
+        .from("permissions")
+        .insert({ key: perm.key, label: perm.label, group_name: perm.group })
+        .select("id")
+
+      if (error) {
+        console.error(`  ❌ Failed to insert permission "${perm.key}":`, error)
+        process.exit(1)
+      }
+
+      permMap.set(perm.key, inserted![0].id)
     }
   }
   console.log(`  ✅ ${permMap.size} permissions ensured`)
@@ -122,21 +130,26 @@ async function seed() {
     const roleId = roleMap.get(roleName)!
     for (const permKey of permKeys) {
       const permId = permMap.get(permKey)!
-      const existing = await db
-        .select()
-        .from(rolePermissions)
-        .where(
-          and(
-            eq(rolePermissions.roleId, roleId),
-            eq(rolePermissions.permissionId, permId)
-          )
-        )
-        .then((r) => r[0])
 
-      if (!existing) {
-        await db
-          .insert(rolePermissions)
-          .values({ roleId, permissionId: permId })
+      const { data: existing } = await supabase
+        .from("role_permissions")
+        .select("role_id")
+        .eq("role_id", roleId)
+        .eq("permission_id", permId)
+
+      if (!existing || existing.length === 0) {
+        const { error } = await supabase
+          .from("role_permissions")
+          .insert({ role_id: roleId, permission_id: permId })
+
+        if (error) {
+          console.error(
+            `  ❌ Failed to link role "${roleName}" ↔ "${permKey}":`,
+            error
+          )
+          process.exit(1)
+        }
+
         linksCreated++
       }
     }

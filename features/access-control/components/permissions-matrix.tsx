@@ -50,7 +50,7 @@ export function PermissionsMatrix() {
   }
 
   return (
-    <Card>
+    <Card className="overflow-x-auto">
       <CardHeader>
         <CardTitle>Матрица прав доступа</CardTitle>
         <CardDescription>
@@ -59,8 +59,7 @@ export function PermissionsMatrix() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <Table className="min-w-[800px]">
+        <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-48">Права</TableHead>
@@ -118,8 +117,7 @@ export function PermissionsMatrix() {
                 )
               })}
             </TableBody>
-          </Table>
-        </div>
+        </Table>
         <div className="flex items-center justify-between mt-4">
           <Button variant="outline" size="sm" onClick={resetMatrix}>
             Сбросить

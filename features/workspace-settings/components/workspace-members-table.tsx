@@ -37,8 +37,10 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 import { workspaceMembers } from "../__mocks__/workspace-settings"
-import { ROLE_LABELS, STATUS_LABELS } from "../types"
-import type { WorkspaceMember, WorkspaceRole } from "../types"
+import type { Role } from "@/types/roles"
+import { ROLE_LABELS } from "@/types/roles"
+import { STATUS_LABELS } from "../types"
+import type { WorkspaceMember } from "../types"
 
 function getInitials(name: string) {
   return name
@@ -124,7 +126,7 @@ function MemberRow({ member }: { member: WorkspaceMember }) {
             </SelectTrigger>
             <SelectContent>
               {(
-                ["admin", "manager", "estimator", "viewer"] as WorkspaceRole[]
+                ["admin", "manager", "estimator", "viewer"] as Role[]
               ).map((r) => (
                 <SelectItem key={r} value={r}>
                   {ROLE_LABELS[r]}

@@ -1,5 +1,5 @@
+import type { Role } from "@/types/roles"
 import type {
-  AccessRole,
   PermissionDefinition,
   PermissionGroup,
   PermissionKey,
@@ -49,7 +49,7 @@ export const permissions: PermissionDefinition[] = [
   { key: "billing.manage", label: "Управление биллингом", group: "billing" },
 ]
 
-export const defaultPermissionMatrix: Record<AccessRole, PermissionKey[]> = {
+export const defaultPermissionMatrix: Record<Role, PermissionKey[]> = {
   owner: permissions.map((p) => p.key),
   admin: permissions.filter((p) => p.key !== "billing.manage").map((p) => p.key),
   manager: permissions

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/table"
 
 import { pendingInvitations } from "../__mocks__/workspace-settings"
-import { ROLE_LABELS } from "../types"
+import { ROLE_LABELS } from "@/types/roles"
 import type { WorkspaceInvitation } from "../types"
 
 function formatDate(dateStr: string) {

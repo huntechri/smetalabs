@@ -1,4 +1,4 @@
-export type WorkspaceRole = "owner" | "admin" | "manager" | "estimator" | "viewer"
+import type { Role } from "@/types/roles"
 
 export type WorkspaceMemberStatus = "active" | "invited" | "suspended"
 
@@ -7,7 +7,7 @@ export type WorkspaceMember = {
   name: string
   email: string
   avatarUrl?: string
-  role: WorkspaceRole
+  role: Role
   status: WorkspaceMemberStatus
   joinedAt: string
   lastActiveAt: string
@@ -18,7 +18,7 @@ export type WorkspaceInvitationStatus = "pending" | "expired"
 export type WorkspaceInvitation = {
   id: string
   email: string
-  role: WorkspaceRole
+  role: Role
   invitedBy: string
   invitedAt: string
   expiresAt: string
@@ -40,27 +40,6 @@ export type AllowedDomain = {
   domain: string
   addedBy: string
   addedAt: string
-}
-
-export const ROLE_LABELS: Record<WorkspaceRole, string> = {
-  owner: "Владелец",
-  admin: "Администратор",
-  manager: "Менеджер",
-  estimator: "Сметчик",
-  viewer: "Наблюдатель",
-}
-
-export const ROLE_DESCRIPTIONS: Record<WorkspaceRole, string> = {
-  owner:
-    "Полный доступ ко всем ресурсам workspace. Может управлять командой, биллингом и удалять workspace.",
-  admin:
-    "Управление участниками, настройками и проектами. Не может удалить workspace или передать права владельца.",
-  manager:
-    "Создание и редактирование смет, управление проектами и закупками. Ограниченный доступ к настройкам команды.",
-  estimator:
-    "Создание и редактирование смет. Доступ только к назначенным проектам.",
-  viewer:
-    "Просмотр смет и проектов без возможности редактирования. Доступ только для чтения.",
 }
 
 export const STATUS_LABELS: Record<WorkspaceMemberStatus, string> = {

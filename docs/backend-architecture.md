@@ -1707,6 +1707,7 @@ CREATE POLICY "admin_manager_upload" ON storage.objects
 | `/team` | `workspace_members.findMany({ownerId})` + `workspace_invitations.findMany({ownerId})` + `workspace_allowed_domains.findMany({ownerId})` | profiles |
 | `/templates` | `templates.findMany()` | template_works, template_materials |
 | `/settings/account` | `profiles.findOne({userId})` + `user_settings.findOne({userId})` | — |
+| `/settings/access` | `roles.findMany()` + `permissions.findMany()` + `role_permissions.findMany()` | — |
 
 ### C. Связи Foreign Key (полный список)
 

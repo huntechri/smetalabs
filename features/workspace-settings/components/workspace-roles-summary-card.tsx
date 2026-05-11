@@ -11,12 +11,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "../types"
-import type { WorkspaceRole } from "../types"
+import type { Role } from "@/types/roles"
+import { ROLE_DESCRIPTIONS, ROLE_LABELS } from "@/types/roles"
 
-const roles: WorkspaceRole[] = ["owner", "admin", "manager", "estimator", "viewer"]
+const roles: Role[] = ["owner", "admin", "manager", "estimator", "viewer"]
 
-const roleColors: Record<WorkspaceRole, string> = {
+const roleColors: Record<Role, string> = {
   owner: "bg-violet-500/10 text-violet-600 hover:bg-violet-500/10",
   admin: "bg-blue-500/10 text-blue-600 hover:bg-blue-500/10",
   manager: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10",

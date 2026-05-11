@@ -22,10 +22,10 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 
-import { ROLE_LABELS } from "../types"
-import type { WorkspaceRole } from "../types"
+import type { Role } from "@/types/roles"
+import { ROLE_LABELS } from "@/types/roles"
 
-const roles: WorkspaceRole[] = ["admin", "manager", "estimator", "viewer"]
+const roles: Role[] = ["admin", "manager", "estimator", "viewer"]
 
 export function InviteLinkCard() {
   const [enabled, setEnabled] = useState(true)

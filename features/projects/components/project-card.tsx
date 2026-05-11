@@ -112,39 +112,45 @@ export function ProjectCard({ project }: ProjectCardProps) {
         <Frame className="grid grid-cols-1 gap-3 border-blue-400 p-2 min-w-0 @xs:grid-cols-2">
           {/* Budget block */}
           <Frame className="border-amber-500 p-3 min-w-0">
-            <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
-              <CurrencyRub className="size-3 shrink-0" />
-              <span>Бюджет</span>
-            </div>
-            <div className="truncate text-xs font-medium">
-              {formatMoney(project.budget)}
+            <div className="flex flex-col w-full">
+              <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
+                <CurrencyRub className="size-3 shrink-0" />
+                <span>Бюджет</span>
+              </div>
+              <div className="w-full truncate text-xs font-medium">
+                {formatMoney(project.budget)}
+              </div>
             </div>
           </Frame>
 
           {/* Dates block */}
           <Frame className="border-amber-500 p-3 min-w-0">
-            <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
-              <CalendarBlank className="size-3 shrink-0" />
-              <span>Сроки</span>
-            </div>
-            <div className="truncate text-xs font-medium">
-              {formatDateRange(project.startDate, project.endDate)}
+            <div className="flex flex-col w-full">
+              <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
+                <CalendarBlank className="size-3 shrink-0" />
+                <span>Сроки</span>
+              </div>
+              <div className="w-full truncate text-xs font-medium">
+                {formatDateRange(project.startDate, project.endDate)}
+              </div>
             </div>
           </Frame>
 
           {/* Progress block */}
           <Frame className="col-span-2 border-amber-500 p-3 min-w-0">
-            <div className="mb-1 text-[0.625rem] text-muted-foreground">
-              Прогресс
-            </div>
-            <div className="mb-1.5 text-xs font-medium">
-              {project.progress}%
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary"
-                style={{ width: `${project.progress}%` }}
-              />
+            <div className="flex flex-col w-full">
+              <div className="mb-1 text-[0.625rem] text-muted-foreground">
+                Прогресс
+              </div>
+              <div className="mb-1.5 text-xs font-medium">
+                {project.progress}%
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${project.progress}%` }}
+                />
+              </div>
             </div>
           </Frame>
         </Frame>

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/db'
-import { roles, permissions, rolePermissions } from '@/db/schema/rbac'
+import { supabase } from '@/db'
 
 /**
  * GET /api/access-control/roles
@@ -15,14 +14,14 @@ import { roles, permissions, rolePermissions } from '@/db/schema/rbac'
  * }
  */
 export async function GET(_request: NextRequest) {
-  // ── Step 0: Check DATABASE_URL ──
-  if (!process.env.DATABASE_URL) {
-    console.error('[GET /api/access-control/roles] DATABASE_URL is not set')
+  // ── Step 0: Check env vars ──
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('[GET /api/access-control/roles] Supabase env vars not set')
     return NextResponse.json(
       {
         error: {
           code: 'CONFIG_ERROR',
-          message: 'DATABASE_URL не настроен',
+          message: 'Supabase не настроен (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)',
         },
       },
       { status: 500 }
@@ -30,33 +29,30 @@ export async function GET(_request: NextRequest) {
   }
 
   console.log(
-    `[GET /api/access-control/roles] DATABASE_URL present, host: ${new URL(process.env.DATABASE_URL).hostname}`
+    `[GET /api/access-control/roles] Supabase URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL}`
   )
 
   // ── Step 1: Fetch roles ──
   let allRoles
   try {
-    allRoles = await db
-      .select({
-        id: roles.id,
-        name: roles.name,
-        label: roles.label,
-        locked: roles.locked,
-        description: roles.description,
-        createdAt: roles.createdAt,
-      })
-      .from(roles)
+    const { data, error } = await supabase
+      .from('roles')
+      .select('id, name, label, locked, description, created_at')
+
+    if (error) throw error
+    allRoles = data ?? []
 
     console.log(
-      `[GET /api/access-control/roles] roles fetched: ${allRoles?.length ?? 0} rows`
+      `[GET /api/access-control/roles] roles fetched: ${allRoles.length} rows`
     )
-  } catch (err) {
+  } catch (err: any) {
     console.error('[GET /api/access-control/roles] roles query failed:', err)
     return NextResponse.json(
       {
         error: {
           code: 'INTERNAL_ERROR',
           message: 'Ошибка при загрузке ролей',
+          details: err?.message,
         },
       },
       { status: 500 }
@@ -64,25 +60,26 @@ export async function GET(_request: NextRequest) {
   }
 
   // ── Step 2: Fetch role_permissions ──
-  let allRolePerms: Array<{ roleId: string; permissionId: string }>
+  let allRolePerms: Array<{ role_id: string; permission_id: string }>
   try {
-    allRolePerms = await db
-      .select({
-        roleId: rolePermissions.roleId,
-        permissionId: rolePermissions.permissionId,
-      })
-      .from(rolePermissions)
+    const { data, error } = await supabase
+      .from('role_permissions')
+      .select('role_id, permission_id')
+
+    if (error) throw error
+    allRolePerms = (data ?? []) as Array<{ role_id: string; permission_id: string }>
 
     console.log(
-      `[GET /api/access-control/roles] rolePermissions fetched: ${allRolePerms?.length ?? 0} rows`
+      `[GET /api/access-control/roles] role_permissions fetched: ${allRolePerms.length} rows`
     )
-  } catch (err) {
-    console.error('[GET /api/access-control/roles] rolePermissions query failed:', err)
+  } catch (err: any) {
+    console.error('[GET /api/access-control/roles] role_permissions query failed:', err)
     return NextResponse.json(
       {
         error: {
           code: 'INTERNAL_ERROR',
           message: 'Ошибка при загрузке связей ролей и разрешений',
+          details: err?.message,
         },
       },
       { status: 500 }
@@ -92,61 +89,61 @@ export async function GET(_request: NextRequest) {
   // ── Step 3: Fetch permissions ──
   let allPermissions
   try {
-    allPermissions = await db
-      .select({
-        id: permissions.id,
-        key: permissions.key,
-        label: permissions.label,
-        groupName: permissions.groupName,
-        description: permissions.description,
-      })
-      .from(permissions)
+    const { data, error } = await supabase
+      .from('permissions')
+      .select('id, key, label, group_name, description')
+
+    if (error) throw error
+    allPermissions = data ?? []
 
     console.log(
-      `[GET /api/access-control/roles] permissions fetched: ${allPermissions?.length ?? 0} rows`
+      `[GET /api/access-control/roles] permissions fetched: ${allPermissions.length} rows`
     )
-  } catch (err) {
+  } catch (err: any) {
     console.error('[GET /api/access-control/roles] permissions query failed:', err)
     return NextResponse.json(
       {
         error: {
           code: 'INTERNAL_ERROR',
           message: 'Ошибка при загрузке разрешений',
+          details: err?.message,
         },
       },
       { status: 500 }
     )
   }
 
-  // ── Step 4: Build response ──
+  // ── Step 4: Build response (JS assembly вместо Drizzle JOIN) ──
   try {
-    // Строим карту permissionId → permission
-    const permMap = new Map(allPermissions.map((p) => [p.id, p]))
+    const permMap = new Map(allPermissions.map((p: any) => [p.id, p]))
 
-    // Группируем rolePermissions по roleId
     const rolePermMap = new Map<string, string[]>()
     for (const rp of allRolePerms) {
-      const existing = rolePermMap.get(rp.roleId) ?? []
-      existing.push(rp.permissionId)
-      rolePermMap.set(rp.roleId, existing)
+      const existing = rolePermMap.get(rp.role_id) ?? []
+      existing.push(rp.permission_id)
+      rolePermMap.set(rp.role_id, existing)
     }
 
-    // Собираем результат
-    const data = allRoles.map((role) => {
+    const data = allRoles.map((role: any) => {
       const permIds = rolePermMap.get(role.id) ?? []
       const perms = permIds
         .map((pid) => permMap.get(pid))
         .filter(Boolean)
-        .map((p) => ({
-          id: p!.id,
-          key: p!.key,
-          label: p!.label,
-          groupName: p!.groupName,
-          description: p!.description,
+        .map((p: any) => ({
+          id: p.id,
+          key: p.key,
+          label: p.label,
+          groupName: p.group_name,
+          description: p.description,
         }))
 
       return {
-        ...role,
+        id: role.id,
+        name: role.name,
+        label: role.label,
+        locked: role.locked,
+        description: role.description,
+        createdAt: role.created_at,
         permissions: perms,
       }
     })
@@ -161,7 +158,7 @@ export async function GET(_request: NextRequest) {
         total: data.length,
       },
     })
-  } catch (err) {
+  } catch (err: any) {
     console.error('[GET /api/access-control/roles] response building failed:', err)
     return NextResponse.json(
       {

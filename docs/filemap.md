@@ -4,7 +4,7 @@
 >
 > **Состояние:** Старт проекта, только вёрстка. Бэкенд, API, работа с БД — отсутствуют.
 >
-> **Последнее обновление:** 2026-05-11
+> **Последнее обновление:** 2026-05-11 (access-control feature)
 >
 > **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
 
@@ -314,6 +314,13 @@ smetalabs/
 │   │           ├── directory-counterparties-metric-group.tsx  # Группа метрик
 │   │           └── directory-counterparties-create-dialog.tsx  # Диалог создания с условными полями
 │   │                                                           # (юрлицо → реквизиты, физлицо → паспорт)
+│   │
+│   ├── access-control/                   # Фича «Права доступа — матрица RBAC» (UI-only)
+│   │   ├── types.ts                      #   AccessRole, PermissionGroup, PermissionKey, RoleDefinition, PermissionDefinition
+│   │   ├── __mocks__/
+│   │   │   └── permissions.ts            #   Мок-роли, матрица прав по умолчанию
+│   │   └── components/
+│   │       └── permissions-matrix.tsx     #   Таблица прав (Table + Checkbox), кнопки Сбросить/Сохранить
 │   │
 │   └── ... (новые фичи создавать здесь по доменному принципу)
 │

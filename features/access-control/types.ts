@@ -1,4 +1,4 @@
-export type AccessRole = "owner" | "admin" | "manager" | "estimator" | "viewer"
+import type { Role } from "@/types/roles"
 
 export type PermissionGroup =
   | "projects"
@@ -29,7 +29,7 @@ export type PermissionKey =
   | "billing.manage"
 
 export type RoleDefinition = {
-  id: AccessRole
+  id: Role
   label: string
   locked: boolean
 }

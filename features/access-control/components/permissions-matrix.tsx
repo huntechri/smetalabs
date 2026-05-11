@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
-import type { AccessRole, PermissionKey } from "../types"
+import type { Role } from "@/types/roles"
+import type { PermissionKey } from "../types"
 import {
   accessRoles,
   defaultPermissionMatrix,
@@ -33,9 +34,9 @@ import {
 
 export function PermissionsMatrix() {
   const [matrix, setMatrix] =
-    useState<Record<AccessRole, PermissionKey[]>>(defaultPermissionMatrix)
+    useState<Record<Role, PermissionKey[]>>(defaultPermissionMatrix)
 
-  function togglePermission(role: AccessRole, key: PermissionKey) {
+  function togglePermission(role: Role, key: PermissionKey) {
     setMatrix((prev) => {
       const current = prev[role]
       const updated = current.includes(key)

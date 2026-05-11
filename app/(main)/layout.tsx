@@ -16,7 +16,7 @@ export default function MainLayout({
         <SiteHeader />
         <div className="flex h-[calc(100svh-var(--header-height))] min-h-0">
           <AppSidebar />
-          <SidebarInset className="min-h-0 overflow-hidden">
+          <SidebarInset className="min-h-0 overflow-y-auto">
             {/* Сюда Next.js будет подставлять контент из /dashboard, /projects и т.д. */}
             {children}
           </SidebarInset>

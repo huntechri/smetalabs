@@ -628,6 +628,88 @@ IDX: idx_user_roles_user_id  ON (user_id)
 | billing.read         |   ✓   |   ✓   |    —    |     —     |   —    |
 | billing.manage       |   ✓   |   —    |    —    |     —     |   —    |
 
+#### 2.2.17a `workspace_members` — Участники workspace
+
+Таблица связывает пользователей с их workspace и определяет роль участника. Использует те же роли, что и RBAC-система (`roles.name`). Поля `status`, `joined_at`, `last_active_at` расширяют контекст участника.
+
+```
+TABLE public.workspace_members
+───────────────────────────────────────────────────────────
+Колонка          Тип                Null     Описание
+───────────────────────────────────────────────────────────
+user_id          uuid               PK       → profiles.id (участник)
+owner_id         uuid               NOT      → profiles.id (владелец workspace)
+role             text               NOT      → roles.name
+status           member_status      NOT      DEFAULT 'active' — 'active' | 'invited' | 'suspended'
+joined_at        timestamptz        NOT      DEFAULT now()
+last_active_at   timestamptz        YES      Последняя активность
+created_at       timestamptz        NOT      DEFAULT now()
+updated_at       timestamptz        NOT      DEFAULT now()
+───────────────────────────────────────────────────────────
+PK:  (user_id, owner_id)
+FK:  user_id → profiles.id ON DELETE CASCADE
+FK:  owner_id → profiles.id ON DELETE CASCADE
+ENUM: member_status = ('active', 'invited', 'suspended')
+IDX: idx_workspace_members_owner_id ON (owner_id)
+IDX: idx_workspace_members_status ON (status)
+RLS:  owner + admin — чтение и управление. Остальные — только чтение своей записи.
+```
+
+**Примечание:** `owner_id` определяет принадлежность к workspace — workspace идентифицируется по владельцу (`profiles.id`), чей `workspace_name` используется как название workspace. В будущем при выделении таблицы `workspaces` поле `owner_id` заменится на `workspace_id`.
+
+#### 2.2.17b `workspace_invitations` — Приглашения в workspace
+
+Хранит отправленные, но ещё не принятые приглашения. После регистрации пользователя запись удаляется и создаётся запись в `workspace_members`.
+
+```
+TABLE public.workspace_invitations
+───────────────────────────────────────────────────────────
+Колонка          Тип                Null     Описание
+───────────────────────────────────────────────────────────
+id               uuid               PK
+email            text               NOT      Email приглашаемого
+role             text               NOT      → roles.name
+invited_by       uuid               NOT      → profiles.id (кто пригласил)
+owner_id         uuid               NOT      → profiles.id (владелец workspace)
+invited_at       timestamptz        NOT      DEFAULT now()
+expires_at       timestamptz        NOT      DEFAULT (now() + interval '7 days')
+status           invitation_status  NOT      DEFAULT 'pending' — 'pending' | 'expired'
+created_at       timestamptz        NOT      DEFAULT now()
+───────────────────────────────────────────────────────────
+PK:  id
+FK:  invited_by → profiles.id ON DELETE CASCADE
+FK:  owner_id → profiles.id ON DELETE CASCADE
+UQ:  (email, owner_id) — один email не может быть приглашён дважды в один workspace
+ENUM: invitation_status = ('pending', 'expired')
+IDX: idx_invitations_status ON (status)
+IDX: idx_invitations_expires ON (expires_at) WHERE status = 'pending'
+RLS:  owner + admin — полный доступ. manager — чтение.
+```
+
+#### 2.2.17c `workspace_allowed_domains` — Разрешённые домены
+
+Белый список доменов для автоматического присоединения к workspace.
+
+```
+TABLE public.workspace_allowed_domains
+───────────────────────────────────────────────────────────
+Колонка          Тип                Null     Описание
+───────────────────────────────────────────────────────────
+id               uuid               PK
+domain           text               NOT      Домен (например, «smetalabs.ru»)
+owner_id         uuid               NOT      → profiles.id (владелец workspace)
+added_by         uuid               NOT      → profiles.id (кто добавил)
+added_at         timestamptz        NOT      DEFAULT now()
+created_at       timestamptz        NOT      DEFAULT now()
+───────────────────────────────────────────────────────────
+PK:  id
+FK:  owner_id → profiles.id ON DELETE CASCADE
+FK:  added_by → profiles.id ON DELETE CASCADE
+UQ:  (domain, owner_id)
+IDX: idx_allowed_domains_owner ON (owner_id)
+RLS:  owner + admin — полный доступ. manager — чтение.
+```
+
 **Примечания к матрице:**
 - `owner` имеет все права и не может быть понижен (`locked: true`).
 - `admin` имеет все права, кроме `billing.manage` (только owner управляет биллингом). Администратор может управлять командой (`team.manage`).
@@ -777,6 +859,18 @@ RETURNS boolean AS $$
 $$ LANGUAGE sql;
 ```
 
+### 2.3.1 Workspace-подсистема (дополнительные связи)
+
+```
+profiles.id (owner) ◀── workspace_members.owner_id
+profiles.id (owner) ◀── workspace_invitations.owner_id
+profiles.id (owner) ◀── workspace_allowed_domains.owner_id
+
+profiles.id (user)   ◀── workspace_members.user_id
+profiles.id (invited_by) ◀── workspace_invitations.invited_by
+profiles.id (added_by) ◀── workspace_allowed_domains.added_by
+```
+
 ### 2.4 Диаграмма таблиц
 
 ```
@@ -832,6 +926,15 @@ $$ LANGUAGE sql;
 ┌──────────────┐
 │  user_roles  │◀──── profiles
 └──────────────┘
+       │
+       │ 1:N
+       ▼
+┌────────────────────┐     ┌──────────────────────┐     ┌─────────────────────────┐
+│ workspace_members  │     │ workspace_invitations│     │ workspace_allowed_      │
+│  → profiles(user)  │     │  → profiles(inviter) │     │ domains                 │
+│  → profiles(owner) │     │  → profiles(owner)   │     │  → profiles(added_by)   │
+└────────────────────┘     └──────────────────────┘     │  → profiles(owner)      │
+                                                        └─────────────────────────┘
 
 
 ┌────────────────────┐
@@ -897,6 +1000,9 @@ app/actions/
     counterparties.ts    — createDirCounterparty, updateDirCounterparty, deleteDirCounterparty
   templates.ts           — createTemplate, updateTemplate, deleteTemplate, applyTemplate
   access-control.ts      — assignRole, removeRole
+  workspace-settings.ts  — inviteMember, removeMember, changeRole, suspendMember,
+                            inviteByLink, revokeInvitation, addDomain, removeDomain,
+                            leaveWorkspace, transferOwnership, archiveWorkspace, deleteWorkspace
   settings.ts            — updateSettings, updateProfile, uploadAvatar
   auth.ts                — кастомные действия (большинство — через Supabase Auth)
 ```
@@ -955,7 +1061,23 @@ GET  /api/templates/:id                              — детали шабло
 GET  /api/dashboard/stats                            — статистика для дашборда
 GET  /api/dashboard/projects-by-status               — проекты по статусам
 GET  /api/dashboard/budget-summary                   — сводка по бюджетам
-GET  /api/team                                       — список команды (роли пользователей)
+GET  /api/team                                       — список команды (участники workspace)
+GET  /api/team/members                               — список участников с ролями и статусами
+GET  /api/team/invitations                           — список ожидающих приглашений
+GET  /api/team/domains                               — список разрешённых доменов
+POST /api/team/invite                                — отправить приглашение
+POST /api/team/invite-link                           — сгенерировать/обновить invite-ссылку
+POST /api/team/members/:userId/change-role           — изменить роль участника
+POST /api/team/members/:userId/suspend               — заблокировать участника
+POST /api/team/members/:userId/remove                — удалить участника из workspace
+POST /api/team/invitations/:id/revoke                — отозвать приглашение
+POST /api/team/invitations/:id/resend                — повторно отправить приглашение
+POST /api/team/domains/add                           — добавить разрешённый домен
+POST /api/team/domains/:id/remove                    — удалить разрешённый домен
+POST /api/team/transfer-ownership                    — передать права владельца
+POST /api/team/leave                                 — покинуть workspace
+POST /api/team/archive                               — архивировать workspace
+POST /api/team/delete                                — удалить workspace
 GET  /api/settings                                   — настройки текущего пользователя
 GET  /api/access-control/roles                       — доступные роли и разрешения
 ```
@@ -1193,11 +1315,12 @@ export const config = {
   ├── 1.5 Seed-данные (db/seed.ts) — роли, разрешения
   └── 1.6 Supabase-клиенты (server/client) + middleware
 
-Фаза 2: Аутентификация
+Фаза 2: Аутентификация и workspace
   ├── 2.1 Supabase Auth UI (auth/login, signup, forgot-password)
   ├── 2.2 Middleware (защита роутов)
   ├── 2.3 Профиль (profiles таблица)
-  └── 2.4 User settings (user_settings)
+  ├── 2.4 User settings (user_settings)
+  └── 2.5 Workspace management (workspace_members, workspace_invitations, workspace_allowed_domains)
 
 Фаза 3: Справочники (независимые)
   ├── 3.1 directory_materials
@@ -1216,12 +1339,14 @@ export const config = {
 Фаза 5: Вспомогательные
   ├── 5.1 Global Purchases
   ├── 5.2 Templates + Template Works + Template Materials
-  └── 5.3 RBAC (team management, user_roles)
+  ├── 5.3 Workspace settings (миграция моков из features/workspace-settings)
+  └── 5.4 RBAC (team management, user_roles)
 
 Фаза 6: Дашборд и финальные штрихи
   ├── 6.1 API Routes для статистики
   ├── 6.2 Account Settings (миграция моков из features/account-settings)
-  └── 6.3 Access Control (миграция моков из features/access-control)
+  ├── 6.3 Workspace Settings (миграция моков из features/workspace-settings)
+  └── 6.4 Access Control (миграция моков из features/access-control)
 ```
 
 ### 5.2 Что меняется в каждой фиче
@@ -1269,6 +1394,7 @@ features/projects/
 | **Templates** | `useTemplates()` → Server Component | `createTemplate`, `updateTemplate`, `deleteTemplate`, `applyTemplate` | `GET /api/templates` |
 | **Access Control** | `useTeam()` → Server Component | `assignRole`, `removeRole` | `GET /api/access-control/roles` |
 | **Dashboard** | `useDashboardStats()` → Server Component | — (read-only) | `GET /api/dashboard/*` |
+| **Workspace Settings** | `useWorkspaceSettings()` → Server Component | `inviteMember`, `removeMember`, `changeRole`, `suspendMember`, `revokeInvitation`, `addDomain`, `removeDomain`, `leaveWorkspace`, `transferOwnership`, `archiveWorkspace`, `deleteWorkspace` | `GET /api/team/*` |
 | **Account Settings** | `useSettings()` → Server Component | `updateSettings`, `updateProfile`, `uploadAvatar` | `GET /api/settings` |
 | **Auth** | `useAuth()` → Supabase Auth хуки | SignIn, SignUp, ResetPassword | — |
 
@@ -1329,6 +1455,9 @@ smetalab/
 │   │   ├── template-materials.ts   #   template_materials
 │   │   ├── roles.ts                #   roles + permissions + role_permissions
 │   │   ├── user-roles.ts           #   user_roles
+│   │   ├── workspace-members.ts    #   workspace_members
+│   │   ├── workspace-invitations.ts #  workspace_invitations
+│   │   ├── workspace-allowed-domains.ts # workspace_allowed_domains
 │   │   └── user-settings.ts        #   user_settings
 │   │
 │   ├── migrations/                  # Авто-генерируемые Drizzle миграции
@@ -1435,6 +1564,7 @@ smetalab/
 │   ├── procurements/                #   Удалить __mocks__, обновить хуки
 │   ├── access-control/              #   Удалить __mocks__, обновить хуки
 │   ├── account-settings/            #   Удалить __mocks__, обновить хуки
+│   ├── workspace-settings/          #   Удалить __mocks__, обновить хуки
 │   ├── dashboard/                   #   Обновить хуки
 │   └── auth/                        #   Обновить хуки
 │
@@ -1554,6 +1684,9 @@ CREATE POLICY "admin_manager_upload" ON storage.objects
 | `DirectorySupplierRow` | `directory_suppliers` | Справочник |
 | `DirectoryCounterpartyRow` | `directory_counterparties` | Справочник |
 | RBAC (роли) | `roles` + `permissions` + `role_permissions` + `user_roles` | |
+| Workspace Members | `workspace_members` | Связь пользователь→workspace с ролью |
+| Workspace Invitations | `workspace_invitations` | Ожидающие приглашения |
+| Workspace Allowed Domains | `workspace_allowed_domains` | Белый список доменов |
 | Account Settings | `user_settings` | 1:1 с profiles |
 
 ### B. Страница → Запрашиваемые данные
@@ -1571,9 +1704,10 @@ CREATE POLICY "admin_manager_upload" ON storage.objects
 | `/directories/suppliers` | `directory_suppliers.findMany()` | profiles |
 | `/directories/counterparties` | `directory_counterparties.findMany()` | profiles |
 | `/procurements` | `global_purchases.findMany()` | suppliers, profiles |
-| `/team` | `profiles.findMany()` + `user_roles` | roles |
+| `/team` | `workspace_members.findMany({ownerId})` + `workspace_invitations.findMany({ownerId})` + `workspace_allowed_domains.findMany({ownerId})` | profiles |
 | `/templates` | `templates.findMany()` | template_works, template_materials |
 | `/settings/account` | `profiles.findOne({userId})` + `user_settings.findOne({userId})` | — |
+| `/settings/access` | `roles.findMany()` + `permissions.findMany()` + `role_permissions.findMany()` | — |
 
 ### C. Связи Foreign Key (полный список)
 
@@ -1589,6 +1723,12 @@ profiles.id              ◀── global_purchases.created_by
 profiles.id              ◀── user_roles.user_id
 profiles.id              ◀── user_roles.assigned_by
 profiles.id              ◀── user_settings.user_id
+profiles.id              ◀── workspace_members.user_id
+profiles.id              ◀── workspace_members.owner_id
+profiles.id              ◀── workspace_invitations.invited_by
+profiles.id              ◀── workspace_invitations.owner_id
+profiles.id              ◀── workspace_allowed_domains.added_by
+profiles.id              ◀── workspace_allowed_domains.owner_id
 
 projects.id              ◀── estimates.project_id
 
@@ -1641,9 +1781,10 @@ permissions.id           ◀── role_permissions.permission_id
 - [ ] Global Purchases: API Routes + Server Actions
 - [ ] Templates: API Routes + Server Actions (включая applyTemplate)
 - [ ] Access Control: API Route + Server Actions (assignRole, removeRole)
+- [ ] Workspace Settings: API Routes + Server Actions (invite/remove/changeRole/suspend/revoke/domains/transfer/leave)
 - [ ] Settings: API Route + Server Actions
 - [ ] Dashboard: API Routes (агрегации)
-- [ ] Удалены все `__mocks__/` (projects, estimates, purchases, execution, directories/*, access-control, account-settings, global-purchases)
+- [ ] Удалены все `__mocks__/` (projects, estimates, purchases, execution, directories/*, access-control, account-settings, workspace-settings, global-purchases)
 - [ ] Хуки переписаны на реальные данные
 - [ ] Файловое хранилище Supabase Storage настроено (бакет 'materials')
 - [ ] Загрузка изображений материалов работает

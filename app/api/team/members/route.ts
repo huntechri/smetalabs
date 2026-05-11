@@ -18,26 +18,59 @@ import { eq } from 'drizzle-orm'
  * }
  */
 export async function GET(_request: NextRequest) {
+  // ── Step 1: Auth check ──
+  let supabase
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'UNAUTHORIZED',
-            message: 'Требуется аутентификация',
-          },
+    supabase = await createClient()
+  } catch (err) {
+    console.error('[GET /api/team/members] createClient failed:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при создании клиента',
         },
-        { status: 401 }
-      )
-    }
+      },
+      { status: 500 }
+    )
+  }
 
-    // Получаем все профили (участники workspace)
-    const allProfiles = await db
+  let user
+  try {
+    const result = await supabase.auth.getUser()
+    user = result.data?.user ?? null
+    if (result.error) {
+      console.error('[GET /api/team/members] getUser returned error:', result.error)
+    }
+  } catch (err) {
+    console.error('[GET /api/team/members] getUser threw:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при проверке аутентификации',
+        },
+      },
+      { status: 500 }
+    )
+  }
+
+  if (!user) {
+    return NextResponse.json(
+      {
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Требуется аутентификация',
+        },
+      },
+      { status: 401 }
+    )
+  }
+
+  // ── Step 2: Fetch profiles ──
+  let allProfiles
+  try {
+    allProfiles = await db
       .select({
         id: profiles.id,
         fullName: profiles.fullName,
@@ -47,9 +80,26 @@ export async function GET(_request: NextRequest) {
         createdAt: profiles.createdAt,
       })
       .from(profiles)
+    console.log(
+      `[GET /api/team/members] profiles fetched: ${allProfiles?.length ?? 0} rows`
+    )
+  } catch (err) {
+    console.error('[GET /api/team/members] profiles query failed:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при загрузке профилей',
+        },
+      },
+      { status: 500 }
+    )
+  }
 
-    // Получаем все user_roles с именами ролей
-    const allUserRoles = await db
+  // ── Step 3: Fetch user_roles + roles join ──
+  let allUserRoles
+  try {
+    allUserRoles = await db
       .select({
         userId: userRoles.userId,
         roleId: userRoles.roleId,
@@ -58,8 +108,24 @@ export async function GET(_request: NextRequest) {
       })
       .from(userRoles)
       .innerJoin(roles, eq(userRoles.roleId, roles.id))
+    console.log(
+      `[GET /api/team/members] userRoles fetched: ${allUserRoles?.length ?? 0} rows`
+    )
+  } catch (err) {
+    console.error('[GET /api/team/members] userRoles join query failed:', err)
+    return NextResponse.json(
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Ошибка при загрузке ролей пользователей',
+        },
+      },
+      { status: 500 }
+    )
+  }
 
-    // Группируем роли по userId
+  // ── Step 4: Build response ──
+  try {
     const userRoleMap = new Map<
       string,
       Array<{ roleId: string; name: string; label: string }>
@@ -74,10 +140,8 @@ export async function GET(_request: NextRequest) {
       userRoleMap.set(ur.userId, existing)
     }
 
-    // Собираем результат: профили + роли
     const data = allProfiles.map((profile) => {
       const profileRoles = userRoleMap.get(profile.id) ?? []
-      // Определяем основную роль (первая или с наивысшим приоритетом)
       const rolePriority: Record<string, number> = {
         owner: 0,
         admin: 1,
@@ -92,7 +156,7 @@ export async function GET(_request: NextRequest) {
       return {
         id: profile.id,
         name: profile.fullName ?? 'Без имени',
-        email: null, // email берётся из auth.users (не хранится в profiles)
+        email: null,
         avatarUrl: profile.avatarUrl,
         phone: profile.phone,
         position: profile.position,
@@ -103,10 +167,14 @@ export async function GET(_request: NextRequest) {
           name: r.name,
           label: r.label,
         })),
-        status: 'active', // TODO: брать из workspace_members.status
+        status: 'active',
         joinedAt: profile.createdAt,
       }
     })
+
+    console.log(
+      `[GET /api/team/members] response built: ${data.length} members`
+    )
 
     return NextResponse.json({
       data,
@@ -114,13 +182,13 @@ export async function GET(_request: NextRequest) {
         total: data.length,
       },
     })
-  } catch (error) {
-    console.error('GET /api/team/members error:', error)
+  } catch (err) {
+    console.error('[GET /api/team/members] response building failed:', err)
     return NextResponse.json(
       {
         error: {
           code: 'INTERNAL_ERROR',
-          message: 'Ошибка при получении списка участников',
+          message: 'Ошибка при формировании ответа',
         },
       },
       { status: 500 }

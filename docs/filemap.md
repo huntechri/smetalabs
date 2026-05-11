@@ -328,6 +328,8 @@ smetalabs/
 │
 └── docs/                                # Документация проекта
     ├── design-system.md                 # Дизайн-система (цвета, типографика, компоненты)
+    ├── designer-prompt.md               # Промпт для дизайнера
+    ├── ui-audit.md                      # Аудит UI-компонентов
     └── filemap.md                       # ← этот файл
 ```
 
@@ -625,7 +627,7 @@ services/                       # Бизнес-логика (когда появ
 
 ### 2.5 Типы
 
-> **Текущее состояние:** Директория `types/` содержит 8 файлов типов: `purchase.ts`, `execution.ts`, `global-purchases.ts`, `estimate.ts`, `directory-material.ts`, `directory-work.ts`, `directory-supplier.ts`, `directory-counterparty.ts`.
+> **Текущее состояние:** Директория `types/` содержит 9 файлов типов: `project.ts`, `purchase.ts`, `execution.ts`, `global-purchases.ts`, `estimate.ts`, `directory-material.ts`, `directory-work.ts`, `directory-supplier.ts`, `directory-counterparty.ts`.
 
 ```
 types/

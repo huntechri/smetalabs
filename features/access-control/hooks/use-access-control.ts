@@ -4,6 +4,26 @@ import { useState, useEffect, useCallback } from "react"
 import { assignRole, removeRole } from "@/app/actions/access-control"
 import type { Role } from "@/types/roles"
 
+// ── Helpers ──
+
+/**
+ * Преобразует HTTP-статус + сообщение от API в понятный пользователю текст ошибки.
+ */
+function resolveFetchError(status: number, apiMessage: string, resource: string): string {
+  switch (status) {
+    case 401:
+      return "Необходимо войти в систему"
+    case 403:
+      return "Недостаточно прав для доступа"
+    case 404:
+      return `API для ${resource} не найден`
+    case 500:
+      return `Ошибка сервера при загрузке ${resource}${apiMessage ? `: ${apiMessage}` : ""}`
+    default:
+      return `Ошибка загрузки ${resource} (${status})${apiMessage ? `: ${apiMessage}` : ""}`
+  }
+}
+
 // ── API types ──
 
 export type ApiPermission = {
@@ -34,8 +54,24 @@ export function useRoles() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/access-control/roles")
-      if (!res.ok) throw new Error("Ошибка загрузки ролей")
+      const res = await fetch("/api/access-control/roles", {
+        credentials: "include",
+      })
+      if (!res.ok) {
+        let apiMessage = ""
+        try {
+          const body = await res.json()
+          apiMessage = body?.error?.message ?? ""
+        } catch {
+          // response body is not JSON
+        }
+        console.error(
+          `[useRoles] fetch failed: ${res.status} ${res.statusText}`,
+          apiMessage || "(no body)"
+        )
+        const errMsg = resolveFetchError(res.status, apiMessage, "ролей")
+        throw new Error(errMsg)
+      }
       const json = await res.json()
       setRoles(json.data)
     } catch (e) {

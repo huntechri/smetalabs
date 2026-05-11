@@ -3,6 +3,26 @@
 import { useState, useEffect, useCallback } from "react"
 import type { WorkspaceMember } from "../types"
 
+// ── Helpers ──
+
+/**
+ * Преобразует HTTP-статус + сообщение от API в понятный пользователю текст ошибки.
+ */
+function resolveFetchError(status: number, apiMessage: string, resource: string): string {
+  switch (status) {
+    case 401:
+      return "Необходимо войти в систему"
+    case 403:
+      return "Недостаточно прав для доступа"
+    case 404:
+      return `API для ${resource} не найден`
+    case 500:
+      return `Ошибка сервера при загрузке ${resource}${apiMessage ? `: ${apiMessage}` : ""}`
+    default:
+      return `Ошибка загрузки ${resource} (${status})${apiMessage ? `: ${apiMessage}` : ""}`
+  }
+}
+
 // ── API response types ──
 
 type ApiMember = {
@@ -43,8 +63,24 @@ export function useWorkspaceMembers() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/team/members")
-      if (!res.ok) throw new Error("Ошибка загрузки участников")
+      const res = await fetch("/api/team/members", {
+        credentials: "include",
+      })
+      if (!res.ok) {
+        let apiMessage = ""
+        try {
+          const body = await res.json()
+          apiMessage = body?.error?.message ?? ""
+        } catch {
+          // response body is not JSON
+        }
+        console.error(
+          `[useWorkspaceMembers] fetch failed: ${res.status} ${res.statusText}`,
+          apiMessage || "(no body)"
+        )
+        const errMsg = resolveFetchError(res.status, apiMessage, "участников")
+        throw new Error(errMsg)
+      }
       const json = await res.json()
       setMembers(json.data.map(mapApiMember))
     } catch (e) {

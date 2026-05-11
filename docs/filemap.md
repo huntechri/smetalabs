@@ -85,7 +85,7 @@ smetalabs/
 │   │   │   └── works/page.tsx          # Виды работ
 │   │   ├── procurements/               # Глобальные закупки (общий список с тулбаром и фильтрами)
 │   │   │   └── page.tsx
-│   │   ├── team/                       # Команда
+│   │   ├── team/                       # Команда (WorkspaceSettingsView из features/workspace-settings)
 │   │   │   └── page.tsx
 │   │   ├── templates/                  # Шаблоны смет
 │   │   │   ├── page.tsx                # Список шаблонов

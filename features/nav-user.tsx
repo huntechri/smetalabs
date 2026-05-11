@@ -20,7 +20,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { CaretUpDown, Sparkle, CheckCircle, CreditCard, Bell, SignOut } from "@phosphor-icons/react"
+import { CaretUpDown, Sparkle, CheckCircle, CreditCard, Bell, SignOut, LockKey } from "@phosphor-icons/react"
 import Link from "next/link"
 
 export function NavUser({
@@ -85,6 +85,12 @@ export function NavUser({
                 <Link href="/settings/account">
                   <CheckCircle />
                   Аккаунт
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/access">
+                  <LockKey />
+                  Права доступа
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>

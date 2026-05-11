@@ -4,7 +4,7 @@
 >
 > **Главный принцип:** Максимально использовать то, что дают shadcn/ui и Tailwind из коробки. Никаких лишних абстракций, обёрток, кастомных решений.
 >
-> **Последняя проверка:** 2026-05-10 (вечер) — актуально. Все 34 компонента `components/ui/` задокументированы. Добавлена фича: projects (с карточками, моками, хуком).
+> **Последняя проверка:** 2026-05-11 — актуально. Все 35 компонентов `components/ui/` задокументированы. Добавлен Switch. Добавлена фича: account-settings (6 карточек).
 
 ---
 
@@ -783,6 +783,32 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
   <PlusIcon />
   <span>Добавить</span>
 </FramedButton>
+```
+
+---
+
+### 4.35 Switch
+
+**Импорт:** `@/components/ui/switch`
+**Экспорт:** `Switch`
+
+Toggle-переключатель на основе Radix UI Switch. Используется для бинарных настроек (вкл/выкл).
+
+```tsx
+// ✅ Базовое использование
+<Switch />
+
+// ✅ Контролируемый
+<Switch checked={enabled} onCheckedChange={setEnabled} />
+
+// ✅ С label (композиция через Field)
+<Field orientation="horizontal">
+  <FieldLabel htmlFor="notifications">
+    <FieldTitle>Push-уведомления</FieldTitle>
+    <FieldDescription>Получать уведомления о новых проектах</FieldDescription>
+  </FieldLabel>
+  <Switch id="notifications" checked={notifications} onCheckedChange={setNotifications} />
+</Field>
 ```
 
 ---

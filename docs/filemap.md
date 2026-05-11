@@ -4,7 +4,7 @@
 >
 > **Состояние:** Старт проекта, только вёрстка. Бэкенд, API, работа с БД — отсутствуют.
 >
-> **Последнее обновление:** 2026-05-11 (access-control feature)
+> **Последнее обновление:** 2026-05-11 (account-settings feature)
 >
 > **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
 
@@ -85,10 +85,13 @@ smetalabs/
 │   │   │   └── page.tsx
 │   │   ├── team/                       # Команда
 │   │   │   └── page.tsx
-│   │   └── templates/                  # Шаблоны смет
-│   │       ├── page.tsx                # Список шаблонов
-│   │       └── [templateId]/           # Конкретный шаблон
-│   │           └── page.tsx
+│   │   ├── templates/                  # Шаблоны смет
+│   │   │   ├── page.tsx                # Список шаблонов
+│   │   │   └── [templateId]/           # Конкретный шаблон
+│   │   │       └── page.tsx
+│   │   └── settings/                   # Настройки
+│   │       └── account/
+│   │           └── page.tsx            # Настройки аккаунта (AccountSettingsView)
 │   │
 │   ├── admin/                           # Админ-панель (без группы роутов — отдельный layout)
 │   │   └── page.tsx
@@ -133,6 +136,7 @@ smetalabs/
 │   │   ├── sidebar.tsx
 │   │   ├── skeleton.tsx
 │   │   ├── sonner.tsx
+│   │   ├── switch.tsx
 │   │   ├── table.tsx
 │   │   ├── tabs.tsx
 │   │   ├── textarea.tsx
@@ -321,6 +325,34 @@ smetalabs/
 │   │   │   └── permissions.ts            #   Мок-роли, матрица прав по умолчанию
 │   │   └── components/
 │   │       └── permissions-matrix.tsx     #   Таблица прав (Table + Checkbox), кнопки Сбросить/Сохранить
+│   │
+│   ├── account-settings/               # Фича «Настройки аккаунта» (multi-tenant SaaS)
+│   │                                   #
+│   │                                   # Архитектура: 6 независимых карточек-компонентов, каждая —
+│   │                                   # самодостаточный UI-блок с собственным мок-состоянием.
+│   │                                   # AccountSettingsView собирает их в вертикальную композицию.
+│   │                                   #
+│   │                                   # Multi-tenant: Profile (личные данные пользователя) и
+│   │                                   # Workspace (данные компании) — раздельные карточки.
+│   │                                   # Labels нейтральные для multi-region SaaS.
+│   │                                   #
+│   │                                   # Каждая карточка: Card (shadcn) → поля (Input/Select/Switch)
+│   │                                   # → Footer с Save-кнопкой (UI-only console.log).
+│   │                                   # Уведомления: Switch (новый shadcn-примитив) для 6 триггеров.
+│   │                                   # Sensitive: border-destructive, все кнопки — заглушки.
+│   │                                   # Роут: settings/account, переход через sidebar (nav-user).
+│   │
+│   │   ├── types.ts                    #   AccountProfile, WorkspaceSettings, AccountPreferences...
+│   │   ├── __mocks__/
+│   │   │   └── account-settings.ts     #   Мок-данные всех 6 карточек
+│   │   └── components/
+│   │       ├── account-settings-view.tsx        # Композиция: сборка 6 карточек в gap-6
+│   │       ├── profile-settings-card.tsx        # Аватар + поля + Select языка/таймзоны
+│   │       ├── workspace-settings-card.tsx      # 2-колоночная сетка полей компании
+│   │       ├── preferences-settings-card.tsx    # Тема/плотность/форматы дат и чисел
+│   │       ├── notification-settings-card.tsx   # 6 Switch-переключателей уведомлений
+│   │       ├── security-settings-card.tsx       # Пароль/2FA/сессии/последний вход
+│   │       └── sensitive-actions-card.tsx       # border-destructive, 4 кнопки (1 disabled)
 │   │
 │   └── ... (новые фичи создавать здесь по доменному принципу)
 │

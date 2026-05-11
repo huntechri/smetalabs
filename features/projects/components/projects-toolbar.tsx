@@ -4,19 +4,18 @@ import { Suspense, type FormEvent, type KeyboardEvent, useState } from "react"
 import { CreateProjectDialog } from "@/features/projects/components/create-project-dialog"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { FunnelIcon, MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 import type { ProjectStatus } from "@/types/project"
 
-const STATUS_OPTIONS: { label: string; value: ProjectStatus | "all" }[] = [
-  { label: "Все статусы", value: "all" },
+const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [
   { label: "Новый", value: "new" },
   { label: "В работе", value: "in_progress" },
   { label: "Завершён", value: "completed" },
@@ -25,8 +24,8 @@ const STATUS_OPTIONS: { label: string; value: ProjectStatus | "all" }[] = [
 export interface ProjectsToolbarProps {
   search: string
   onSearchChange: (value: string) => void
-  statusFilter: ProjectStatus | "all"
-  onStatusFilterChange: (value: ProjectStatus | "all") => void
+  statusFilter: ProjectStatus[]
+  onStatusFilterChange: (value: ProjectStatus[]) => void
 }
 
 export function ProjectsToolbar({
@@ -37,6 +36,7 @@ export function ProjectsToolbar({
 }: ProjectsToolbarProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [localSearch, setLocalSearch] = useState(search)
+  const [popoverOpen, setPopoverOpen] = useState(false)
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -48,6 +48,13 @@ export function ProjectsToolbar({
       event.preventDefault()
       onSearchChange(localSearch.trim())
     }
+  }
+
+  const handleStatusToggle = (value: ProjectStatus) => {
+    const updated = statusFilter.includes(value)
+      ? statusFilter.filter((s) => s !== value)
+      : [...statusFilter, value]
+    onStatusFilterChange(updated)
   }
 
   return (
@@ -86,27 +93,44 @@ export function ProjectsToolbar({
               <PlusIcon data-icon="inline-start" />
               +Создать
             </Button>
-          </ButtonGroup>
-        </div>
 
-        <div className="rounded-md border border-dashed border-teal-400 p-2">
-          <Select
-            value={statusFilter}
-            onValueChange={(value) =>
-              onStatusFilterChange(value as ProjectStatus | "all")
-            }
-          >
-            <SelectTrigger className="h-8 min-w-[160px]">
-              <SelectValue placeholder="Все статусы" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <FunnelIcon data-icon="inline-start" />
+                  <span className="hidden sm:inline">Фильтр</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2">
+                <div className="space-y-2">
+                  {STATUS_OPTIONS.map((option) => (
+                    <div
+                      key={option.value}
+                      className="flex items-center gap-2"
+                    >
+                      <Checkbox
+                        id={`status-${option.value}`}
+                        checked={statusFilter.includes(option.value)}
+                        onCheckedChange={() =>
+                          handleStatusToggle(option.value)
+                        }
+                      />
+                      <Label
+                        htmlFor={`status-${option.value}`}
+                        className="cursor-pointer text-sm"
+                      >
+                        {option.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </ButtonGroup>
         </div>
       </div>
     </div>

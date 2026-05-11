@@ -1,72 +1,157 @@
-import { createClient as createSupabaseClient } from "@/lib/supabase/server"
+import { db } from "@/db"
+import {
+  userRoles,
+  roles,
+  permissions,
+  rolePermissions,
+} from "@/db/schema/rbac"
+import { createClient } from "@/lib/supabase/server"
+import { eq, inArray } from "drizzle-orm"
+import type { PermissionKey } from "@/features/access-control/types"
+
+// ── Auth helpers ──
 
 /**
- * Get the current user's roles from the user_roles table.
- * Returns an array of role names (e.g. ["owner", "admin"]).
+ * Get the current authenticated user from Supabase Auth.
+ * Returns the user or null if not authenticated.
  */
-export async function getUserRoles(): Promise<string[]> {
-  const supabase = await createSupabaseClient()
+async function getCurrentUser() {
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
+  return user
+}
 
+// ── Role helpers ──
+
+/**
+ * Get the current user's roles from the user_roles table.
+ * Uses Drizzle JOIN across user_roles → roles.
+ */
+export async function getUserRoles(): Promise<string[]> {
+  const user = await getCurrentUser()
   if (!user) return []
 
-  const { data } = await supabase
-    .from("user_roles")
-    .select("role:roles(name)")
-    .eq("user_id", user.id)
+  const rows = await db
+    .select({ name: roles.name })
+    .from(userRoles)
+    .innerJoin(roles, eq(roles.id, userRoles.roleId))
+    .where(eq(userRoles.userId, user.id))
 
-  return data?.map((r: any) => r.role?.name).filter(Boolean) ?? []
+  return rows.map((r) => r.name).filter(Boolean)
 }
 
 /**
- * Check if the current user has a specific role.
+ * Get the current user's permission keys.
+ * Uses Drizzle JOIN: user_roles → role_permissions → permissions.
  */
-export async function hasRole(role: string): Promise<boolean> {
-  const roles = await getUserRoles()
-  return roles.includes(role)
+export async function getUserPermissions(): Promise<PermissionKey[]> {
+  const user = await getCurrentUser()
+  if (!user) return []
+
+  const rows = await db
+    .select({ key: permissions.key })
+    .from(userRoles)
+    .innerJoin(rolePermissions, eq(rolePermissions.roleId, userRoles.roleId))
+    .innerJoin(permissions, eq(permissions.id, rolePermissions.permissionId))
+    .where(eq(userRoles.userId, user.id))
+
+  return rows.map((r) => r.key as PermissionKey)
+}
+
+// ── Permission checks ──
+
+let _cachedPermissions: PermissionKey[] | null = null
+
+async function ensurePermissions(): Promise<PermissionKey[]> {
+  if (!_cachedPermissions) {
+    _cachedPermissions = await getUserPermissions()
+  }
+  return _cachedPermissions
 }
 
 /**
- * Check if the current user has one of the given roles.
+ * Check if the current user has a specific permission.
  */
-export async function hasAnyRole(roles: string[]): Promise<boolean> {
-  const userRoles = await getUserRoles()
-  return roles.some((r) => userRoles.includes(r))
+export async function hasPermission(key: PermissionKey): Promise<boolean> {
+  const perms = await ensurePermissions()
+  return perms.includes(key)
 }
 
 /**
- * Check if the current user has write access (owner, admin, or manager).
+ * Check if the current user has any of the given permissions.
  */
-export async function canWrite(): Promise<boolean> {
-  return hasAnyRole(["owner", "admin", "manager"])
+export async function hasAnyPermission(keys: PermissionKey[]): Promise<boolean> {
+  const perms = await ensurePermissions()
+  return keys.some((k) => perms.includes(k))
 }
 
 /**
- * Check if the current user can manage team (owner or admin).
+ * Check if the current user has all of the given permissions.
+ */
+export async function hasAllPermissions(keys: PermissionKey[]): Promise<boolean> {
+  const perms = await ensurePermissions()
+  return keys.every((k) => perms.includes(k))
+}
+
+/**
+ * Check if the current user can manage projects (create projects).
+ */
+export async function canManageProjects(): Promise<boolean> {
+  return hasPermission("projects.create")
+}
+
+/**
+ * Check if the current user can manage estimates (create estimates).
+ */
+export async function canManageEstimates(): Promise<boolean> {
+  return hasPermission("estimates.create")
+}
+
+/**
+ * Check if the current user can manage purchases (create purchases).
+ */
+export async function canManagePurchases(): Promise<boolean> {
+  return hasPermission("purchases.create")
+}
+
+/**
+ * Check if the current user can manage the team.
  */
 export async function canManageTeam(): Promise<boolean> {
-  return hasAnyRole(["owner", "admin"])
+  return hasPermission("team.manage")
+}
+
+/**
+ * Check if the current user can view billing.
+ */
+export async function canViewBilling(): Promise<boolean> {
+  return hasPermission("billing.read")
 }
 
 /**
  * Require authentication. Throws if not authenticated.
+ * Returns the authenticated user.
  */
 export async function requireAuth() {
-  const supabase = await createSupabaseClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) throw new Error("Unauthorized")
   return user
 }
 
 /**
- * Require a specific role. Throws if not authorized.
+ * Require a specific permission key. Throws if not authorized.
  */
-export async function requireRole(role: string) {
+export async function requirePermission(key: PermissionKey) {
   await requireAuth()
-  const has = await hasRole(role)
+  const has = await hasPermission(key)
   if (!has) throw new Error("Forbidden: insufficient permissions")
+}
+
+/**
+ * Clear the cached permissions (useful after role changes).
+ */
+export function clearPermissionCache() {
+  _cachedPermissions = null
 }

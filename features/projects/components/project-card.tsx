@@ -19,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Frame } from "@/components/ui/frame"
 import { Separator } from "@/components/ui/separator"
 
 interface ProjectCardProps {
@@ -67,10 +68,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const statusCfg = STATUS_CONFIG[project.status]
 
   return (
-    <Card className="border-dashed border-amber-500">
+    <Frame className="border-amber-500">
+      <Card>
       <CardHeader>
         {/* Status badges row */}
-        <div className="flex flex-row items-center gap-2 rounded-md border border-dashed border-green-400 p-1.5">
+        <Frame className="items-center gap-2 border-green-400 p-1.5">
           {/* Status badge with dot */}
           <Badge
             variant={statusCfg.badgeVariant}
@@ -82,86 +84,103 @@ export function ProjectCard({ project }: ProjectCardProps) {
             {statusCfg.label}
           </Badge>
 
-        </div>
+        </Frame>
 
         {/* Title */}
-        <div className="rounded-md border border-dashed border-green-300 p-2">
+        <Frame className="border-green-300 p-2">
           <CardTitle>{project.title}</CardTitle>
-        </div>
+        </Frame>
 
-        {/* Customer + Address */}
-        <div className="flex flex-col gap-1 rounded-md border border-dashed border-green-300 p-2">
+        {/* Customer */}
+        <Frame className="border-green-300 p-2">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <BuildingApartment className="size-3 shrink-0" />
             <span>{project.customer}</span>
           </div>
+        </Frame>
+
+        {/* Address */}
+        <Frame className="border-green-300 p-2">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="size-3 shrink-0" />
             <span>{project.address ?? "Адрес не указан"}</span>
           </div>
-        </div>
+        </Frame>
       </CardHeader>
 
       <CardContent>
-        <div className="grid grid-cols-3 gap-3 rounded-md border border-dashed border-blue-400 p-2">
+        <Frame className="grid grid-cols-1 gap-3 border-blue-400 p-2 min-w-0 @xs:grid-cols-2">
           {/* Budget block */}
-          <div className="rounded-lg border border-dashed border-amber-500 p-3">
-            <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
-              <CurrencyRub className="size-3 shrink-0" />
-              <span>Бюджет</span>
+          <Frame className="border-amber-500 p-3 min-w-0">
+            <div className="flex flex-col w-full">
+              <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
+                <CurrencyRub className="size-3 shrink-0" />
+                <span>Бюджет</span>
+              </div>
+              <div className="w-full truncate text-xs font-medium">
+                {formatMoney(project.budget)}
+              </div>
             </div>
-            <div className="text-xs font-medium">
-              {formatMoney(project.budget)}
-            </div>
-          </div>
+          </Frame>
 
           {/* Dates block */}
-          <div className="rounded-lg border border-dashed border-amber-500 p-3">
-            <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
-              <CalendarBlank className="size-3 shrink-0" />
-              <span>Сроки</span>
+          <Frame className="border-amber-500 p-3 min-w-0">
+            <div className="flex flex-col w-full">
+              <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
+                <CalendarBlank className="size-3 shrink-0" />
+                <span>Сроки</span>
+              </div>
+              <div className="w-full truncate text-xs font-medium">
+                {formatDateRange(project.startDate, project.endDate)}
+              </div>
             </div>
-            <div className="text-xs font-medium">
-              {formatDateRange(project.startDate, project.endDate)}
-            </div>
-          </div>
+          </Frame>
 
           {/* Progress block */}
-          <div className="rounded-lg border border-dashed border-amber-500 p-3">
-            <div className="mb-1 text-[0.625rem] text-muted-foreground">
-              Прогресс
+          <Frame className="col-span-2 border-amber-500 p-3 min-w-0">
+            <div className="flex flex-col w-full">
+              <div className="mb-1 text-[0.625rem] text-muted-foreground">
+                Прогресс
+              </div>
+              <div className="mb-1.5 text-xs font-medium">
+                {project.progress}%
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${project.progress}%` }}
+                />
+              </div>
             </div>
-            <div className="mb-1.5 text-xs font-medium">
-              {project.progress}%
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary"
-                style={{ width: `${project.progress}%` }}
-              />
-            </div>
-          </div>
-        </div>
+          </Frame>
+        </Frame>
       </CardContent>
 
       <Separator />
 
       <CardFooter>
-        <div className="flex gap-2 rounded-md border border-dashed border-purple-400 p-1.5">
-          <Button variant="outline" size="xs">
-            <ArrowSquareOut data-icon="inline-start" />
-            Открыть
-          </Button>
-          <Button variant="outline" size="xs">
-            <NotePencil data-icon="inline-start" />
-            Ред.
-          </Button>
-          <Button variant="destructive" size="xs">
-            <Trash data-icon="inline-start" />
-            Удалить
-          </Button>
-        </div>
+        <Frame className="gap-2 border-purple-400 p-1.5">
+          <Frame className="border-purple-300 p-1">
+            <Button variant="outline" size="xs">
+              <ArrowSquareOut data-icon="inline-start" />
+              Открыть
+            </Button>
+          </Frame>
+          <Frame className="border-purple-300 p-1">
+            <Button variant="outline" size="xs">
+              <NotePencil data-icon="inline-start" />
+              Ред.
+            </Button>
+          </Frame>
+          <Frame className="border-purple-300 p-1">
+            <Button variant="destructive" size="xs">
+              <Trash data-icon="inline-start" />
+              Удалить
+            </Button>
+          </Frame>
+        </Frame>
       </CardFooter>
-    </Card>
+      </Card>
+    </Frame>
   )
 }

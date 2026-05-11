@@ -4,6 +4,7 @@ import { DotsThree, LockKey, User } from "@phosphor-icons/react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -18,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Select,
   SelectContent,
@@ -33,10 +35,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-import { workspaceMembers } from "../__mocks__/workspace-settings"
+import { useWorkspaceMembers } from "../hooks/use-workspace-settings"
 import type { Role } from "@/types/roles"
 import { ROLE_LABELS } from "@/types/roles"
 import { STATUS_LABELS } from "../types"
@@ -176,13 +177,57 @@ function MemberRow({ member }: { member: WorkspaceMember }) {
 }
 
 export function WorkspaceMembersTable() {
+  const { members, loading, error } = useWorkspaceMembers()
+
+  // ── Loading skeleton ──
+  if (loading) {
+    return (
+      <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
+        <CardHeader>
+          <Skeleton className="h-5 w-48" />
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="p-4 space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // ── Error state ──
+  if (error) {
+    return (
+      <Card className="border-dashed border-destructive/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <User className="size-4" />
+            Участники
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 text-center">
+          <p className="text-sm text-destructive">
+            Не удалось загрузить список участников: {error}
+          </p>
+          <Button variant="outline" size="sm" className="mt-3" onClick={() => window.location.reload()}>
+            Попробовать снова
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
             <User className="size-4" />
-            Участники ({workspaceMembers.length})
+            Участники ({members.length})
           </CardTitle>
         </div>
       </CardHeader>
@@ -202,7 +247,7 @@ export function WorkspaceMembersTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {workspaceMembers.map((m) => (
+              {members.map((m) => (
                 <MemberRow key={m.id} member={m} />
               ))}
             </TableBody>
@@ -211,7 +256,7 @@ export function WorkspaceMembersTable() {
 
         {/* Mobile card list */}
         <div className="sm:hidden divide-y divide-border/50">
-          {workspaceMembers.map((m) => {
+          {members.map((m) => {
             const isOwner = m.role === "owner"
             return (
               <div

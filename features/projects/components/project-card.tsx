@@ -109,7 +109,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </CardHeader>
 
       <CardContent>
-        <Frame className="grid grid-cols-3 gap-3 border-blue-400 p-2">
+        <Frame className="grid grid-cols-2 gap-3 border-blue-400 p-2">
           {/* Budget block */}
           <Frame className="border-amber-500 p-3">
             <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
@@ -133,7 +133,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </Frame>
 
           {/* Progress block */}
-          <Frame className="border-amber-500 p-3">
+          <Frame className="col-span-2 border-amber-500 p-3">
             <div className="mb-1 text-[0.625rem] text-muted-foreground">
               Прогресс
             </div>

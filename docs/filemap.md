@@ -104,15 +104,34 @@ smetalabs/
 │   │   └── callback/
 │   │       └── route.ts                 #   GET: verifyOtp + redirect (token_hash, type)
 │   │
-│   └── api/                             # API-роуты (ЕЩЁ НЕ СОЗДАНЫ — появится при разработке)
+│   ├── actions/                          # Server Actions (бизнес-данные)
+│   │   ├── access-control.ts             #   assignRole, removeRole (RBAC-мутации)
+│   │   ├── settings.ts                   #   updateProfile, updateWorkspace, updatePreferences,
+│   │   │                                  #   updateNotifications, updateSecurity
+│   │   └── workspace-settings.ts          #   ⚠️ Скелеты: changeRole, removeMember, inviteMember, ...
+│   │
+│   └── api/                             # API Routes (REST)
+│       ├── access-control/
+│       │   └── roles/
+│       │       └── route.ts              #   GET: все роли с разрешениями
+│       ├── settings/
+│       │   └── route.ts                  #   GET: настройки текущего пользователя
+│       └── team/
+│           └── members/
+│               └── route.ts              #   GET: список участников workspace
 │
 ├── db/                                 # Работа с БД (Drizzle ORM + PostgreSQL)
 │   ├── index.ts                         #   Клиент Drizzle (postgres-js, drizzle({schema}))
 │   ├── seed.ts                          #   Заполнение RBAC-данными (роли, права, связи)
+│   ├── seed-settings.ts                 #   Заполнение дефолтных настроек (user_settings)
+│   ├── migrations/
+│   │   └── 002_rls_policies.sql          #   RLS: функции + политики на все таблицы
 │   └── schema/
 │       ├── index.ts                     #   Реэкспорт всех схем
 │       ├── profiles.ts                  #   Таблица profiles (расширение auth.users)
-│       └── rbac.ts                      #   Таблицы roles, permissions, role_permissions
+│       ├── rbac.ts                      #   Таблицы roles, permissions, role_permissions
+│       └── user-settings.ts             #   Таблица user_settings (JSONB: profile, workspace,
+│                                        #     preferences, notifications, security)
 │
 ├── types/                               # Общие типы
 │   ├── purchase.ts                      #   Тип PurchaseRow
@@ -663,9 +682,9 @@ purchases-view.tsx                   ← page.tsx рендерит этот ко
 
 ### 2.4 Работа с данными
 
-> **Текущее состояние:** Слой БД (Drizzle ORM + PostgreSQL) и auth-слой (Supabase Auth) добавлены в `feature/auth-setup`. Схема RBAC и profiles готова. Server Actions для login/signup реализованы. Middleware защищает роуты.
+> **Текущее состояние:** Слой БД (Drizzle ORM + PostgreSQL) и auth-слой (Supabase Auth) работают. Схема RBAC, profiles, user_settings готова. Server Actions для login/signup, access-control, settings — реализованы. API Routes для roles, settings, team/members — работают. RLS-политики применены. Middleware защищает роуты.
 >
-> Остальные данные пока на моках. Правила ниже — целевая архитектура при полном переходе к реальным данным.
+> Часть данных пока на моках (справочники, проекты, сметы). Правила ниже — целевая архитектура при полном переходе к реальным данным.
 
 #### Приоритетный подход: Server Components + Server Actions
 
@@ -680,28 +699,38 @@ purchases-view.tsx                   ← page.tsx рендерит этот ко
 | Потребность | Где создавать |
 |---|---|
 | **Server Action** (auth) | `lib/auth/actions.ts` — loginAction, signupAction, signOutAction (✅ реализовано) |
-| **Server Action** (бизнес-данные) | `app/actions/{domain}.ts` — рядом с роутами (план) |
+| **Server Action** (бизнес-данные) | `app/actions/{domain}.ts` — рядом с роутами (✅ частично) |
 | **Прямой запрос к БД** | `db/` — клиент (`db/index.ts`), схема (`db/schema/`), seed (`db/seed.ts`) |
 | **Auth-проверки** | `lib/auth/permissions.ts` — getUserRoles, hasRole, canWrite, requireAuth (✅ реализовано) |
 | **Supabase-клиенты** | `lib/supabase/` — server.ts (cookies), client.ts (браузер), proxy.ts (middleware) |
-| **API Route** (внешний доступ) | `app/api/{domain}/route.ts` |
+| **API Route** (данные для клиента) | `app/api/{domain}/.../route.ts` (✅ частично) |
 | **Сервисный слой** (бизнес-логика) | `services/{domain}.ts` (план) |
 
 #### Структура (текущая + план)
 
 ```
 app/
-├── actions/                    # Server Actions (план — бизнес-данные)
-│   ├── projects.ts             #   createProject, updateProject, deleteProject
-│   └── estimates.ts            #   createEstimate, addSection, updateSection
+├── actions/                    # Server Actions (✅ частично)
+│   ├── access-control.ts       #   assignRole, removeRole
+│   ├── settings.ts             #   updateProfile, updateWorkspace, updatePreferences,
+│   │                            #   updateNotifications, updateSecurity
+│   ├── workspace-settings.ts   #   ⚠️ Скелеты (changeRole, removeMember, ...)
+│   ├── projects.ts             #   (план) createProject, updateProject, deleteProject
+│   └── estimates.ts            #   (план) createEstimate, addSection, updateSection
 │
 ├── auth/                       # Auth-роуты (✅ реализовано)
 │   └── callback/
 │       └── route.ts            #   GET: OAuth + email confirm handler
 │
-├── api/                        # REST API (для внешних потребителей)
-│   └── projects/
-│       └── route.ts            #   GET /api/projects
+├── api/                        # API Routes (✅ частично)
+│   ├── access-control/
+│   │   └── roles/
+│   │       └── route.ts        #   GET: все роли с правами
+│   ├── settings/
+│   │   └── route.ts            #   GET: настройки пользователя
+│   └── team/
+│       └── members/
+│           └── route.ts        #   GET: список участников
 │
 db/                             # Работа с БД (✅ реализовано — основа)
 ├── index.ts                    #   Клиент Drizzle (postgres-js + schema)

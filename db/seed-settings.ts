@@ -6,15 +6,10 @@ import { supabase } from "./index"
  */
 const defaultSettings = {
   profile: {
-    displayName: "",
-    email: "",
-    phone: "",
-    jobTitle: "",
     language: "ru",
-    timezone: "Europe/Moscow",
+    timezone: "UTC",
   },
   workspace: {
-    workspaceName: "",
     companyLegalName: "",
     companyType: "",
     registrationNumber: "",
@@ -24,7 +19,7 @@ const defaultSettings = {
     companyPhone: "",
     defaultCurrency: "RUB",
     defaultLocale: "ru-RU",
-    defaultTimezone: "Europe/Moscow",
+    defaultTimezone: "UTC",
   },
   preferences: {
     theme: "system",

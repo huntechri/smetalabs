@@ -50,11 +50,11 @@ const NotificationsSchema = z.object({
 })
 
 // ═══════════════════════════════════════════════════════════════
-// Helper: upsert user_settings row, then return updated document
+// Helpers
 // ═══════════════════════════════════════════════════════════════
 
-async function upsertSettings(userId: string, column: string, data: Record<string, unknown>) {
-  // Проверяем, существует ли запись
+/** Upsert a single JSONB column in user_settings. */
+async function upsertSettingsColumn(userId: string, column: string, data: Record<string, unknown>) {
   const { data: existing } = await supabase
     .from("user_settings")
     .select("user_id")
@@ -62,7 +62,6 @@ async function upsertSettings(userId: string, column: string, data: Record<strin
     .maybeSingle()
 
   if (existing) {
-    // Обновляем конкретную JSONB-колонку
     const { error } = await supabase
       .from("user_settings")
       .update({
@@ -73,7 +72,6 @@ async function upsertSettings(userId: string, column: string, data: Record<strin
 
     if (error) throw error
   } else {
-    // Создаём запись с дефолтными значениями и переданными данными
     const { error } = await supabase
       .from("user_settings")
       .insert({
@@ -83,25 +81,52 @@ async function upsertSettings(userId: string, column: string, data: Record<strin
 
     if (error) throw error
   }
+}
 
-  // Возвращаем обновлённый документ
-  const { data: updated, error: fetchErr } = await supabase
+/** Fetch profiles + user_settings and return the merged document (same shape as GET /api/settings). */
+async function getMergedSettings(userId: string, userEmail: string) {
+  const { data: pData } = await supabase
+    .from("profiles")
+    .select("full_name, phone, position, workspace_name")
+    .eq("id", userId)
+    .maybeSingle()
+
+  const { data: sData, error: sErr } = await supabase
     .from("user_settings")
     .select("profile, workspace, preferences, notifications, security, updated_at")
     .eq("user_id", userId)
     .single()
 
-  if (fetchErr) throw fetchErr
+  if (sErr && sErr.code !== "PGRST116") throw sErr
 
   return {
     data: {
-      profile: updated.profile ?? {},
-      workspace: updated.workspace ?? {},
-      preferences: updated.preferences ?? {},
-      notifications: updated.notifications ?? {},
-      security: updated.security ?? {},
+      profile: {
+        displayName: pData?.full_name ?? "",
+        email: userEmail ?? "",
+        phone: pData?.phone ?? "",
+        jobTitle: pData?.position ?? "",
+        language: sData?.profile?.language ?? "ru",
+        timezone: sData?.profile?.timezone ?? "UTC",
+      },
+      workspace: {
+        workspaceName: pData?.workspace_name ?? "",
+        companyLegalName: sData?.workspace?.companyLegalName ?? "",
+        companyType: sData?.workspace?.companyType ?? "",
+        registrationNumber: sData?.workspace?.registrationNumber ?? "",
+        taxNumber: sData?.workspace?.taxNumber ?? "",
+        legalAddress: sData?.workspace?.legalAddress ?? "",
+        billingEmail: sData?.workspace?.billingEmail ?? "",
+        companyPhone: sData?.workspace?.companyPhone ?? "",
+        defaultCurrency: sData?.workspace?.defaultCurrency ?? "RUB",
+        defaultLocale: sData?.workspace?.defaultLocale ?? "ru-RU",
+        defaultTimezone: sData?.workspace?.defaultTimezone ?? "UTC",
+      },
+      preferences: sData?.preferences ?? {},
+      notifications: sData?.notifications ?? {},
+      security: sData?.security ?? {},
     },
-    meta: { updatedAt: updated.updated_at },
+    meta: { updatedAt: sData?.updated_at ?? null },
   }
 }
 
@@ -110,7 +135,10 @@ async function upsertSettings(userId: string, column: string, data: Record<strin
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Обновить профиль пользователя (displayName, email, phone, ...).
+ * Обновить профиль пользователя.
+ * Разделяет данные:
+ * - profiles.full_name, .phone, .position ← из data.displayName, data.phone, data.jobTitle
+ * - user_settings.profile ← { language, timezone }
  */
 export async function updateProfile(
   data: z.infer<typeof ProfileSchema>
@@ -118,13 +146,38 @@ export async function updateProfile(
   const user = await requireAuth()
   const parsed = ProfileSchema.parse(data)
 
-  const result = await upsertSettings(user.id, "profile", parsed)
+  // ── Update profiles table (public identity) ──
+  const profileUpdate: Record<string, string> = {}
+  if (parsed.displayName !== undefined) profileUpdate.full_name = parsed.displayName
+  if (parsed.phone !== undefined) profileUpdate.phone = parsed.phone
+  if (parsed.jobTitle !== undefined) profileUpdate.position = parsed.jobTitle
+
+  if (Object.keys(profileUpdate).length > 0) {
+    const { error: pErr } = await supabase
+      .from("profiles")
+      .update(profileUpdate)
+      .eq("id", user.id)
+    if (pErr) throw pErr
+  }
+
+  // ── Update user_settings.profile (language, timezone) ──
+  const settingsUpdate: Record<string, string> = {}
+  if (parsed.language !== undefined) settingsUpdate.language = parsed.language
+  if (parsed.timezone !== undefined) settingsUpdate.timezone = parsed.timezone
+
+  if (Object.keys(settingsUpdate).length > 0) {
+    await upsertSettingsColumn(user.id, "profile", settingsUpdate)
+  }
+
   revalidatePath("/settings/account")
-  return result
+  return getMergedSettings(user.id, user.email ?? "")
 }
 
 /**
  * Обновить настройки workspace.
+ * Разделяет данные:
+ * - profiles.workspace_name ← из data.workspaceName
+ * - user_settings.workspace ← все юридические реквизиты
  */
 export async function updateWorkspace(
   data: z.infer<typeof WorkspaceSchema>
@@ -132,9 +185,23 @@ export async function updateWorkspace(
   const user = await requireAuth()
   const parsed = WorkspaceSchema.parse(data)
 
-  const result = await upsertSettings(user.id, "workspace", parsed)
+  // ── Update profiles.workspace_name ──
+  if (parsed.workspaceName !== undefined) {
+    const { error: pErr } = await supabase
+      .from("profiles")
+      .update({ workspace_name: parsed.workspaceName })
+      .eq("id", user.id)
+    if (pErr) throw pErr
+  }
+
+  // ── Update user_settings.workspace (legal requisites only) ──
+  const { workspaceName: _wn, ...legalFields } = parsed
+  if (Object.keys(legalFields).length > 0) {
+    await upsertSettingsColumn(user.id, "workspace", legalFields)
+  }
+
   revalidatePath("/settings/account")
-  return result
+  return getMergedSettings(user.id, user.email ?? "")
 }
 
 /**
@@ -146,9 +213,9 @@ export async function updatePreferences(
   const user = await requireAuth()
   const parsed = PreferencesSchema.parse(data)
 
-  const result = await upsertSettings(user.id, "preferences", parsed)
+  await upsertSettingsColumn(user.id, "preferences", parsed)
   revalidatePath("/settings/account")
-  return result
+  return getMergedSettings(user.id, user.email ?? "")
 }
 
 /**
@@ -160,7 +227,7 @@ export async function updateNotifications(
   const user = await requireAuth()
   const parsed = NotificationsSchema.parse(data)
 
-  const result = await upsertSettings(user.id, "notifications", parsed)
+  await upsertSettingsColumn(user.id, "notifications", parsed)
   revalidatePath("/settings/account")
-  return result
+  return getMergedSettings(user.id, user.email ?? "")
 }

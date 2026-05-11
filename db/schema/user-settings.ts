@@ -16,10 +16,10 @@ export const userSettings = pgTable("user_settings", {
     .primaryKey()
     .references(() => profiles.id, { onDelete: "cascade" }),
 
-  /** AccountProfile: { displayName, email, phone, jobTitle, language, timezone } */
+  /** AccountProfile (settings-only): { language, timezone } (public identity via profiles table) */
   profile: jsonb("profile").notNull().default({}),
 
-  /** WorkspaceSettings: { workspaceName, companyLegalName, companyType, ... } */
+  /** WorkspaceSettings (legal requisites only): { companyLegalName, companyType, ... } (workspaceName via profiles table) */
   workspace: jsonb("workspace").notNull().default({}),
 
   /** AccountPreferences: { theme, density, dateFormat, numberFormat, defaultEstimateView } */

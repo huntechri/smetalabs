@@ -1014,7 +1014,8 @@ app/actions/
   workspace-settings.ts  — inviteMember, removeMember, changeRole, suspendMember,
                             inviteByLink, revokeInvitation, addDomain, removeDomain,
                             leaveWorkspace, transferOwnership, archiveWorkspace, deleteWorkspace
-  settings.ts            — updateSettings, updateProfile, uploadAvatar
+  settings.ts            — updateProfile, updateWorkspace, updatePreferences,
+                            updateNotifications, updateSecurity
   auth.ts                — кастомные действия (большинство — через Supabase Auth)
 ```
 
@@ -1406,7 +1407,7 @@ features/projects/
 | **Access Control** | `useTeam()` → Server Component | `assignRole`, `removeRole` | `GET /api/access-control/roles` |
 | **Dashboard** | `useDashboardStats()` → Server Component | — (read-only) | `GET /api/dashboard/*` |
 | **Workspace Settings** | `useWorkspaceSettings()` → Server Component | `inviteMember`, `removeMember`, `changeRole`, `suspendMember`, `revokeInvitation`, `addDomain`, `removeDomain`, `leaveWorkspace`, `transferOwnership`, `archiveWorkspace`, `deleteWorkspace` | `GET /api/team/*` |
-| **Account Settings** | `useSettings()` → Server Component | `updateSettings`, `updateProfile`, `uploadAvatar` | `GET /api/settings` |
+| **Account Settings** | `useSettings()` → Server Component | `updateProfile`, `updateWorkspace`, `updatePreferences`, `updateNotifications`, `updateSecurity` | `GET /api/settings` |
 | **Auth** | `useAuth()` → Supabase Auth хуки | SignIn, SignUp, ResetPassword | — |
 
 ### 5.3 Пример: миграция фичи Projects
@@ -1554,6 +1555,7 @@ smetalab/
 │   │   │   └── counterparties.ts
 │   │   ├── templates.ts
 │   │   ├── access-control.ts
+│   │   ├── workspace-settings.ts
 │   │   └── settings.ts
 │   │
 │   └── auth/                        # Существующие страницы (будут обновлены)

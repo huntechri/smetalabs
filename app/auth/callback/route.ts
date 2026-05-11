@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   }
 
   // If we got here, something went wrong — redirect to login with error
-  redirectTo.pathname = "/auth/login"
+  redirectTo.pathname = "/login"
   redirectTo.searchParams.set("error", "auth_callback_failed")
   return NextResponse.redirect(redirectTo)
 }

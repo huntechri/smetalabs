@@ -48,7 +48,7 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
     const { error } = await supabase.auth.admin.inviteUserByEmail(
       invitation.email,
       {
-        redirectTo: `${siteUrl}/auth/callback?next=/dashboard`,
+        redirectTo: `${siteUrl}/dashboard`,
         data: { invitation_id: id },
       }
     )

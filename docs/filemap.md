@@ -283,11 +283,14 @@ Use `types/` only for shared cross-feature types. Keep feature-private types in 
 
 ```txt
 /team
-  → features/workspace-settings/**
+  → features/workspace-settings/components/team-management-view.tsx
+  → team-only blocks: overview, members, manual invite, pending invites, roles summary
   → app/api/team/** or app/actions/team.ts
   → lib/auth/team.ts permission helpers
   → public.workspace_* tables / Supabase Auth admin API
 ```
+
+`/team` is not the catch-all workspace settings screen. Workspace/security controls such as invite links, allowed-domain auto-join rules and workspace danger actions stay out of the primary team flow until a dedicated workspace/security settings route owns them.
 
 ---
 

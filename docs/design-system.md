@@ -4,7 +4,7 @@
 >
 > **Главный принцип:** Максимально использовать то, что дают shadcn/ui и Tailwind из коробки. Никаких лишних абстракций, обёрток, кастомных решений.
 >
-> **Последняя проверка:** 2026-05-12 — актуально. Все 35 компонентов `components/ui/` задокументированы. Добавлен Switch. Добавлены фичи: account-settings (6 карточек), workspace-settings (15 компонентов, включая 4 диалога подтверждения). Добавлен auth-illustration.
+> **Последняя проверка:** 2026-05-12 — актуально. Все 35 компонентов `components/ui/` задокументированы. Добавлен Switch. Добавлены фичи: account-settings (6 карточек), workspace-settings (16 компонентов, включая 4 диалога подтверждения). Добавлен auth-illustration.
 
 ---
 
@@ -1085,13 +1085,14 @@ aria-expanded:bg-muted
 
 ## 6.10 Проверка: фича workspace-settings
 
-**Фича:** `features/workspace-settings/` — 15 компонентов, 1 файл типов, 1 мок-файл.
+**Фича:** `features/workspace-settings/` — 16 компонентов, 1 файл типов, 1 мок-файл.
 
 **Проверка на следование дизайн-системе:**
 
 | Компонент                      | Используемые shadcn/ui примитивы                                                                                | Новый UI-паттерн? |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------- | ----------------- |
-| `workspace-settings-view`      | Композиция (gap-6)                                                                                              | —                 |
+| `team-management-view`         | Композиция team-only блоков (gap-6) для `/team`: overview, members, manual invite, pending invites, roles       | —                 |
+| `workspace-settings-view`      | Catch-all композиция workspace/settings блоков; не используется как primary `/team` flow                        | —                 |
 | `workspace-overview-card`      | Card, CardHeader, CardTitle, CardContent, Badge, Separator                                                      | —                 |
 | `workspace-members-table`      | Card, CardHeader, CardTitle, CardContent, Table, Badge, Avatar, Select, DropdownMenu, Button, + 4 диалога       | —                 |
 | `role-change-dialog`           | Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Select, Button               | —                 |
@@ -1105,7 +1106,7 @@ aria-expanded:bg-muted
 | `workspace-roles-summary-card` | Card, CardHeader, CardTitle, CardDescription, CardContent, Badge                                                | —                 |
 | `workspace-actions-card`       | Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Separator                                    | —                 |
 
-**Результат:** ✅ Фича полностью следует дизайн-системе. Все 15 компонентов используют только существующие shadcn/ui примитивы. Новых UI-паттернов не введено. Стилизация — только через Tailwind-классы и CSS-переменные (`text-muted-foreground`, `bg-muted/30`, `text-destructive`, `border-dashed`, и т.д.). Иконки — Phosphor.
+**Результат:** ✅ Фича полностью следует дизайн-системе. Все 16 компонентов используют только существующие shadcn/ui примитивы. Новых UI-паттернов не введено. Стилизация — только через Tailwind-классы и CSS-переменные (`text-muted-foreground`, `bg-muted/30`, `text-destructive`, `border-dashed`, и т.д.). Иконки — Phosphor.
 
 **Особенности:**
 

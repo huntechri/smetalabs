@@ -177,12 +177,9 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
 
-    // Определяем корректный URL сайта (на Vercel берём из заголовка или APP_URL)
-    const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host")
-    const proto = request.headers.get("x-forwarded-proto") ?? "https"
-    const siteUrl = host
-      ? `${proto}://${host}`
-      : process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+    // Используем стабильный продакшен URL для redirectTo, т.к. Supabase
+    // требует каждый redirect URL добавлять вручную, а preview URL меняется.
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
     let emailSent = false
     let emailError: string | null = null
     try {

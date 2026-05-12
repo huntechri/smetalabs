@@ -120,7 +120,7 @@ export async function inviteMemberAction(
   let emailSent = false
   try {
     const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(parsed.email, {
-      redirectTo: `${siteUrl}/signup?invite=${newInvitation.id}`,
+      redirectTo: `${siteUrl}/auth/callback?next=/dashboard`,
       data: {
         invited_by: user.id,
         workspace_role: parsed.role,

@@ -637,22 +637,25 @@ TABLE public.workspace_members
 ───────────────────────────────────────────────────────────
 Колонка          Тип                Null     Описание
 ───────────────────────────────────────────────────────────
-user_id          uuid               PK       → profiles.id (участник)
+id               uuid               PK       DEFAULT uuid_generate_v4()
+user_id          uuid               NOT      → profiles.id (участник)
 owner_id         uuid               NOT      → profiles.id (владелец workspace)
-role             text               NOT      → roles.name
+role_id          uuid               NOT      → roles.id
 status           member_status      NOT      DEFAULT 'active' — 'active' | 'invited' | 'suspended'
-joined_at        timestamptz        NOT      DEFAULT now()
+joined_at        timestamptz        YES      Дата присоединения
 last_active_at   timestamptz        YES      Последняя активность
 created_at       timestamptz        NOT      DEFAULT now()
 updated_at       timestamptz        NOT      DEFAULT now()
 ───────────────────────────────────────────────────────────
-PK:  (user_id, owner_id)
+PK:  id
+UQ:  (user_id, owner_id)
 FK:  user_id → profiles.id ON DELETE CASCADE
 FK:  owner_id → profiles.id ON DELETE CASCADE
+FK:  role_id → roles.id ON DELETE RESTRICT
 ENUM: member_status = ('active', 'invited', 'suspended')
 IDX: idx_workspace_members_owner_id ON (owner_id)
 IDX: idx_workspace_members_status ON (status)
-RLS:  owner + admin — чтение и управление. Остальные — только чтение своей записи.
+RLS:  workspace owner/admin — управление в своём workspace; manager — чтение команды своего workspace; остальные — только чтение своей записи.
 ```
 
 **Примечание:** `owner_id` определяет принадлежность к workspace — workspace идентифицируется по владельцу (`profiles.id`), чей `workspace_name` используется как название workspace. В будущем при выделении таблицы `workspaces` поле `owner_id` заменится на `workspace_id`.
@@ -668,22 +671,24 @@ TABLE public.workspace_invitations
 ───────────────────────────────────────────────────────────
 id               uuid               PK
 email            text               NOT      Email приглашаемого
-role             text               NOT      → roles.name
+role_id          uuid               NOT      → roles.id
 invited_by       uuid               NOT      → profiles.id (кто пригласил)
 owner_id         uuid               NOT      → profiles.id (владелец workspace)
 invited_at       timestamptz        NOT      DEFAULT now()
 expires_at       timestamptz        NOT      DEFAULT (now() + interval '7 days')
 status           invitation_status  NOT      DEFAULT 'pending' — 'pending' | 'expired'
+message          text               YES      Сообщение приглашающему/приглашаемому
 created_at       timestamptz        NOT      DEFAULT now()
 ───────────────────────────────────────────────────────────
 PK:  id
+FK:  role_id → roles.id ON DELETE RESTRICT
 FK:  invited_by → profiles.id ON DELETE CASCADE
 FK:  owner_id → profiles.id ON DELETE CASCADE
-UQ:  (email, owner_id) — один email не может быть приглашён дважды в один workspace
+UQ:  (lower(email), owner_id) — один email не может быть приглашён дважды в один workspace, без учёта регистра
 ENUM: invitation_status = ('pending', 'expired')
 IDX: idx_invitations_status ON (status)
 IDX: idx_invitations_expires ON (expires_at) WHERE status = 'pending'
-RLS:  owner + admin — полный доступ. manager — чтение.
+RLS:  workspace owner/admin — полный доступ в своём workspace. manager — чтение своего workspace.
 ```
 
 #### 2.2.17c `workspace_allowed_domains` — Разрешённые домены ✅ Реализовано
@@ -707,7 +712,7 @@ FK:  owner_id → profiles.id ON DELETE CASCADE
 FK:  added_by → profiles.id ON DELETE CASCADE
 UQ:  (domain, owner_id)
 IDX: idx_allowed_domains_owner ON (owner_id)
-RLS:  owner + admin — полный доступ. manager — чтение.
+RLS:  workspace owner/admin — полный доступ в своём workspace. manager — чтение своего workspace.
 ```
 
 **Примечания к матрице:**
@@ -1267,7 +1272,7 @@ GET  /api/access-control/roles                       — доступные ро
      │                   │    / Server Action  │                   │
      │                   │    получает user из │                   │
      │                   │    cookies →        │                   │
-     │                   │    auth.getSession()│                   │
+     │                   │    auth.getUser()   │                   │
      │                   │                     │                   │
      │                   │ 9. RLS в PostgreSQL │                   │
      │                   │    auth.uid()       │                   │
@@ -1275,12 +1280,20 @@ GET  /api/access-control/roles                       — доступные ро
      │                   │    доступ к строкам │                   │
 ```
 
-**Middleware (`middleware.ts`):**
+**Регистрация и приглашения:**
+
+- `handle_new_user()` создаёт `profiles`, `user_settings`, базовую запись `workspace_members` и запись `user_roles`.
+- Обычная регистрация получает роль `owner` и собственный workspace (`owner_id = user_id`).
+- Регистрация по Supabase invite (`inviteUserByEmail`) ищет `workspace_invitations` по `invitation_id` + email, добавляет пользователя в `workspace_members`, назначает роль в `user_roles` и удаляет принятое приглашение.
+- Приглашения хранятся в `workspace_invitations`, не в JSONB `user_settings.workspace`.
+
+**Proxy (`proxy.ts`, Next.js 16):**
 
 ```typescript
-// Защита роутов: публичные vs защищённые
+// Обновляет Supabase SSR-сессию через auth.getClaims().
+// API routes выполняют собственный auth/permission check.
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|auth).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }
 ```
 

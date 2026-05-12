@@ -36,7 +36,10 @@ export const rolePermissions = pgTable(
       .notNull()
       .references(() => permissions.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.roleId, t.permissionId] })]
+  (t) => [
+    primaryKey({ columns: [t.roleId, t.permissionId] }),
+    index("idx_role_permissions_permission_id").on(t.permissionId),
+  ]
 )
 
 // ── User Roles ──
@@ -57,5 +60,7 @@ export const userRoles = pgTable(
   (t) => [
     primaryKey({ columns: [t.userId, t.roleId] }),
     index("idx_user_roles_user_id").on(t.userId),
+    index("idx_user_roles_role_id").on(t.roleId),
+    index("idx_user_roles_assigned_by").on(t.assignedBy),
   ]
 )

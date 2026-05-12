@@ -2,9 +2,14 @@
 
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
-import { requireAuth, canManageTeam } from '@/lib/auth/permissions'
+import { requireAuth } from '@/lib/auth/permissions'
 import { supabase } from '@/db'
 import { createClient } from '@/lib/supabase/server'
+import {
+  canManageTeamForWorkspace,
+  getPrimaryWorkspace,
+  getRoleId,
+} from '@/lib/auth/team'
 
 // ═══════════════════════════════════════════════════════════════
 // Zod-схемы
@@ -65,79 +70,74 @@ async function getUserName(userId: string): Promise<string> {
 
 /**
  * Пригласить участника в workspace.
- * Сохраняет приглашение в user_settings.workspace.invitations.
+ * Сохраняет приглашение в workspace_invitations и отправляет письмо Supabase Auth.
  */
 export async function inviteMemberAction(
   input: z.infer<typeof InviteMemberSchema>
 ) {
   const user = await requireAuth()
+  const parsed = InviteMemberSchema.parse({
+    ...input,
+    email: input.email.trim().toLowerCase(),
+  })
 
-  if (!(await canManageTeam())) {
+  const ownerId = await getPrimaryWorkspace(user.id)
+  if (!(await canManageTeamForWorkspace(user.id, ownerId))) {
     throw new Error('Forbidden: недостаточно прав для приглашения участников')
   }
 
-  const parsed = InviteMemberSchema.parse(input)
+  const roleId = await getRoleId(parsed.role)
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  const { data: existing } = await supabase
-    .from('user_settings')
-    .select('workspace')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const { data: invitation, error: insertError } = await supabase
+    .from('workspace_invitations')
+    .insert({
+      email: parsed.email,
+      role_id: roleId,
+      invited_by: user.id,
+      owner_id: ownerId,
+      message: parsed.message ?? null,
+      expires_at: expiresAt,
+    })
+    .select('id,email,message,invited_at,expires_at,status')
+    .single()
 
-  const ws = (existing?.workspace ?? {}) as Record<string, any>
-  const invitations = (ws.invitations ?? []) as any[]
+  if (insertError) {
+    if (insertError.code === '23505') {
+      throw new Error('Приглашение для этого email уже отправлено')
+    }
+    throw new Error(`Ошибка создания приглашения: ${insertError.message}`)
+  }
 
-  // Check duplicate email
-  if (invitations.some((inv: any) => inv.email === parsed.email && inv.status === 'pending')) {
-    throw new Error('Приглашение для этого email уже отправлено')
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(parsed.email, {
+    redirectTo: `${siteUrl}/auth/callback?next=/dashboard`,
+    data: {
+      invited_by: user.id,
+      workspace_role: parsed.role,
+      invitation_id: invitation.id,
+    },
+  })
+
+  if (inviteErr) {
+    await supabase.from('workspace_invitations').delete().eq('id', invitation.id)
+    throw new Error(`Ошибка отправки приглашения: ${inviteErr.message}`)
   }
 
   const inviterName = await getUserName(user.id)
-
-  const newInvitation = {
-    id: crypto.randomUUID(),
-    email: parsed.email,
+  const result = {
+    id: invitation.id,
+    email: invitation.email,
     role: parsed.role,
     invitedBy: inviterName,
-    invitedAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'pending',
-    message: parsed.message ?? '',
-  }
-
-  invitations.push(newInvitation)
-
-  await supabase
-    .from('user_settings')
-    .upsert({
-      user_id: user.id,
-      workspace: { ...ws, invitations },
-      updated_at: new Date().toISOString(),
-    })
-
-  // Отправляем реальное email-приглашение через Supabase Auth Admin
-  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-  let emailSent = false
-  try {
-    const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(parsed.email, {
-      redirectTo: `${siteUrl}/signup?invite=${newInvitation.id}`,
-      data: {
-        invited_by: user.id,
-        workspace_role: parsed.role,
-        invitation_id: newInvitation.id,
-      },
-    })
-    if (inviteErr) {
-      console.warn('[inviteMemberAction] inviteUserByEmail warning:', inviteErr.message)
-    } else {
-      emailSent = true
-    }
-  } catch (emailErr: any) {
-    console.warn('[inviteMemberAction] inviteUserByEmail threw:', emailErr?.message ?? emailErr)
+    invitedAt: invitation.invited_at,
+    expiresAt: invitation.expires_at,
+    status: invitation.status,
+    message: invitation.message ?? '',
   }
 
   revalidatePath('/team')
-  return { success: true, data: newInvitation, emailSent }
+  return { success: true, data: result, emailSent: true }
 }
 
 /**

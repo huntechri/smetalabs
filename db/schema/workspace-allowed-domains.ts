@@ -24,5 +24,6 @@ export const workspaceAllowedDomains = pgTable(
     uniqueIndex("uq_workspace_allowed_domains_domain_owner")
       .on(t.domain, t.ownerId),
     index("idx_workspace_allowed_domains_owner_id").on(t.ownerId),
+    index("idx_workspace_allowed_domains_added_by").on(t.addedBy),
   ]
 )

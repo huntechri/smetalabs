@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
     const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${siteUrl}/dashboard`,
+      redirectTo: `${siteUrl}/set-password`,
       data: {
         invited_by: user.id,
         invitation_id: invitation.id,

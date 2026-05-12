@@ -2,11 +2,14 @@ import { createClient as createSupabaseClient } from "@/lib/supabase/server"
 import { supabase } from "@/db"
 import {
   canManageTeamForWorkspace,
+  getPrimaryWorkspace,
+  getWorkspaceRole,
   requireCurrentWorkspace,
+  requireWorkspaceMember,
 } from "@/lib/auth/team"
 
 // ═══════════════════════════════════════════════════════════════
-// 1. Базовые функции — role-based (обратная совместимость)
+// 1. Базовые функции — workspace-scoped compatibility wrappers
 // ═══════════════════════════════════════════════════════════════
 
 /**
@@ -21,39 +24,32 @@ async function getCurrentUserId(): Promise<string | null> {
   return user?.id ?? null
 }
 
+async function getCurrentWorkspaceRoleIds(): Promise<string[]> {
+  const userId = await getCurrentUserId()
+  if (!userId) return []
+
+  const ownerId = await getPrimaryWorkspace(userId)
+  const member = await requireWorkspaceMember(userId, ownerId)
+  return member.roleId ? [member.roleId] : []
+}
+
 /**
- * Получить роли текущего пользователя из user_roles.
- * Возвращает массив имён ролей (например, ["owner", "admin"]).
- *
- * Использует отдельные запросы + сборку в JS вместо Drizzle JOIN.
+ * @deprecated Ambiguous compatibility helper. Workspace authorization must use
+ * explicit ownerId helpers from `lib/auth/team` when possible. This wrapper is
+ * intentionally scoped to the current workspace and never reads global
+ * `user_roles`.
  */
 export async function getUserRoles(): Promise<string[]> {
   const userId = await getCurrentUserId()
   if (!userId) return []
 
-  // 1. Получаем role_id для пользователя
-  const { data: userRoleRows, error: err1 } = await supabase
-    .from("user_roles")
-    .select("role_id")
-    .eq("user_id", userId)
-
-  if (err1 || !userRoleRows?.length) return []
-
-  const roleIds = userRoleRows.map((r) => r.role_id)
-
-  // 2. Получаем имена ролей по id
-  const { data: roleRows, error: err2 } = await supabase
-    .from("roles")
-    .select("name")
-    .in("id", roleIds)
-
-  if (err2) return []
-
-  return roleRows.map((r) => r.name).filter(Boolean)
+  const role = await getWorkspaceRole(userId, await getPrimaryWorkspace(userId))
+  return role ? [role] : []
 }
 
 /**
- * Проверить, есть ли у текущего пользователя конкретная роль.
+ * @deprecated Ambiguous compatibility helper. Prefer explicit workspace checks
+ * from `lib/auth/team`. This wrapper uses current workspace membership only.
  */
 export async function hasRole(role: string): Promise<boolean> {
   const userRolesList = await getUserRoles()
@@ -61,7 +57,8 @@ export async function hasRole(role: string): Promise<boolean> {
 }
 
 /**
- * Проверить, есть ли у текущего пользователя хотя бы одна из указанных ролей.
+ * @deprecated Ambiguous compatibility helper. Prefer explicit workspace checks
+ * from `lib/auth/team`. This wrapper uses current workspace membership only.
  */
 export async function hasAnyRole(rolesList: string[]): Promise<boolean> {
   const userRolesList = await getUserRoles()
@@ -69,30 +66,20 @@ export async function hasAnyRole(rolesList: string[]): Promise<boolean> {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 2. Permission-based функции (отдельные запросы + сборка в JS)
+// 2. Permission-based функции (workspace_members → role_permissions → permissions)
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Получить ВСЕ permissions текущего пользователя
- * через последовательные запросы: user_roles → role_permissions → permissions.
- *
- * Возвращает массив ключей разрешений (например, ["projects.read", "estimates.create"]).
+ * @deprecated Ambiguous compatibility helper. Workspace authorization must use
+ * explicit ownerId helpers from `lib/auth/team` when possible. This wrapper
+ * resolves the current workspace and derives permissions from
+ * `workspace_members.role_id`, never from global `user_roles`.
  */
 export async function getUserPermissions(): Promise<string[]> {
-  const userId = await getCurrentUserId()
-  if (!userId) return []
+  const roleIds = await getCurrentWorkspaceRoleIds()
+  if (!roleIds.length) return []
 
-  // 1. Получаем role_id для пользователя
-  const { data: userRoleRows, error: err1 } = await supabase
-    .from("user_roles")
-    .select("role_id")
-    .eq("user_id", userId)
-
-  if (err1 || !userRoleRows?.length) return []
-
-  const roleIds = userRoleRows.map((r) => r.role_id)
-
-  // 2. Получаем permission_id через role_permissions
+  // 1. Получаем permission_id через role_permissions
   const { data: rpRows, error: err2 } = await supabase
     .from("role_permissions")
     .select("permission_id")
@@ -103,7 +90,7 @@ export async function getUserPermissions(): Promise<string[]> {
   // Дедупликация permission_id
   const permissionIds = [...new Set(rpRows.map((r) => r.permission_id))]
 
-  // 3. Получаем ключи разрешений
+  // 2. Получаем ключи разрешений
   const { data: permRows, error: err3 } = await supabase
     .from("permissions")
     .select("key")
@@ -115,23 +102,28 @@ export async function getUserPermissions(): Promise<string[]> {
 }
 
 let _cachedPermissions: string[] | null = null
-let _cachedUserId: string | null = null
+let _cachedPermissionsScope: string | null = null
 
 /**
  * Получить закэшированные permissions (для повторных проверок в рамках одного запроса).
  */
 async function getCachedPermissions(): Promise<string[]> {
   const userId = await getCurrentUserId()
-  if (userId === _cachedUserId && _cachedPermissions !== null) {
+  const ownerId = userId ? await getPrimaryWorkspace(userId) : null
+  const scope = userId && ownerId ? `${userId}:${ownerId}` : null
+
+  if (scope === _cachedPermissionsScope && _cachedPermissions !== null) {
     return _cachedPermissions
   }
+
   _cachedPermissions = await getUserPermissions()
-  _cachedUserId = userId
+  _cachedPermissionsScope = scope
   return _cachedPermissions
 }
 
 /**
- * Проверить, есть ли у текущего пользователя конкретное разрешение.
+ * @deprecated Ambiguous compatibility helper. Prefer explicit workspace checks.
+ * This wrapper uses current workspace membership only.
  */
 export async function hasPermission(key: string): Promise<boolean> {
   const perms = await getCachedPermissions()
@@ -139,7 +131,8 @@ export async function hasPermission(key: string): Promise<boolean> {
 }
 
 /**
- * Проверить, есть ли у текущего пользователя хотя бы одно из указанных разрешений.
+ * @deprecated Ambiguous compatibility helper. Prefer explicit workspace checks.
+ * This wrapper uses current workspace membership only.
  */
 export async function hasAnyPermission(keys: string[]): Promise<boolean> {
   const perms = await getCachedPermissions()
@@ -147,7 +140,8 @@ export async function hasAnyPermission(keys: string[]): Promise<boolean> {
 }
 
 /**
- * Проверить, есть ли у текущего пользователя ВСЕ указанные разрешения.
+ * @deprecated Ambiguous compatibility helper. Prefer explicit workspace checks.
+ * This wrapper uses current workspace membership only.
  */
 export async function hasAllPermissions(keys: string[]): Promise<boolean> {
   const perms = await getCachedPermissions()
@@ -159,8 +153,8 @@ export async function hasAllPermissions(keys: string[]): Promise<boolean> {
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Может ли пользователь управлять проектами?
- * (projects.create || projects.update || projects.delete)
+ * @deprecated Ambiguous compatibility helper. Prefer explicit workspace checks.
+ * This wrapper uses current workspace membership only.
  */
 export async function canManageProjects(): Promise<boolean> {
   return hasAnyPermission([
@@ -171,8 +165,8 @@ export async function canManageProjects(): Promise<boolean> {
 }
 
 /**
- * Может ли пользователь управлять сметами?
- * (estimates.create || estimates.update || estimates.delete)
+ * @deprecated Ambiguous compatibility helper. Prefer explicit workspace checks.
+ * This wrapper uses current workspace membership only.
  */
 export async function canManageEstimates(): Promise<boolean> {
   return hasAnyPermission([
@@ -194,15 +188,16 @@ export async function canManageTeam(): Promise<boolean> {
 }
 
 /**
- * Может ли пользователь просматривать биллинг?
+ * @deprecated Ambiguous compatibility helper. Prefer explicit workspace checks.
+ * This wrapper uses current workspace membership only.
  */
 export async function canViewBilling(): Promise<boolean> {
   return hasPermission("billing.read")
 }
 
 /**
- * Может ли пользователь писать (создавать/редактировать/удалять)?
- * Обратная совместимость: canWrite = canManageProjects || canManageEstimates
+ * @deprecated Ambiguous compatibility helper. Prefer explicit workspace checks.
+ * This wrapper uses current workspace membership only.
  */
 export async function canWrite(): Promise<boolean> {
   const [projects, estimates] = await Promise.all([
@@ -235,7 +230,8 @@ export async function requireAuth(): Promise<{
 }
 
 /**
- * Требовать конкретное разрешение. Бросает Error если нет прав.
+ * @deprecated Ambiguous compatibility guard. Prefer explicit workspace checks.
+ * This wrapper uses current workspace membership only.
  */
 export async function requirePermission(key: string): Promise<void> {
   await requireAuth()
@@ -246,8 +242,8 @@ export async function requirePermission(key: string): Promise<void> {
 }
 
 /**
- * Требовать определённую роль. Бросает Error если нет роли.
- * (обратная совместимость)
+ * @deprecated Ambiguous compatibility guard. Prefer explicit workspace checks.
+ * This wrapper uses current workspace membership only.
  */
 export async function requireRole(role: string): Promise<void> {
   await requireAuth()

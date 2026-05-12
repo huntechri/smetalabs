@@ -1288,7 +1288,7 @@ GET  /api/access-control/roles                       — доступные ро
 
 **Регистрация и приглашения:**
 
-- `handle_new_user()` создаёт `profiles`, `user_settings`, базовую запись `workspace_members` и запись `user_roles`.
+- `handle_new_user()` создаёт `profiles`, `user_settings` и базовую запись `workspace_members`. Legacy/global `user_roles` не участвует в workspace authorization.
 - Обычная регистрация получает роль `owner` и собственный workspace (`owner_id = user_id`).
 - **Отправка приглашения:** `inviteMemberAction` в `app/actions/team.ts` вызывает `inviteUserByEmail` с `redirectTo: /dashboard`. Параметр `data.invitation_id` сохраняется в `user_metadata` приглашённого.
 - **Hash fragment:** Supabase Auth редиректит с токенами в URL hash (напр. `#access_token=...&refresh_token=...&type=invite`). Клиентский Supabase SDK (`@supabase/ssr`) подхватывает hash-параметры, устанавливает сессионные cookies и убирает hash из URL.
@@ -1297,10 +1297,9 @@ GET  /api/access-control/roles                       — доступные ро
   1. Читает `invitation_id` из `user_metadata` пользователя
   2. Ищет pending-инвитацию в `workspace_invitations`
   3. Проверяет совпадение email, статус `pending` и срок действия
-  4. Upsert'ит запись в `workspace_members` (статус `active`)
-  5. Upsert'ит роль в `user_roles`
-  6. Удаляет использованное приглашение из `workspace_invitations`
-- **API-роуты:** `POST /api/team/invitations/accept` — ручной вызов `acceptInvitationIfPresent`. `POST /api/team/invitations/[id]/resend` — повторная отправка приглашения через `inviteUserByEmail`.
+  4. Upsert'ит запись в `workspace_members` (статус `active`, роль из `role_id`)
+  5. Удаляет использованное приглашение из `workspace_invitations`
+- **API-роуты:** `POST /api/team/invitations/accept` — ручной вызов `acceptInvitationIfPresent`; только успешное принятие возвращает HTTP 200, validation/auth failures возвращают 4xx (`400/401/403/404/410`), server failures — 500. `POST /api/team/invitations/[id]/resend` — повторная отправка приглашения через `inviteUserByEmail`.
 - Приглашения хранятся в `workspace_invitations`, не в JSONB `user_settings.workspace`.
 
 **Proxy (`proxy.ts`, Next.js 16):**
@@ -1849,7 +1848,7 @@ Required helpers:
 - `canReadTeamForWorkspace(userId, ownerId)` — owner/admin/manager read guard.
 - `canManageTeamForWorkspace(userId, ownerId)` — owner/admin mutation guard.
 
-Workspace RBAC source of truth is `workspace_members.role_id -> roles`. The legacy/global `user_roles` table is not used for workspace-level authorization; reserve it only for future platform/global roles if needed.
+Workspace RBAC source of truth is `workspace_members.role_id -> roles`. The legacy/global `user_roles` table is not used for workspace-level authorization; reserve it only for future platform/global roles if needed. Ambiguous compatibility helpers in `lib/auth/permissions.ts` are deprecated and resolve the current workspace before checking roles/permissions; new workspace authorization code should use explicit `ownerId` helpers from `lib/auth/team.ts`.
 
 ### Service-role policy
 

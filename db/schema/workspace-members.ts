@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, pgEnum, index } from "drizzle-orm/pg-core"
+import { pgTable, uuid, timestamp, pgEnum, index, uniqueIndex } from "drizzle-orm/pg-core"
 import { profiles } from "./profiles"
 import { roles } from "./rbac"
 
@@ -34,7 +34,9 @@ export const workspaceMembers = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    uniqueIndex("uq_workspace_members_user_owner").on(t.userId, t.ownerId),
     index("idx_workspace_members_owner_id").on(t.ownerId),
+    index("idx_workspace_members_role_id").on(t.roleId),
     index("idx_workspace_members_status").on(t.status),
   ]
 )

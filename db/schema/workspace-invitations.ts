@@ -35,6 +35,9 @@ export const workspaceInvitations = pgTable(
     uniqueIndex("uq_workspace_invitations_email_owner")
       .on(t.email, t.ownerId),
     index("idx_workspace_invitations_status").on(t.status),
+    index("idx_workspace_invitations_role_id").on(t.roleId),
+    index("idx_workspace_invitations_owner_id").on(t.ownerId),
+    index("idx_workspace_invitations_invited_by").on(t.invitedBy),
     index("idx_workspace_invitations_expires_at_pending")
       .on(t.expiresAt)
       .where(sql`${t.status} = 'pending'`), // partial index

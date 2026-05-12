@@ -111,7 +111,7 @@ export async function inviteMemberAction(
 
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
   const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(parsed.email, {
-    redirectTo: `${siteUrl}/dashboard`,
+    redirectTo: `${siteUrl}/set-password`,
     data: {
       invited_by: user.id,
       workspace_role: parsed.role,

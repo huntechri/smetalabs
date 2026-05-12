@@ -42,6 +42,11 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
+  // ── Invite password setup — allow before browser client persists hash session ──
+  if (pathname === "/set-password") {
+    return supabaseResponse
+  }
+
   // ── Auth pages (/login, /signup, /forgot-password) — only for unauthenticated ──
   const authPaths = ["/login", "/signup", "/forgot-password"]
   const isAuthPage = authPaths.some((p) => pathname === p)

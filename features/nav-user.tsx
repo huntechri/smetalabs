@@ -125,14 +125,14 @@ export function NavUser({ user }: { user: NavUserData }) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <form action={signOutAction}>
-              <DropdownMenuItem asChild>
-                <button type="submit" className="w-full">
-                  <SignOut />
-                  Выйти
-                </button>
-              </DropdownMenuItem>
-            </form>
+            <DropdownMenuItem
+              onClick={async () => {
+                await signOutAction()
+              }}
+            >
+              <SignOut />
+              Выйти
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

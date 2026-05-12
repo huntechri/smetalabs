@@ -1,6 +1,6 @@
 # SmetaLabs — Filemap
 
-> Last updated: 2026-05-12
+> Last updated: 2026-05-12 22:00 UTC
 >
 > Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md).
 
@@ -15,7 +15,7 @@ smetalabs/
 ├── db/                     # Drizzle client, schema, migrations, seed scripts
 ├── docs/                   # architecture, filemap and design-system documentation
 ├── features/               # feature-owned UI, hooks and screens
-├── hooks/                  # global hooks only
+├── hooks/                  # global hooks only (`use-mobile.ts`)
 ├── lib/                    # shared infra, auth helpers, Supabase clients, utilities
 ├── public/                 # static assets
 ├── types/                  # shared cross-feature TypeScript types
@@ -136,7 +136,8 @@ features/
 │       ├── login-form.tsx
 │       ├── signup-form.tsx
 │       ├── forgot-password-form.tsx
-│       └── set-password-form.tsx
+│       ├── set-password-form.tsx
+│       └── invite-password-form.tsx
 │
 ├── dashboard/
 ├── projects/
@@ -194,8 +195,14 @@ lib/
 │   ├── client.ts           # browser client
 │   ├── server.ts           # server client
 │   └── proxy.ts            # session refresh + route protection
-├── auth/                   # auth, RBAC and workspace helpers
-└── utils.ts                # generic utilities
+├── auth/
+│   ├── actions.ts          # server action helpers
+│   ├── invitations.ts      # invitation acceptance logic
+│   ├── permissions.ts      # RBAC permission guards
+│   └── team.ts             # workspace-scoped member/role helpers
+├── calculations.ts         # estimate math utilities
+├── formatters.ts           # number, currency, date formatters
+└── utils.ts                # generic utilities (cn, etc.)
 ```
 
 Rules:
@@ -223,7 +230,10 @@ db/
     ├── index.ts
     ├── profiles.ts
     ├── rbac.ts
-    └── user-settings.ts
+    ├── user-settings.ts
+    ├── workspace-allowed-domains.ts
+    ├── workspace-invitations.ts
+    └── workspace-members.ts
 ```
 
 Rules:

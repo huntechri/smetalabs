@@ -2,6 +2,7 @@
 
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 import { requireAuth } from "@/lib/auth/permissions"
 import { supabase } from "@/db"
 import { createClient } from "@/lib/supabase/server"
@@ -42,8 +43,20 @@ async function getUserName(userId: string): Promise<string> {
   }
 }
 
-function authCallbackUrl(siteUrl: string) {
-  return `${siteUrl}/auth/callback?next=/set-password`
+async function getRequestOrigin() {
+  const headersList = await headers()
+  const forwardedHost = headersList.get("x-forwarded-host")
+  const host = forwardedHost ?? headersList.get("host") ?? "localhost:3000"
+  const proto = headersList.get("x-forwarded-proto") ?? "http"
+  return `${proto}://${host}`
+}
+
+function authCallbackUrl(origin: string) {
+  return `${origin}/auth/callback`
+}
+
+function passwordSetupUrl(origin: string) {
+  return `${origin}/set-password`
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -91,14 +104,11 @@ export async function inviteMemberAction(
     throw new Error(`Ошибка создания приглашения: ${insertError.message}`)
   }
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000"
+  const origin = await getRequestOrigin()
   const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(
     parsed.email,
     {
-      redirectTo: authCallbackUrl(siteUrl),
+      redirectTo: authCallbackUrl(origin),
       data: {
         invited_by: user.id,
         workspace_role: parsed.role,
@@ -170,10 +180,9 @@ export async function resetPasswordAction() {
   const user = await requireAuth()
 
   const client = await createClient()
-  const siteUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? ""
+  const origin = await getRequestOrigin()
   const { error } = await client.auth.resetPasswordForEmail(user.email!, {
-    redirectTo: authCallbackUrl(siteUrl),
+    redirectTo: passwordSetupUrl(origin),
   })
 
   if (error) {

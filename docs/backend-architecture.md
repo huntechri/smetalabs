@@ -1083,6 +1083,8 @@ GET  /api/team/members                               — список участ
 GET  /api/team/invitations                           — список ожидающих приглашений ✅
 POST /api/team/invitations                           — создать приглашение ✅
 DELETE /api/team/invitations/:id                     — отменить приглашение ✅
+POST /api/team/invitations/accept                    — принять приглашение (из user_metadata) ✅
+POST /api/team/invitations/:id/resend                — повторно отправить приглашение ✅
 GET  /api/team/domains                               — список разрешённых доменов ✅
 POST /api/team/domains                               — добавить разрешённый домен ✅
 DELETE /api/team/domains/:id                         — удалить разрешённый домен ✅
@@ -1094,7 +1096,7 @@ POST /api/team/members/:userId/change-role           — изменить рол
 POST /api/team/members/:userId/suspend               — заблокировать участника (план)
 POST /api/team/members/:userId/remove                — удалить участника из workspace (план)
 POST /api/team/invitations/:id/revoke                — отозвать приглашение (план)
-POST /api/team/invitations/:id/resend                — повторно отправить приглашение (план)
+POST /api/team/invitations/:id/resend                — повторно отправить приглашение (устарело, см. реализацию выше)
 POST /api/team/transfer-ownership                    — передать права владельца (план)
 POST /api/team/leave                                 — покинуть workspace (план)
 POST /api/team/archive                               — архивировать workspace (план)
@@ -1284,7 +1286,17 @@ GET  /api/access-control/roles                       — доступные ро
 
 - `handle_new_user()` создаёт `profiles`, `user_settings`, базовую запись `workspace_members` и запись `user_roles`.
 - Обычная регистрация получает роль `owner` и собственный workspace (`owner_id = user_id`).
-- Регистрация по Supabase invite (`inviteUserByEmail`) ищет `workspace_invitations` по `invitation_id` + email, добавляет пользователя в `workspace_members`, назначает роль в `user_roles` и удаляет принятое приглашение.
+- **Отправка приглашения:** `inviteMemberAction` в `app/actions/team.ts` вызывает `inviteUserByEmail` с `redirectTo: /dashboard`. Параметр `data.invitation_id` сохраняется в `user_metadata` приглашённого.
+- **Hash fragment:** Supabase Auth редиректит с токенами в URL hash (напр. `#access_token=...&refresh_token=...&type=invite`). Клиентский Supabase SDK (`@supabase/ssr`) подхватывает hash-параметры, устанавливает сессионные cookies и убирает hash из URL.
+- **Callback (`app/auth/callback/route.ts`):** упрощён — обрабатывает только OTP-верификацию (`verifyOtp`) и OAuth-коды (`exchangeCodeForSession`). Инвитация не обрабатывается в callback.
+- **Принятие приглашения:** `app/(main)/layout.tsx` после `auth.getUser()` вызывает `acceptInvitationIfPresent(userId)` из `lib/auth/invitations.ts`. Этот хелпер:
+  1. Читает `invitation_id` из `user_metadata` пользователя
+  2. Ищет pending-инвитацию в `workspace_invitations`
+  3. Проверяет совпадение email, статус `pending` и срок действия
+  4. Upsert'ит запись в `workspace_members` (статус `active`)
+  5. Upsert'ит роль в `user_roles`
+  6. Удаляет использованное приглашение из `workspace_invitations`
+- **API-роуты:** `POST /api/team/invitations/accept` — ручной вызов `acceptInvitationIfPresent`. `POST /api/team/invitations/[id]/resend` — повторная отправка приглашения через `inviteUserByEmail`.
 - Приглашения хранятся в `workspace_invitations`, не в JSONB `user_settings.workspace`.
 
 **Proxy (`proxy.ts`, Next.js 16):**

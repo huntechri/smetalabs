@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { DotsThree, LockKey, User } from "@phosphor-icons/react"
 import { toast } from "sonner"
 
@@ -38,6 +39,8 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
+import { RemoveMemberDialog } from "./remove-member-dialog"
+import { RoleChangeDialog } from "./role-change-dialog"
 import { useWorkspaceMembers } from "../hooks/use-workspace-settings"
 import type { Role } from "@/types/roles"
 import { ROLE_LABELS } from "@/types/roles"
@@ -51,7 +54,7 @@ type MemberActions = {
   onOpenRoleChange: (member: WorkspaceMember) => void
   onResetPassword: (member: WorkspaceMember) => Promise<void>
   onToggleSuspend: (member: WorkspaceMember) => Promise<void>
-  onRemoveMember: (member: WorkspaceMember) => Promise<void>
+  onRemoveMember: (member: WorkspaceMember) => void
 }
 
 function getInitials(name: string) {
@@ -210,6 +213,8 @@ export function WorkspaceMembersTable() {
     removeMember,
     resetPassword,
   } = useWorkspaceMembers()
+  const [roleChangeTarget, setRoleChangeTarget] = useState<WorkspaceMember | null>(null)
+  const [removeTarget, setRemoveTarget] = useState<WorkspaceMember | null>(null)
 
   const handleChangeRole = async (member: WorkspaceMember, role: Role) => {
     if (member.role === role) return
@@ -222,17 +227,7 @@ export function WorkspaceMembersTable() {
   }
 
   const handleOpenRoleChange = (member: WorkspaceMember) => {
-    const rolesList = EDITABLE_ROLES.map((role) => `${role} — ${ROLE_LABELS[role]}`).join("\n")
-    const selected = window.prompt(`Введите новую роль для ${member.name}:\n${rolesList}`, member.role)
-    if (!selected) return
-
-    const role = selected.trim() as Role
-    if (!EDITABLE_ROLES.includes(role)) {
-      toast.error("Неизвестная роль")
-      return
-    }
-
-    void handleChangeRole(member, role)
+    setRoleChangeTarget(member)
   }
 
   const handleResetPassword = async (member: WorkspaceMember) => {
@@ -254,15 +249,26 @@ export function WorkspaceMembersTable() {
     }
   }
 
-  const handleRemoveMember = async (member: WorkspaceMember) => {
-    if (!window.confirm(`Удалить ${member.name} из workspace?`)) return
+  const handleOpenRemoveMember = (member: WorkspaceMember) => {
+    setRemoveTarget(member)
+  }
+
+  const handleRemoveMember = async () => {
+    if (!removeTarget) return
 
     try {
-      await removeMember(member.id)
-      toast.success(`${member.name} удалён из workspace`)
+      await removeMember(removeTarget.id)
+      toast.success(`${removeTarget.name} удалён из workspace`)
+      setRemoveTarget(null)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Ошибка удаления участника")
     }
+  }
+
+  const handleConfirmRoleChange = async (role: Role) => {
+    if (!roleChangeTarget) return
+    await handleChangeRole(roleChangeTarget, role)
+    setRoleChangeTarget(null)
   }
 
   const actions: MemberActions = {
@@ -270,7 +276,7 @@ export function WorkspaceMembersTable() {
     onOpenRoleChange: handleOpenRoleChange,
     onResetPassword: handleResetPassword,
     onToggleSuspend: handleToggleSuspend,
-    onRemoveMember: handleRemoveMember,
+    onRemoveMember: handleOpenRemoveMember,
   }
 
   // ── Loading skeleton ──
@@ -316,7 +322,8 @@ export function WorkspaceMembersTable() {
   }
 
   return (
-    <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
+    <>
+      <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
@@ -389,6 +396,19 @@ export function WorkspaceMembersTable() {
           })}
         </div>
       </CardContent>
-    </Card>
+      </Card>
+      <RoleChangeDialog
+        open={roleChangeTarget !== null}
+        onOpenChange={(open) => !open && setRoleChangeTarget(null)}
+        member={roleChangeTarget}
+        onConfirm={handleConfirmRoleChange}
+      />
+      <RemoveMemberDialog
+        open={removeTarget !== null}
+        onOpenChange={(open) => !open && setRemoveTarget(null)}
+        member={removeTarget}
+        onConfirm={handleRemoveMember}
+      />
+    </>
   )
 }

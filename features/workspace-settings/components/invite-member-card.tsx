@@ -31,15 +31,17 @@ import { useInviteMember } from "../hooks/use-workspace-settings"
 const roles: Role[] = ["admin", "manager", "estimator", "viewer"]
 
 export function InviteMemberCard() {
-  const { invite, loading, error } = useInviteMember()
+  const { invite, loading } = useInviteMember()
   const [email, setEmail] = useState("")
   const [role, setRole] = useState("viewer")
   const [message, setMessage] = useState("")
   const [localError, setLocalError] = useState<string | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLocalError(null)
+    setWarning(null)
 
     if (!email.trim()) {
       setLocalError("Введите email")
@@ -47,13 +49,18 @@ export function InviteMemberCard() {
     }
 
     try {
-      await invite(email.trim(), role, message.trim() || undefined)
-      toast.success(`Приглашение отправлено на ${email.trim()}`)
+      const result = await invite(email.trim(), role, message.trim() || undefined)
+      if (result.warning) {
+        setWarning(result.warning)
+        toast.warning(result.warning)
+      } else {
+        toast.success(`Приглашение отправлено на ${email.trim()}`)
+      }
       setEmail("")
       setRole("viewer")
       setMessage("")
-    } catch (err: any) {
-      const msg = err?.message ?? "Ошибка отправки приглашения"
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Ошибка отправки приглашения"
       setLocalError(msg)
       toast.error(msg)
     }
@@ -123,6 +130,11 @@ export function InviteMemberCard() {
           </div>
           {localError && (
             <p className="sm:col-span-2 text-xs text-destructive">{localError}</p>
+          )}
+          {warning && (
+            <p className="sm:col-span-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-md p-2">
+              ⚠️ {warning}
+            </p>
           )}
         </CardContent>
         <CardFooter className="border-t border-dashed border-border/50 pt-4">

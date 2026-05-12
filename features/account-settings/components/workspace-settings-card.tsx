@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSettings, useUpdateWorkspace } from "../hooks/use-account-settings"
+import { useUpdateWorkspace } from "../hooks/use-account-settings"
+import type { SettingsResponse } from "../hooks/use-account-settings"
 
 const companyTypes = [
   { value: "ООО", label: "ООО" },
@@ -44,6 +45,7 @@ const locales = [
 ]
 
 const timezones = [
+  { value: "UTC", label: "UTC" },
   { value: "Europe/Moscow", label: "UTC+3 Москва" },
   { value: "Europe/Kaliningrad", label: "UTC+2 Калининград" },
   { value: "Europe/Samara", label: "UTC+4 Самара" },
@@ -54,8 +56,19 @@ const timezones = [
   { value: "Asia/Vladivostok", label: "UTC+10 Владивосток" },
 ]
 
-export function WorkspaceSettingsCard() {
-  const { settings, loading, error, refetch } = useSettings()
+type SettingsStateProps = {
+  settings: SettingsResponse["data"] | null
+  loading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export function WorkspaceSettingsCard({
+  settings,
+  loading,
+  error,
+  refetch,
+}: SettingsStateProps) {
   const {
     updateWorkspace,
     loading: saving,
@@ -72,7 +85,7 @@ export function WorkspaceSettingsCard() {
   const [companyPhone, setCompanyPhone] = useState("")
   const [defaultCurrency, setDefaultCurrency] = useState("RUB")
   const [defaultLocale, setDefaultLocale] = useState("ru-RU")
-  const [defaultTimezone, setDefaultTimezone] = useState("Europe/Moscow")
+  const [defaultTimezone, setDefaultTimezone] = useState("UTC")
 
   useEffect(() => {
     if (settings?.workspace) {
@@ -87,7 +100,7 @@ export function WorkspaceSettingsCard() {
       setCompanyPhone(w.companyPhone ?? "")
       setDefaultCurrency(w.defaultCurrency ?? "RUB")
       setDefaultLocale(w.defaultLocale ?? "ru-RU")
-      setDefaultTimezone(w.defaultTimezone ?? "Europe/Moscow")
+      setDefaultTimezone(w.defaultTimezone ?? "UTC")
     }
   }, [settings])
 
@@ -108,7 +121,6 @@ export function WorkspaceSettingsCard() {
     if (updated) await refetch()
   }
 
-  // ── Loading state ──
   if (loading) {
     return (
       <Card>
@@ -134,7 +146,6 @@ export function WorkspaceSettingsCard() {
     )
   }
 
-  // ── Error state ──
   if (error && !settings?.workspace) {
     return (
       <Card className="border-destructive/50">

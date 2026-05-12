@@ -32,6 +32,14 @@ function resolveFetchError(status: number, apiMessage: string, resource: string)
 
 // ── API response types ──
 
+function getApiMessage(body: unknown) {
+  if (typeof body !== "object" || body === null || !("error" in body)) {
+    return ""
+  }
+  const error = (body as { error?: { message?: unknown } }).error
+  return typeof error?.message === "string" ? error.message : ""
+}
+
 type ApiMember = {
   id: string
   name: string
@@ -77,7 +85,7 @@ export function useWorkspaceMembers() {
         let apiMessage = ""
         try {
           const body = await res.json()
-          apiMessage = body?.error?.message ?? ""
+          apiMessage = getApiMessage(body)
         } catch {
           // response body is not JSON
         }
@@ -98,7 +106,9 @@ export function useWorkspaceMembers() {
   }, [])
 
   useEffect(() => {
-    fetchMembers()
+    queueMicrotask(() => {
+      void fetchMembers()
+    })
   }, [fetchMembers])
 
   return { members, loading, error, refetch: fetchMembers }
@@ -122,7 +132,7 @@ export function useWorkspaceOverview() {
         let apiMessage = ""
         try {
           const body = await res.json()
-          apiMessage = body?.error?.message ?? ""
+          apiMessage = getApiMessage(body)
         } catch { /* no JSON */ }
         throw new Error(resolveFetchError(res.status, apiMessage, "обзора workspace"))
       }
@@ -136,7 +146,9 @@ export function useWorkspaceOverview() {
   }, [])
 
   useEffect(() => {
-    fetchOverview()
+    queueMicrotask(() => {
+      void fetchOverview()
+    })
   }, [fetchOverview])
 
   return { overview, loading, error, refetch: fetchOverview }
@@ -167,7 +179,7 @@ export function useInviteMember() {
           let apiMessage = ""
           try {
             const body = await res.json()
-            apiMessage = body?.error?.message ?? ""
+            apiMessage = getApiMessage(body)
           } catch { /* no JSON */ }
           throw new Error(resolveFetchError(res.status, apiMessage, "приглашения"))
         }
@@ -210,7 +222,7 @@ export function useInvitations() {
         let apiMessage = ""
         try {
           const body = await res.json()
-          apiMessage = body?.error?.message ?? ""
+          apiMessage = getApiMessage(body)
         } catch { /* no JSON */ }
         throw new Error(resolveFetchError(res.status, apiMessage, "приглашений"))
       }
@@ -224,7 +236,9 @@ export function useInvitations() {
   }, [])
 
   useEffect(() => {
-    fetchInvitations()
+    queueMicrotask(() => {
+      void fetchInvitations()
+    })
   }, [fetchInvitations])
 
   const cancelInvitation = useCallback(async (id: string) => {
@@ -237,7 +251,7 @@ export function useInvitations() {
         let apiMessage = ""
         try {
           const body = await res.json()
-          apiMessage = body?.error?.message ?? ""
+          apiMessage = getApiMessage(body)
         } catch { /* no JSON */ }
         throw new Error(resolveFetchError(res.status, apiMessage, "отзыва приглашения"))
       }
@@ -272,7 +286,7 @@ export function useDomains() {
         let apiMessage = ""
         try {
           const body = await res.json()
-          apiMessage = body?.error?.message ?? ""
+          apiMessage = getApiMessage(body)
         } catch { /* no JSON */ }
         throw new Error(resolveFetchError(res.status, apiMessage, "доменов"))
       }
@@ -287,7 +301,9 @@ export function useDomains() {
   }, [])
 
   useEffect(() => {
-    fetchDomains()
+    queueMicrotask(() => {
+      void fetchDomains()
+    })
   }, [fetchDomains])
 
   const addDomain = useCallback(async (domain: string) => {
@@ -302,7 +318,7 @@ export function useDomains() {
         let apiMessage = ""
         try {
           const body = await res.json()
-          apiMessage = body?.error?.message ?? ""
+          apiMessage = getApiMessage(body)
         } catch { /* no JSON */ }
         throw new Error(resolveFetchError(res.status, apiMessage, "добавления домена"))
       }
@@ -325,7 +341,7 @@ export function useDomains() {
         let apiMessage = ""
         try {
           const body = await res.json()
-          apiMessage = body?.error?.message ?? ""
+          apiMessage = getApiMessage(body)
         } catch { /* no JSON */ }
         throw new Error(resolveFetchError(res.status, apiMessage, "удаления домена"))
       }
@@ -349,7 +365,7 @@ export function useDomains() {
         let apiMessage = ""
         try {
           const body = await res.json()
-          apiMessage = body?.error?.message ?? ""
+          apiMessage = getApiMessage(body)
         } catch { /* no JSON */ }
         throw new Error(resolveFetchError(res.status, apiMessage, "настройки auto-join"))
       }
@@ -394,7 +410,7 @@ export function useInviteLink() {
         let apiMessage = ""
         try {
           const body = await res.json()
-          apiMessage = body?.error?.message ?? ""
+          apiMessage = getApiMessage(body)
         } catch { /* no JSON */ }
         throw new Error(resolveFetchError(res.status, apiMessage, "ссылки"))
       }
@@ -411,7 +427,9 @@ export function useInviteLink() {
   }, [])
 
   useEffect(() => {
-    fetchInviteLink()
+    queueMicrotask(() => {
+      void fetchInviteLink()
+    })
   }, [fetchInviteLink])
 
   const updateInviteLink = useCallback(
@@ -429,7 +447,7 @@ export function useInviteLink() {
           let apiMessage = ""
           try {
             const body = await res.json()
-            apiMessage = body?.error?.message ?? ""
+            apiMessage = getApiMessage(body)
           } catch { /* no JSON */ }
           throw new Error(resolveFetchError(res.status, apiMessage, "обновления ссылки"))
         }

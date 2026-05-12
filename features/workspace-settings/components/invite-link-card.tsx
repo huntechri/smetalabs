@@ -1,7 +1,6 @@
 "use client"
 
-import { useState } from "react"
-import { Copy, Link as LinkIcon, Spinner } from "@phosphor-icons/react"
+import { Copy, Link as LinkIcon } from "@phosphor-icons/react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -32,7 +31,6 @@ const roles: Role[] = ["admin", "manager", "estimator", "viewer"]
 
 export function InviteLinkCard() {
   const { enabled, url, defaultRole, loading, saving, error, updateInviteLink, refetch } = useInviteLink()
-  const [showError, setShowError] = useState(false)
 
   // ── Loading skeleton ──
   if (loading) {
@@ -55,25 +53,20 @@ export function InviteLinkCard() {
     )
   }
 
-  // ── Error state ──
-  if (error && !showError) {
-    setShowError(true)
-  }
-
   async function handleToggleEnabled(checked: boolean) {
     try {
       await updateInviteLink({ enabled: checked })
       toast.success(checked ? "Ссылка включена" : "Ссылка выключена")
-    } catch (err: any) {
-      toast.error(err?.message ?? "Ошибка сохранения")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Ошибка сохранения")
     }
   }
 
   async function handleRoleChange(newRole: string) {
     try {
       await updateInviteLink({ defaultRole: newRole })
-    } catch (err: any) {
-      toast.error(err?.message ?? "Ошибка сохранения")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Ошибка сохранения")
     }
   }
 
@@ -153,7 +146,7 @@ export function InviteLinkCard() {
           </Select>
         </div>
       </CardContent>
-      {showError && error && (
+      {error && (
         <div className="px-6 pb-4">
           <p className="text-xs text-destructive">
             Ошибка: {error}{" "}

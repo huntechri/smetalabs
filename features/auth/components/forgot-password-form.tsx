@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState } from "react"
+import { Spinner } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
+import { AuthIllustration } from "./auth-illustration"
 import {
   forgotPasswordAction,
   type ForgotPasswordState,
@@ -54,10 +56,9 @@ export function ForgotPasswordForm({
           <form action={formAction} className="p-6 md:p-8">
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
-                <h1 className="text-2xl font-bold">Forgot Password</h1>
+                <h1 className="text-2xl font-bold">Восстановление пароля</h1>
                 <p className="text-balance text-muted-foreground">
-                  Enter your email address and we&apos;ll send you a link to
-                  reset your password.
+                  Укажите email, и мы отправим ссылку для сброса пароля.
                 </p>
               </div>
               <Field>
@@ -66,7 +67,7 @@ export function ForgotPasswordForm({
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="user@company.ru"
                   required
                   defaultValue={state.email}
                 />
@@ -75,8 +76,15 @@ export function ForgotPasswordForm({
                 <p className="text-sm text-destructive">{state.error}</p>
               )}
               <Field>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Отправка..." : "Отправить ссылку"}
+                <Button type="submit" className="gap-2" disabled={isPending}>
+                  {isPending ? (
+                    <>
+                      <Spinner className="size-4 animate-spin" />
+                      Отправка...
+                    </>
+                  ) : (
+                    "Отправить ссылку"
+                  )}
                 </Button>
               </Field>
               <FieldDescription className="text-center">
@@ -87,19 +95,13 @@ export function ForgotPasswordForm({
               </FieldDescription>
             </FieldGroup>
           </form>
-          <div className="relative hidden bg-muted md:block">
-            <img
-              src="/images/auth-bg.png"
-              alt="Изображение"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-            />
-          </div>
+          <AuthIllustration />
         </CardContent>
       </Card>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our{" "}
-        <a href="#">Terms of Service</a> and{" "}
-        <a href="#">Политика конфиденциальности</a>.
+        Продолжая, вы соглашаетесь с{" "}
+        <a href="#">условиями использования</a> и{" "}
+        <a href="#">политикой конфиденциальности</a>.
       </FieldDescription>
     </div>
   )

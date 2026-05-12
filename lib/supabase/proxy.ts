@@ -43,7 +43,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // ── Auth pages (/login, /signup, /forgot-password) — only for unauthenticated ──
-  const authPaths = ["/login", "/signup", "/signup", "/forgot-password"]
+  const authPaths = ["/login", "/signup", "/forgot-password"]
   const isAuthPage = authPaths.some((p) => pathname === p)
 
   if (isAuthPage) {

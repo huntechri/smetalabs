@@ -48,8 +48,8 @@ export function AllowedDomainsCard() {
         setNewDomain("")
         toast.success(`Домен @${trimmed} добавлен`)
       }
-    } catch (err: any) {
-      toast.error(err?.message ?? "Ошибка добавления домена")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Ошибка добавления домена")
     } finally {
       setAddingDomain(false)
     }
@@ -62,8 +62,8 @@ export function AllowedDomainsCard() {
       if (ok) {
         toast.success(`Домен @${domain} удалён`)
       }
-    } catch (err: any) {
-      toast.error(err?.message ?? "Ошибка удаления домена")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Ошибка удаления домена")
     } finally {
       setRemovingId(null)
     }
@@ -74,8 +74,8 @@ export function AllowedDomainsCard() {
     try {
       await setAutoJoinDomains(checked)
       toast.success(checked ? "Авто-присоединение включено" : "Авто-присоединение выключено")
-    } catch (err: any) {
-      toast.error(err?.message ?? "Ошибка сохранения")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Ошибка сохранения")
     } finally {
       setSavingAutoJoin(false)
     }

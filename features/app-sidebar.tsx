@@ -1,11 +1,18 @@
 "use client"
 
 import * as React from "react"
+import {
+  Command,
+  Files,
+  FolderSimple,
+  Folders,
+  Package,
+  SquaresFour,
+  Users,
+} from "@phosphor-icons/react"
 
 import { NavMain } from "@/features/nav-main"
-import { NavProjects } from "@/features/nav-projects"
-import { NavSecondary } from "@/features/nav-secondary"
-import { NavUser } from "@/features/nav-user"
+import { NavUser, type NavUserData } from "@/features/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -15,25 +22,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import {
-  SquaresFour,
-  FolderSimple,
-  Package,
-  Users,
-  Folders,
-  Files,
-  SignOut,
-  User,
-  Command,
-  CaretRight
-} from "@phosphor-icons/react"
 
 const data = {
-  user: {
-    name: "Admin",
-    email: "admin@smetalabs.com",
-    avatar: "/avatars/admin.png",
-  },
   navMain: [
     {
       title: "Дашборд",
@@ -87,7 +77,17 @@ const data = {
   ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
+  user?: NavUserData
+}
+
+const fallbackUser: NavUserData = {
+  name: "Пользователь",
+  email: "",
+  avatar: null,
+}
+
+export function AppSidebar({ user = fallbackUser, ...props }: AppSidebarProps) {
   return (
     <Sidebar
       className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
@@ -97,13 +97,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <a href="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">SmetaLab</span>
-                  <span className="truncate text-xs">SaaS Платформа</span>
+                  <span className="truncate text-xs">SaaS-платформа</span>
                 </div>
               </a>
             </SidebarMenuButton>
@@ -112,10 +112,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* Projects and Secondary sections removed, all paths are now in NavMain */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )

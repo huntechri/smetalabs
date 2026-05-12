@@ -40,8 +40,8 @@ export function WorkspaceActionsCard() {
     try {
       const result = await leaveWorkspaceAction()
       toast.success(result.message ?? "Вы покинули workspace")
-    } catch (err: any) {
-      toast.error(err?.message ?? "Ошибка при выходе из workspace")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Ошибка при выходе из workspace")
     } finally {
       setLeaving(false)
     }
@@ -52,8 +52,8 @@ export function WorkspaceActionsCard() {
     try {
       const result = await transferOwnershipAction({ userId: "" })
       toast.success(result.message ?? "Права переданы")
-    } catch (err: any) {
-      toast.error(err?.message ?? "Ошибка передачи прав")
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Ошибка передачи прав")
     } finally {
       setTransferring(false)
     }

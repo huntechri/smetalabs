@@ -1,5 +1,16 @@
 "use client"
 
+import Link from "next/link"
+import {
+  Bell,
+  CaretUpDown,
+  CheckCircle,
+  CreditCard,
+  LockKey,
+  SignOut,
+  Sparkle,
+} from "@phosphor-icons/react"
+
 import {
   Avatar,
   AvatarFallback,
@@ -20,19 +31,26 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { CaretUpDown, Sparkle, CheckCircle, CreditCard, Bell, SignOut, LockKey } from "@phosphor-icons/react"
-import Link from "next/link"
+import { signOutAction } from "@/lib/auth/actions"
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
-}) {
+export type NavUserData = {
+  name: string
+  email: string
+  avatar?: string | null
+}
+
+function getInitials(name: string, email: string) {
+  const source = name.trim() || email.trim()
+  const parts = source.split(/[\s@._-]+/).filter(Boolean)
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "SL"
+}
+
+export function NavUser({ user }: { user: NavUserData }) {
   const { isMobile } = useSidebar()
+  const fallback = getInitials(user.name, user.email)
 
   return (
     <SidebarMenu>
@@ -44,8 +62,10 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                {user.avatar ? (
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                ) : null}
+                <AvatarFallback className="rounded-lg">{fallback}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
@@ -63,8 +83,10 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  {user.avatar ? (
+                    <AvatarImage src={user.avatar} alt={user.name} />
+                  ) : null}
+                  <AvatarFallback className="rounded-lg">{fallback}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
@@ -103,10 +125,14 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <SignOut />
-              Выйти
-            </DropdownMenuItem>
+            <form action={signOutAction}>
+              <DropdownMenuItem asChild>
+                <button type="submit" className="w-full">
+                  <SignOut />
+                  Выйти
+                </button>
+              </DropdownMenuItem>
+            </form>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

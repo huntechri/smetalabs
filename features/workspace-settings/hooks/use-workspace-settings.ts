@@ -147,13 +147,15 @@ export function useWorkspaceOverview() {
 export function useInviteMember() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [emailWarning, setEmailWarning] = useState<string | null>(null)
 
   const invite = useCallback(
-    async (email: string, role: string, message?: string) => {
+    async (
+      email: string,
+      role: string,
+      message?: string
+    ): Promise<{ data: WorkspaceInvitation; warning: string | null }> => {
       setLoading(true)
       setError(null)
-      setEmailWarning(null)
       try {
         const res = await fetch("/api/team/invitations", {
           method: "POST",
@@ -170,13 +172,12 @@ export function useInviteMember() {
           throw new Error(resolveFetchError(res.status, apiMessage, "приглашения"))
         }
         const json = await res.json()
-        // Показываем предупреждение если email не отправился (например, лимит)
-        if (!json.meta?.emailSent && json.meta?.emailError) {
-          setEmailWarning(
-            `Приглашение сохранено, но письмо не отправлено: ${json.meta.emailError}`
-          )
-        }
-        return json.data
+        const warning =
+          !json.meta?.emailSent && json.meta?.emailError
+            ? `Приглашение сохранено, но письмо не отправлено: ${json.meta.emailError}`
+            : null
+
+        return { data: json.data, warning }
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Неизвестная ошибка"
         setError(msg)
@@ -188,7 +189,7 @@ export function useInviteMember() {
     []
   )
 
-  return { invite, loading, error, emailWarning }
+  return { invite, loading, error }
 }
 
 // ── useInvitations ──

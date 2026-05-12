@@ -31,7 +31,7 @@ import { useInviteMember } from "../hooks/use-workspace-settings"
 const roles: Role[] = ["admin", "manager", "estimator", "viewer"]
 
 export function InviteMemberCard() {
-  const { invite, loading, error, emailWarning } = useInviteMember()
+  const { invite, loading } = useInviteMember()
   const [email, setEmail] = useState("")
   const [role, setRole] = useState("viewer")
   const [message, setMessage] = useState("")
@@ -49,21 +49,18 @@ export function InviteMemberCard() {
     }
 
     try {
-      await invite(email.trim(), role, message.trim() || undefined)
-      toast.success(`Приглашение отправлено на ${email.trim()}`)
-      // Проверяем предупреждение от хука (email не ушёл, но сохранён)
-      // setTimeout чтобы хук успел обновить emailWarning после await
-      setTimeout(() => {
-        if (emailWarning) {
-          setWarning(emailWarning)
-          toast.warning(emailWarning)
-        }
-      }, 100)
+      const result = await invite(email.trim(), role, message.trim() || undefined)
+      if (result.warning) {
+        setWarning(result.warning)
+        toast.warning(result.warning)
+      } else {
+        toast.success(`Приглашение отправлено на ${email.trim()}`)
+      }
       setEmail("")
       setRole("viewer")
       setMessage("")
-    } catch (err: any) {
-      const msg = err?.message ?? "Ошибка отправки приглашения"
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Ошибка отправки приглашения"
       setLocalError(msg)
       toast.error(msg)
     }

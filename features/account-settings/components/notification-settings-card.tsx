@@ -1,24 +1,22 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  useSettings,
-  useUpdateNotifications,
-} from "../hooks/use-account-settings"
+import { useUpdateNotifications } from "../hooks/use-account-settings"
+import type { SettingsResponse } from "../hooks/use-account-settings"
 import type { NotificationSettings } from "../types"
+
+type SettingsStateProps = {
+  settings: SettingsResponse["data"] | null
+  loading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
 
 const notificationLabels: Record<keyof NotificationSettings, string> = {
   projectUpdates: "Обновления проектов",
@@ -29,9 +27,7 @@ const notificationLabels: Record<keyof NotificationSettings, string> = {
   weeklySummary: "Еженедельная сводка",
 }
 
-const notifKeys = Object.keys(
-  notificationLabels
-) as (keyof NotificationSettings)[]
+const notifKeys = Object.keys(notificationLabels) as (keyof NotificationSettings)[]
 
 const defaultNotifs: NotificationSettings = {
   projectUpdates: false,
@@ -42,35 +38,25 @@ const defaultNotifs: NotificationSettings = {
   weeklySummary: false,
 }
 
-export function NotificationSettingsCard() {
-  const { settings, loading, error, refetch } = useSettings()
-  const {
-    updateNotifications,
-    loading: saving,
-    error: saveError,
-  } = useUpdateNotifications()
-
+export function NotificationSettingsCard({ settings, loading, error, refetch }: SettingsStateProps) {
+  const { updateNotifications, loading: saving, error: saveError } = useUpdateNotifications()
   const [notifs, setNotifs] = useState<NotificationSettings>(defaultNotifs)
 
   useEffect(() => {
     if (settings?.notifications) {
-      setNotifs({
-        ...defaultNotifs,
-        ...settings.notifications,
-      })
+      setNotifs({ ...defaultNotifs, ...settings.notifications })
     }
   }, [settings])
 
-  const handleToggle = (key: keyof NotificationSettings, checked: boolean) => {
+  function handleToggle(key: keyof NotificationSettings, checked: boolean) {
     setNotifs((prev) => ({ ...prev, [key]: checked }))
   }
 
-  const handleSave = async () => {
+  async function handleSave() {
     const updated = await updateNotifications(notifs)
     if (updated) await refetch()
   }
 
-  // ── Loading state ──
   if (loading) {
     return (
       <Card>
@@ -90,21 +76,14 @@ export function NotificationSettingsCard() {
     )
   }
 
-  // ── Error state ──
   if (error && !settings?.notifications) {
     return (
       <Card className="border-destructive/50">
         <CardHeader>
           <CardTitle>Уведомления</CardTitle>
-          <CardDescription className="text-destructive">
-            Ошибка загрузки: {error}
-          </CardDescription>
+          <CardDescription className="text-destructive">Ошибка загрузки: {error}</CardDescription>
         </CardHeader>
-        <CardFooter>
-          <Button variant="outline" onClick={refetch}>
-            Повторить
-          </Button>
-        </CardFooter>
+        <CardFooter><Button variant="outline" onClick={refetch}>Повторить</Button></CardFooter>
       </Card>
     )
   }
@@ -113,36 +92,21 @@ export function NotificationSettingsCard() {
     <Card>
       <CardHeader>
         <CardTitle>Уведомления</CardTitle>
-        <CardDescription>
-          Настройте, какие уведомления вы хотите получать
-        </CardDescription>
+        <CardDescription>Настройте, какие уведомления вы хотите получать</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
         {notifKeys.map((key) => (
           <div key={key} className="flex items-center justify-between py-1.5">
-            <Label
-              htmlFor={`notif-${key}`}
-              className="cursor-pointer font-normal"
-            >
+            <Label htmlFor={`notif-${key}`} className="cursor-pointer font-normal">
               {notificationLabels[key]}
             </Label>
-            <Switch
-              id={`notif-${key}`}
-              checked={notifs[key]}
-              onCheckedChange={(checked) => handleToggle(key, checked)}
-            />
+            <Switch id={`notif-${key}`} checked={notifs[key]} onCheckedChange={(checked) => handleToggle(key, checked)} />
           </div>
         ))}
-        {saveError && (
-          <p className="text-xs text-destructive">
-            Ошибка сохранения: {saveError}
-          </p>
-        )}
+        {saveError && <p className="text-xs text-destructive">Ошибка сохранения: {saveError}</p>}
       </CardContent>
       <CardFooter className="border-t pt-4">
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? "Сохранение..." : "Сохранить"}
-        </Button>
+        <Button onClick={handleSave} disabled={saving}>{saving ? "Сохранение..." : "Сохранить"}</Button>
       </CardFooter>
     </Card>
   )

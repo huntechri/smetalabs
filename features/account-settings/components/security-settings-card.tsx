@@ -6,22 +6,21 @@ import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { useSettings } from "../hooks/use-account-settings"
-import { resetPasswordAction } from "@/app/actions/team"
+import { sendOwnPasswordResetEmailAction } from "@/app/actions/settings"
+import type { SettingsResponse } from "../hooks/use-account-settings"
 
-export function SecuritySettingsCard() {
-  const { settings, loading, error, refetch } = useSettings()
+type SettingsStateProps = {
+  settings: SettingsResponse["data"] | null
+  loading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export function SecuritySettingsCard({ settings, loading, error, refetch }: SettingsStateProps) {
   const [resettingPassword, setResettingPassword] = useState(false)
-
   const security = settings?.security
 
   const formattedLastLogin = security?.lastLogin
@@ -37,7 +36,7 @@ export function SecuritySettingsCard() {
   async function handleResetPassword() {
     setResettingPassword(true)
     try {
-      const result = await resetPasswordAction()
+      const result = await sendOwnPasswordResetEmailAction()
       toast.success(result.message ?? "Ссылка для сброса пароля отправлена")
     } catch (err: any) {
       toast.error(err?.message ?? "Ошибка отправки ссылки для сброса пароля")
@@ -46,17 +45,6 @@ export function SecuritySettingsCard() {
     }
   }
 
-  function handleSetup2FA() {
-    // TODO: Реализовать интеграцию с 2FA (сложная интеграция)
-    toast.info("Настройка двухфакторной аутентификации будет доступна в ближайшее время")
-  }
-
-  function handleManageSessions() {
-    // TODO: Реализовать управление сессиями через Supabase Auth
-    toast.info("Управление сессиями будет доступно в ближайшее время")
-  }
-
-  // ── Loading state ──
   if (loading) {
     return (
       <Card>
@@ -79,21 +67,14 @@ export function SecuritySettingsCard() {
     )
   }
 
-  // ── Error state ──
   if (error && !security) {
     return (
       <Card className="border-destructive/50">
         <CardHeader>
           <CardTitle>Безопасность</CardTitle>
-          <CardDescription className="text-destructive">
-            Ошибка загрузки: {error}
-          </CardDescription>
+          <CardDescription className="text-destructive">Ошибка загрузки: {error}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button variant="outline" onClick={refetch}>
-            Повторить
-          </Button>
-        </CardContent>
+        <CardContent><Button variant="outline" onClick={refetch}>Повторить</Button></CardContent>
       </Card>
     )
   }
@@ -102,76 +83,52 @@ export function SecuritySettingsCard() {
     <Card>
       <CardHeader>
         <CardTitle>Безопасность</CardTitle>
-        <CardDescription>
-          Управление паролем и параметрами безопасности аккаунта
-        </CardDescription>
+        <CardDescription>Управление паролем и параметрами безопасности аккаунта</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex items-center justify-between py-1">
           <div className="flex flex-col gap-0.5">
             <span className="text-sm font-medium">Пароль</span>
-            <span className="text-xs text-muted-foreground">
-              Измените пароль для входа в аккаунт
-            </span>
+            <span className="text-xs text-muted-foreground">Измените пароль для входа в аккаунт</span>
           </div>
-          <Button
-            variant="outline"
-            onClick={handleResetPassword}
-            disabled={resettingPassword}
-            className="gap-1.5"
-          >
+          <Button variant="outline" onClick={handleResetPassword} disabled={resettingPassword} className="gap-1.5">
             {resettingPassword ? <Spinner className="size-3.5 animate-spin" /> : null}
             {resettingPassword ? "Отправка..." : "Сменить пароль"}
           </Button>
         </div>
+
         <div className="flex items-center justify-between py-1">
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium">
-              Двухфакторная аутентификация
-            </span>
-            <span className="text-xs text-muted-foreground">
-              Дополнительная защита вашего аккаунта
-            </span>
+            <span className="text-sm font-medium">Двухфакторная аутентификация</span>
+            <span className="text-xs text-muted-foreground">Дополнительная защита вашего аккаунта</span>
           </div>
           <div className="flex items-center gap-2">
-            <Badge
-              variant={security?.twoFactorEnabled ? "default" : "secondary"}
-            >
+            <Badge variant={security?.twoFactorEnabled ? "default" : "secondary"}>
               {security?.twoFactorEnabled ? "Включена" : "Выключена"}
             </Badge>
-            <Button
-              variant="outline"
-              onClick={handleSetup2FA}
-            >
-              Настроить
+            <Button variant="outline" disabled title="Настройка 2FA будет подключена отдельной задачей">
+              Настроить · скоро
             </Button>
           </div>
         </div>
+
         <div className="flex items-center justify-between py-1">
           <div className="flex flex-col gap-0.5">
             <span className="text-sm font-medium">Активные сессии</span>
-            <span className="text-xs text-muted-foreground">
-              Устройства, на которых выполнен вход
-            </span>
+            <span className="text-xs text-muted-foreground">Устройства, на которых выполнен вход</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              {security?.activeSessionsCount ?? 0} устройств
-            </span>
-            <Button
-              variant="outline"
-              onClick={handleManageSessions}
-            >
-              Управлять
+            <span className="text-xs text-muted-foreground">{security?.activeSessionsCount ?? 0} устройств</span>
+            <Button variant="outline" disabled title="Управление сессиями будет подключено отдельной задачей">
+              Управлять · скоро
             </Button>
           </div>
         </div>
+
         <div className="flex items-center justify-between py-1">
           <div className="flex flex-col gap-0.5">
             <span className="text-sm font-medium">Последний вход</span>
-            <span className="text-xs text-muted-foreground">
-              Дата и время последней авторизации
-            </span>
+            <span className="text-xs text-muted-foreground">Дата и время последней авторизации</span>
           </div>
           <span className="text-xs">{formattedLastLogin}</span>
         </div>

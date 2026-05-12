@@ -93,6 +93,16 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Handle invite flow and OAuth callbacks where Supabase already created a session.
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (session) {
+    await acceptInvitationIfPresent(session.user.id)
+    redirectTo.searchParams.delete('next')
+    return NextResponse.redirect(redirectTo)
+  }
+
   redirectTo.pathname = '/login'
   redirectTo.searchParams.set('error', 'auth_callback_failed')
   return NextResponse.redirect(redirectTo)

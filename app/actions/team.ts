@@ -42,6 +42,10 @@ async function getUserName(userId: string): Promise<string> {
   }
 }
 
+function authCallbackUrl(siteUrl: string) {
+  return `${siteUrl}/auth/callback?next=/set-password`
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Server Actions
 // ═══════════════════════════════════════════════════════════════
@@ -94,7 +98,7 @@ export async function inviteMemberAction(
   const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(
     parsed.email,
     {
-      redirectTo: `${siteUrl}/set-password`,
+      redirectTo: authCallbackUrl(siteUrl),
       data: {
         invited_by: user.id,
         workspace_role: parsed.role,
@@ -169,7 +173,7 @@ export async function resetPasswordAction() {
   const siteUrl =
     process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? ""
   const { error } = await client.auth.resetPasswordForEmail(user.email!, {
-    redirectTo: `${siteUrl}/set-password`,
+    redirectTo: authCallbackUrl(siteUrl),
   })
 
   if (error) {

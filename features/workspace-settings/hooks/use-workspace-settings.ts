@@ -328,7 +328,20 @@ export function useInvitations() {
     }
   }, [])
 
-  return { invitations, loading, error, refetch: fetchInvitations, cancelInvitation }
+  const resendInvitation = useCallback(async (id: string) => {
+    const res = await fetch(`/api/team/invitations/${id}/resend`, {
+      method: "POST",
+      credentials: "include",
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      const errorMessage = typeof json.error === "string" ? json.error : json.error?.message
+      throw new Error(errorMessage || "Ошибка повторной отправки")
+    }
+    return json
+  }, [])
+
+  return { invitations, loading, error, refetch: fetchInvitations, cancelInvitation, resendInvitation }
 }
 
 // ── useDomains ──

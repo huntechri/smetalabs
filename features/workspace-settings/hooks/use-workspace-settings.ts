@@ -7,6 +7,7 @@ import type {
   WorkspaceInvitation,
   AllowedDomain,
 } from "../types"
+import type { Role } from "@/types/roles"
 
 // ── Helpers ──
 
@@ -40,6 +41,7 @@ type ApiMember = {
   roles: Array<{ id: string; name: string; label: string }>
   status: string
   joinedAt: string
+  lastActiveAt?: string | null
   primaryRole: string | null
   primaryRoleLabel: string | null
   phone?: string | null
@@ -55,7 +57,7 @@ function mapApiMember(api: ApiMember): WorkspaceMember {
     role: (api.primaryRole as WorkspaceMember["role"]) ?? "viewer",
     status: (api.status as WorkspaceMember["status"]) ?? "active",
     joinedAt: api.joinedAt,
-    lastActiveAt: "—", // API пока не возвращает lastActiveAt
+    lastActiveAt: api.lastActiveAt ?? "—"
   }
 }
 
@@ -101,7 +103,69 @@ export function useWorkspaceMembers() {
     fetchMembers()
   }, [fetchMembers])
 
-  return { members, loading, error, refetch: fetchMembers }
+  const mutateMember = useCallback(
+    async (
+      userId: string,
+      method: "PATCH" | "DELETE" | "POST",
+      body?: Record<string, unknown>,
+      pathSuffix = ""
+    ) => {
+      const res = await fetch(`/api/team/members/${userId}${pathSuffix}`, {
+        method,
+        credentials: "include",
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
+      })
+
+      if (!res.ok) {
+        let apiMessage = ""
+        try {
+          const json = await res.json()
+          apiMessage = json?.error?.message ?? ""
+        } catch {
+          // response body is not JSON
+        }
+        throw new Error(resolveFetchError(res.status, apiMessage, "участника"))
+      }
+
+      await fetchMembers()
+      return res.json().catch(() => ({ success: true }))
+    },
+    [fetchMembers]
+  )
+
+  const updateRole = useCallback(
+    (userId: string, newRole: Role) =>
+      mutateMember(userId, "PATCH", { role: newRole }),
+    [mutateMember]
+  )
+
+  const suspendMember = useCallback(
+    (userId: string, suspend: boolean) =>
+      mutateMember(userId, "PATCH", { status: suspend ? "suspended" : "active" }),
+    [mutateMember]
+  )
+
+  const removeMember = useCallback(
+    (userId: string) => mutateMember(userId, "DELETE"),
+    [mutateMember]
+  )
+
+  const resetPassword = useCallback(
+    (userId: string) => mutateMember(userId, "POST", undefined, "/reset-password"),
+    [mutateMember]
+  )
+
+  return {
+    members,
+    loading,
+    error,
+    refetch: fetchMembers,
+    updateRole,
+    suspendMember,
+    removeMember,
+    resetPassword,
+  }
 }
 
 // ── useWorkspaceOverview ──

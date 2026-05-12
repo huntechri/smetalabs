@@ -1,6 +1,7 @@
 "use client"
 
 import { DotsThree, LockKey, User } from "@phosphor-icons/react"
+import { toast } from "sonner"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -42,6 +43,16 @@ import type { Role } from "@/types/roles"
 import { ROLE_LABELS } from "@/types/roles"
 import { STATUS_LABELS } from "../types"
 import type { WorkspaceMember } from "../types"
+
+const EDITABLE_ROLES: Role[] = ["admin", "manager", "estimator", "viewer"]
+
+type MemberActions = {
+  onChangeRole: (member: WorkspaceMember, role: Role) => Promise<void>
+  onOpenRoleChange: (member: WorkspaceMember) => void
+  onResetPassword: (member: WorkspaceMember) => Promise<void>
+  onToggleSuspend: (member: WorkspaceMember) => Promise<void>
+  onRemoveMember: (member: WorkspaceMember) => Promise<void>
+}
 
 function getInitials(name: string) {
   return name
@@ -94,7 +105,44 @@ function StatusBadge({ status }: { status: WorkspaceMember["status"] }) {
   )
 }
 
-function MemberRow({ member }: { member: WorkspaceMember }) {
+function MemberActionsMenu({ member, actions }: { member: WorkspaceMember; actions: MemberActions }) {
+  const isOwner = member.role === "owner"
+  const suspendLabel = member.status === "suspended" ? "Разблокировать" : "Заблокировать"
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn("size-7 p-0", isOwner && "opacity-30 pointer-events-none")}
+          disabled={isOwner}
+        >
+          <DotsThree className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Действия</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => actions.onOpenRoleChange(member)}>
+          Изменить роль
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => void actions.onResetPassword(member)}>
+          Сбросить пароль
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onClick={() => void actions.onToggleSuspend(member)}>
+          {suspendLabel}
+        </DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onClick={() => void actions.onRemoveMember(member)}>
+          Удалить из workspace
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function MemberRow({ member, actions }: { member: WorkspaceMember; actions: MemberActions }) {
   const isOwner = member.role === "owner"
 
   return (
@@ -121,14 +169,16 @@ function MemberRow({ member }: { member: WorkspaceMember }) {
             <span>{ROLE_LABELS[member.role]}</span>
           </div>
         ) : (
-          <Select defaultValue={member.role} disabled={isOwner}>
+          <Select
+            value={member.role}
+            disabled={isOwner}
+            onValueChange={(role) => void actions.onChangeRole(member, role as Role)}
+          >
             <SelectTrigger className="h-7 w-[130px] text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(
-                ["admin", "manager", "estimator", "viewer"] as Role[]
-              ).map((r) => (
+              {EDITABLE_ROLES.map((r) => (
                 <SelectItem key={r} value={r}>
                   {ROLE_LABELS[r]}
                 </SelectItem>
@@ -144,40 +194,84 @@ function MemberRow({ member }: { member: WorkspaceMember }) {
         {formatRelative(member.lastActiveAt)}
       </TableCell>
       <TableCell className="text-right">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn("size-7 p-0", isOwner && "opacity-30 pointer-events-none")}
-              disabled={isOwner}
-            >
-              <DotsThree className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Действия</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Изменить роль</DropdownMenuItem>
-            <DropdownMenuItem>Сбросить пароль</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive">
-              {member.status === "suspended"
-                ? "Разблокировать"
-                : "Заблокировать"}
-            </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive">
-              Удалить из workspace
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <MemberActionsMenu member={member} actions={actions} />
       </TableCell>
     </TableRow>
   )
 }
 
 export function WorkspaceMembersTable() {
-  const { members, loading, error } = useWorkspaceMembers()
+  const {
+    members,
+    loading,
+    error,
+    updateRole,
+    suspendMember,
+    removeMember,
+    resetPassword,
+  } = useWorkspaceMembers()
+
+  const handleChangeRole = async (member: WorkspaceMember, role: Role) => {
+    if (member.role === role) return
+    try {
+      await updateRole(member.id, role)
+      toast.success(`Роль участника ${member.name} изменена на «${ROLE_LABELS[role]}»`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка изменения роли")
+    }
+  }
+
+  const handleOpenRoleChange = (member: WorkspaceMember) => {
+    const rolesList = EDITABLE_ROLES.map((role) => `${role} — ${ROLE_LABELS[role]}`).join("\n")
+    const selected = window.prompt(`Введите новую роль для ${member.name}:\n${rolesList}`, member.role)
+    if (!selected) return
+
+    const role = selected.trim() as Role
+    if (!EDITABLE_ROLES.includes(role)) {
+      toast.error("Неизвестная роль")
+      return
+    }
+
+    void handleChangeRole(member, role)
+  }
+
+  const handleResetPassword = async (member: WorkspaceMember) => {
+    try {
+      await resetPassword(member.id)
+      toast.success(`Ссылка для сброса пароля отправлена ${member.name}`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка сброса пароля")
+    }
+  }
+
+  const handleToggleSuspend = async (member: WorkspaceMember) => {
+    const suspend = member.status !== "suspended"
+    try {
+      await suspendMember(member.id, suspend)
+      toast.success(suspend ? `${member.name} заблокирован` : `${member.name} разблокирован`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка изменения статуса")
+    }
+  }
+
+  const handleRemoveMember = async (member: WorkspaceMember) => {
+    if (!window.confirm(`Удалить ${member.name} из workspace?`)) return
+
+    try {
+      await removeMember(member.id)
+      toast.success(`${member.name} удалён из workspace`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка удаления участника")
+    }
+  }
+
+  const actions: MemberActions = {
+    onChangeRole: handleChangeRole,
+    onOpenRoleChange: handleOpenRoleChange,
+    onResetPassword: handleResetPassword,
+    onToggleSuspend: handleToggleSuspend,
+    onRemoveMember: handleRemoveMember,
+  }
 
   // ── Loading skeleton ──
   if (loading) {
@@ -248,7 +342,7 @@ export function WorkspaceMembersTable() {
             </TableHeader>
             <TableBody>
               {members.map((m) => (
-                <MemberRow key={m.id} member={m} />
+                <MemberRow key={m.id} member={m} actions={actions} />
               ))}
             </TableBody>
           </Table>
@@ -258,6 +352,7 @@ export function WorkspaceMembersTable() {
         <div className="sm:hidden divide-y divide-border/50">
           {members.map((m) => {
             const isOwner = m.role === "owner"
+
             return (
               <div
                 key={m.id}
@@ -288,36 +383,7 @@ export function WorkspaceMembersTable() {
                     </span>
                   </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "size-7 shrink-0 p-0",
-                        isOwner && "opacity-30 pointer-events-none"
-                      )}
-                      disabled={isOwner}
-                    >
-                      <DotsThree className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Действия</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>Изменить роль</DropdownMenuItem>
-                    <DropdownMenuItem>Сбросить пароль</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive">
-                      {m.status === "suspended"
-                        ? "Разблокировать"
-                        : "Заблокировать"}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem variant="destructive">
-                      Удалить из workspace
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <MemberActionsMenu member={m} actions={actions} />
               </div>
             )
           })}

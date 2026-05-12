@@ -144,7 +144,34 @@ export async function GET(_request: NextRequest) {
     )
   }
 
-  // ── Step 4: Build response (JS assembly) ──
+  // ── Step 4: Fetch workspace member statuses (если таблица уже используется) ──
+  let workspaceMemberMap = new Map<
+    string,
+    { status: string; role_id: string | null; joined_at: string | null; last_active_at: string | null }
+  >()
+  try {
+    const { data, error } = await supabase
+      .from('workspace_members')
+      .select('user_id, role_id, status, joined_at, last_active_at')
+
+    if (error) throw error
+
+    workspaceMemberMap = new Map(
+      (data ?? []).map((m: any) => [
+        m.user_id,
+        {
+          status: m.status,
+          role_id: m.role_id,
+          joined_at: m.joined_at,
+          last_active_at: m.last_active_at,
+        },
+      ])
+    )
+  } catch (err: any) {
+    console.warn('[GET /api/team/members] workspace_members unavailable:', err?.message ?? err)
+  }
+
+  // ── Step 5: Build response (JS assembly) ──
   try {
     const userRoleMap = new Map<
       string,
@@ -171,30 +198,46 @@ export async function GET(_request: NextRequest) {
       viewer: 4,
     }
 
-    const data = allProfiles.map((profile: any) => {
-      const profileRoles = userRoleMap.get(profile.id) ?? []
-      const sorted = [...profileRoles].sort(
-        (a, b) => (rolePriority[a.name] ?? 99) - (rolePriority[b.name] ?? 99)
-      )
+    const data = allProfiles
+      .filter((profile: any) => userRoleMap.has(profile.id) || workspaceMemberMap.has(profile.id))
+      .map((profile: any) => {
+        const workspaceMember = workspaceMemberMap.get(profile.id)
+        const profileRoles = userRoleMap.get(profile.id) ?? []
 
-      return {
-        id: profile.id,
-        name: profile.full_name ?? 'Без имени',
-        email: null,
-        avatarUrl: profile.avatar_url,
-        phone: profile.phone,
-        position: profile.position,
-        primaryRole: sorted[0]?.name ?? null,
-        primaryRoleLabel: sorted[0]?.label ?? null,
-        roles: profileRoles.map((r) => ({
-          id: r.roleId,
-          name: r.name,
-          label: r.label,
-        })),
-        status: 'active',
-        joinedAt: profile.created_at,
-      }
-    })
+        if (workspaceMember?.role_id && !profileRoles.some((r) => r.roleId === workspaceMember.role_id)) {
+          const roleInfo = rolesMap.get(workspaceMember.role_id)
+          if (roleInfo) {
+            profileRoles.push({
+              roleId: workspaceMember.role_id,
+              name: roleInfo.name,
+              label: roleInfo.label,
+            })
+          }
+        }
+
+        const sorted = [...profileRoles].sort(
+          (a, b) => (rolePriority[a.name] ?? 99) - (rolePriority[b.name] ?? 99)
+        )
+
+        return {
+          id: profile.id,
+          name: profile.full_name ?? 'Без имени',
+          email: null,
+          avatarUrl: profile.avatar_url,
+          phone: profile.phone,
+          position: profile.position,
+          primaryRole: sorted[0]?.name ?? null,
+          primaryRoleLabel: sorted[0]?.label ?? null,
+          roles: profileRoles.map((r) => ({
+            id: r.roleId,
+            name: r.name,
+            label: r.label,
+          })),
+          status: workspaceMember?.status ?? 'active',
+          joinedAt: workspaceMember?.joined_at ?? profile.created_at,
+          lastActiveAt: workspaceMember?.last_active_at ?? null,
+        }
+      })
 
     console.log(
       `[GET /api/team/members] response built: ${data.length} members`

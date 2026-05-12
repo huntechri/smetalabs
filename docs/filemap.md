@@ -4,7 +4,7 @@
 >
 > **Состояние:** Активная разработка. Фронтенд на моках. Добавлен backend/auth слой: Drizzle ORM, Supabase Auth (Server Actions, middleware), RBAC-схема. Добавлена фича workspace-settings (team management). PermissionsMatrix перенесена на `/settings/access`.
 >
-> **Последнее обновление:** 2026-05-12 (документация после мержа PR #34-#40: auth audit, member management API, dialogs)
+> **Последнее обновление:** 2026-05-12 (документация после мержа PR #43: invitation flow fix, новые API-роуты accept/resend, shared helper `lib/auth/invitations.ts`)
 >
 > **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
 
@@ -57,7 +57,7 @@ smetalabs/
 │   │   └── forgot-password/page.tsx     # Восстановление пароля
 │   │
 │   ├── (main)/                          # Route Group: основной интерфейс (с sidebar)
-│   │   ├── layout.tsx                   # Layout с SidebarProvider, AppSidebar, SiteHeader
+│   │   ├── layout.tsx                   # Layout с SidebarProvider, AppSidebar, SiteHeader + acceptInvitationIfPresent
 │   │   ├── page.tsx                     # Редирект на /dashboard
 │   │   ├── dashboard/                   # Дашборд (главная страница после входа)
 │   │   │   ├── page.tsx                 # Страница дашборда
@@ -102,8 +102,8 @@ smetalabs/
 │   │
 │   ├── auth/                            # Auth-роуты (callback OAuth / email confirm)
 │   │   └── callback/
-│   │       └── route.ts                 #   GET: verifyOtp + exchangeCodeForSession + acceptInvitationIfPresent
-│   │                                     #     (подтверждение email/OAuth и автоматическое принятие приглашений)
+│   │       └── route.ts                 #   GET: verifyOtp + exchangeCodeForSession
+│   │                                     #     Только подтверждение email/OAuth. Принятие приглашений вынесено в (main)/layout → lib/auth/invitations.ts
 │   │
 │   ├── actions/                          # Server Actions (бизнес-данные)
 │   │   ├── access-control.ts             #   assignRole, removeRole (RBAC-мутации)
@@ -112,6 +112,7 @@ smetalabs/
 │   │   ├── team.ts                        #   inviteMemberAction, leaveWorkspaceAction,
 │   │   │                                  #   transferOwnershipAction, deactivateAccountAction,
 │   │   │                                  #   resetPasswordAction (работает с workspace_invitations)
+│   │   │                                  #   redirectTo: /dashboard (токены arrive через URL hash)
 │   │   └── workspace-settings.ts          #   ⚠️ Скелеты — функциональность перенесена в team.ts
 │   │
 │   └── api/                             # API Routes (REST)
@@ -125,8 +126,12 @@ smetalabs/
 │           │   └── route.ts              #   GET: обзор workspace
 │           ├── invitations/
 │           │   ├── route.ts              #   GET список, POST создание
+│           │   ├── accept/
+│           │   │   └── route.ts          #   POST: принятие приглашения (acceptInvitationIfPresent)
 │           │   └── [id]/
-│           │       └── route.ts          #   DELETE: отмена приглашения
+│           │       ├── route.ts          #   DELETE: отмена приглашения
+│           │       └── resend/
+│           │           └── route.ts      #   POST: повторная отправка приглашения (resend)
 │           ├── domains/
 │           │   ├── route.ts              #   GET список, POST добавление, PATCH auto-join
 │           │   └── [id]/
@@ -470,6 +475,9 @@ smetalabs/
 │   │
 │   └── auth/                            #   Серверные auth-утилиты
 │       ├── actions.ts                     #     Server Actions: loginAction, signupAction, signOutAction, getAuthErrorMessage
+│       ├── invitations.ts                 #     acceptInvitationIfPresent(userId): проверка user_metadata,
+│       │                                  #     поиск pending приглашения, upsert workspace_members/user_roles,
+│       │                                  #     удаление принятого приглашения
 │       ├── permissions.ts                 #     Проверки прав: getUserRoles, hasRole, canWrite, canManageTeam, requireAuth
 │       └── team.ts                        #     Workspace-утилиты: getPrimaryWorkspace, getWorkspaceRole,
 │                                          #     canManageTeamForWorkspace, getRoleId
@@ -724,7 +732,7 @@ purchases-view.tsx                   ← page.tsx рендерит этот ко
 
 ### 2.4 Работа с данными
 
-> **Текущее состояние:** Слой БД (Drizzle ORM + PostgreSQL) и auth-слой (Supabase Auth) работают. Схема RBAC, profiles, user_settings, workspace_members, workspace_invitations, workspace_allowed_domains готова. Server Actions для login/signup, access-control, settings, team (invite, leave, transfer, deactivate, resetPassword) — реализованы. API Routes для roles, settings, team/overview, team/members (GET/PATCH/DELETE), team/members/[userId]/reset-password, team/invitations, team/domains, team/invite-link — работают. RLS-политики применены. Middleware защищает роуты. Добавлен auth-флоу с автоматическим принятием приглашений в callback.
+> **Текущее состояние:** Слой БД (Drizzle ORM + PostgreSQL) и auth-слой (Supabase Auth) работают. Схема RBAC, profiles, user_settings, workspace_members, workspace_invitations, workspace_allowed_domains готова. Server Actions для login/signup, access-control, settings, team (invite, leave, transfer, deactivate, resetPassword) — реализованы. API Routes для roles, settings, team/overview, team/members (GET/PATCH/DELETE), team/members/[userId]/reset-password, team/invitations, team/domains, team/invite-link — работают. RLS-политики применены. Middleware защищает роуты. Добавлен auth-флоу с принятием приглашений: `redirectTo: /dashboard`, `(main)/layout` вызывает `acceptInvitationIfPresent` (hash-фрагмент подхватывается клиентским SDK).
 >
 > Часть данных пока на моках (справочники, проекты, сметы). Правила ниже — целевая архитектура при полном переходе к реальным данным.
 
@@ -766,7 +774,8 @@ app/
 │
 ├── auth/                       # Auth-роуты (✅ реализовано)
 │   └── callback/
-│       └── route.ts            #   GET: OAuth + email confirm + acceptInvitationIfPresent
+│       └── route.ts            #   GET: verifyOtp + exchangeCodeForSession
+│                                #     (только OTP/OAuth, приглашения — в (main)/layout)
 │
 ├── api/                        # API Routes (✅ частично)
 │   ├── access-control/
@@ -1208,7 +1217,7 @@ export default async function AdminPage() {
 - `/login` — форма входа, `loginAction` (Zod-валидация, Supabase Auth)
 - `/signup` — форма регистрации, `signupAction`
 - `/forgot-password` — форма восстановления (UI-only пока)
-- `/auth/callback` — обработчик OAuth и email-подтверждений
+- `/auth/callback` — обработчик OTP и OAuth (только). Приглашения принимаются в `(main)/layout` через `lib/auth/invitations.ts`
 
 ---
 

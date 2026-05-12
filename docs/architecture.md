@@ -4,7 +4,7 @@
 >
 > Scope: production-facing architecture rules for the current Next.js 16 + Supabase Auth + Drizzle + shadcn/ui codebase.
 
-This document is the architectural contract for where code belongs and how new features should be added. For the compact directory map, see [`docs/filemap-current.md`](./filemap-current.md). For visual/design rules, see [`docs/design-system.md`](./design-system.md).
+This document is the architectural contract for where code belongs and how new features should be added. For the compact directory map, see [`docs/filemap.md`](./filemap.md). For visual/design rules, see [`docs/design-system.md`](./design-system.md).
 
 ---
 
@@ -240,6 +240,60 @@ Every workspace/team mutation must check the current user first. Do not trust cl
 
 Common helpers live in `lib/auth/**`.
 
+### Staged RBAC and permission matrix strategy
+
+The current stage is role-based workspace access, not fully editable permission-based authorization.
+
+Until the core business modules are stable, runtime access control must stay coarse-grained and predictable:
+
+- `owner` and `admin` manage workspace/team operations;
+- `manager` can read workspace/team data where explicitly allowed;
+- `estimator` and `viewer` receive restricted access;
+- tenant boundaries are resolved through workspace membership, not client-provided workspace IDs.
+
+The `roles`, `permissions` and `role_permissions` tables are the target permission matrix model. At the current stage they may be used for display, seed data and future architecture alignment, but they must not be exposed as a user-editable source of truth until all sensitive runtime paths enforce permission keys consistently.
+
+Do not enable a "Save permissions" UI while changes in `role_permissions` are not enforced by all relevant server actions, API routes and database policies. A writable matrix without full runtime enforcement creates false-success and weakens the security model.
+
+When new features are added, define future permission keys while implementing the feature, using this shape:
+
+```txt
+<resource>.<action>
+```
+
+Examples:
+
+```txt
+projects.read
+projects.create
+projects.update
+projects.delete
+estimates.read
+estimates.create
+estimates.update
+estimates.delete
+team.read
+team.manage
+billing.read
+billing.manage
+```
+
+The target permission-based stage may be implemented after the main feature modules stabilize. That stage requires:
+
+- a single `hasWorkspacePermission` / `requireWorkspacePermission` helper;
+- permission checks in every sensitive server action and API route;
+- transactional updates for `role_permissions`;
+- RLS policies or Postgres security-definer helpers aligned with backend authorization;
+- smoke tests for admin, manager, estimator and viewer behavior.
+
+Some safety invariants must remain outside the editable matrix and cannot be disabled by configuration:
+
+- the workspace owner always retains control;
+- the last owner/admin cannot be removed or downgraded;
+- `SUPABASE_SERVICE_ROLE_KEY` is server-only;
+- tenant isolation is always enforced through workspace membership;
+- billing and security-critical operations require explicit backend checks even if a permission row is misconfigured.
+
 ---
 
 ## 7. UI architecture rules
@@ -275,7 +329,7 @@ Do not put `reports-view.tsx` in `components/ui/`. It is not a primitive.
 When a PR changes routing, auth flow, folder ownership or public feature structure, update at least one of:
 
 - `docs/architecture.md`
-- `docs/filemap-current.md`
+- `docs/filemap.md`
 - `docs/design-system.md`
 - `README.md`
 

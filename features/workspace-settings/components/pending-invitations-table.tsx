@@ -86,18 +86,13 @@ function InvitationRow({
   isResending,
 }: {
   invitation: WorkspaceInvitation
-  onCancel: (id: string) => void
+  onCancel: (id: string) => Promise<void>
   onResend: (id: string) => void
   isCancelling: boolean
   isResending: boolean
 }) {
   async function handleCancel() {
-    try {
-      await onCancel(invitation.id)
-      toast.success(`Приглашение для ${invitation.email} отозвано`)
-    } catch {
-      toast.error("Ошибка отзыва приглашения")
-    }
+    await onCancel(invitation.id)
   }
 
   return (
@@ -182,6 +177,9 @@ export function PendingInvitationsTable() {
     setCancellingId(id)
     try {
       await cancelInvitation(id)
+      toast.success("Приглашение отозвано")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка отзыва")
     } finally {
       setCancellingId(null)
     }
@@ -355,7 +353,6 @@ export function PendingInvitationsTable() {
                     variant="destructive"
                     onClick={async () => {
                       await handleCancel(inv.id)
-                      toast.success(`Приглашение для ${inv.email} отозвано`)
                     }}
                     disabled={cancellingId === inv.id}
                   >

@@ -306,26 +306,20 @@ export function useInvitations() {
   }, [fetchInvitations])
 
   const cancelInvitation = useCallback(async (id: string) => {
-    try {
-      const res = await fetch(`/api/team/invitations/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      })
-      if (!res.ok) {
-        let apiMessage = ""
-        try {
-          const body = await res.json()
-          apiMessage = getApiMessage(body)
-        } catch { /* no JSON */ }
-        throw new Error(resolveFetchError(res.status, apiMessage, "отзыва приглашения"))
-      }
-      // Remove from local state
-      setInvitations((prev) => prev.filter((inv) => inv.id !== id))
-      return true
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Ошибка отзыва приглашения")
-      return false
+    const res = await fetch(`/api/team/invitations/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    })
+    if (!res.ok) {
+      let apiMessage = ""
+      try {
+        const body = await res.json()
+        apiMessage = getApiMessage(body)
+      } catch { /* no JSON */ }
+      throw new Error(resolveFetchError(res.status, apiMessage, "отзыва приглашения"))
     }
+    // Remove from local state
+    setInvitations((prev) => prev.filter((inv) => inv.id !== id))
   }, [])
 
   const resendInvitation = useCallback(async (id: string) => {

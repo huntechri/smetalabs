@@ -1,17 +1,20 @@
 # SmetaLab
 
-Дашборд для управления строительными сметами и эстимейтами. Проекты, сметы, закупки, финансы — всё в одном интерфейсе.
+Multi-tenant SaaS для управления строительными сметами, проектами, закупками, командой и настройками workspace.
 
-> ⚠️ **Ранняя стадия:** фронтенд, вёрстка и структура. Бэкенд и работа с данными — в планах.
+> **Статус:** активная разработка. В проекте уже есть frontend-shell, auth/RBAC слой, Supabase Auth, Drizzle schema/migrations, workspace/team management и настройки аккаунта/workspace. Часть бизнес-модулей всё ещё работает на моках и постепенно подключается к backend.
 
 ## Стек
 
 | Категория | Технологии |
 |---|---|
-| Фреймворк | [Next.js 16](https://nextjs.org/) (App Router) |
+| Фреймворк | [Next.js 16](https://nextjs.org/) App Router |
 | UI | [shadcn/ui](https://ui.shadcn.com/) (radix-mira) |
 | Стили | [Tailwind CSS v4](https://tailwindcss.com/) |
 | Язык | TypeScript |
+| Auth | Supabase Auth, `@supabase/ssr` |
+| DB | PostgreSQL, Drizzle ORM |
+| RBAC | roles / permissions / workspace membership |
 | Пакетный менеджер | pnpm |
 | Таблицы | @tanstack/react-table |
 | Графики | Recharts |
@@ -25,7 +28,7 @@
 git clone <repo-url>
 cd smetalabs
 
-# 2. Установить зависимости (требуется pnpm)
+# 2. Установить зависимости
 pnpm install
 
 # 3. Запустить dev-сервер
@@ -36,30 +39,36 @@ pnpm dev
 
 **Требования:** Node.js ≥22, pnpm ≥9.
 
-## Структура проекта
+## Основная структура
 
-```
+```txt
 smetalabs/
-├── app/                    # Роутинг Next.js (App Router)
-│   ├── (auth)/             # Авторизация (логин, регистрация, сброс пароля)
-│   └── (main)/             # Основной интерфейс
-│       ├── dashboard/      # Дашборд
-│       ├── projects/       # Проекты и сметы
-│       ├── directories/    # Справочники (контрагенты, материалы, поставщики)
-│       └── procurements/   # Закупки
-├── features/               # Фиче-компоненты (бизнес-логика интерфейса)
-├── components/ui/          # UI-компоненты shadcn/ui
-├── hooks/                  # Кастомные хуки
-├── lib/                    # Утилиты
-└── public/                 # Статика
+├── app/                    # Next.js routes, layouts, API routes, server actions
+├── features/               # feature-owned UI, hooks, screens
+├── components/ui/          # shadcn/ui primitives only
+├── lib/                    # Supabase clients, auth helpers, shared infra
+├── db/                     # Drizzle schema, migrations, seed scripts
+├── types/                  # shared cross-feature TypeScript types
+├── docs/                   # architecture, filemap, design-system
+└── public/                 # static assets
 ```
-
-Подробная карта проекта: [`docs/filemap.md`](docs/filemap.md) — описаны все слои, правила именования и сценарии.
 
 ## Документация
 
-- [Дизайн-система](docs/design-system.md) — цвета, токены, типографика
-- [Карта проекта (filemap)](docs/filemap.md) — структура, слои, правила
+- [Architecture Guide](docs/architecture.md) — архитектурные слои, ownership rules, auth/invite flow
+- [Current Filemap](docs/filemap-current.md) — компактная актуальная карта папок и файлов
+- [Legacy Filemap](docs/filemap.md) — длинная историческая карта проекта
+- [Design System](docs/design-system.md) — shadcn/ui, tokens, typography, визуальные правила
+
+## Важные архитектурные правила
+
+- `components/ui/**` — только shadcn/ui primitives и approved primitive extensions.
+- Feature-specific UI хранится в `features/<feature>/components/**`.
+- Route files в `app/**` должны быть тонкими и делегировать крупный UI в `features/**`.
+- Auth/RBAC/workspace helper logic хранится в `lib/auth/**`.
+- Supabase client/session infrastructure хранится в `lib/supabase/**`.
+- DB schema и migrations хранятся в `db/**`.
+- При изменении routing/auth/folder ownership нужно обновлять docs.
 
 ## Скрипты
 
@@ -69,5 +78,5 @@ smetalabs/
 | `pnpm build` | Production-сборка |
 | `pnpm start` | Запуск production-сервера |
 | `pnpm lint` | ESLint |
-| `pnpm format` | Prettier (форматирование) |
+| `pnpm format` | Prettier |
 | `pnpm typecheck` | Проверка типов TypeScript |

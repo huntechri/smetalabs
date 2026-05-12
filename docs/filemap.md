@@ -4,7 +4,7 @@
 >
 > **Состояние:** Активная разработка. Фронтенд на моках. Добавлен backend/auth слой: Drizzle ORM, Supabase Auth (Server Actions, middleware), RBAC-схема. Добавлена фича workspace-settings (team management). PermissionsMatrix перенесена на `/settings/access`.
 >
-> **Последнее обновление:** 2026-05-11 (перенос PermissionsMatrix на /settings/access)
+> **Последнее обновление:** 2026-05-12 (документация после мержа PR #32: team API, workspace tables, hooks)
 >
 > **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
 
@@ -379,14 +379,17 @@ smetalabs/
 │   │                                   # → Footer с Save-кнопкой → Server Action в app/actions/settings.ts
 │   │                                   # Бэкенд: таблица user_settings (JSONB), GET /api/settings.
 │   │                                   # Уведомления: Switch для 6 триггеров.
-│   │                                   # Sensitive: border-destructive, все кнопки — заглушки.
+│   │                                   # Security + Sensitive: подключены к Server Actions
+│   │                                   # (deactivateAccount, resetPassword).
 │   │                                   # Роут: settings/account, переход через sidebar (nav-user).
 │   │
 │   │   ├── types.ts                    #   AccountProfile, WorkspaceSettings, AccountPreferences...
 │   │   ├── __mocks__/
 │   │   │   └── account-settings.ts     #   Мок-данные всех 6 карточек
 │   │   ├── hooks/
-│   │   │   └── use-account-settings.ts  #   Хук useSettings: GET /api/settings + Server Actions
+│   │   │   └── use-account-settings.ts  #   Хуки: useSettings, useUpdateProfile,
+│   │                                 #   useUpdateWorkspace, useUpdatePreferences,
+│   │                                 #   useUpdateNotifications
 │   │   └── components/
 │   │       ├── account-settings-view.tsx        # Композиция: сборка 6 карточек в gap-6
 │   │       ├── profile-settings-card.tsx        # Аватар + поля + Select языка/таймзоны
@@ -394,24 +397,29 @@ smetalabs/
 │   │       ├── preferences-settings-card.tsx    # Тема/плотность/форматы дат и чисел
 │   │       ├── notification-settings-card.tsx   # 6 Switch-переключателей уведомлений
 │   │       ├── security-settings-card.tsx       # Пароль/2FA/сессии/последний вход
-│   │       └── sensitive-actions-card.tsx       # border-destructive, 4 кнопки (1 disabled)
+│   │       │                                    # (подключена к API, не заглушка)
+│   │       └── sensitive-actions-card.tsx       # border-destructive, 4 кнопки
+│   │                                            # (deactivateAccount, resetPassword
+│   │                                            # через Server Actions)
 │   │
 │   ├── workspace-settings/            # Фича «Workspace / Team Settings» (multi-tenant, подключена к API)
 │   │   ├── types.ts                     #   WorkspaceRole, WorkspaceMember, WorkspaceInvitation, WorkspaceOverview
 │   │   ├── __mocks__/
 │   │   │   └── workspace-settings.ts    #   Моки (fallback при ошибке API)
 │   │   ├── hooks/
-│   │   │   └── use-workspace-settings.ts #  Хук useWorkspaceMembers: GET /api/team/members
+│   │   │   └── use-workspace-settings.ts #  Хуки: useWorkspaceMembers,
+│   │   │                                  #  useWorkspaceOverview, useInviteMember,
+│   │   │                                  #  useInvitations, useDomains, useInviteLink
 │   │   └── components/
-│   │       ├── workspace-settings-view.tsx       # Композиция: сборка 8 секций
-│   │       ├── workspace-overview-card.tsx       # Карточка обзора workspace
-│   │       ├── workspace-members-table.tsx       # Таблица участников (Role Select, Status Badge, actions)
-│   │       ├── invite-member-card.tsx            # Форма приглашения участника
-│   │       ├── invite-link-card.tsx              # Invite-ссылка + Switch + Select
-│   │       ├── allowed-domains-card.tsx          # Список разрешённых доменов + Input
-│   │       ├── pending-invitations-table.tsx     # Таблица ожидающих приглашений
-│   │       ├── workspace-roles-summary-card.tsx  # Сводка ролей с описаниями
-│   │       └── workspace-actions-card.tsx        # Leave, Transfer, Archive, Remove
+│   │       ├── workspace-settings-view.tsx       # Композиция: сборка 8 секций (все — через API)
+│   │       ├── workspace-overview-card.tsx       # GET /api/team/overview
+│   │       ├── workspace-members-table.tsx       # Таблица участников (API, Role Select, Status Badge)
+│   │       ├── invite-member-card.tsx            # Форма приглашения (POST /api/team/invitations)
+│   │       ├── invite-link-card.tsx              # Invite-ссылка (GET/PATCH /api/team/invite-link)
+│   │       ├── allowed-domains-card.tsx          # Домены (GET/POST/DELETE /api/team/domains)
+│   │       ├── pending-invitations-table.tsx     # Ожидающие приглашения (GET /api/team/invitations)
+│   │       ├── workspace-roles-summary-card.tsx  # Сводка ролей (static, без API)
+│   │       └── workspace-actions-card.tsx        # Leave, Transfer, Archive, Remove (Server Actions)
 │   │
 │   └── ... (новые фичи создавать здесь по доменному принципу)
 │
@@ -682,7 +690,7 @@ purchases-view.tsx                   ← page.tsx рендерит этот ко
 
 ### 2.4 Работа с данными
 
-> **Текущее состояние:** Слой БД (Drizzle ORM + PostgreSQL) и auth-слой (Supabase Auth) работают. Схема RBAC, profiles, user_settings готова. Server Actions для login/signup, access-control, settings — реализованы. API Routes для roles, settings, team/members — работают. RLS-политики применены. Middleware защищает роуты.
+> **Текущее состояние:** Слой БД (Drizzle ORM + PostgreSQL) и auth-слой (Supabase Auth) работают. Схема RBAC, profiles, user_settings, workspace_members, workspace_invitations, workspace_allowed_domains готова. Server Actions для login/signup, access-control, settings, team — реализованы. API Routes для roles, settings, team/overview, team/members, team/invitations, team/domains, team/invite-link — работают. RLS-политики применены. Middleware защищает роуты.
 >
 > Часть данных пока на моках (справочники, проекты, сметы). Правила ниже — целевая архитектура при полном переходе к реальным данным.
 
@@ -710,11 +718,15 @@ purchases-view.tsx                   ← page.tsx рендерит этот ко
 
 ```
 app/
-├── actions/                    # Server Actions (✅ частично)
+├── actions/                    # Server Actions (✅ реализовано)
 │   ├── access-control.ts       #   assignRole, removeRole
 │   ├── settings.ts             #   updateProfile, updateWorkspace, updatePreferences,
-│   │                            #   updateNotifications, updateSecurity
-│   ├── workspace-settings.ts   #   ⚠️ Скелеты (changeRole, removeMember, ...)
+│   │                            #   updateNotifications
+│   ├── team.ts                 #   inviteMemberAction, leaveWorkspaceAction,
+│   │                            #   transferOwnershipAction, deactivateAccountAction,
+│   │                            #   resetPasswordAction
+│   ├── workspace-settings.ts   #   ⚠️ Скелеты (changeRole, removeMember, ...) —
+│   │                            #   устарели, функциональность перенесена в team.ts
 │   ├── projects.ts             #   (план) createProject, updateProject, deleteProject
 │   └── estimates.ts            #   (план) createEstimate, addSection, updateSection
 │
@@ -729,17 +741,36 @@ app/
 │   ├── settings/
 │   │   └── route.ts            #   GET: настройки пользователя
 │   └── team/
+│       ├── overview/
+│       │   └── route.ts        #   GET: обзор workspace
+│       ├── invitations/
+│       │   ├── route.ts        #   GET список, POST создание
+│       │   └── [id]/
+│       │       └── route.ts    #   DELETE: отмена приглашения
+│       ├── domains/
+│       │   ├── route.ts        #   GET список, POST добавление
+│       │   └── [id]/
+│       │       └── route.ts    #   DELETE: удаление домена
+│       ├── invite-link/
+│       │   └── route.ts        #   GET статус, PATCH обновление
 │       └── members/
 │           └── route.ts        #   GET: список участников
 │
 db/                             # Работа с БД (✅ реализовано — основа)
 ├── index.ts                    #   Клиент Drizzle (postgres-js + schema)
 ├── seed.ts                     #   Seed RBAC-данных (роли, права)
+├── seed-settings.ts            #   Seed: дефолтные настройки + workspace_members
+│                               #   + invitations + domains
 ├── drizzle.config.ts           #   (в корне проекта)
 └── schema/
     ├── index.ts                #   Реэкспорт
     ├── profiles.ts             #   Таблица profiles
-    └── rbac.ts                 #   Таблицы roles, permissions, role_permissions
+    ├── rbac.ts                 #   Таблицы roles, permissions, role_permissions
+    ├── user-settings.ts        #   Таблица user_settings (JSONB: profile,
+    │                            #   workspace, preferences, notifications, security)
+    ├── workspace-members.ts    #   Таблица workspace_members (участники workspace)
+    ├── workspace-invitations.ts #  Таблица workspace_invitations (приглашения)
+    └── workspace-allowed-domains.ts # Таблица workspace_allowed_domains (разрешённые домены)
 │
 lib/
 ├── supabase/                   # Supabase-клиенты (✅ реализовано)

@@ -1,8 +1,8 @@
 # Архитектура Backend — SmetaLab
 
-> **Статус:** Проект
-> **Версия:** 1.0
-> **Дата:** 2026-05-11
+> **Статус:** Активная разработка (фазы 1-2 реализованы)
+> **Версия:** 1.1
+> **Дата:** 2026-05-12
 > **Контекст:** Next.js 16 + shadcn/ui + Tailwind v4, деплой на Vercel.
 > Текущее состояние — только фронтенд на моках (`__mocks__/`).
 > Документ описывает целевой backend.
@@ -628,7 +628,7 @@ IDX: idx_user_roles_user_id  ON (user_id)
 | billing.read         |   ✓   |   ✓   |    —    |     —     |   —    |
 | billing.manage       |   ✓   |   —    |    —    |     —     |   —    |
 
-#### 2.2.17a `workspace_members` — Участники workspace
+#### 2.2.17a `workspace_members` — Участники workspace ✅ Реализовано
 
 Таблица связывает пользователей с их workspace и определяет роль участника. Использует те же роли, что и RBAC-система (`roles.name`). Поля `status`, `joined_at`, `last_active_at` расширяют контекст участника.
 
@@ -657,7 +657,7 @@ RLS:  owner + admin — чтение и управление. Остальные
 
 **Примечание:** `owner_id` определяет принадлежность к workspace — workspace идентифицируется по владельцу (`profiles.id`), чей `workspace_name` используется как название workspace. В будущем при выделении таблицы `workspaces` поле `owner_id` заменится на `workspace_id`.
 
-#### 2.2.17b `workspace_invitations` — Приглашения в workspace
+#### 2.2.17b `workspace_invitations` — Приглашения в workspace ✅ Реализовано
 
 Хранит отправленные, но ещё не принятые приглашения. После регистрации пользователя запись удаляется и создаётся запись в `workspace_members`.
 
@@ -686,7 +686,7 @@ IDX: idx_invitations_expires ON (expires_at) WHERE status = 'pending'
 RLS:  owner + admin — полный доступ. manager — чтение.
 ```
 
-#### 2.2.17c `workspace_allowed_domains` — Разрешённые домены
+#### 2.2.17c `workspace_allowed_domains` — Разрешённые домены ✅ Реализовано
 
 Белый список доменов для автоматического присоединения к workspace.
 
@@ -717,7 +717,7 @@ RLS:  owner + admin — полный доступ. manager — чтение.
 - `estimator` работает со сметами (создание/редактирование/удаление), видит проекты и закупки.
 - `viewer` — только чтение проектов, смет, закупок.
 
-#### 2.2.17 `user_settings` — Настройки аккаунта
+#### 2.2.17 `user_settings` — Настройки аккаунта ✅ Реализовано
 
 Подход: JSONB-поддокументы для каждой группы настроек. **Публичная идентичность** (displayName, phone, email, workspaceName) хранится в `profiles` (см. 2.2.1) и **не дублируется** здесь. `user_settings` содержит только то, чего нет в `profiles`.
 
@@ -1073,23 +1073,27 @@ GET  /api/templates/:id                              — детали шабло
 GET  /api/dashboard/stats                            — статистика для дашборда
 GET  /api/dashboard/projects-by-status               — проекты по статусам
 GET  /api/dashboard/budget-summary                   — сводка по бюджетам
-GET  /api/team                                       — список команды (участники workspace)
-GET  /api/team/members                               — список участников с ролями и статусами
-GET  /api/team/invitations                           — список ожидающих приглашений
-GET  /api/team/domains                               — список разрешённых доменов
-POST /api/team/invite                                — отправить приглашение
-POST /api/team/invite-link                           — сгенерировать/обновить invite-ссылку
-POST /api/team/members/:userId/change-role           — изменить роль участника
-POST /api/team/members/:userId/suspend               — заблокировать участника
-POST /api/team/members/:userId/remove                — удалить участника из workspace
-POST /api/team/invitations/:id/revoke                — отозвать приглашение
-POST /api/team/invitations/:id/resend                — повторно отправить приглашение
-POST /api/team/domains/add                           — добавить разрешённый домен
-POST /api/team/domains/:id/remove                    — удалить разрешённый домен
-POST /api/team/transfer-ownership                    — передать права владельца
-POST /api/team/leave                                 — покинуть workspace
-POST /api/team/archive                               — архивировать workspace
-POST /api/team/delete                                — удалить workspace
+GET  /api/team/overview                              — обзор workspace ✅
+GET  /api/team/members                               — список участников с ролями и статусами ✅
+GET  /api/team/invitations                           — список ожидающих приглашений ✅
+POST /api/team/invitations                           — создать приглашение ✅
+DELETE /api/team/invitations/:id                     — отменить приглашение ✅
+GET  /api/team/domains                               — список разрешённых доменов ✅
+POST /api/team/domains                               — добавить разрешённый домен ✅
+DELETE /api/team/domains/:id                         — удалить разрешённый домен ✅
+GET  /api/team/invite-link                           — статус invite-ссылки ✅
+PATCH /api/team/invite-link                          — обновить invite-ссылку ✅
+GET  /api/team                                       — список команды (участники workspace) (план)
+POST /api/team/invite                                — отправить приглашение (план)
+POST /api/team/members/:userId/change-role           — изменить роль участника (план)
+POST /api/team/members/:userId/suspend               — заблокировать участника (план)
+POST /api/team/members/:userId/remove                — удалить участника из workspace (план)
+POST /api/team/invitations/:id/revoke                — отозвать приглашение (план)
+POST /api/team/invitations/:id/resend                — повторно отправить приглашение (план)
+POST /api/team/transfer-ownership                    — передать права владельца (план)
+POST /api/team/leave                                 — покинуть workspace (план)
+POST /api/team/archive                               — архивировать workspace (план)
+POST /api/team/delete                                — удалить workspace (план)
 GET  /api/settings                                   — настройки текущего пользователя
 GET  /api/access-control/roles                       — доступные роли и разрешения
 ```
@@ -1327,12 +1331,12 @@ export const config = {
   ├── 1.5 Seed-данные (db/seed.ts) — роли, разрешения
   └── 1.6 Supabase-клиенты (server/client) + middleware
 
-Фаза 2: Аутентификация и workspace
-  ├── 2.1 Supabase Auth UI (auth/login, signup, forgot-password)
-  ├── 2.2 Middleware (защита роутов)
-  ├── 2.3 Профиль (profiles таблица)
-  ├── 2.4 User settings (user_settings)
-  └── 2.5 Workspace management (workspace_members, workspace_invitations, workspace_allowed_domains)
+Фаза 2: Аутентификация и workspace ✅ Реализовано
+  ├── 2.1 Supabase Auth UI (auth/login, signup, forgot-password) ✅
+  ├── 2.2 Middleware (защита роутов) ✅
+  ├── 2.3 Профиль (profiles таблица) ✅
+  ├── 2.4 User settings (user_settings) ✅
+  └── 2.5 Workspace management (workspace_members, workspace_invitations, workspace_allowed_domains) ✅
 
 Фаза 3: Справочники (независимые)
   ├── 3.1 directory_materials
@@ -1478,6 +1482,7 @@ smetalab/
 │   │   └── ...
 │   │
 │   ├── seed.ts                      # Начальные данные (роли, разрешения, admin-пользователь)
+│   ├── seed-settings.ts             # Seed: дефолтные настройки + workspace_members + invitations + domains
 │   └── index.ts                     # Экспорт db-клиента (drizzle(client))
 │
 ├── lib/                             # 🆕 Библиотеки и утилиты
@@ -1777,25 +1782,21 @@ permissions.id           ◀── role_permissions.permission_id
 
 ## 9. Чек-лист реализации
 
-- [ ] Supabase проект создан, переменные окружения добавлены
-- [ ] Drizzle конфигурация (`drizzle.config.ts`) настроена
-- [ ] Схемы БД написаны (`db/schema/*.ts`)
-- [ ] Миграции сгенерированы и применены (`drizzle-kit generate` + `drizzle-kit migrate`)
-- [ ] Seed-данные: роли, разрешения, связи role_permissions
-- [ ] Supabase-клиенты (browser, server, middleware, admin) созданы
-- [ ] Next.js middleware настроен (защита роутов)
-- [ ] RLS-политики применены ко всем таблицам
-- [ ] Auth страницы подключены к Supabase Auth
-- [ ] Profiles таблица создана + триггер на auth.users
-- [ ] Справочники: API Routes + Server Actions
-- [ ] Projects: API Routes + Server Actions
-- [ ] Estimates + Works + Materials: API Routes + Server Actions
-- [ ] Purchases + Executions: API Routes + Server Actions
-- [ ] Global Purchases: API Routes + Server Actions
-- [ ] Templates: API Routes + Server Actions (включая applyTemplate)
-- [ ] Access Control: API Route + Server Actions (assignRole, removeRole)
-- [ ] Workspace Settings: API Routes + Server Actions (invite/remove/changeRole/suspend/revoke/domains/transfer/leave)
-- [ ] Settings: API Route + Server Actions
+- [x] Supabase проект создан, переменные окружения добавлены
+- [x] Drizzle конфигурация (`drizzle.config.ts`) настроена
+- [x] Схемы БД написаны (`db/schema/*.ts`)
+- [x] Миграции сгенерированы и применены (`drizzle-kit generate` + `drizzle-kit migrate`)
+- [x] Seed-данные: роли, разрешения, связи role_permissions
+- [x] Supabase-клиенты (browser, server, middleware, admin) созданы
+- [x] Next.js middleware настроен (защита роутов)
+- [x] RLS-политики применены ко всем таблицам
+- [x] Auth страницы подключены к Supabase Auth
+- [x] Profiles таблица создана + триггер на auth.users
+- [x] User settings таблица создана (user_settings) + API + Server Actions
+- [x] Workspace management: таблицы workspace_members, workspace_invitations, workspace_allowed_domains + API
+- [x] Access Control: API Route + Server Actions (assignRole, removeRole)
+- [x] Settings: API Route + Server Actions
+- [x] Workspace Settings: API Routes + Server Actions (inviteMember, leaveWorkspace, transferOwnership, deactivateAccount, resetPassword)
 - [ ] Dashboard: API Routes (агрегации)
 - [ ] Удалены все `__mocks__/` (projects, estimates, purchases, execution, directories/*, access-control, account-settings, workspace-settings, global-purchases)
 - [ ] Хуки переписаны на реальные данные

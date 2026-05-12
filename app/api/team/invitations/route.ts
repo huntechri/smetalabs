@@ -27,6 +27,13 @@ async function getAuthenticatedUser() {
   return user
 }
 
+function getRequestOrigin(request: NextRequest) {
+  const forwardedHost = request.headers.get("x-forwarded-host")
+  const host = forwardedHost ?? request.headers.get("host") ?? "localhost:3000"
+  const proto = request.headers.get("x-forwarded-proto") ?? "http"
+  return `${proto}://${host}`
+}
+
 function jsonError(code: string, message: string, status: number) {
   return NextResponse.json({ error: { code, message } }, { status })
 }
@@ -143,14 +150,11 @@ export async function POST(request: NextRequest) {
       throw insertError
     }
 
-    const siteUrl =
-      process.env.NEXT_PUBLIC_APP_URL ??
-      process.env.NEXT_PUBLIC_SITE_URL ??
-      "http://localhost:3000"
+    const origin = getRequestOrigin(request)
     const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
       email,
       {
-        redirectTo: `${siteUrl}/auth/callback?next=/set-password`,
+        redirectTo: `${origin}/auth/callback`,
         data: {
           invited_by: user.id,
           invitation_id: invitation.id,

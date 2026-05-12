@@ -23,6 +23,10 @@ function isAlreadySaved(error: { code?: string; message?: string }) {
   )
 }
 
+function hasInvitationMetadata(metadata: Record<string, unknown> | undefined) {
+  return typeof metadata?.invitation_id === "string" && metadata.invitation_id.length > 0
+}
+
 export function InvitePasswordForm({
   className,
   ...props
@@ -50,18 +54,32 @@ export function InvitePasswordForm({
 
     setIsPending(true)
 
-    const { error } = await supabase.auth.updateUser({ password })
+    const { error: updateError } = await supabase.auth.updateUser({ password })
 
-    if (error) {
+    if (updateError && !isAlreadySaved(updateError)) {
       setIsPending(false)
-      if (isAlreadySaved(error)) {
-        router.replace("/dashboard")
-        return
-      }
-
       setError(
-        error.message ?? "Не удалось сохранить пароль. Попробуйте ещё раз."
+        updateError.message ?? "Не удалось сохранить пароль. Попробуйте ещё раз."
       )
+      return
+    }
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      setIsPending(false)
+      setError(
+        "Пароль сохранён, но не удалось проверить сессию. Войдите с новым паролем."
+      )
+      return
+    }
+
+    if (!hasInvitationMetadata(user.user_metadata)) {
+      setIsPending(false)
+      router.replace("/dashboard")
       return
     }
 
@@ -90,8 +108,7 @@ export function InvitePasswordForm({
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Придумайте пароль</h1>
                 <p className="text-balance text-muted-foreground">
-                  Установите пароль для входа в SmetaLab после принятия
-                  приглашения.
+                  Установите или обновите пароль для входа в SmetaLab.
                 </p>
               </div>
 

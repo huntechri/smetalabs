@@ -115,8 +115,29 @@ export async function inviteMemberAction(
       updated_at: new Date().toISOString(),
     })
 
+  // Отправляем реальное email-приглашение через Supabase Auth Admin
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  let emailSent = false
+  try {
+    const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(parsed.email, {
+      redirectTo: `${siteUrl}/signup?invite=${newInvitation.id}`,
+      data: {
+        invited_by: user.id,
+        workspace_role: parsed.role,
+        invitation_id: newInvitation.id,
+      },
+    })
+    if (inviteErr) {
+      console.warn('[inviteMemberAction] inviteUserByEmail warning:', inviteErr.message)
+    } else {
+      emailSent = true
+    }
+  } catch (emailErr: any) {
+    console.warn('[inviteMemberAction] inviteUserByEmail threw:', emailErr?.message ?? emailErr)
+  }
+
   revalidatePath('/team')
-  return { success: true, data: newInvitation }
+  return { success: true, data: newInvitation, emailSent }
 }
 
 /**

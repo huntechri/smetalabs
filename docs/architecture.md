@@ -146,6 +146,8 @@ Current areas:
 - `/settings/account`
 - `/settings/access`
 
+`/team` owns team management only: workspace/team summary, members, manual email invites, pending invitations and role reference/management. It must not render catch-all workspace settings controls such as invite links, allowed-domain auto-join policy, workspace ownership transfer or danger-zone actions until those controls have a dedicated workspace/security settings route and production-safe backend contract.
+
 ### Auth callback route
 
 `app/auth/callback/route.ts` handles Supabase callback patterns such as `token_hash` and `code`. It should not hard-code dashboard redirects when a `next` value is present.

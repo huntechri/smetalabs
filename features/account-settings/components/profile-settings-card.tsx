@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSettings, useUpdateProfile } from "../hooks/use-account-settings"
+import { useUpdateProfile } from "../hooks/use-account-settings"
+import type { SettingsResponse } from "../hooks/use-account-settings"
 
 const languages = [
   { value: "ru", label: "Русский" },
@@ -31,6 +32,7 @@ const languages = [
 ]
 
 const timezones = [
+  { value: "UTC", label: "UTC" },
   { value: "Europe/Moscow", label: "UTC+3 Москва" },
   { value: "Europe/Kaliningrad", label: "UTC+2 Калининград" },
   { value: "Europe/Samara", label: "UTC+4 Самара" },
@@ -43,8 +45,19 @@ const timezones = [
   { value: "America/New_York", label: "UTC-5 Нью-Йорк" },
 ]
 
-export function ProfileSettingsCard() {
-  const { settings, loading, error, refetch } = useSettings()
+type SettingsStateProps = {
+  settings: SettingsResponse["data"] | null
+  loading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export function ProfileSettingsCard({
+  settings,
+  loading,
+  error,
+  refetch,
+}: SettingsStateProps) {
   const {
     updateProfile,
     loading: saving,
@@ -55,9 +68,8 @@ export function ProfileSettingsCard() {
   const [phone, setPhone] = useState("")
   const [jobTitle, setJobTitle] = useState("")
   const [language, setLanguage] = useState("ru")
-  const [timezone, setTimezone] = useState("Europe/Moscow")
+  const [timezone, setTimezone] = useState("UTC")
 
-  // Sync settings into local state when loaded
   useEffect(() => {
     if (settings?.profile) {
       const p = settings.profile
@@ -65,7 +77,7 @@ export function ProfileSettingsCard() {
       setPhone(p.phone ?? "")
       setJobTitle(p.jobTitle ?? "")
       setLanguage(p.language ?? "ru")
-      setTimezone(p.timezone ?? "Europe/Moscow")
+      setTimezone(p.timezone ?? "UTC")
     }
   }, [settings])
 
@@ -82,7 +94,6 @@ export function ProfileSettingsCard() {
     if (updated) await refetch()
   }
 
-  // ── Loading state ──
   if (loading) {
     return (
       <Card>
@@ -112,7 +123,6 @@ export function ProfileSettingsCard() {
     )
   }
 
-  // ── Error state ──
   if (error && !profile) {
     return (
       <Card className="border-destructive/50">

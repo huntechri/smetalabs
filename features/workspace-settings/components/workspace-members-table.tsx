@@ -7,12 +7,7 @@ import { toast } from "sonner"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +35,9 @@ import {
 import { cn } from "@/lib/utils"
 
 import { RemoveMemberDialog } from "./remove-member-dialog"
+import { ResetPasswordDialog } from "./reset-password-dialog"
 import { RoleChangeDialog } from "./role-change-dialog"
+import { SuspendMemberDialog } from "./suspend-member-dialog"
 import { useWorkspaceMembers } from "../hooks/use-workspace-settings"
 import type { Role } from "@/types/roles"
 import { ROLE_LABELS } from "@/types/roles"
@@ -52,8 +49,8 @@ const EDITABLE_ROLES: Role[] = ["admin", "manager", "estimator", "viewer"]
 type MemberActions = {
   onChangeRole: (member: WorkspaceMember, role: Role) => Promise<void>
   onOpenRoleChange: (member: WorkspaceMember) => void
-  onResetPassword: (member: WorkspaceMember) => Promise<void>
-  onToggleSuspend: (member: WorkspaceMember) => Promise<void>
+  onResetPassword: (member: WorkspaceMember) => void
+  onToggleSuspend: (member: WorkspaceMember) => void
   onRemoveMember: (member: WorkspaceMember) => void
 }
 
@@ -91,7 +88,10 @@ function formatRelative(dateStr: string) {
 }
 
 function StatusBadge({ status }: { status: WorkspaceMember["status"] }) {
-  const variants: Record<WorkspaceMember["status"], "default" | "secondary" | "outline"> = {
+  const variants: Record<
+    WorkspaceMember["status"],
+    "default" | "secondary" | "outline"
+  > = {
     active: "default",
     invited: "secondary",
     suspended: "outline",
@@ -102,15 +102,25 @@ function StatusBadge({ status }: { status: WorkspaceMember["status"] }) {
     suspended: "bg-destructive/10 text-destructive hover:bg-destructive/10",
   }
   return (
-    <Badge variant={variants[status]} className={cn("font-normal", colors[status])}>
+    <Badge
+      variant={variants[status]}
+      className={cn("font-normal", colors[status])}
+    >
       {STATUS_LABELS[status]}
     </Badge>
   )
 }
 
-function MemberActionsMenu({ member, actions }: { member: WorkspaceMember; actions: MemberActions }) {
+function MemberActionsMenu({
+  member,
+  actions,
+}: {
+  member: WorkspaceMember
+  actions: MemberActions
+}) {
   const isOwner = member.role === "owner"
-  const suspendLabel = member.status === "suspended" ? "Разблокировать" : "Заблокировать"
+  const suspendLabel =
+    member.status === "suspended" ? "Разблокировать" : "Заблокировать"
 
   return (
     <DropdownMenu>
@@ -118,7 +128,10 @@ function MemberActionsMenu({ member, actions }: { member: WorkspaceMember; actio
         <Button
           variant="ghost"
           size="sm"
-          className={cn("size-7 p-0", isOwner && "opacity-30 pointer-events-none")}
+          className={cn(
+            "size-7 p-0",
+            isOwner && "pointer-events-none opacity-30"
+          )}
           disabled={isOwner}
         >
           <DotsThree className="size-4" />
@@ -130,14 +143,20 @@ function MemberActionsMenu({ member, actions }: { member: WorkspaceMember; actio
         <DropdownMenuItem onClick={() => actions.onOpenRoleChange(member)}>
           Изменить роль
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => void actions.onResetPassword(member)}>
+        <DropdownMenuItem onClick={() => actions.onResetPassword(member)}>
           Сбросить пароль
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={() => void actions.onToggleSuspend(member)}>
+        <DropdownMenuItem
+          variant="destructive"
+          onClick={() => actions.onToggleSuspend(member)}
+        >
           {suspendLabel}
         </DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onClick={() => void actions.onRemoveMember(member)}>
+        <DropdownMenuItem
+          variant="destructive"
+          onClick={() => actions.onRemoveMember(member)}
+        >
           Удалить из workspace
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -145,7 +164,13 @@ function MemberActionsMenu({ member, actions }: { member: WorkspaceMember; actio
   )
 }
 
-function MemberRow({ member, actions }: { member: WorkspaceMember; actions: MemberActions }) {
+function MemberRow({
+  member,
+  actions,
+}: {
+  member: WorkspaceMember
+  actions: MemberActions
+}) {
   const isOwner = member.role === "owner"
 
   return (
@@ -175,7 +200,9 @@ function MemberRow({ member, actions }: { member: WorkspaceMember; actions: Memb
           <Select
             value={member.role}
             disabled={isOwner}
-            onValueChange={(role) => void actions.onChangeRole(member, role as Role)}
+            onValueChange={(role) =>
+              void actions.onChangeRole(member, role as Role)
+            }
           >
             <SelectTrigger className="h-7 w-[130px] text-xs">
               <SelectValue />
@@ -193,7 +220,7 @@ function MemberRow({ member, actions }: { member: WorkspaceMember; actions: Memb
       <TableCell>
         <StatusBadge status={member.status} />
       </TableCell>
-      <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+      <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
         {formatRelative(member.lastActiveAt)}
       </TableCell>
       <TableCell className="text-right">
@@ -213,14 +240,22 @@ export function WorkspaceMembersTable() {
     removeMember,
     resetPassword,
   } = useWorkspaceMembers()
-  const [roleChangeTarget, setRoleChangeTarget] = useState<WorkspaceMember | null>(null)
+  const [roleChangeTarget, setRoleChangeTarget] =
+    useState<WorkspaceMember | null>(null)
   const [removeTarget, setRemoveTarget] = useState<WorkspaceMember | null>(null)
+  const [resetPasswordTarget, setResetPasswordTarget] =
+    useState<WorkspaceMember | null>(null)
+  const [suspendTarget, setSuspendTarget] = useState<WorkspaceMember | null>(
+    null
+  )
 
   const handleChangeRole = async (member: WorkspaceMember, role: Role) => {
     if (member.role === role) return
     try {
       await updateRole(member.id, role)
-      toast.success(`Роль участника ${member.name} изменена на «${ROLE_LABELS[role]}»`)
+      toast.success(
+        `Роль участника ${member.name} изменена на «${ROLE_LABELS[role]}»`
+      )
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Ошибка изменения роли")
     }
@@ -230,22 +265,44 @@ export function WorkspaceMembersTable() {
     setRoleChangeTarget(member)
   }
 
-  const handleResetPassword = async (member: WorkspaceMember) => {
+  const handleOpenResetPassword = (member: WorkspaceMember) => {
+    setResetPasswordTarget(member)
+  }
+
+  const handleResetPassword = async () => {
+    if (!resetPasswordTarget) return
+
     try {
-      await resetPassword(member.id)
-      toast.success(`Ссылка для сброса пароля отправлена ${member.name}`)
+      await resetPassword(resetPasswordTarget.id)
+      toast.success(
+        `Ссылка для сброса пароля отправлена ${resetPasswordTarget.name}`
+      )
+      setResetPasswordTarget(null)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Ошибка сброса пароля")
     }
   }
 
-  const handleToggleSuspend = async (member: WorkspaceMember) => {
-    const suspend = member.status !== "suspended"
+  const handleOpenToggleSuspend = (member: WorkspaceMember) => {
+    setSuspendTarget(member)
+  }
+
+  const handleToggleSuspend = async () => {
+    if (!suspendTarget) return
+
+    const suspend = suspendTarget.status !== "suspended"
     try {
-      await suspendMember(member.id, suspend)
-      toast.success(suspend ? `${member.name} заблокирован` : `${member.name} разблокирован`)
+      await suspendMember(suspendTarget.id, suspend)
+      toast.success(
+        suspend
+          ? `${suspendTarget.name} заблокирован`
+          : `${suspendTarget.name} разблокирован`
+      )
+      setSuspendTarget(null)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка изменения статуса")
+      toast.error(
+        err instanceof Error ? err.message : "Ошибка изменения статуса"
+      )
     }
   }
 
@@ -261,7 +318,9 @@ export function WorkspaceMembersTable() {
       toast.success(`${removeTarget.name} удалён из workspace`)
       setRemoveTarget(null)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка удаления участника")
+      toast.error(
+        err instanceof Error ? err.message : "Ошибка удаления участника"
+      )
     }
   }
 
@@ -274,20 +333,20 @@ export function WorkspaceMembersTable() {
   const actions: MemberActions = {
     onChangeRole: handleChangeRole,
     onOpenRoleChange: handleOpenRoleChange,
-    onResetPassword: handleResetPassword,
-    onToggleSuspend: handleToggleSuspend,
+    onResetPassword: handleOpenResetPassword,
+    onToggleSuspend: handleOpenToggleSuspend,
     onRemoveMember: handleOpenRemoveMember,
   }
 
   // ── Loading skeleton ──
   if (loading) {
     return (
-      <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
+      <Card className="overflow-hidden border-dashed border-muted-foreground/30">
         <CardHeader>
           <Skeleton className="h-5 w-48" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="p-4 space-y-3">
+          <div className="space-y-3 p-4">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
@@ -313,7 +372,12 @@ export function WorkspaceMembersTable() {
           <p className="text-sm text-destructive">
             Не удалось загрузить список участников: {error}
           </p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={() => window.location.reload()}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => window.location.reload()}
+          >
             Попробовать снова
           </Button>
         </CardContent>
@@ -323,85 +387,98 @@ export function WorkspaceMembersTable() {
 
   return (
     <>
-      <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <User className="size-4" />
-            Участники ({members.length})
-          </CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        {/* Desktop table */}
-        <div className="hidden sm:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Участник</TableHead>
-                <TableHead>Роль</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead className="hidden md:table-cell">
-                  Активность
-                </TableHead>
-                <TableHead className="w-10" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {members.map((m) => (
-                <MemberRow key={m.id} member={m} actions={actions} />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+      <Card className="overflow-hidden border-dashed border-muted-foreground/30">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <User className="size-4" />
+              Участники ({members.length})
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {/* Desktop table */}
+          <div className="hidden sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Участник</TableHead>
+                  <TableHead>Роль</TableHead>
+                  <TableHead>Статус</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Активность
+                  </TableHead>
+                  <TableHead className="w-10" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {members.map((m) => (
+                  <MemberRow key={m.id} member={m} actions={actions} />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-        {/* Mobile card list */}
-        <div className="sm:hidden divide-y divide-border/50">
-          {members.map((m) => {
-            const isOwner = m.role === "owner"
+          {/* Mobile card list */}
+          <div className="divide-y divide-border/50 sm:hidden">
+            {members.map((m) => {
+              const isOwner = m.role === "owner"
 
-            return (
-              <div
-                key={m.id}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3",
-                  isOwner && "bg-muted/30"
-                )}
-              >
-                <Avatar className="size-8 shrink-0">
-                  <AvatarFallback className="text-[0.625rem]">
-                    {getInitials(m.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-medium">
-                    {m.name}
-                    {isOwner && (
-                      <LockKey className="ml-1 inline size-3 text-muted-foreground" />
-                    )}
-                  </p>
-                  <p className="truncate text-[0.65rem] text-muted-foreground">
-                    {m.email}
-                  </p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <StatusBadge status={m.status} />
-                    <span className="text-[0.6rem] text-muted-foreground">
-                      {ROLE_LABELS[m.role]}
-                    </span>
+              return (
+                <div
+                  key={m.id}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3",
+                    isOwner && "bg-muted/30"
+                  )}
+                >
+                  <Avatar className="size-8 shrink-0">
+                    <AvatarFallback className="text-[0.625rem]">
+                      {getInitials(m.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium">
+                      {m.name}
+                      {isOwner && (
+                        <LockKey className="ml-1 inline size-3 text-muted-foreground" />
+                      )}
+                    </p>
+                    <p className="truncate text-[0.65rem] text-muted-foreground">
+                      {m.email}
+                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <StatusBadge status={m.status} />
+                      <span className="text-[0.6rem] text-muted-foreground">
+                        {ROLE_LABELS[m.role]}
+                      </span>
+                    </div>
                   </div>
+                  <MemberActionsMenu member={m} actions={actions} />
                 </div>
-                <MemberActionsMenu member={m} actions={actions} />
-              </div>
-            )
-          })}
-        </div>
-      </CardContent>
+              )
+            })}
+          </div>
+        </CardContent>
       </Card>
       <RoleChangeDialog
         open={roleChangeTarget !== null}
         onOpenChange={(open) => !open && setRoleChangeTarget(null)}
         member={roleChangeTarget}
         onConfirm={handleConfirmRoleChange}
+      />
+      <ResetPasswordDialog
+        open={resetPasswordTarget !== null}
+        onOpenChange={(open) => !open && setResetPasswordTarget(null)}
+        memberName={resetPasswordTarget?.name ?? "участнику"}
+        onConfirm={handleResetPassword}
+      />
+      <SuspendMemberDialog
+        open={suspendTarget !== null}
+        onOpenChange={(open) => !open && setSuspendTarget(null)}
+        memberName={suspendTarget?.name ?? "участнику"}
+        suspend={suspendTarget?.status !== "suspended"}
+        onConfirm={handleToggleSuspend}
       />
       <RemoveMemberDialog
         open={removeTarget !== null}

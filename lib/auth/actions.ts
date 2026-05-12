@@ -14,6 +14,28 @@ async function getOrigin() {
   return `${proto}://${host}`
 }
 
+function getAuthErrorMessage(message: string) {
+  const normalized = message.toLowerCase()
+
+  if (normalized.includes("invalid login credentials")) {
+    return "Неверный email или пароль"
+  }
+  if (normalized.includes("email not confirmed")) {
+    return "Подтвердите email перед входом"
+  }
+  if (normalized.includes("user already registered") || normalized.includes("already registered")) {
+    return "Пользователь с таким email уже зарегистрирован"
+  }
+  if (normalized.includes("password") && normalized.includes("weak")) {
+    return "Пароль слишком простой"
+  }
+  if (normalized.includes("rate limit") || normalized.includes("too many")) {
+    return "Слишком много попыток. Попробуйте позже"
+  }
+
+  return "Не удалось выполнить действие. Проверьте данные и попробуйте ещё раз"
+}
+
 // ── Login ──
 const loginSchema = z.object({
   email: z.string().email("Введите корректный email"),
@@ -49,7 +71,7 @@ export async function loginAction(
   })
 
   if (error) {
-    return { error: error.message, email: parsed.data.email }
+    return { error: getAuthErrorMessage(error.message), email: parsed.data.email }
   }
 
   if (data?.session) {
@@ -108,7 +130,7 @@ export async function signupAction(
   })
 
   if (error) {
-    return { error: error.message, email: parsed.data.email }
+    return { error: getAuthErrorMessage(error.message), email: parsed.data.email }
   }
 
   return { success: true, email: parsed.data.email }
@@ -152,7 +174,7 @@ export async function forgotPasswordAction(
   )
 
   if (error) {
-    return { error: error.message, email: parsed.data.email }
+    return { error: getAuthErrorMessage(error.message), email: parsed.data.email }
   }
 
   return { success: true, email: parsed.data.email }

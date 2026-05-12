@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState } from "react"
+import { Spinner } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
+import { AuthIllustration } from "./auth-illustration"
 import { signupAction, type SignupState } from "@/lib/auth/actions"
 
 const initialState: SignupState = {}
@@ -55,7 +57,7 @@ export function SignupForm({
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Создать аккаунт</h1>
                 <p className="text-sm text-balance text-muted-foreground">
-                  Enter your email below to create your account
+                  Укажите email и пароль для создания аккаунта
                 </p>
               </div>
               <Field>
@@ -64,13 +66,12 @@ export function SignupForm({
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="user@company.ru"
                   required
                   defaultValue={state.email}
                 />
                 <FieldDescription>
-                  We&apos;ll use this to contact you. We will not share your
-                  email with anyone else.
+                  Мы используем email для входа и важных уведомлений.
                 </FieldDescription>
               </Field>
               <Field>
@@ -86,7 +87,7 @@ export function SignupForm({
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="confirmPassword">
-                      Confirm Password
+                      Повторите пароль
                     </FieldLabel>
                     <Input
                       id="confirmPassword"
@@ -97,19 +98,26 @@ export function SignupForm({
                   </Field>
                 </Field>
                 <FieldDescription>
-                  Must be at least 8 characters long.
+                  Минимум 8 символов.
                 </FieldDescription>
               </Field>
               {state.error && (
                 <p className="text-sm text-destructive">{state.error}</p>
               )}
               <Field>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Создание..." : "Создать аккаунт"}
+                <Button type="submit" className="gap-2" disabled={isPending}>
+                  {isPending ? (
+                    <>
+                      <Spinner className="size-4 animate-spin" />
+                      Создание...
+                    </>
+                  ) : (
+                    "Создать аккаунт"
+                  )}
                 </Button>
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-                Or continue with
+                Или продолжить через
               </FieldSeparator>
               <Field className="grid grid-cols-3 gap-4">
                 <Button variant="outline" type="button">
@@ -148,19 +156,13 @@ export function SignupForm({
               </FieldDescription>
             </FieldGroup>
           </form>
-          <div className="relative hidden bg-muted md:block">
-            <img
-              src="/images/auth-bg.png"
-              alt="Изображение"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-            />
-          </div>
+          <AuthIllustration />
         </CardContent>
       </Card>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our{" "}
-        <a href="#">Terms of Service</a> and{" "}
-        <a href="#">Политика конфиденциальности</a>.
+        Продолжая, вы соглашаетесь с{" "}
+        <a href="#">условиями использования</a> и{" "}
+        <a href="#">политикой конфиденциальности</a>.
       </FieldDescription>
     </div>
   )

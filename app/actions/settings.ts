@@ -2,12 +2,10 @@
 
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 import { supabase } from "@/db"
 import { requireAuth } from "@/lib/auth/permissions"
-
-// ═══════════════════════════════════════════════════════════════
-// Zod-схемы (соответствуют интерфейсам из features/account-settings/types.ts)
-// ═══════════════════════════════════════════════════════════════
+import { createClient } from "@/lib/supabase/server"
 
 const ProfileSchema = z.object({
   displayName: z.string().optional(),
@@ -25,11 +23,7 @@ const WorkspaceSchema = z.object({
   registrationNumber: z.string().optional(),
   taxNumber: z.string().optional(),
   legalAddress: z.string().optional(),
-  billingEmail: z
-    .string()
-    .email("Некорректный email")
-    .optional()
-    .or(z.literal("")),
+  billingEmail: z.string().email("Некорректный email").optional().or(z.literal("")),
   companyPhone: z.string().optional(),
   defaultCurrency: z.string().optional(),
   defaultLocale: z.string().optional(),
@@ -53,16 +47,7 @@ const NotificationsSchema = z.object({
   weeklySummary: z.boolean().optional(),
 })
 
-// ═══════════════════════════════════════════════════════════════
-// Helpers
-// ═══════════════════════════════════════════════════════════════
-
-/** Upsert a single JSONB column in user_settings by merging with existing keys. */
-async function upsertSettingsColumn(
-  userId: string,
-  column: string,
-  data: Record<string, unknown>
-) {
+async function upsertSettingsColumn(userId: string, column: string, data: Record<string, unknown>) {
   const { data: existing, error: selectError } = await supabase
     .from("user_settings")
     .select(`user_id, ${column}`)
@@ -71,31 +56,22 @@ async function upsertSettingsColumn(
 
   if (selectError) throw selectError
 
-  const current = ((existing as Record<string, unknown> | null)?.[column] ??
-    {}) as Record<string, unknown>
+  const current = ((existing as Record<string, unknown> | null)?.[column] ?? {}) as Record<string, unknown>
   const merged = { ...current, ...data }
 
   if (existing) {
     const { error } = await supabase
       .from("user_settings")
-      .update({
-        [column]: merged,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ [column]: merged, updated_at: new Date().toISOString() })
       .eq("user_id", userId)
-
     if (error) throw error
-  } else {
-    const { error } = await supabase.from("user_settings").insert({
-      user_id: userId,
-      [column]: merged,
-    })
-
-    if (error) throw error
+    return
   }
+
+  const { error } = await supabase.from("user_settings").insert({ user_id: userId, [column]: merged })
+  if (error) throw error
 }
 
-/** Fetch profiles + user_settings and return the merged document (same shape as GET /api/settings). */
 async function getMergedSettings(userId: string, userEmail: string) {
   const { data: pData } = await supabase
     .from("profiles")
@@ -105,9 +81,7 @@ async function getMergedSettings(userId: string, userEmail: string) {
 
   const { data: sData, error: sErr } = await supabase
     .from("user_settings")
-    .select(
-      "profile, workspace, preferences, notifications, security, updated_at"
-    )
+    .select("profile, workspace, preferences, notifications, security, updated_at")
     .eq("user_id", userId)
     .single()
 
@@ -144,102 +118,85 @@ async function getMergedSettings(userId: string, userEmail: string) {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Server Actions
-// ═══════════════════════════════════════════════════════════════
+async function getRequestOrigin() {
+  const headersList = await headers()
+  const forwardedHost = headersList.get("x-forwarded-host")
+  const host = forwardedHost ?? headersList.get("host") ?? "localhost:3000"
+  const proto = headersList.get("x-forwarded-proto") ?? "http"
+  return `${proto}://${host}`
+}
 
-/**
- * Обновить профиль пользователя.
- * Разделяет данные:
- * - profiles.full_name, .phone, .position ← из data.displayName, data.phone, data.jobTitle
- * - user_settings.profile ← { language, timezone }
- */
 export async function updateProfile(data: z.infer<typeof ProfileSchema>) {
   const user = await requireAuth()
   const parsed = ProfileSchema.parse(data)
 
-  // ── Update profiles table (public identity) ──
   const profileUpdate: Record<string, string> = {}
-  if (parsed.displayName !== undefined)
-    profileUpdate.full_name = parsed.displayName
+  if (parsed.displayName !== undefined) profileUpdate.full_name = parsed.displayName
   if (parsed.phone !== undefined) profileUpdate.phone = parsed.phone
   if (parsed.jobTitle !== undefined) profileUpdate.position = parsed.jobTitle
 
   if (Object.keys(profileUpdate).length > 0) {
-    const { error: pErr } = await supabase
-      .from("profiles")
-      .update(profileUpdate)
-      .eq("id", user.id)
-    if (pErr) throw pErr
+    const { error } = await supabase.from("profiles").update(profileUpdate).eq("id", user.id)
+    if (error) throw error
   }
 
-  // ── Update user_settings.profile (language, timezone) ──
   const settingsUpdate: Record<string, string> = {}
   if (parsed.language !== undefined) settingsUpdate.language = parsed.language
   if (parsed.timezone !== undefined) settingsUpdate.timezone = parsed.timezone
-
-  if (Object.keys(settingsUpdate).length > 0) {
-    await upsertSettingsColumn(user.id, "profile", settingsUpdate)
-  }
+  if (Object.keys(settingsUpdate).length > 0) await upsertSettingsColumn(user.id, "profile", settingsUpdate)
 
   revalidatePath("/settings/account")
   return getMergedSettings(user.id, user.email ?? "")
 }
 
-/**
- * Обновить настройки workspace.
- * Разделяет данные:
- * - profiles.workspace_name ← из data.workspaceName
- * - user_settings.workspace ← все юридические реквизиты
- */
 export async function updateWorkspace(data: z.infer<typeof WorkspaceSchema>) {
   const user = await requireAuth()
   const parsed = WorkspaceSchema.parse(data)
 
-  // ── Update profiles.workspace_name ──
   if (parsed.workspaceName !== undefined) {
-    const { error: pErr } = await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({ workspace_name: parsed.workspaceName })
       .eq("id", user.id)
-    if (pErr) throw pErr
+    if (error) throw error
   }
 
-  // ── Update user_settings.workspace (legal requisites only) ──
   const legalFields: Partial<typeof parsed> = { ...parsed }
   delete legalFields.workspaceName
-  if (Object.keys(legalFields).length > 0) {
-    await upsertSettingsColumn(user.id, "workspace", legalFields)
-  }
+  if (Object.keys(legalFields).length > 0) await upsertSettingsColumn(user.id, "workspace", legalFields)
 
   revalidatePath("/settings/account")
   return getMergedSettings(user.id, user.email ?? "")
 }
 
-/**
- * Обновить предпочтения интерфейса (тема, плотность, форматы).
- */
-export async function updatePreferences(
-  data: z.infer<typeof PreferencesSchema>
-) {
+export async function updatePreferences(data: z.infer<typeof PreferencesSchema>) {
   const user = await requireAuth()
   const parsed = PreferencesSchema.parse(data)
-
   await upsertSettingsColumn(user.id, "preferences", parsed)
   revalidatePath("/settings/account")
   return getMergedSettings(user.id, user.email ?? "")
 }
 
-/**
- * Обновить настройки уведомлений.
- */
-export async function updateNotifications(
-  data: z.infer<typeof NotificationsSchema>
-) {
+export async function updateNotifications(data: z.infer<typeof NotificationsSchema>) {
   const user = await requireAuth()
   const parsed = NotificationsSchema.parse(data)
-
   await upsertSettingsColumn(user.id, "notifications", parsed)
   revalidatePath("/settings/account")
   return getMergedSettings(user.id, user.email ?? "")
+}
+
+export async function sendOwnPasswordResetEmailAction() {
+  const user = await requireAuth()
+  const client = await createClient()
+  const origin = await getRequestOrigin()
+  const { error } = await client.auth.resetPasswordForEmail(user.email!, {
+    redirectTo: `${origin}/set-password`,
+  })
+
+  if (error) throw new Error(`Ошибка отправки ссылки для сброса пароля: ${error.message}`)
+
+  return {
+    success: true,
+    message: "Ссылка для сброса пароля отправлена на email",
+  }
 }

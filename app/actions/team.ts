@@ -5,16 +5,11 @@ import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { requireAuth } from "@/lib/auth/permissions"
 import { supabase } from "@/db"
-import { createClient } from "@/lib/supabase/server"
 import {
   canManageTeamForWorkspace,
   getPrimaryWorkspace,
   getRoleId,
 } from "@/lib/auth/team"
-
-// ═══════════════════════════════════════════════════════════════
-// Zod-схемы
-// ═══════════════════════════════════════════════════════════════
 
 const InviteMemberSchema = z.object({
   email: z.string().email("Некорректный email"),
@@ -25,10 +20,6 @@ const InviteMemberSchema = z.object({
 const TransferOwnershipSchema = z.object({
   userId: z.string().min(1, "Некорректный ID пользователя"),
 })
-
-// ═══════════════════════════════════════════════════════════════
-// Helpers
-// ═══════════════════════════════════════════════════════════════
 
 async function getUserName(userId: string): Promise<string> {
   try {
@@ -55,21 +46,7 @@ function authCallbackUrl(origin: string) {
   return `${origin}/auth/callback`
 }
 
-function passwordSetupUrl(origin: string) {
-  return `${origin}/set-password`
-}
-
-// ═══════════════════════════════════════════════════════════════
-// Server Actions
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Пригласить участника в workspace.
- * Сохраняет приглашение в workspace_invitations и отправляет письмо Supabase Auth.
- */
-export async function inviteMemberAction(
-  input: z.infer<typeof InviteMemberSchema>
-) {
+export async function inviteMemberAction(input: z.infer<typeof InviteMemberSchema>) {
   const user = await requireAuth()
   const parsed = InviteMemberSchema.parse({
     ...input,
@@ -105,17 +82,14 @@ export async function inviteMemberAction(
   }
 
   const origin = await getRequestOrigin()
-  const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(
-    parsed.email,
-    {
-      redirectTo: authCallbackUrl(origin),
-      data: {
-        invited_by: user.id,
-        workspace_role: parsed.role,
-        invitation_id: invitation.id,
-      },
-    }
-  )
+  const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(parsed.email, {
+    redirectTo: authCallbackUrl(origin),
+    data: {
+      invited_by: user.id,
+      workspace_role: parsed.role,
+      invitation_id: invitation.id,
+    },
+  })
 
   if (inviteErr) {
     await supabase
@@ -142,57 +116,18 @@ export async function inviteMemberAction(
   return { success: true, data: result, emailSent: true }
 }
 
-/**
- * Покинуть workspace.
- */
 export async function leaveWorkspaceAction() {
   await requireAuth()
-  throw new Error(
-    "Not implemented: безопасный выход из workspace ещё не подключён"
-  )
+  throw new Error("Not implemented: безопасный выход из workspace ещё не подключён")
 }
 
-/**
- * Передать права владельца другому участнику.
- */
-export async function transferOwnershipAction(
-  input: z.infer<typeof TransferOwnershipSchema>
-) {
+export async function transferOwnershipAction(input: z.infer<typeof TransferOwnershipSchema>) {
   await requireAuth()
   TransferOwnershipSchema.parse(input)
-  throw new Error(
-    "Not implemented: передача владельца требует отдельной транзакционной операции"
-  )
+  throw new Error("Not implemented: передача владельца требует отдельной транзакционной операции")
 }
 
-/**
- * Деактивировать аккаунт.
- */
 export async function deactivateAccountAction() {
   await requireAuth()
   throw new Error("Not implemented: деактивация аккаунта пока не подключена")
-}
-
-/**
- * Отправить ссылку для сброса пароля на email пользователя.
- */
-export async function resetPasswordAction() {
-  const user = await requireAuth()
-
-  const client = await createClient()
-  const origin = await getRequestOrigin()
-  const { error } = await client.auth.resetPasswordForEmail(user.email!, {
-    redirectTo: passwordSetupUrl(origin),
-  })
-
-  if (error) {
-    throw new Error(
-      `Ошибка отправки ссылки для сброса пароля: ${error.message}`
-    )
-  }
-
-  return {
-    success: true,
-    message: "Ссылка для сброса пароля отправлена на email",
-  }
 }

@@ -4,7 +4,7 @@
 >
 > **Состояние:** Активная разработка. Фронтенд на моках. Добавлен backend/auth слой: Drizzle ORM, Supabase Auth (Server Actions, middleware), RBAC-схема. Добавлена фича workspace-settings (team management). PermissionsMatrix перенесена на `/settings/access`.
 >
-> **Последнее обновление:** 2026-05-12 (документация после мержа PR #32: team API, workspace tables, hooks)
+> **Последнее обновление:** 2026-05-12 (документация после мержа PR #34-#40: auth audit, member management API, dialogs)
 >
 > **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
 
@@ -102,13 +102,17 @@ smetalabs/
 │   │
 │   ├── auth/                            # Auth-роуты (callback OAuth / email confirm)
 │   │   └── callback/
-│   │       └── route.ts                 #   GET: verifyOtp + redirect (token_hash, type)
+│   │       └── route.ts                 #   GET: verifyOtp + exchangeCodeForSession + acceptInvitationIfPresent
+│   │                                     #     (подтверждение email/OAuth и автоматическое принятие приглашений)
 │   │
 │   ├── actions/                          # Server Actions (бизнес-данные)
 │   │   ├── access-control.ts             #   assignRole, removeRole (RBAC-мутации)
 │   │   ├── settings.ts                   #   updateProfile, updateWorkspace, updatePreferences,
 │   │   │                                  #   updateNotifications, updateSecurity
-│   │   └── workspace-settings.ts          #   ⚠️ Скелеты: changeRole, removeMember, inviteMember, ...
+│   │   ├── team.ts                        #   inviteMemberAction, leaveWorkspaceAction,
+│   │   │                                  #   transferOwnershipAction, deactivateAccountAction,
+│   │   │                                  #   resetPasswordAction (работает с workspace_invitations)
+│   │   └── workspace-settings.ts          #   ⚠️ Скелеты — функциональность перенесена в team.ts
 │   │
 │   └── api/                             # API Routes (REST)
 │       ├── access-control/
@@ -117,15 +121,35 @@ smetalabs/
 │       ├── settings/
 │       │   └── route.ts                  #   GET: настройки текущего пользователя
 │       └── team/
+│           ├── overview/
+│           │   └── route.ts              #   GET: обзор workspace
+│           ├── invitations/
+│           │   ├── route.ts              #   GET список, POST создание
+│           │   └── [id]/
+│           │       └── route.ts          #   DELETE: отмена приглашения
+│           ├── domains/
+│           │   ├── route.ts              #   GET список, POST добавление, PATCH auto-join
+│           │   └── [id]/
+│           │       └── route.ts          #   DELETE: удаление домена
+│           ├── invite-link/
+│           │   └── route.ts              #   GET статус, PATCH обновление
 │           └── members/
-│               └── route.ts              #   GET: список участников workspace
+│               ├── route.ts              #   GET: список участников workspace
+│               └── [userId]/
+│                   ├── route.ts          #   PATCH: обновить роль/статус, DELETE: удалить
+│                   └── reset-password/
+│                       └── route.ts      #   POST: отправить ссылку сброса пароля участнику
 │
 ├── db/                                 # Работа с БД (Drizzle ORM + PostgreSQL)
 │   ├── index.ts                         #   Клиент Drizzle (postgres-js, drizzle({schema}))
 │   ├── seed.ts                          #   Заполнение RBAC-данными (роли, права, связи)
 │   ├── seed-settings.ts                 #   Заполнение дефолтных настроек (user_settings)
 │   ├── migrations/
-│   │   └── 002_rls_policies.sql          #   RLS: функции + политики на все таблицы
+│   │   ├── 002_rls_policies.sql          #   RLS: функции + политики на все таблицы
+│   │   ├── 003_workspace_tables.sql       #   Таблицы workspace (members, invitations, domains)
+│   │   ├── 004_auth_invitation_flow.sql   #   Auth-флоу приглашений: статусы, индексы, RBAC-вставки
+│   │   ├── 005_rls_advisor_cleanup.sql    #   Очистка RLS-политик, индексы для эффективных проверок
+│   │   └── 006_defer_invite_acceptance.sql #  Триггер handle_new_user (создание профиля + принятие приглашения)
 │   └── schema/
 │       ├── index.ts                     #   Реэкспорт всех схем
 │       ├── profiles.ts                  #   Таблица profiles (расширение auth.users)
@@ -194,9 +218,10 @@ smetalabs/
 │   │
 │   ├── auth/                            # Фича «Авторизация»
 │   │   └── components/
-│   │       ├── login-form.tsx           # Форма входа
-│   │       ├── signup-form.tsx          # Форма регистрации
-│   │       └── forgot-password-form.tsx # Форма восстановления
+│   │       ├── auth-illustration.tsx     # Иллюстрация на фоне страниц авторизации (Image с затемнением)
+│   │       ├── login-form.tsx           # Форма входа (улучшена обработка ошибок, getAuthErrorMessage)
+│   │       ├── signup-form.tsx          # Форма регистрации (улучшена обработка ошибок)
+│   │       └── forgot-password-form.tsx # Форма восстановления (улучшена обработка ошибок)
 │   │
 │   ├── dashboard/                       # Фича «Дашборд»
 │   │   ├── chart-area-client.tsx        # Клиентский график (Recharts, lazy-загрузка)
@@ -407,17 +432,24 @@ smetalabs/
 │   │   ├── __mocks__/
 │   │   │   └── workspace-settings.ts    #   Моки (fallback при ошибке API)
 │   │   ├── hooks/
-│   │   │   └── use-workspace-settings.ts #  Хуки: useWorkspaceMembers,
+│   │   │   └── use-workspace-settings.ts #  Хуки: useWorkspaceMembers (с мутациями: updateRole,
+│   │   │                                  #  suspendMember, removeMember, resetPassword),
 │   │   │                                  #  useWorkspaceOverview, useInviteMember,
 │   │   │                                  #  useInvitations, useDomains, useInviteLink
 │   │   └── components/
 │   │       ├── workspace-settings-view.tsx       # Композиция: сборка 8 секций (все — через API)
 │   │       ├── workspace-overview-card.tsx       # GET /api/team/overview
-│   │       ├── workspace-members-table.tsx       # Таблица участников (API, Role Select, Status Badge)
+│   │       ├── workspace-members-table.tsx       # Таблица участников (API, Role Select, Status Badge,
+│   │       │                                      #   + диалоги: роль/сброс/блокировка/удаление)
+│   │       ├── role-change-dialog.tsx            # Диалог изменения роли (Select ролей)
+│   │       ├── remove-member-dialog.tsx          # Диалог подтверждения удаления участника
+│   │       ├── reset-password-dialog.tsx         # Диалог подтверждения сброса пароля
+│   │       ├── suspend-member-dialog.tsx         # Диалог блокировки/разблокировки участника
 │   │       ├── invite-member-card.tsx            # Форма приглашения (POST /api/team/invitations)
 │   │       ├── invite-link-card.tsx              # Invite-ссылка (GET/PATCH /api/team/invite-link)
 │   │       ├── allowed-domains-card.tsx          # Домены (GET/POST/DELETE /api/team/domains)
-│   │       ├── pending-invitations-table.tsx     # Ожидающие приглашения (GET /api/team/invitations)
+│   │       ├── pending-invitations-table.tsx     # Ожидающие приглашения (GET /api/team/invitations,
+│   │       │                                      #   + отзыв + копирование email + resend)
 │   │       ├── workspace-roles-summary-card.tsx  # Сводка ролей (static, без API)
 │   │       └── workspace-actions-card.tsx        # Leave, Transfer, Archive, Remove (Server Actions)
 │   │
@@ -437,8 +469,10 @@ smetalabs/
 │   │   └── proxy.ts                       #     updateSession() — обновление сессий в middleware
 │   │
 │   └── auth/                            #   Серверные auth-утилиты
-│       ├── actions.ts                     #     Server Actions: loginAction, signupAction, signOutAction
-│       └── permissions.ts                 #     Проверки прав: getUserRoles, hasRole, canWrite, requireAuth
+│       ├── actions.ts                     #     Server Actions: loginAction, signupAction, signOutAction, getAuthErrorMessage
+│       ├── permissions.ts                 #     Проверки прав: getUserRoles, hasRole, canWrite, canManageTeam, requireAuth
+│       └── team.ts                        #     Workspace-утилиты: getPrimaryWorkspace, getWorkspaceRole,
+│                                          #     canManageTeamForWorkspace, getRoleId
 │
 ├── public/                              # Статические файлы
 │   └── images/
@@ -690,7 +724,7 @@ purchases-view.tsx                   ← page.tsx рендерит этот ко
 
 ### 2.4 Работа с данными
 
-> **Текущее состояние:** Слой БД (Drizzle ORM + PostgreSQL) и auth-слой (Supabase Auth) работают. Схема RBAC, profiles, user_settings, workspace_members, workspace_invitations, workspace_allowed_domains готова. Server Actions для login/signup, access-control, settings, team — реализованы. API Routes для roles, settings, team/overview, team/members, team/invitations, team/domains, team/invite-link — работают. RLS-политики применены. Middleware защищает роуты.
+> **Текущее состояние:** Слой БД (Drizzle ORM + PostgreSQL) и auth-слой (Supabase Auth) работают. Схема RBAC, profiles, user_settings, workspace_members, workspace_invitations, workspace_allowed_domains готова. Server Actions для login/signup, access-control, settings, team (invite, leave, transfer, deactivate, resetPassword) — реализованы. API Routes для roles, settings, team/overview, team/members (GET/PATCH/DELETE), team/members/[userId]/reset-password, team/invitations, team/domains, team/invite-link — работают. RLS-политики применены. Middleware защищает роуты. Добавлен auth-флоу с автоматическим принятием приглашений в callback.
 >
 > Часть данных пока на моках (справочники, проекты, сметы). Правила ниже — целевая архитектура при полном переходе к реальным данным.
 
@@ -732,7 +766,7 @@ app/
 │
 ├── auth/                       # Auth-роуты (✅ реализовано)
 │   └── callback/
-│       └── route.ts            #   GET: OAuth + email confirm handler
+│       └── route.ts            #   GET: OAuth + email confirm + acceptInvitationIfPresent
 │
 ├── api/                        # API Routes (✅ частично)
 │   ├── access-control/
@@ -748,13 +782,17 @@ app/
 │       │   └── [id]/
 │       │       └── route.ts    #   DELETE: отмена приглашения
 │       ├── domains/
-│       │   ├── route.ts        #   GET список, POST добавление
+│       │   ├── route.ts        #   GET список, POST добавление, PATCH auto-join
 │       │   └── [id]/
 │       │       └── route.ts    #   DELETE: удаление домена
 │       ├── invite-link/
 │       │   └── route.ts        #   GET статус, PATCH обновление
 │       └── members/
-│           └── route.ts        #   GET: список участников
+│           ├── route.ts        #   GET: список участников
+│           └── [userId]/
+│               ├── route.ts    #   PATCH: изменить роль/статус, DELETE: удалить
+│               └── reset-password/
+│                   └── route.ts #  POST: отправить ссылку сброса пароля
 │
 db/                             # Работа с БД (✅ реализовано — основа)
 ├── index.ts                    #   Клиент Drizzle (postgres-js + schema)
@@ -779,8 +817,9 @@ lib/
 │   └── proxy.ts                #   updateSession() — middleware
 │
 ├── auth/                       # Серверная auth-логика (✅ реализовано)
-│   ├── actions.ts              #   loginAction, signupAction, signOutAction
-│   └── permissions.ts          #   getUserRoles, hasRole, canWrite, requireAuth
+│   ├── actions.ts              #   loginAction, signupAction, signOutAction, getAuthErrorMessage
+│   ├── permissions.ts          #   getUserRoles, hasRole, canWrite, canManageTeam, requireAuth
+│   └── team.ts                 #   getPrimaryWorkspace, getWorkspaceRole, canManageTeamForWorkspace, getRoleId
 │
 services/                       # Бизнес-логика (план)
 ├── projects.ts

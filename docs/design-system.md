@@ -4,7 +4,7 @@
 >
 > **Главный принцип:** Максимально использовать то, что дают shadcn/ui и Tailwind из коробки. Никаких лишних абстракций, обёрток, кастомных решений.
 >
-> **Последняя проверка:** 2026-05-11 — актуально. Все 35 компонентов `components/ui/` задокументированы. Добавлен Switch. Добавлена фича: account-settings (6 карточек). Добавлена фича: workspace-settings (8 секций/карточек).
+> **Последняя проверка:** 2026-05-12 — актуально. Все 35 компонентов `components/ui/` задокументированы. Добавлен Switch. Добавлены фичи: account-settings (6 карточек), workspace-settings (15 компонентов, включая 4 диалога подтверждения). Добавлен auth-illustration.
 
 ---
 
@@ -1064,7 +1064,7 @@ aria-expanded:bg-muted
 
 ## 6.10 Проверка: фича workspace-settings
 
-**Фича:** `features/workspace-settings/` — 11 компонентов, 1 файл типов, 1 мок-файл.
+**Фича:** `features/workspace-settings/` — 15 компонентов, 1 файл типов, 1 мок-файл.
 
 **Проверка на следование дизайн-системе:**
 
@@ -1072,7 +1072,11 @@ aria-expanded:bg-muted
 |---|---|---|
 | `workspace-settings-view` | Композиция (gap-6) | — |
 | `workspace-overview-card` | Card, CardHeader, CardTitle, CardContent, Badge, Separator | — |
-| `workspace-members-table` | Card, CardHeader, CardTitle, CardContent, Table, Badge, Avatar, Select, DropdownMenu, Button | — |
+| `workspace-members-table` | Card, CardHeader, CardTitle, CardContent, Table, Badge, Avatar, Select, DropdownMenu, Button, + 4 диалога | — |
+| `role-change-dialog` | Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Select, Button | — |
+| `remove-member-dialog` | Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Button (destructive) | — |
+| `reset-password-dialog` | Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Button | — |
+| `suspend-member-dialog` | Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Button (destructive/default) | — |
 | `invite-member-card` | Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Input, Label, Select, Textarea, Button | — |
 | `invite-link-card` | Card, CardHeader, CardTitle, CardDescription, CardContent, Input, Label, Select, Switch, Button | — |
 | `allowed-domains-card` | Card, CardHeader, CardTitle, CardDescription, CardContent, Badge, Input, Label, Switch, Button | — |
@@ -1080,12 +1084,13 @@ aria-expanded:bg-muted
 | `workspace-roles-summary-card` | Card, CardHeader, CardTitle, CardDescription, CardContent, Badge | — |
 | `workspace-actions-card` | Card, CardHeader, CardTitle, CardDescription, CardContent, Button, Separator | — |
 
-**Результат:** ✅ Фича полностью следует дизайн-системе. Все 11 компонентов используют только существующие shadcn/ui примитивы. Новых UI-паттернов не введено. Стилизация — только через Tailwind-классы и CSS-переменные (`text-muted-foreground`, `bg-muted/30`, `text-destructive`, `border-dashed`, и т.д.). Иконки — Phosphor.
+**Результат:** ✅ Фича полностью следует дизайн-системе. Все 15 компонентов используют только существующие shadcn/ui примитивы. Новых UI-паттернов не введено. Стилизация — только через Tailwind-классы и CSS-переменные (`text-muted-foreground`, `bg-muted/30`, `text-destructive`, `border-dashed`, и т.д.). Иконки — Phosphor.
 
 **Особенности:**
 - Используется декоративный стиль `border-dashed` на Card для визуальной группировки UI-only компонентов (используется и в других фичах).
 - Mobile-first адаптивность через Tailwind breakpoints (`sm:`, `md:`, `lg:`).
-- Композиция без бизнес-логики — все данные из `__mocks__/` (временный этап вёрстки).
+- Диалоги подтверждения действий (изменение роли, удаление, сброс пароля, блокировка) следуют паттерну: `Dialog` + `DialogHeader` (Title + Description) + действие + `DialogFooter` (Cancel/Confirm). Кнопка подтверждения использует `variant="destructive"` для необратимых действий (удаление, блокировка) и `variant="default"` для остальных.
+- Композиция без бизнес-логики — все данные через хуки и API (`useWorkspaceMembers` с мутациями).
 
 ---
 

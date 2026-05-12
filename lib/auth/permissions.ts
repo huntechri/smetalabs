@@ -218,12 +218,15 @@ export async function canWrite(): Promise<boolean> {
  * Требовать аутентификацию. Бросает Error если нет сессии.
  * Возвращает user.id.
  */
-export async function requireAuth(): Promise<{ id: string }> {
-  const userId = await getCurrentUserId()
-  if (!userId) {
+export async function requireAuth(): Promise<{ id: string; email?: string | null }> {
+  const client = await createSupabaseClient()
+  const {
+    data: { user },
+  } = await client.auth.getUser()
+  if (!user) {
     throw new Error('Unauthorized: требуется аутентификация')
   }
-  return { id: userId }
+  return { id: user.id, email: user.email }
 }
 
 /**

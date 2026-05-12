@@ -116,7 +116,7 @@ export async function inviteMemberAction(
     })
 
   // Отправляем реальное email-приглашение через Supabase Auth Admin
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
   let emailSent = false
   try {
     const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(parsed.email, {

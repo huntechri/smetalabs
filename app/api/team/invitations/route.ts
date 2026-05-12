@@ -177,8 +177,12 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
 
-    // Отправляем реальное email-приглашение через Supabase Auth Admin
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+    // Определяем корректный URL сайта (на Vercel берём из заголовка или APP_URL)
+    const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host")
+    const proto = request.headers.get("x-forwarded-proto") ?? "https"
+    const siteUrl = host
+      ? `${proto}://${host}`
+      : process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
     let emailSent = false
     let emailError: string | null = null
     try {

@@ -56,8 +56,7 @@ smetalabs/
 ## Документация
 
 - [Architecture Guide](docs/architecture.md) — архитектурные слои, ownership rules, auth/invite flow
-- [Current Filemap](docs/filemap-current.md) — компактная актуальная карта папок и файлов
-- [Legacy Filemap](docs/filemap.md) — длинная историческая карта проекта
+- [Filemap](docs/filemap.md) — актуальная карта папок и файлов
 - [Design System](docs/design-system.md) — shadcn/ui, tokens, typography, визуальные правила
 
 ## Важные архитектурные правила

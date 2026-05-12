@@ -1,9 +1,5 @@
 "use client"
 
-import { useState } from "react"
-import { Spinner } from "@phosphor-icons/react"
-import { toast } from "sonner"
-
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -22,60 +18,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-import {
-  leaveWorkspaceAction,
-  transferOwnershipAction,
-  deactivateAccountAction,
-} from "@/app/actions/team"
-
 export function SensitiveActionsCard() {
-  const [leaving, setLeaving] = useState(false)
-  const [transferring, setTransferring] = useState(false)
-  const [deactivating, setDeactivating] = useState(false)
-
-  async function handleLeave() {
-    setLeaving(true)
-    try {
-      const result = await leaveWorkspaceAction()
-      toast.success(result.message ?? "Вы покинули workspace")
-    } catch (err: any) {
-      toast.error(err?.message ?? "Ошибка при выходе из workspace")
-    } finally {
-      setLeaving(false)
-    }
-  }
-
-  async function handleTransfer() {
-    setTransferring(true)
-    try {
-      const result = await transferOwnershipAction({ userId: "" })
-      toast.success(result.message ?? "Права переданы")
-    } catch (err: any) {
-      toast.error(err?.message ?? "Ошибка передачи прав")
-    } finally {
-      setTransferring(false)
-    }
-  }
-
-  async function handleDeactivate() {
-    setDeactivating(true)
-    try {
-      const result = await deactivateAccountAction()
-      toast.success(result.message ?? "Аккаунт деактивирован")
-    } catch (err: any) {
-      toast.error(err?.message ?? "Ошибка деактивации аккаунта")
-    } finally {
-      setDeactivating(false)
-    }
-  }
-
   return (
     <Card className="border-destructive/50">
       <CardHeader>
         <CardTitle className="text-destructive">Опасные действия</CardTitle>
         <CardDescription>
-          Действия, которые могут повлиять на ваш аккаунт и рабочее пространство.
-          Будьте осторожны.
+          Действия, которые могут повлиять на ваш аккаунт и рабочее
+          пространство. Будьте осторожны.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
@@ -90,25 +40,25 @@ export function SensitiveActionsCard() {
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="destructive">Покинуть</Button>
+              <Button
+                variant="destructive"
+                disabled
+                title="Действие пока не реализовано"
+              >
+                Покинуть · скоро
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Покинуть workspace?</DialogTitle>
                 <DialogDescription>
-                  Вы потеряете доступ ко всем проектам, сметам и данным workspace.
-                  Это действие нельзя отменить.
+                  Вы потеряете доступ ко всем проектам, сметам и данным
+                  workspace. Это действие нельзя отменить.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter showCloseButton>
-                <Button
-                  variant="destructive"
-                  onClick={handleLeave}
-                  disabled={leaving}
-                  className="gap-1.5"
-                >
-                  {leaving ? <Spinner className="size-3.5 animate-spin" /> : null}
-                  {leaving ? "Выход..." : "Покинуть"}
+                <Button variant="destructive" disabled>
+                  Покинуть · скоро
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -127,7 +77,13 @@ export function SensitiveActionsCard() {
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline">Передать</Button>
+              <Button
+                variant="outline"
+                disabled
+                title="Действие пока не реализовано"
+              >
+                Передать · скоро
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -138,15 +94,7 @@ export function SensitiveActionsCard() {
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter showCloseButton>
-                <Button
-                  variant="default"
-                  onClick={handleTransfer}
-                  disabled={transferring}
-                  className="gap-1.5"
-                >
-                  {transferring ? <Spinner className="size-3.5 animate-spin" /> : null}
-                  Подтвердить передачу
-                </Button>
+                <Button disabled>Подтвердить передачу · скоро</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -163,7 +111,13 @@ export function SensitiveActionsCard() {
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="destructive">Деактивировать</Button>
+              <Button
+                variant="destructive"
+                disabled
+                title="Действие пока не реализовано"
+              >
+                Деактивировать · скоро
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -174,14 +128,8 @@ export function SensitiveActionsCard() {
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter showCloseButton>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeactivate}
-                  disabled={deactivating}
-                  className="gap-1.5"
-                >
-                  {deactivating ? <Spinner className="size-3.5 animate-spin" /> : null}
-                  {deactivating ? "Деактивация..." : "Деактивировать"}
+                <Button variant="destructive" disabled>
+                  Деактивировать · скоро
                 </Button>
               </DialogFooter>
             </DialogContent>

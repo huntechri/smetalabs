@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 
 import { useState, useEffect } from "react"
@@ -55,7 +56,11 @@ const timezones = [
 
 export function WorkspaceSettingsCard() {
   const { settings, loading, error, refetch } = useSettings()
-  const { updateWorkspace, loading: saving, error: saveError } = useUpdateWorkspace()
+  const {
+    updateWorkspace,
+    loading: saving,
+    error: saveError,
+  } = useUpdateWorkspace()
 
   const [workspaceName, setWorkspaceName] = useState("")
   const [companyLegalName, setCompanyLegalName] = useState("")
@@ -87,7 +92,7 @@ export function WorkspaceSettingsCard() {
   }, [settings])
 
   const handleSave = async () => {
-    await updateWorkspace({
+    const updated = await updateWorkspace({
       workspaceName,
       companyLegalName,
       companyType,
@@ -100,6 +105,7 @@ export function WorkspaceSettingsCard() {
       defaultLocale,
       defaultTimezone,
     })
+    if (updated) await refetch()
   }
 
   // ── Loading state ──
@@ -191,9 +197,7 @@ export function WorkspaceSettingsCard() {
             </Select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="registrationNumber">
-              Регистрационный номер
-            </Label>
+            <Label htmlFor="registrationNumber">Регистрационный номер</Label>
             <Input
               id="registrationNumber"
               value={registrationNumber}

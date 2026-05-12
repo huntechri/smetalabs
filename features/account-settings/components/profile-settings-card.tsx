@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 
 import { useState, useEffect } from "react"
@@ -44,7 +45,11 @@ const timezones = [
 
 export function ProfileSettingsCard() {
   const { settings, loading, error, refetch } = useSettings()
-  const { updateProfile, loading: saving, error: saveError } = useUpdateProfile()
+  const {
+    updateProfile,
+    loading: saving,
+    error: saveError,
+  } = useUpdateProfile()
 
   const [displayName, setDisplayName] = useState("")
   const [phone, setPhone] = useState("")
@@ -67,13 +72,14 @@ export function ProfileSettingsCard() {
   const profile = settings?.profile
 
   const handleSave = async () => {
-    await updateProfile({
+    const updated = await updateProfile({
       displayName,
       phone,
       jobTitle,
       language,
       timezone,
     })
+    if (updated) await refetch()
   }
 
   // ── Loading state ──
@@ -171,7 +177,7 @@ export function ProfileSettingsCard() {
               type="email"
               value={profile?.email ?? ""}
               readOnly
-              className="bg-muted/50 cursor-not-allowed"
+              className="cursor-not-allowed bg-muted/50"
             />
           </div>
           <div className="flex flex-col gap-1.5">

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 
 import { useState, useEffect } from "react"
@@ -13,7 +14,10 @@ import {
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSettings, useUpdateNotifications } from "../hooks/use-account-settings"
+import {
+  useSettings,
+  useUpdateNotifications,
+} from "../hooks/use-account-settings"
 import type { NotificationSettings } from "../types"
 
 const notificationLabels: Record<keyof NotificationSettings, string> = {
@@ -25,7 +29,9 @@ const notificationLabels: Record<keyof NotificationSettings, string> = {
   weeklySummary: "Еженедельная сводка",
 }
 
-const notifKeys = Object.keys(notificationLabels) as (keyof NotificationSettings)[]
+const notifKeys = Object.keys(
+  notificationLabels
+) as (keyof NotificationSettings)[]
 
 const defaultNotifs: NotificationSettings = {
   projectUpdates: false,
@@ -38,8 +44,11 @@ const defaultNotifs: NotificationSettings = {
 
 export function NotificationSettingsCard() {
   const { settings, loading, error, refetch } = useSettings()
-  const { updateNotifications, loading: saving, error: saveError } =
-    useUpdateNotifications()
+  const {
+    updateNotifications,
+    loading: saving,
+    error: saveError,
+  } = useUpdateNotifications()
 
   const [notifs, setNotifs] = useState<NotificationSettings>(defaultNotifs)
 
@@ -57,7 +66,8 @@ export function NotificationSettingsCard() {
   }
 
   const handleSave = async () => {
-    await updateNotifications(notifs)
+    const updated = await updateNotifications(notifs)
+    if (updated) await refetch()
   }
 
   // ── Loading state ──
@@ -109,10 +119,7 @@ export function NotificationSettingsCard() {
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
         {notifKeys.map((key) => (
-          <div
-            key={key}
-            className="flex items-center justify-between py-1.5"
-          >
+          <div key={key} className="flex items-center justify-between py-1.5">
             <Label
               htmlFor={`notif-${key}`}
               className="cursor-pointer font-normal"

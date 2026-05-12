@@ -23,7 +23,10 @@ function getAuthErrorMessage(message: string) {
   if (normalized.includes("email not confirmed")) {
     return "Подтвердите email перед входом"
   }
-  if (normalized.includes("user already registered") || normalized.includes("already registered")) {
+  if (
+    normalized.includes("user already registered") ||
+    normalized.includes("already registered")
+  ) {
     return "Пользователь с таким email уже зарегистрирован"
   }
   if (normalized.includes("password") && normalized.includes("weak")) {
@@ -71,7 +74,10 @@ export async function loginAction(
   })
 
   if (error) {
-    return { error: getAuthErrorMessage(error.message), email: parsed.data.email }
+    return {
+      error: getAuthErrorMessage(error.message),
+      email: parsed.data.email,
+    }
   }
 
   if (data?.session) {
@@ -130,7 +136,10 @@ export async function signupAction(
   })
 
   if (error) {
-    return { error: getAuthErrorMessage(error.message), email: parsed.data.email }
+    return {
+      error: getAuthErrorMessage(error.message),
+      email: parsed.data.email,
+    }
   }
 
   return { success: true, email: parsed.data.email }
@@ -169,12 +178,15 @@ export async function forgotPasswordAction(
   const { error } = await supabase.auth.resetPasswordForEmail(
     parsed.data.email,
     {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: `${origin}/set-password`,
     }
   )
 
   if (error) {
-    return { error: getAuthErrorMessage(error.message), email: parsed.data.email }
+    return {
+      error: getAuthErrorMessage(error.message),
+      email: parsed.data.email,
+    }
   }
 
   return { success: true, email: parsed.data.email }

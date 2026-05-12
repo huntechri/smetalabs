@@ -293,18 +293,39 @@ Use `types/` only for shared cross-feature types. Keep feature-private types in 
 
 ## Quick placement guide
 
-| Task | Put it here |
-|---|---|
-| New route/page | `app/(main)/.../page.tsx` or `app/(auth)/.../page.tsx` |
-| New feature screen | `features/<feature>/components/*-view.tsx` |
-| Feature-only hook | `features/<feature>/hooks/use-*.ts` |
-| Cross-feature type | `types/*.ts` |
-| Feature-private type | `features/<feature>/types.ts` |
-| API endpoint | `app/api/<domain>/route.ts` |
-| Server action | `app/actions/<domain>.ts` |
-| Auth/RBAC helper | `lib/auth/*.ts` |
-| Supabase client/session infrastructure | `lib/supabase/*.ts` |
-| DB schema | `db/schema/*.ts` |
-| SQL migration | `db/migrations/*.sql` |
-| shadcn primitive | `components/ui/*.tsx` |
-| Business UI | `features/<feature>/components/*.tsx` |
+| Task                                   | Put it here                                            |
+| -------------------------------------- | ------------------------------------------------------ |
+| New route/page                         | `app/(main)/.../page.tsx` or `app/(auth)/.../page.tsx` |
+| New feature screen                     | `features/<feature>/components/*-view.tsx`             |
+| Feature-only hook                      | `features/<feature>/hooks/use-*.ts`                    |
+| Cross-feature type                     | `types/*.ts`                                           |
+| Feature-private type                   | `features/<feature>/types.ts`                          |
+| API endpoint                           | `app/api/<domain>/route.ts`                            |
+| Server action                          | `app/actions/<domain>.ts`                              |
+| Auth/RBAC helper                       | `lib/auth/*.ts`                                        |
+| Supabase client/session infrastructure | `lib/supabase/*.ts`                                    |
+| DB schema                              | `db/schema/*.ts`                                       |
+| SQL migration                          | `db/migrations/*.sql`                                  |
+| shadcn primitive                       | `components/ui/*.tsx`                                  |
+| Business UI                            | `features/<feature>/components/*.tsx`                  |
+
+---
+
+## Issue #48 auth/team/access hardening updates
+
+- `lib/auth/team.ts` — authoritative workspace helper layer. Resolves current workspace via `workspace_members.owner_id`, exposes `requireCurrentWorkspace`, `requireWorkspaceMember`, `canReadTeamForWorkspace`, `canManageTeamForWorkspace`, role lookup, and scoped member lookup helpers.
+- `lib/auth/invitations.ts` — invitation acceptance helper. Accepts pending invitations from authenticated Supabase user metadata after `/set-password` success; writes only `workspace_members` and deletes the scoped pending invitation.
+- `app/(auth)/set-password/page.tsx` and `features/auth/components/invite-password-form.tsx` — password setup/reset flow for hash-token invite/reset links. Browser client updates password; invitation acceptance is called only after success.
+- `app/auth/callback/route.ts` — kept for OTP/OAuth/server-readable callback flows.
+- `app/api/team/members/**` — workspace-scoped team reads/mutations and password reset.
+- `app/api/team/overview/route.ts` — workspace-scoped overview counts and owner metadata.
+- `app/api/team/invitations/**` — workspace-scoped list/create/revoke/resend/accept routes; no false invite success on email failure.
+- `app/api/team/domains/**` — real `workspace_allowed_domains` storage scoped by workspace; auto-join setting returns explicit 501 until implemented.
+- `app/api/team/invite-link/route.ts` — explicit 501 because no authoritative workspace-scoped invite-link storage exists yet.
+- `app/api/access-control/roles/route.ts` — now requires authenticated workspace read permission.
+- `app/actions/access-control.ts` — workspace role mutations use `workspace_members.role_id`, not global `user_roles`.
+- `app/actions/settings.ts` — JSONB settings updates merge subdocuments rather than replacing omitted keys.
+- `app/actions/team.ts` and `app/actions/workspace-settings.ts` — dangerous/skeleton actions return explicit Not implemented errors instead of false success.
+- `features/account-settings/components/sensitive-actions-card.tsx` — unimplemented dangerous actions are disabled/labelled coming soon.
+- `features/access-control/components/permissions-matrix.tsx` — save action is disabled/labelled coming soon until persistence is implemented.
+- `features/auth/components/login-form.tsx`, `features/auth/components/signup-form.tsx` — unimplemented social auth buttons are hidden and replaced with explanatory copy.

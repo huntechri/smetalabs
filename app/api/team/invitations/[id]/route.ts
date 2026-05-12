@@ -1,81 +1,49 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
 import { supabase } from "@/db"
+import {
+  canManageTeamForWorkspace,
+  requireCurrentWorkspace,
+} from "@/lib/auth/team"
+import { requireAuth } from "@/lib/auth/permissions"
 
-/**
- * DELETE /api/team/invitations/[id]
- * Отзывает (удаляет) приглашение по ID.
- */
+function jsonError(code: string, message: string, status: number) {
+  return NextResponse.json({ error: { code, message } }, { status })
+}
+
+/** DELETE /api/team/invitations/[id] — revoke pending invitation in current workspace only. */
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params
-
-  // ── Auth check ──
-  let ssrClient
   try {
-    ssrClient = await createClient()
-  } catch {
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при создании клиента" } },
-      { status: 500 }
-    )
-  }
+    const user = await requireAuth()
+    const ownerId = await requireCurrentWorkspace(user.id)
+    if (!(await canManageTeamForWorkspace(user.id, ownerId))) {
+      return jsonError(
+        "FORBIDDEN",
+        "Недостаточно прав для отзыва приглашений",
+        403
+      )
+    }
 
-  let user
-  try {
-    const result = await ssrClient.auth.getUser()
-    user = result.data?.user ?? null
-  } catch {
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при проверке аутентификации" } },
-      { status: 500 }
-    )
-  }
+    const { id } = await params
+    const { data, error } = await supabase
+      .from("workspace_invitations")
+      .delete()
+      .eq("id", id)
+      .eq("owner_id", ownerId)
+      .eq("status", "pending")
+      .select("id")
+      .maybeSingle()
 
-  if (!user) {
-    return NextResponse.json(
-      { error: { code: "UNAUTHORIZED", message: "Требуется аутентификация" } },
-      { status: 401 }
-    )
-  }
-
-  // ── Fetch current workspace settings ──
-  const { data: settingsData } = await supabase
-    .from("user_settings")
-    .select("workspace")
-    .eq("user_id", user.id)
-    .maybeSingle()
-
-  const ws = (settingsData?.workspace ?? {}) as Record<string, any>
-  const invitations = (ws.invitations ?? []) as any[]
-  const filtered = invitations.filter((inv: any) => inv.id !== id)
-
-  if (filtered.length === invitations.length) {
-    return NextResponse.json(
-      { error: { code: "NOT_FOUND", message: "Приглашение не найдено" } },
-      { status: 404 }
-    )
-  }
-
-  ws.invitations = filtered
-
-  try {
-    await supabase
-      .from("user_settings")
-      .upsert({
-        user_id: user.id,
-        workspace: ws,
-        updated_at: new Date().toISOString(),
-      })
+    if (error) throw error
+    if (!data) return jsonError("NOT_FOUND", "Приглашение не найдено", 404)
 
     return NextResponse.json({ success: true })
-  } catch (err: any) {
-    console.error("[DELETE /api/team/invitations/[id]] save error:", err)
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при отзыве приглашения" } },
-      { status: 500 }
-    )
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("Unauthorized"))
+      return jsonError("UNAUTHORIZED", "Требуется аутентификация", 401)
+    console.error("[DELETE /api/team/invitations/[id]]", err)
+    return jsonError("INTERNAL_ERROR", "Ошибка при отзыве приглашения", 500)
   }
 }

@@ -1,10 +1,6 @@
 import { AppSidebar } from "@/features/app-sidebar"
 import { SiteHeader } from "@/features/site-header"
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/sidebar"
-import { acceptInvitationIfPresent } from "@/lib/auth/invitations"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function MainLayout({
@@ -15,14 +11,6 @@ export default async function MainLayout({
   const supabase = await createClient()
   const { data } = await supabase.auth.getUser()
   const user = data.user
-
-  if (user) {
-    try {
-      await acceptInvitationIfPresent(user.id)
-    } catch (err) {
-      console.error("[MainLayout] Failed to accept invitation", err)
-    }
-  }
 
   const displayName =
     user?.user_metadata?.full_name ??

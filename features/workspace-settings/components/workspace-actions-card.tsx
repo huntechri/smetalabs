@@ -1,15 +1,11 @@
 "use client"
 
-import { useState } from "react"
 import {
   Archive,
   ArrowRight,
   ArrowSquareOut,
-  Spinner,
   Trash,
 } from "@phosphor-icons/react"
-import { toast } from "sonner"
-
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -29,36 +25,7 @@ import {
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 
-import { leaveWorkspaceAction, transferOwnershipAction } from "@/app/actions/team"
-
 export function WorkspaceActionsCard() {
-  const [leaving, setLeaving] = useState(false)
-  const [transferring, setTransferring] = useState(false)
-
-  async function handleLeave() {
-    setLeaving(true)
-    try {
-      const result = await leaveWorkspaceAction()
-      toast.success(result.message ?? "Вы покинули workspace")
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Ошибка при выходе из workspace")
-    } finally {
-      setLeaving(false)
-    }
-  }
-
-  async function handleTransfer() {
-    setTransferring(true)
-    try {
-      const result = await transferOwnershipAction({ userId: "" })
-      toast.success(result.message ?? "Права переданы")
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Ошибка передачи прав")
-    } finally {
-      setTransferring(false)
-    }
-  }
-
   return (
     <Card className="border-dashed border-destructive/30">
       <CardHeader>
@@ -84,28 +51,24 @@ export function WorkspaceActionsCard() {
                 variant="outline"
                 size="sm"
                 className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
+                disabled
+                title="Действие пока не реализовано"
               >
                 <ArrowSquareOut className="size-3.5" />
-                Покинуть
+                Покинуть · скоро
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Покинуть workspace?</DialogTitle>
                 <DialogDescription>
-                  Вы потеряете доступ ко всем проектам, сметам и данным workspace.
-                  Это действие нельзя отменить.
+                  Вы потеряете доступ ко всем проектам, сметам и данным
+                  workspace. Это действие нельзя отменить.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter showCloseButton>
-                <Button
-                  variant="destructive"
-                  onClick={handleLeave}
-                  disabled={leaving}
-                  className="gap-1.5"
-                >
-                  {leaving ? <Spinner className="size-3.5 animate-spin" /> : null}
-                  {leaving ? "Выход..." : "Покинуть"}
+                <Button variant="destructive" disabled>
+                  Покинуть · скоро
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -122,9 +85,15 @@ export function WorkspaceActionsCard() {
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1 text-xs"
+                disabled
+                title="Действие пока не реализовано"
+              >
                 <ArrowRight className="size-3.5" />
-                Передать
+                Передать · скоро
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -136,15 +105,7 @@ export function WorkspaceActionsCard() {
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter showCloseButton>
-                <Button
-                  variant="default"
-                  onClick={handleTransfer}
-                  disabled={transferring}
-                  className="gap-1.5"
-                >
-                  {transferring ? <Spinner className="size-3.5 animate-spin" /> : null}
-                  Подтвердить передачу
-                </Button>
+                <Button disabled>Подтвердить передачу · скоро</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Copy, Link as LinkIcon } from "@phosphor-icons/react"
+import { Copy, Link as LinkIcon, Spinner } from "@phosphor-icons/react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -20,17 +21,70 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 
 import type { Role } from "@/types/roles"
 import { ROLE_LABELS } from "@/types/roles"
+import { useInviteLink } from "../hooks/use-workspace-settings"
 
 const roles: Role[] = ["admin", "manager", "estimator", "viewer"]
 
 export function InviteLinkCard() {
-  const [enabled, setEnabled] = useState(true)
+  const { enabled, url, defaultRole, loading, saving, error, updateInviteLink, refetch } = useInviteLink()
+  const [showError, setShowError] = useState(false)
 
-  const inviteUrl = "https://app.smetalabs.ru/join/smetalabs-studio"
+  // ── Loading skeleton ──
+  if (loading) {
+    return (
+      <Card className="border-dashed border-muted-foreground/30">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-3.5 w-72" />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-[1fr_auto_auto]">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-8 w-[140px]" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // ── Error state ──
+  if (error && !showError) {
+    setShowError(true)
+  }
+
+  async function handleToggleEnabled(checked: boolean) {
+    try {
+      await updateInviteLink({ enabled: checked })
+      toast.success(checked ? "Ссылка включена" : "Ссылка выключена")
+    } catch (err: any) {
+      toast.error(err?.message ?? "Ошибка сохранения")
+    }
+  }
+
+  async function handleRoleChange(newRole: string) {
+    try {
+      await updateInviteLink({ defaultRole: newRole })
+    } catch (err: any) {
+      toast.error(err?.message ?? "Ошибка сохранения")
+    }
+  }
+
+  function handleCopy() {
+    if (url) {
+      navigator.clipboard.writeText(url).then(
+        () => toast.success("Ссылка скопирована"),
+        () => toast.error("Не удалось скопировать ссылку")
+      )
+    }
+  }
 
   return (
     <Card className="border-dashed border-muted-foreground/30">
@@ -46,7 +100,11 @@ export function InviteLinkCard() {
               приглашения.
             </CardDescription>
           </div>
-          <Switch checked={enabled} onCheckedChange={setEnabled} />
+          <Switch
+            checked={enabled}
+            onCheckedChange={handleToggleEnabled}
+            disabled={saving}
+          />
         </div>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-[1fr_auto_auto]">
@@ -56,7 +114,7 @@ export function InviteLinkCard() {
           </Label>
           <Input
             id="invite-link"
-            value={inviteUrl}
+            value={enabled ? (url ?? "—") : "Ссылка отключена"}
             readOnly
             className="h-8 text-xs font-mono"
           />
@@ -66,9 +124,8 @@ export function InviteLinkCard() {
             size="sm"
             variant="outline"
             className="h-8 gap-1.5"
-            onClick={() => {
-              navigator.clipboard.writeText(inviteUrl).catch(() => {})
-            }}
+            disabled={!enabled || !url}
+            onClick={handleCopy}
           >
             <Copy className="size-3.5" />
             Копировать
@@ -78,7 +135,11 @@ export function InviteLinkCard() {
           <Label htmlFor="invite-default-role" className="text-xs">
             Роль по умолчанию
           </Label>
-          <Select defaultValue="viewer">
+          <Select
+            value={defaultRole}
+            onValueChange={handleRoleChange}
+            disabled={saving || !enabled}
+          >
             <SelectTrigger id="invite-default-role" className="h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -92,6 +153,14 @@ export function InviteLinkCard() {
           </Select>
         </div>
       </CardContent>
+      {showError && error && (
+        <div className="px-6 pb-4">
+          <p className="text-xs text-destructive">
+            Ошибка: {error}{" "}
+            <button onClick={refetch} className="underline">Повторить</button>
+          </p>
+        </div>
+      )}
     </Card>
   )
 }

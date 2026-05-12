@@ -15,6 +15,17 @@ export const mockProfile: AccountProfile = {
   timezone: "Europe/Moscow",
 }
 
+/**
+ * Profile fields that come from the `profiles` table (public identity).
+ * In a real app these are fetched from profiles and merged by the API.
+ */
+export const mockProfilesRow = {
+  full_name: "Алексей Смирнов",
+  phone: "+7 (916) 123-45-67",
+  position: "Главный инженер",
+  workspace_name: "ООО «СтройГрад»",
+}
+
 export const mockWorkspace: WorkspaceSettings = {
   workspaceName: "ООО «СтройГрад»",
   companyLegalName: 'Общество с ограниченной ответственностью "СтройГрад"',
@@ -27,7 +38,7 @@ export const mockWorkspace: WorkspaceSettings = {
   companyPhone: "+7 (495) 987-65-43",
   defaultCurrency: "RUB",
   defaultLocale: "ru-RU",
-  defaultTimezone: "Europe/Moscow",
+  defaultTimezone: "UTC",
 }
 
 export const mockPreferences: AccountPreferences = {

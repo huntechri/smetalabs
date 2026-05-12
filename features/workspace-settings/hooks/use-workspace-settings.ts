@@ -1,7 +1,12 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import type { WorkspaceMember } from "../types"
+import type {
+  WorkspaceMember,
+  WorkspaceOverview,
+  WorkspaceInvitation,
+  AllowedDomain,
+} from "../types"
 
 // ── Helpers ──
 
@@ -16,6 +21,8 @@ function resolveFetchError(status: number, apiMessage: string, resource: string)
       return "Недостаточно прав для доступа"
     case 404:
       return `API для ${resource} не найден`
+    case 409:
+      return apiMessage || `Конфликт: ${resource}`
     case 500:
       return `Ошибка сервера при загрузке ${resource}${apiMessage ? `: ${apiMessage}` : ""}`
     default:
@@ -95,4 +102,350 @@ export function useWorkspaceMembers() {
   }, [fetchMembers])
 
   return { members, loading, error, refetch: fetchMembers }
+}
+
+// ── useWorkspaceOverview ──
+
+export function useWorkspaceOverview() {
+  const [overview, setOverview] = useState<WorkspaceOverview | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchOverview = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/team/overview", {
+        credentials: "include",
+      })
+      if (!res.ok) {
+        let apiMessage = ""
+        try {
+          const body = await res.json()
+          apiMessage = body?.error?.message ?? ""
+        } catch { /* no JSON */ }
+        throw new Error(resolveFetchError(res.status, apiMessage, "обзора workspace"))
+      }
+      const json = await res.json()
+      setOverview(json.data)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Неизвестная ошибка")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchOverview()
+  }, [fetchOverview])
+
+  return { overview, loading, error, refetch: fetchOverview }
+}
+
+// ── useInviteMember ──
+
+export function useInviteMember() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const invite = useCallback(
+    async (email: string, role: string, message?: string) => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch("/api/team/invitations", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, role, message }),
+        })
+        if (!res.ok) {
+          let apiMessage = ""
+          try {
+            const body = await res.json()
+            apiMessage = body?.error?.message ?? ""
+          } catch { /* no JSON */ }
+          throw new Error(resolveFetchError(res.status, apiMessage, "приглашения"))
+        }
+        const json = await res.json()
+        return json.data
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Неизвестная ошибка"
+        setError(msg)
+        throw e
+      } finally {
+        setLoading(false)
+      }
+    },
+    []
+  )
+
+  return { invite, loading, error }
+}
+
+// ── useInvitations ──
+
+export function useInvitations() {
+  const [invitations, setInvitations] = useState<WorkspaceInvitation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchInvitations = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/team/invitations", {
+        credentials: "include",
+      })
+      if (!res.ok) {
+        let apiMessage = ""
+        try {
+          const body = await res.json()
+          apiMessage = body?.error?.message ?? ""
+        } catch { /* no JSON */ }
+        throw new Error(resolveFetchError(res.status, apiMessage, "приглашений"))
+      }
+      const json = await res.json()
+      setInvitations(json.data ?? [])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Неизвестная ошибка")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchInvitations()
+  }, [fetchInvitations])
+
+  const cancelInvitation = useCallback(async (id: string) => {
+    try {
+      const res = await fetch(`/api/team/invitations/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+      if (!res.ok) {
+        let apiMessage = ""
+        try {
+          const body = await res.json()
+          apiMessage = body?.error?.message ?? ""
+        } catch { /* no JSON */ }
+        throw new Error(resolveFetchError(res.status, apiMessage, "отзыва приглашения"))
+      }
+      // Remove from local state
+      setInvitations((prev) => prev.filter((inv) => inv.id !== id))
+      return true
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Ошибка отзыва приглашения")
+      return false
+    }
+  }, [])
+
+  return { invitations, loading, error, refetch: fetchInvitations, cancelInvitation }
+}
+
+// ── useDomains ──
+
+export function useDomains() {
+  const [domains, setDomains] = useState<AllowedDomain[]>([])
+  const [autoJoin, setAutoJoin] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchDomains = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/team/domains", {
+        credentials: "include",
+      })
+      if (!res.ok) {
+        let apiMessage = ""
+        try {
+          const body = await res.json()
+          apiMessage = body?.error?.message ?? ""
+        } catch { /* no JSON */ }
+        throw new Error(resolveFetchError(res.status, apiMessage, "доменов"))
+      }
+      const json = await res.json()
+      setDomains(json.data ?? [])
+      setAutoJoin(json.meta?.autoJoinDomains ?? false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Неизвестная ошибка")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchDomains()
+  }, [fetchDomains])
+
+  const addDomain = useCallback(async (domain: string) => {
+    try {
+      const res = await fetch("/api/team/domains", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain }),
+      })
+      if (!res.ok) {
+        let apiMessage = ""
+        try {
+          const body = await res.json()
+          apiMessage = body?.error?.message ?? ""
+        } catch { /* no JSON */ }
+        throw new Error(resolveFetchError(res.status, apiMessage, "добавления домена"))
+      }
+      const json = await res.json()
+      setDomains((prev) => [...prev, json.data])
+      return true
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Ошибка добавления домена")
+      return false
+    }
+  }, [])
+
+  const removeDomain = useCallback(async (id: string) => {
+    try {
+      const res = await fetch(`/api/team/domains/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+      if (!res.ok) {
+        let apiMessage = ""
+        try {
+          const body = await res.json()
+          apiMessage = body?.error?.message ?? ""
+        } catch { /* no JSON */ }
+        throw new Error(resolveFetchError(res.status, apiMessage, "удаления домена"))
+      }
+      setDomains((prev) => prev.filter((d) => d.id !== id))
+      return true
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Ошибка удаления домена")
+      return false
+    }
+  }, [])
+
+  const setAutoJoinDomains = useCallback(async (value: boolean) => {
+    try {
+      const res = await fetch("/api/team/domains", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ autoJoinDomains: value }),
+      })
+      if (!res.ok) {
+        let apiMessage = ""
+        try {
+          const body = await res.json()
+          apiMessage = body?.error?.message ?? ""
+        } catch { /* no JSON */ }
+        throw new Error(resolveFetchError(res.status, apiMessage, "настройки auto-join"))
+      }
+      setAutoJoin(value)
+      return true
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Ошибка сохранения auto-join")
+      return false
+    }
+  }, [])
+
+  return {
+    domains,
+    autoJoin,
+    loading,
+    error,
+    refetch: fetchDomains,
+    addDomain,
+    removeDomain,
+    setAutoJoinDomains,
+  }
+}
+
+// ── useInviteLink ──
+
+export function useInviteLink() {
+  const [enabled, setEnabled] = useState(true)
+  const [url, setUrl] = useState<string | null>(null)
+  const [defaultRole, setDefaultRole] = useState("viewer")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const fetchInviteLink = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/team/invite-link", {
+        credentials: "include",
+      })
+      if (!res.ok) {
+        let apiMessage = ""
+        try {
+          const body = await res.json()
+          apiMessage = body?.error?.message ?? ""
+        } catch { /* no JSON */ }
+        throw new Error(resolveFetchError(res.status, apiMessage, "ссылки"))
+      }
+      const json = await res.json()
+      const data = json.data
+      setEnabled(data.enabled)
+      setUrl(data.url)
+      setDefaultRole(data.defaultRole)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Неизвестная ошибка")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchInviteLink()
+  }, [fetchInviteLink])
+
+  const updateInviteLink = useCallback(
+    async (updates: { enabled?: boolean; defaultRole?: string }) => {
+      setSaving(true)
+      setError(null)
+      try {
+        const res = await fetch("/api/team/invite-link", {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        })
+        if (!res.ok) {
+          let apiMessage = ""
+          try {
+            const body = await res.json()
+            apiMessage = body?.error?.message ?? ""
+          } catch { /* no JSON */ }
+          throw new Error(resolveFetchError(res.status, apiMessage, "обновления ссылки"))
+        }
+        const json = await res.json()
+        const data = json.data
+        setEnabled(data.enabled)
+        setUrl(data.url)
+        setDefaultRole(data.defaultRole)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Ошибка сохранения")
+      } finally {
+        setSaving(false)
+      }
+    },
+    []
+  )
+
+  return {
+    enabled,
+    url,
+    defaultRole,
+    loading,
+    saving,
+    error,
+    refetch: fetchInviteLink,
+    updateInviteLink,
+  }
 }

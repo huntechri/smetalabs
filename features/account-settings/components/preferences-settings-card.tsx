@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -17,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockPreferences } from "../__mocks__/account-settings"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useSettings, useUpdatePreferences } from "../hooks/use-account-settings"
 
 const themes = [
   { value: "system", label: "Системная" },
@@ -49,7 +51,77 @@ const estimateViews = [
 ]
 
 export function PreferencesSettingsCard() {
-  const prefs = mockPreferences
+  const { settings, loading, error, refetch } = useSettings()
+  const { updatePreferences, loading: saving, error: saveError } =
+    useUpdatePreferences()
+
+  const [theme, setTheme] = useState("system")
+  const [density, setDensity] = useState("comfortable")
+  const [dateFormat, setDateFormat] = useState("ДД.ММ.ГГГГ")
+  const [numberFormat, setNumberFormat] = useState("1 000,00")
+  const [defaultEstimateView, setDefaultEstimateView] = useState("table")
+
+  useEffect(() => {
+    if (settings?.preferences) {
+      const p = settings.preferences
+      setTheme(p.theme ?? "system")
+      setDensity(p.density ?? "comfortable")
+      setDateFormat(p.dateFormat ?? "ДД.ММ.ГГГГ")
+      setNumberFormat(p.numberFormat ?? "1 000,00")
+      setDefaultEstimateView(p.defaultEstimateView ?? "table")
+    }
+  }, [settings])
+
+  const handleSave = async () => {
+    await updatePreferences({
+      theme: theme as "system" | "light" | "dark",
+      density: density as "comfortable" | "compact",
+      dateFormat,
+      numberFormat,
+      defaultEstimateView,
+    })
+  }
+
+  // ── Loading state ──
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-3.5 w-72" />
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-1.5">
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // ── Error state ──
+  if (error && !settings?.preferences) {
+    return (
+      <Card className="border-destructive/50">
+        <CardHeader>
+          <CardTitle>Настройки интерфейса</CardTitle>
+          <CardDescription className="text-destructive">
+            Ошибка загрузки: {error}
+          </CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button variant="outline" onClick={refetch}>
+            Повторить
+          </Button>
+        </CardFooter>
+      </Card>
+    )
+  }
 
   return (
     <Card>
@@ -63,7 +135,7 @@ export function PreferencesSettingsCard() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="theme">Тема</Label>
-            <Select defaultValue={prefs.theme}>
+            <Select value={theme} onValueChange={setTheme}>
               <SelectTrigger id="theme" className="w-full">
                 <SelectValue placeholder="Выберите тему" />
               </SelectTrigger>
@@ -78,7 +150,7 @@ export function PreferencesSettingsCard() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="density">Плотность интерфейса</Label>
-            <Select defaultValue={prefs.density}>
+            <Select value={density} onValueChange={setDensity}>
               <SelectTrigger id="density" className="w-full">
                 <SelectValue placeholder="Выберите плотность" />
               </SelectTrigger>
@@ -93,7 +165,7 @@ export function PreferencesSettingsCard() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="dateFormat">Формат даты</Label>
-            <Select defaultValue={prefs.dateFormat}>
+            <Select value={dateFormat} onValueChange={setDateFormat}>
               <SelectTrigger id="dateFormat" className="w-full">
                 <SelectValue placeholder="Выберите формат" />
               </SelectTrigger>
@@ -108,7 +180,7 @@ export function PreferencesSettingsCard() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="numberFormat">Формат чисел</Label>
-            <Select defaultValue={prefs.numberFormat}>
+            <Select value={numberFormat} onValueChange={setNumberFormat}>
               <SelectTrigger id="numberFormat" className="w-full">
                 <SelectValue placeholder="Выберите формат" />
               </SelectTrigger>
@@ -123,7 +195,10 @@ export function PreferencesSettingsCard() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="defaultEstimateView">Вид смет по умолчанию</Label>
-            <Select defaultValue={prefs.defaultEstimateView}>
+            <Select
+              value={defaultEstimateView}
+              onValueChange={setDefaultEstimateView}
+            >
               <SelectTrigger id="defaultEstimateView" className="w-full">
                 <SelectValue placeholder="Выберите вид" />
               </SelectTrigger>
@@ -137,12 +212,15 @@ export function PreferencesSettingsCard() {
             </Select>
           </div>
         </div>
+        {saveError && (
+          <p className="text-xs text-destructive">
+            Ошибка сохранения: {saveError}
+          </p>
+        )}
       </CardContent>
       <CardFooter className="border-t pt-4">
-        <Button
-          onClick={() => console.log("Save preferences settings")}
-        >
-          Сохранить
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? "Сохранение..." : "Сохранить"}
         </Button>
       </CardFooter>
     </Card>

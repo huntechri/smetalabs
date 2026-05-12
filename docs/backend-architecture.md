@@ -719,7 +719,10 @@ RLS:  owner + admin — полный доступ. manager — чтение.
 
 #### 2.2.17 `user_settings` — Настройки аккаунта
 
-Подход: JSONB-поддокументы для каждой группы настроек, соответствующие интерфейсам из `features/account-settings/types.ts`. Это позволяет хранить структурированные данные без потери типизации и без разрастания схемы на десятки колонок.
+Подход: JSONB-поддокументы для каждой группы настроек. **Публичная идентичность** (displayName, phone, email, workspaceName) хранится в `profiles` (см. 2.2.1) и **не дублируется** здесь. `user_settings` содержит только то, чего нет в `profiles`.
+
+API (`GET /api/settings`) объединяет данные из `profiles` + `user_settings` в единый ответ.
+Server Actions (`updateProfile`, `updateWorkspace`) разделяют данные: публичные поля → `profiles`, настройки → `user_settings`.
 
 ```
 TABLE public.user_settings
@@ -727,13 +730,15 @@ TABLE public.user_settings
 Колонка                   Тип            Null     Описание
 ───────────────────────────────────────────────────────────
 user_id                   uuid           PK       → profiles.id
-profile                   jsonb          NOT      DEFAULT '{}' — AccountProfile
-                                                     { displayName, email, phone, jobTitle, language, timezone }
-workspace                 jsonb          NOT      DEFAULT '{}' — WorkspaceSettings
-                                                     { workspaceName, companyLegalName, companyType,
+profile                   jsonb          NOT      DEFAULT '{}' — дополнение к profiles
+                                                     { language, timezone }
+                                                     (displayName, email, phone, jobTitle — в profiles)
+workspace                 jsonb          NOT      DEFAULT '{}' — юридические реквизиты
+                                                     { companyLegalName, companyType,
                                                        registrationNumber, taxNumber, legalAddress,
                                                        billingEmail, companyPhone, defaultCurrency,
                                                        defaultLocale, defaultTimezone }
+                                                     (workspaceName — в profiles.workspace_name)
 preferences               jsonb          NOT      DEFAULT '{}' — AccountPreferences
                                                      { theme, density, dateFormat, numberFormat, defaultEstimateView }
 notifications             jsonb          NOT      DEFAULT '{}' — NotificationSettings
@@ -755,20 +760,26 @@ RLS:  пользователь читает/редактирует только 
 - Не нужно писать миграции при добавлении нового поля в настройки — достаточно расширить интерфейс.
 - Поля `security.lastLogin` и `security.activeSessionsCount` — вычисляемые сервером, не редактируются пользователем.
 
+**Разделение данных (нет дублирования с profiles):**
+
+| Данные | Источник |
+|---|---|
+| displayName, phone, jobTitle | `profiles.full_name`, `.phone`, `.position` |
+| email | `auth.users.email` (Supabase Auth) |
+| workspaceName | `profiles.workspace_name` |
+| language, timezone | `user_settings.profile` |
+| Юр. реквизиты (companyLegalName, ...) | `user_settings.workspace` |
+| preferences, notifications, security | `user_settings` |
+
 **Значения по умолчанию (DEFAULT):**
 
 ```json
 {
   "profile": {
-    "displayName": "",
-    "email": "",
-    "phone": "",
-    "jobTitle": "",
     "language": "ru",
-    "timezone": "Europe/Moscow"
+    "timezone": "UTC"
   },
   "workspace": {
-    "workspaceName": "",
     "companyLegalName": "",
     "companyType": "",
     "registrationNumber": "",
@@ -778,7 +789,7 @@ RLS:  пользователь читает/редактирует только 
     "companyPhone": "",
     "defaultCurrency": "RUB",
     "defaultLocale": "ru-RU",
-    "defaultTimezone": "Europe/Moscow"
+    "defaultTimezone": "UTC"
   },
   "preferences": {
     "theme": "system",
@@ -1003,7 +1014,8 @@ app/actions/
   workspace-settings.ts  — inviteMember, removeMember, changeRole, suspendMember,
                             inviteByLink, revokeInvitation, addDomain, removeDomain,
                             leaveWorkspace, transferOwnership, archiveWorkspace, deleteWorkspace
-  settings.ts            — updateSettings, updateProfile, uploadAvatar
+  settings.ts            — updateProfile, updateWorkspace, updatePreferences,
+                            updateNotifications, updateSecurity
   auth.ts                — кастомные действия (большинство — через Supabase Auth)
 ```
 
@@ -1395,7 +1407,7 @@ features/projects/
 | **Access Control** | `useTeam()` → Server Component | `assignRole`, `removeRole` | `GET /api/access-control/roles` |
 | **Dashboard** | `useDashboardStats()` → Server Component | — (read-only) | `GET /api/dashboard/*` |
 | **Workspace Settings** | `useWorkspaceSettings()` → Server Component | `inviteMember`, `removeMember`, `changeRole`, `suspendMember`, `revokeInvitation`, `addDomain`, `removeDomain`, `leaveWorkspace`, `transferOwnership`, `archiveWorkspace`, `deleteWorkspace` | `GET /api/team/*` |
-| **Account Settings** | `useSettings()` → Server Component | `updateSettings`, `updateProfile`, `uploadAvatar` | `GET /api/settings` |
+| **Account Settings** | `useSettings()` → Server Component | `updateProfile`, `updateWorkspace`, `updatePreferences`, `updateNotifications`, `updateSecurity` | `GET /api/settings` |
 | **Auth** | `useAuth()` → Supabase Auth хуки | SignIn, SignUp, ResetPassword | — |
 
 ### 5.3 Пример: миграция фичи Projects
@@ -1543,6 +1555,7 @@ smetalab/
 │   │   │   └── counterparties.ts
 │   │   ├── templates.ts
 │   │   ├── access-control.ts
+│   │   ├── workspace-settings.ts
 │   │   └── settings.ts
 │   │
 │   └── auth/                        # Существующие страницы (будут обновлены)

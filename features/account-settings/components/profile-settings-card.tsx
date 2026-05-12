@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,7 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { mockProfile } from "../__mocks__/account-settings"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useSettings, useUpdateProfile } from "../hooks/use-account-settings"
 
 const languages = [
   { value: "ru", label: "Русский" },
@@ -41,7 +43,94 @@ const timezones = [
 ]
 
 export function ProfileSettingsCard() {
-  const profile = mockProfile
+  const { settings, loading, error, refetch } = useSettings()
+  const { updateProfile, loading: saving, error: saveError } = useUpdateProfile()
+
+  const [displayName, setDisplayName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [jobTitle, setJobTitle] = useState("")
+  const [language, setLanguage] = useState("ru")
+  const [timezone, setTimezone] = useState("Europe/Moscow")
+
+  // Sync settings into local state when loaded
+  useEffect(() => {
+    if (settings?.profile) {
+      const p = settings.profile
+      setDisplayName(p.displayName ?? "")
+      setPhone(p.phone ?? "")
+      setJobTitle(p.jobTitle ?? "")
+      setLanguage(p.language ?? "ru")
+      setTimezone(p.timezone ?? "Europe/Moscow")
+    }
+  }, [settings])
+
+  const profile = settings?.profile
+
+  const handleSave = async () => {
+    await updateProfile({
+      displayName,
+      phone,
+      jobTitle,
+      language,
+      timezone,
+    })
+  }
+
+  // ── Loading state ──
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-36" />
+          <Skeleton className="h-3.5 w-64" />
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <Skeleton className="size-12 rounded-full" />
+            <div className="flex flex-col gap-1">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-48" />
+            </div>
+          </div>
+          <Separator />
+          <div className="grid gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-1.5">
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // ── Error state ──
+  if (error && !profile) {
+    return (
+      <Card className="border-destructive/50">
+        <CardHeader>
+          <CardTitle>Личный профиль</CardTitle>
+          <CardDescription className="text-destructive">
+            Ошибка загрузки: {error}
+          </CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button variant="outline" onClick={refetch}>
+            Повторить
+          </Button>
+        </CardFooter>
+      </Card>
+    )
+  }
+
+  const initials = displayName
+    ? displayName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+    : "?"
 
   return (
     <Card>
@@ -54,45 +143,57 @@ export function ProfileSettingsCard() {
       <CardContent className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <Avatar size="lg">
-            <AvatarFallback>
-              {profile.displayName
-                .split(" ")
-                .map((n) => n[0])
-                .join("")}
-            </AvatarFallback>
+            <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="text-sm font-medium">{profile.displayName}</span>
-            <span className="text-xs text-muted-foreground">{profile.email}</span>
+            <span className="text-sm font-medium">
+              {profile?.displayName ?? "—"}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {profile?.email ?? "—"}
+            </span>
           </div>
         </div>
         <Separator />
         <div className="grid gap-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="displayName">Отображаемое имя</Label>
-            <Input id="displayName" defaultValue={profile.displayName} />
+            <Input
+              id="displayName"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
-              defaultValue={profile.email}
+              value={profile?.email ?? ""}
               readOnly
               className="bg-muted/50 cursor-not-allowed"
             />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="phone">Телефон</Label>
-            <Input id="phone" type="tel" defaultValue={profile.phone} />
+            <Input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="jobTitle">Должность</Label>
-            <Input id="jobTitle" defaultValue={profile.jobTitle} />
+            <Input
+              id="jobTitle"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="language">Язык</Label>
-            <Select defaultValue={profile.language}>
+            <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger id="language" className="w-full">
                 <SelectValue placeholder="Выберите язык" />
               </SelectTrigger>
@@ -107,7 +208,7 @@ export function ProfileSettingsCard() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="timezone">Часовой пояс</Label>
-            <Select defaultValue={profile.timezone}>
+            <Select value={timezone} onValueChange={setTimezone}>
               <SelectTrigger id="timezone" className="w-full">
                 <SelectValue placeholder="Выберите часовой пояс" />
               </SelectTrigger>
@@ -121,12 +222,15 @@ export function ProfileSettingsCard() {
             </Select>
           </div>
         </div>
+        {saveError && (
+          <p className="text-xs text-destructive">
+            Ошибка сохранения: {saveError}
+          </p>
+        )}
       </CardContent>
       <CardFooter className="border-t pt-4">
-        <Button
-          onClick={() => console.log("Save profile settings")}
-        >
-          Сохранить
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? "Сохранение..." : "Сохранить"}
         </Button>
       </CardFooter>
     </Card>

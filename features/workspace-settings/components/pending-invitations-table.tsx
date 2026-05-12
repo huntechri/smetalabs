@@ -1,6 +1,16 @@
 "use client"
 
-import { Clock, Copy, DotsThree, Envelope, PaperPlaneTilt, X } from "@phosphor-icons/react"
+import { useState } from "react"
+import {
+  Clock,
+  Copy,
+  DotsThree,
+  Envelope,
+  PaperPlaneTilt,
+  Spinner,
+  X,
+} from "@phosphor-icons/react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,6 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -27,7 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-import { pendingInvitations } from "../__mocks__/workspace-settings"
+import { useInvitations } from "../hooks/use-workspace-settings"
 import { ROLE_LABELS } from "@/types/roles"
 import type { WorkspaceInvitation } from "../types"
 
@@ -67,7 +78,24 @@ function InvitationStatusBadge({
   )
 }
 
-function InvitationRow({ invitation }: { invitation: WorkspaceInvitation }) {
+function InvitationRow({
+  invitation,
+  onCancel,
+  isCancelling,
+}: {
+  invitation: WorkspaceInvitation
+  onCancel: (id: string) => void
+  isCancelling: boolean
+}) {
+  async function handleCancel() {
+    try {
+      await onCancel(invitation.id)
+      toast.success(`Приглашение для ${invitation.email} отозвано`)
+    } catch {
+      toast.error("Ошибка отзыва приглашения")
+    }
+  }
+
   return (
     <TableRow>
       <TableCell>
@@ -76,7 +104,7 @@ function InvitationRow({ invitation }: { invitation: WorkspaceInvitation }) {
           <span className="truncate text-xs font-mono">{invitation.email}</span>
         </div>
       </TableCell>
-      <TableCell className="text-xs">{ROLE_LABELS[invitation.role]}</TableCell>
+      <TableCell className="text-xs">{ROLE_LABELS[invitation.role as keyof typeof ROLE_LABELS] ?? invitation.role}</TableCell>
       <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
         {invitation.invitedBy}
       </TableCell>
@@ -103,13 +131,28 @@ function InvitationRow({ invitation }: { invitation: WorkspaceInvitation }) {
               <PaperPlaneTilt className="size-3.5" />
               Отправить повторно
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                navigator.clipboard.writeText(invitation.email).then(
+                  () => toast.success("Email скопирован"),
+                  () => {}
+                )
+              }}
+            >
               <Copy className="size-3.5" />
-              Копировать ссылку
+              Копировать email
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive">
-              <X className="size-3.5" />
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={handleCancel}
+              disabled={isCancelling}
+            >
+              {isCancelling ? (
+                <Spinner className="size-3.5 animate-spin" />
+              ) : (
+                <X className="size-3.5" />
+              )}
               Отозвать
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -120,12 +163,81 @@ function InvitationRow({ invitation }: { invitation: WorkspaceInvitation }) {
 }
 
 export function PendingInvitationsTable() {
+  const { invitations, loading, error, refetch, cancelInvitation } = useInvitations()
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
+
+  async function handleCancel(id: string) {
+    setCancellingId(id)
+    try {
+      await cancelInvitation(id)
+    } finally {
+      setCancellingId(null)
+    }
+  }
+
+  // ── Loading skeleton ──
+  if (loading) {
+    return (
+      <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
+        <CardHeader>
+          <Skeleton className="h-5 w-48" />
+        </CardHeader>
+        <CardContent className="p-4 space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-6 w-20 rounded-full" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // ── Error state ──
+  if (error && invitations.length === 0) {
+    return (
+      <Card className="border-dashed border-destructive/30 overflow-hidden">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Clock className="size-4" />
+            Ожидающие приглашения
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <p className="text-sm text-destructive mb-3">Ошибка: {error}</p>
+          <Button variant="outline" size="sm" onClick={refetch}>
+            Повторить
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // ── Empty state ──
+  if (invitations.length === 0) {
+    return (
+      <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Clock className="size-4" />
+            Ожидающие приглашения
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 text-center">
+          <p className="text-xs text-muted-foreground">Нет ожидающих приглашений</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Clock className="size-4" />
-          Ожидающие приглашения ({pendingInvitations.length})
+          Ожидающие приглашения ({invitations.length})
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -150,8 +262,13 @@ export function PendingInvitationsTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pendingInvitations.map((inv) => (
-                <InvitationRow key={inv.id} invitation={inv} />
+              {invitations.map((inv) => (
+                <InvitationRow
+                  key={inv.id}
+                  invitation={inv}
+                  onCancel={handleCancel}
+                  isCancelling={cancellingId === inv.id}
+                />
               ))}
             </TableBody>
           </Table>
@@ -159,7 +276,7 @@ export function PendingInvitationsTable() {
 
         {/* Mobile card list */}
         <div className="sm:hidden divide-y divide-border/50">
-          {pendingInvitations.map((inv) => (
+          {invitations.map((inv) => (
             <div key={inv.id} className="flex items-center gap-3 px-4 py-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
@@ -169,7 +286,7 @@ export function PendingInvitationsTable() {
                 <div className="mt-1 flex items-center gap-2">
                   <InvitationStatusBadge status={inv.status} />
                   <span className="text-[0.6rem] text-muted-foreground">
-                    {ROLE_LABELS[inv.role]} · {inv.invitedBy}
+                    {ROLE_LABELS[inv.role as keyof typeof ROLE_LABELS] ?? inv.role} · {inv.invitedBy}
                   </span>
                 </div>
                 <p className="mt-0.5 text-[0.6rem] text-muted-foreground">
@@ -189,13 +306,31 @@ export function PendingInvitationsTable() {
                     <PaperPlaneTilt className="size-3.5" />
                     Отправить повторно
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      navigator.clipboard.writeText(inv.email).then(
+                        () => toast.success("Email скопирован"),
+                        () => {}
+                      )
+                    }}
+                  >
                     <Copy className="size-3.5" />
-                    Копировать ссылку
+                    Копировать email
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem variant="destructive">
-                    <X className="size-3.5" />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={async () => {
+                      await handleCancel(inv.id)
+                      toast.success(`Приглашение для ${inv.email} отозвано`)
+                    }}
+                    disabled={cancellingId === inv.id}
+                  >
+                    {cancellingId === inv.id ? (
+                      <Spinner className="size-3.5 animate-spin" />
+                    ) : (
+                      <X className="size-3.5" />
+                    )}
                     Отозвать
                   </DropdownMenuItem>
                 </DropdownMenuContent>

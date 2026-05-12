@@ -19,27 +19,14 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { useWorkspaceMembers } from "../hooks/use-workspace-settings"
+import { useWorkspaceOverview } from "../hooks/use-workspace-settings"
+
+// ── Plan constants (из одного места) ──
+const PLAN_NAME = "Pro"
+const MEMBER_LIMIT = 15
 
 export function WorkspaceOverviewCard() {
-  const { members, loading, error } = useWorkspaceMembers()
-
-  const overview = useMemo(() => {
-    const ownerMember = members.find((m) => m.role === "owner")
-    const activeMembers = members.filter((m) => m.status === "active").length
-    const totalMembers = members.length
-
-    return {
-      name: "SmetaLabs Studio",
-      slug: "smetalabs-studio",
-      companyName: "SmetaLabs LLC",
-      ownerName: ownerMember?.name ?? "—",
-      planName: "Pro",
-      memberLimit: 15,
-      currentMembers: totalMembers,
-      activeMembers,
-    }
-  }, [members])
+  const { overview, loading, error, refetch } = useWorkspaceOverview()
 
   // ── Loading skeleton ──
   if (loading) {
@@ -61,7 +48,7 @@ export function WorkspaceOverviewCard() {
   }
 
   // ── Error state ──
-  if (error) {
+  if (error && !overview) {
     return (
       <Card className="border-dashed border-destructive/30">
         <CardHeader>
@@ -74,9 +61,26 @@ export function WorkspaceOverviewCard() {
           <p className="text-sm text-destructive">
             Не удалось загрузить данные: {error}
           </p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={() => window.location.reload()}>
-            Попробовать снова
+          <Button variant="outline" size="sm" className="mt-3" onClick={refetch}>
+            Повторить
           </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // ── No data fallback ──
+  if (!overview) {
+    return (
+      <Card className="border-dashed border-muted-foreground/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Buildings className="size-4" />
+            Обзор workspace
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-muted-foreground">Нет данных</p>
         </CardContent>
       </Card>
     )
@@ -115,14 +119,14 @@ export function WorkspaceOverviewCard() {
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground">Тариф</span>
           <Badge variant="secondary" className="font-mono">
-            {overview.planName}
+            {PLAN_NAME}
           </Badge>
         </div>
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground">Участники</span>
           <p className="text-sm flex items-center gap-1.5">
             <Users className="size-3.5 text-muted-foreground" />
-            {overview.currentMembers}/{overview.memberLimit}
+            {overview.currentMembers}/{MEMBER_LIMIT}
           </p>
         </div>
       </CardContent>

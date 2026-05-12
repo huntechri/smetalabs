@@ -1,20 +1,26 @@
 "use client"
 
+import { useState } from "react"
+import { Spinner } from "@phosphor-icons/react"
+import { toast } from "sonner"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+
 import { useSettings } from "../hooks/use-account-settings"
+import { resetPasswordAction } from "@/app/actions/team"
 
 export function SecuritySettingsCard() {
   const { settings, loading, error, refetch } = useSettings()
+  const [resettingPassword, setResettingPassword] = useState(false)
 
   const security = settings?.security
 
@@ -27,6 +33,28 @@ export function SecuritySettingsCard() {
         minute: "2-digit",
       })
     : "—"
+
+  async function handleResetPassword() {
+    setResettingPassword(true)
+    try {
+      const result = await resetPasswordAction()
+      toast.success(result.message ?? "Ссылка для сброса пароля отправлена")
+    } catch (err: any) {
+      toast.error(err?.message ?? "Ошибка отправки ссылки для сброса пароля")
+    } finally {
+      setResettingPassword(false)
+    }
+  }
+
+  function handleSetup2FA() {
+    // TODO: Реализовать интеграцию с 2FA (сложная интеграция)
+    toast.info("Настройка двухфакторной аутентификации будет доступна в ближайшее время")
+  }
+
+  function handleManageSessions() {
+    // TODO: Реализовать управление сессиями через Supabase Auth
+    toast.info("Управление сессиями будет доступно в ближайшее время")
+  }
 
   // ── Loading state ──
   if (loading) {
@@ -61,11 +89,11 @@ export function SecuritySettingsCard() {
             Ошибка загрузки: {error}
           </CardDescription>
         </CardHeader>
-        <CardFooter>
+        <CardContent>
           <Button variant="outline" onClick={refetch}>
             Повторить
           </Button>
-        </CardFooter>
+        </CardContent>
       </Card>
     )
   }
@@ -88,9 +116,12 @@ export function SecuritySettingsCard() {
           </div>
           <Button
             variant="outline"
-            onClick={() => alert("Смена пароля")}
+            onClick={handleResetPassword}
+            disabled={resettingPassword}
+            className="gap-1.5"
           >
-            Сменить пароль
+            {resettingPassword ? <Spinner className="size-3.5 animate-spin" /> : null}
+            {resettingPassword ? "Отправка..." : "Сменить пароль"}
           </Button>
         </div>
         <div className="flex items-center justify-between py-1">
@@ -110,7 +141,7 @@ export function SecuritySettingsCard() {
             </Badge>
             <Button
               variant="outline"
-              onClick={() => alert("Настройка 2FA")}
+              onClick={handleSetup2FA}
             >
               Настроить
             </Button>
@@ -129,7 +160,7 @@ export function SecuritySettingsCard() {
             </span>
             <Button
               variant="outline"
-              onClick={() => alert("Управление сессиями")}
+              onClick={handleManageSessions}
             >
               Управлять
             </Button>

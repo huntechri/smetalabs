@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Globe, Plus, X } from "@phosphor-icons/react"
+import { Globe, Plus, Spinner, X } from "@phosphor-icons/react"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,27 +15,112 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 
-import { allowedDomains } from "../__mocks__/workspace-settings"
+import { useDomains } from "../hooks/use-workspace-settings"
 
 export function AllowedDomainsCard() {
-  const [autoJoin, setAutoJoin] = useState(false)
-  const [newDomain, setNewDomain] = useState("")
-  const [domains, setDomains] = useState(
-    allowedDomains.map((d) => d.domain)
-  )
+  const {
+    domains,
+    autoJoin,
+    loading,
+    error,
+    refetch,
+    addDomain,
+    removeDomain,
+    setAutoJoinDomains,
+  } = useDomains()
 
-  function handleAdd() {
+  const [newDomain, setNewDomain] = useState("")
+  const [addingDomain, setAddingDomain] = useState(false)
+  const [removingId, setRemovingId] = useState<string | null>(null)
+  const [savingAutoJoin, setSavingAutoJoin] = useState(false)
+
+  async function handleAdd() {
     const trimmed = newDomain.trim().toLowerCase()
-    if (trimmed && !domains.includes(trimmed)) {
-      setDomains((prev) => [...prev, trimmed])
-      setNewDomain("")
+    if (!trimmed) return
+
+    setAddingDomain(true)
+    try {
+      const ok = await addDomain(trimmed)
+      if (ok) {
+        setNewDomain("")
+        toast.success(`Домен @${trimmed} добавлен`)
+      }
+    } catch (err: any) {
+      toast.error(err?.message ?? "Ошибка добавления домена")
+    } finally {
+      setAddingDomain(false)
     }
   }
 
-  function handleRemove(domain: string) {
-    setDomains((prev) => prev.filter((d) => d !== domain))
+  async function handleRemove(id: string, domain: string) {
+    setRemovingId(id)
+    try {
+      const ok = await removeDomain(id)
+      if (ok) {
+        toast.success(`Домен @${domain} удалён`)
+      }
+    } catch (err: any) {
+      toast.error(err?.message ?? "Ошибка удаления домена")
+    } finally {
+      setRemovingId(null)
+    }
+  }
+
+  async function handleAutoJoinChange(checked: boolean) {
+    setSavingAutoJoin(true)
+    try {
+      await setAutoJoinDomains(checked)
+      toast.success(checked ? "Авто-присоединение включено" : "Авто-присоединение выключено")
+    } catch (err: any) {
+      toast.error(err?.message ?? "Ошибка сохранения")
+    } finally {
+      setSavingAutoJoin(false)
+    }
+  }
+
+  // ── Loading state ──
+  if (loading) {
+    return (
+      <Card className="border-dashed border-muted-foreground/30">
+        <CardHeader>
+          <Skeleton className="h-5 w-44" />
+          <Skeleton className="h-3.5 w-64" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <Skeleton key={i} className="h-6 w-28 rounded-full" />
+            ))}
+          </div>
+          <Skeleton className="h-8 w-full" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // ── Error state ──
+  if (error && domains.length === 0) {
+    return (
+      <Card className="border-dashed border-destructive/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Globe className="size-4" />
+            Разрешённые домены
+          </CardTitle>
+          <CardDescription className="text-destructive">
+            Ошибка загрузки: {error}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" size="sm" onClick={refetch}>
+            Повторить
+          </Button>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -56,24 +142,29 @@ export function AllowedDomainsCard() {
       <CardContent className="space-y-4">
         {/* Domain list */}
         <div className="flex flex-wrap gap-2">
-          {domains.map((domain) => (
+          {domains.map((d) => (
             <Badge
-              key={domain}
+              key={d.id}
               variant="secondary"
               className="gap-1 pr-1 font-mono text-xs font-normal"
             >
-              @{domain}
+              @{d.domain}
               <Button
                 variant="ghost"
                 size="sm"
                 className="size-4 p-0 hover:bg-transparent"
-                onClick={() => handleRemove(domain)}
+                onClick={() => handleRemove(d.id, d.domain)}
+                disabled={removingId === d.id}
               >
-                <X className="size-2.5" />
+                {removingId === d.id ? (
+                  <Spinner className="size-2.5 animate-spin" />
+                ) : (
+                  <X className="size-2.5" />
+                )}
               </Button>
             </Badge>
           ))}
-          {domains.length === 0 && (
+          {domains.length === 0 && !loading && (
             <p className="text-xs text-muted-foreground">
               Нет разрешённых доменов
             </p>
@@ -95,6 +186,7 @@ export function AllowedDomainsCard() {
                 if (e.key === "Enter") handleAdd()
               }}
               className="h-8 text-xs"
+              disabled={addingDomain}
             />
           </div>
           <Button
@@ -102,9 +194,13 @@ export function AllowedDomainsCard() {
             variant="outline"
             className="h-8 gap-1.5 shrink-0"
             onClick={handleAdd}
-            disabled={!newDomain.trim()}
+            disabled={!newDomain.trim() || addingDomain}
           >
-            <Plus className="size-3.5" />
+            {addingDomain ? (
+              <Spinner className="size-3.5 animate-spin" />
+            ) : (
+              <Plus className="size-3.5" />
+            )}
             Добавить
           </Button>
         </div>
@@ -123,9 +219,17 @@ export function AllowedDomainsCard() {
           <Switch
             id="auto-join"
             checked={autoJoin}
-            onCheckedChange={setAutoJoin}
+            onCheckedChange={handleAutoJoinChange}
+            disabled={savingAutoJoin}
           />
         </div>
+
+        {/* Error indicator for partial failures */}
+        {error && domains.length > 0 && (
+          <p className="text-xs text-amber-600">
+            Предупреждение: {error}
+          </p>
+        )}
       </CardContent>
     </Card>
   )

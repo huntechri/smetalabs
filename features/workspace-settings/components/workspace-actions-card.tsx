@@ -1,11 +1,14 @@
 "use client"
 
+import { useState } from "react"
 import {
   Archive,
   ArrowRight,
   ArrowSquareOut,
+  Spinner,
   Trash,
 } from "@phosphor-icons/react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,9 +18,47 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 
+import { leaveWorkspaceAction, transferOwnershipAction } from "@/app/actions/team"
+
 export function WorkspaceActionsCard() {
+  const [leaving, setLeaving] = useState(false)
+  const [transferring, setTransferring] = useState(false)
+
+  async function handleLeave() {
+    setLeaving(true)
+    try {
+      const result = await leaveWorkspaceAction()
+      toast.success(result.message ?? "Вы покинули workspace")
+    } catch (err: any) {
+      toast.error(err?.message ?? "Ошибка при выходе из workspace")
+    } finally {
+      setLeaving(false)
+    }
+  }
+
+  async function handleTransfer() {
+    setTransferring(true)
+    try {
+      const result = await transferOwnershipAction({ userId: "" })
+      toast.success(result.message ?? "Права переданы")
+    } catch (err: any) {
+      toast.error(err?.message ?? "Ошибка передачи прав")
+    } finally {
+      setTransferring(false)
+    }
+  }
+
   return (
     <Card className="border-dashed border-destructive/30">
       <CardHeader>
@@ -37,14 +78,38 @@ export function WorkspaceActionsCard() {
               Вы потеряете доступ ко всем проектам и сметам.
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
-          >
-            <ArrowSquareOut className="size-3.5" />
-            Покинуть
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1 text-xs text-destructive hover:text-destructive"
+              >
+                <ArrowSquareOut className="size-3.5" />
+                Покинуть
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Покинуть workspace?</DialogTitle>
+                <DialogDescription>
+                  Вы потеряете доступ ко всем проектам, сметам и данным workspace.
+                  Это действие нельзя отменить.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter showCloseButton>
+                <Button
+                  variant="destructive"
+                  onClick={handleLeave}
+                  disabled={leaving}
+                  className="gap-1.5"
+                >
+                  {leaving ? <Spinner className="size-3.5 animate-spin" /> : null}
+                  {leaving ? "Выход..." : "Покинуть"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Transfer ownership */}
@@ -55,10 +120,34 @@ export function WorkspaceActionsCard() {
               Передать права другому участнику workspace.
             </p>
           </div>
-          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
-            <ArrowRight className="size-3.5" />
-            Передать
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
+                <ArrowRight className="size-3.5" />
+                Передать
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Передать права владельца?</DialogTitle>
+                <DialogDescription>
+                  Вы передадите все права владельца выбранному участнику. После
+                  передачи вы потеряете права владельца.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter showCloseButton>
+                <Button
+                  variant="default"
+                  onClick={handleTransfer}
+                  disabled={transferring}
+                  className="gap-1.5"
+                >
+                  {transferring ? <Spinner className="size-3.5 animate-spin" /> : null}
+                  Подтвердить передачу
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <Separator className="border-dashed" />

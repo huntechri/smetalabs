@@ -1,3 +1,6 @@
 export * from "./profiles"
 export * from "./rbac"
 export * from "./user-settings"
+export * from "./workspace-members"
+export * from "./workspace-invitations"
+export * from "./workspace-allowed-domains"

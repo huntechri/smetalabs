@@ -1,5 +1,9 @@
-import { createClient as createSupabaseClient } from '@/lib/supabase/server'
-import { supabase } from '@/db'
+import { createClient as createSupabaseClient } from "@/lib/supabase/server"
+import { supabase } from "@/db"
+import {
+  canManageTeamForWorkspace,
+  requireCurrentWorkspace,
+} from "@/lib/auth/team"
 
 // ═══════════════════════════════════════════════════════════════
 // 1. Базовые функции — role-based (обратная совместимость)
@@ -29,9 +33,9 @@ export async function getUserRoles(): Promise<string[]> {
 
   // 1. Получаем role_id для пользователя
   const { data: userRoleRows, error: err1 } = await supabase
-    .from('user_roles')
-    .select('role_id')
-    .eq('user_id', userId)
+    .from("user_roles")
+    .select("role_id")
+    .eq("user_id", userId)
 
   if (err1 || !userRoleRows?.length) return []
 
@@ -39,9 +43,9 @@ export async function getUserRoles(): Promise<string[]> {
 
   // 2. Получаем имена ролей по id
   const { data: roleRows, error: err2 } = await supabase
-    .from('roles')
-    .select('name')
-    .in('id', roleIds)
+    .from("roles")
+    .select("name")
+    .in("id", roleIds)
 
   if (err2) return []
 
@@ -80,9 +84,9 @@ export async function getUserPermissions(): Promise<string[]> {
 
   // 1. Получаем role_id для пользователя
   const { data: userRoleRows, error: err1 } = await supabase
-    .from('user_roles')
-    .select('role_id')
-    .eq('user_id', userId)
+    .from("user_roles")
+    .select("role_id")
+    .eq("user_id", userId)
 
   if (err1 || !userRoleRows?.length) return []
 
@@ -90,9 +94,9 @@ export async function getUserPermissions(): Promise<string[]> {
 
   // 2. Получаем permission_id через role_permissions
   const { data: rpRows, error: err2 } = await supabase
-    .from('role_permissions')
-    .select('permission_id')
-    .in('role_id', roleIds)
+    .from("role_permissions")
+    .select("permission_id")
+    .in("role_id", roleIds)
 
   if (err2 || !rpRows?.length) return []
 
@@ -101,9 +105,9 @@ export async function getUserPermissions(): Promise<string[]> {
 
   // 3. Получаем ключи разрешений
   const { data: permRows, error: err3 } = await supabase
-    .from('permissions')
-    .select('key')
-    .in('id', permissionIds)
+    .from("permissions")
+    .select("key")
+    .in("id", permissionIds)
 
   if (err3) return []
 
@@ -160,9 +164,9 @@ export async function hasAllPermissions(keys: string[]): Promise<boolean> {
  */
 export async function canManageProjects(): Promise<boolean> {
   return hasAnyPermission([
-    'projects.create',
-    'projects.update',
-    'projects.delete',
+    "projects.create",
+    "projects.update",
+    "projects.delete",
   ])
 }
 
@@ -172,9 +176,9 @@ export async function canManageProjects(): Promise<boolean> {
  */
 export async function canManageEstimates(): Promise<boolean> {
   return hasAnyPermission([
-    'estimates.create',
-    'estimates.update',
-    'estimates.delete',
+    "estimates.create",
+    "estimates.update",
+    "estimates.delete",
   ])
 }
 
@@ -183,19 +187,17 @@ export async function canManageEstimates(): Promise<boolean> {
  * (team.manage || team.create || team.update || team.delete)
  */
 export async function canManageTeam(): Promise<boolean> {
-  return hasAnyPermission([
-    'team.manage',
-    'team.create',
-    'team.update',
-    'team.delete',
-  ])
+  const userId = await getCurrentUserId()
+  if (!userId) return false
+  const ownerId = await requireCurrentWorkspace(userId)
+  return canManageTeamForWorkspace(userId, ownerId)
 }
 
 /**
  * Может ли пользователь просматривать биллинг?
  */
 export async function canViewBilling(): Promise<boolean> {
-  return hasPermission('billing.read')
+  return hasPermission("billing.read")
 }
 
 /**
@@ -218,13 +220,16 @@ export async function canWrite(): Promise<boolean> {
  * Требовать аутентификацию. Бросает Error если нет сессии.
  * Возвращает user.id.
  */
-export async function requireAuth(): Promise<{ id: string; email?: string | null }> {
+export async function requireAuth(): Promise<{
+  id: string
+  email?: string | null
+}> {
   const client = await createSupabaseClient()
   const {
     data: { user },
   } = await client.auth.getUser()
   if (!user) {
-    throw new Error('Unauthorized: требуется аутентификация')
+    throw new Error("Unauthorized: требуется аутентификация")
   }
   return { id: user.id, email: user.email }
 }

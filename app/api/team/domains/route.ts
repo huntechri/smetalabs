@@ -1,248 +1,130 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
 import { supabase } from "@/db"
+import {
+  canManageTeamForWorkspace,
+  canReadTeamForWorkspace,
+  requireCurrentWorkspace,
+} from "@/lib/auth/team"
+import { requireAuth } from "@/lib/auth/permissions"
 
-/**
- * GET /api/team/domains
- * Возвращает список разрешённых доменов и настройку auto-join.
- *
- * POST /api/team/domains
- * Добавляет новый разрешённый домен.
- * Тело: { domain: string }
- */
+function jsonError(code: string, message: string, status: number) {
+  return NextResponse.json({ error: { code, message } }, { status })
+}
+
+const DOMAIN_RE = /^[a-z0-9][a-z0-9.-]+\.[a-z]{2,}$/
+
+async function requireWorkspaceAccess(manage = false) {
+  const user = await requireAuth()
+  const ownerId = await requireCurrentWorkspace(user.id)
+  const allowed = manage
+    ? await canManageTeamForWorkspace(user.id, ownerId)
+    : await canReadTeamForWorkspace(user.id, ownerId)
+  if (!allowed) throw new Error("FORBIDDEN")
+  return { user, ownerId }
+}
+
 export async function GET() {
-  // ── Auth check ──
-  let ssrClient
   try {
-    ssrClient = await createClient()
-  } catch {
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при создании клиента" } },
-      { status: 500 }
+    const { ownerId } = await requireWorkspaceAccess(false)
+    const { data, error } = await supabase
+      .from("workspace_allowed_domains")
+      .select("id,domain,added_by,added_at")
+      .eq("owner_id", ownerId)
+      .order("added_at", { ascending: false })
+
+    if (error) throw error
+
+    const addedByIds = [
+      ...new Set((data ?? []).map((row) => row.added_by).filter(Boolean)),
+    ]
+    const { data: profiles, error: profilesError } = addedByIds.length
+      ? await supabase
+          .from("profiles")
+          .select("id,full_name,email")
+          .in("id", addedByIds)
+      : { data: [], error: null }
+
+    if (profilesError) throw profilesError
+
+    const profilesById = new Map(
+      (profiles ?? []).map((profile) => [profile.id, profile])
     )
-  }
-
-  let user
-  try {
-    const result = await ssrClient.auth.getUser()
-    user = result.data?.user ?? null
-  } catch {
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при проверке аутентификации" } },
-      { status: 500 }
-    )
-  }
-
-  if (!user) {
-    return NextResponse.json(
-      { error: { code: "UNAUTHORIZED", message: "Требуется аутентификация" } },
-      { status: 401 }
-    )
-  }
-
-  // ── Fetch from user_settings ──
-  try {
-    const { data: settingsData } = await supabase
-      .from("user_settings")
-      .select("workspace")
-      .eq("user_id", user.id)
-      .maybeSingle()
-
-    const ws = (settingsData?.workspace ?? {}) as Record<string, any>
-    const domains = (ws.domains ?? []) as any[]
-    const autoJoin = ws.autoJoinDomains ?? false
+    const domains = (data ?? []).map((row) => ({
+      id: row.id,
+      domain: row.domain,
+      addedBy:
+        profilesById.get(row.added_by ?? "")?.full_name ??
+        profilesById.get(row.added_by ?? "")?.email ??
+        "System",
+      addedAt: row.added_at,
+    }))
 
     return NextResponse.json({
       data: domains,
-      meta: { autoJoinDomains: autoJoin },
+      meta: { autoJoinDomains: false },
     })
-  } catch (err: any) {
-    console.error("[GET /api/team/domains] error:", err)
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при загрузке доменов" } },
-      { status: 500 }
-    )
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("Unauthorized"))
+      return jsonError("UNAUTHORIZED", "Требуется аутентификация", 401)
+    if (err instanceof Error && err.message === "FORBIDDEN")
+      return jsonError("FORBIDDEN", "Недостаточно прав", 403)
+    console.error("[GET /api/team/domains]", err)
+    return jsonError("INTERNAL_ERROR", "Ошибка при загрузке доменов", 500)
   }
 }
 
 export async function POST(request: NextRequest) {
-  // ── Auth check ──
-  let ssrClient
   try {
-    ssrClient = await createClient()
-  } catch {
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при создании клиента" } },
-      { status: 500 }
-    )
-  }
+    const { user, ownerId } = await requireWorkspaceAccess(true)
+    const body = (await request.json()) as { domain?: string }
+    const domain = (body.domain ?? "").trim().toLowerCase()
+    if (!DOMAIN_RE.test(domain))
+      return jsonError("BAD_REQUEST", "Некорректный домен", 400)
 
-  let user
-  try {
-    const result = await ssrClient.auth.getUser()
-    user = result.data?.user ?? null
-  } catch {
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при проверке аутентификации" } },
-      { status: 500 }
-    )
-  }
+    const { data, error } = await supabase
+      .from("workspace_allowed_domains")
+      .insert({ domain, owner_id: ownerId, added_by: user.id })
+      .select("id,domain,added_at")
+      .single()
 
-  if (!user) {
-    return NextResponse.json(
-      { error: { code: "UNAUTHORIZED", message: "Требуется аутентификация" } },
-      { status: 401 }
-    )
-  }
-
-  let body: { domain: string }
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: { code: "BAD_REQUEST", message: "Некорректный JSON" } },
-      { status: 400 }
-    )
-  }
-
-  const domain = (body.domain ?? "").trim().toLowerCase()
-  if (!domain || !/^[a-z0-9][a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) {
-    return NextResponse.json(
-      { error: { code: "BAD_REQUEST", message: "Некорректный домен" } },
-      { status: 400 }
-    )
-  }
-
-  // ── Fetch current workspace settings ──
-  const { data: settingsData } = await supabase
-    .from("user_settings")
-    .select("workspace")
-    .eq("user_id", user.id)
-    .maybeSingle()
-
-  const ws = (settingsData?.workspace ?? {}) as Record<string, any>
-  const domains = (ws.domains ?? []) as any[]
-
-  // Check for duplicate
-  if (domains.some((d: any) => d.domain === domain)) {
-    return NextResponse.json(
-      { error: { code: "CONFLICT", message: "Домен уже добавлен" } },
-      { status: 409 }
-    )
-  }
-
-  const newDomain = {
-    id: crypto.randomUUID(),
-    domain,
-    addedBy: user.email ?? "System",
-    addedAt: new Date().toISOString(),
-  }
-
-  domains.push(newDomain)
-  ws.domains = domains
-
-  try {
-    await supabase
-      .from("user_settings")
-      .upsert({
-        user_id: user.id,
-        workspace: ws,
-        updated_at: new Date().toISOString(),
-      })
+    if (error) {
+      if (error.code === "23505")
+        return jsonError("CONFLICT", "Домен уже добавлен", 409)
+      throw error
+    }
 
     return NextResponse.json({
       success: true,
-      data: newDomain,
+      data: {
+        id: data.id,
+        domain: data.domain,
+        addedBy: user.email ?? "System",
+        addedAt: data.added_at,
+      },
     })
-  } catch (err: any) {
-    console.error("[POST /api/team/domains] save error:", err)
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при сохранении" } },
-      { status: 500 }
-    )
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("Unauthorized"))
+      return jsonError("UNAUTHORIZED", "Требуется аутентификация", 401)
+    if (err instanceof Error && err.message === "FORBIDDEN")
+      return jsonError("FORBIDDEN", "Недостаточно прав", 403)
+    console.error("[POST /api/team/domains]", err)
+    return jsonError("INTERNAL_ERROR", "Ошибка при сохранении домена", 500)
   }
 }
 
-/**
- * PATCH /api/team/domains
- * Обновляет настройку auto-join для разрешённых доменов.
- * Тело: { autoJoinDomains: boolean }
- */
-export async function PATCH(request: NextRequest) {
-  // ── Auth check ──
-  let ssrClient
+export async function PATCH(_request: NextRequest) {
   try {
-    ssrClient = await createClient()
-  } catch {
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при создании клиента" } },
-      { status: 500 }
+    await requireWorkspaceAccess(true)
+    return jsonError(
+      "NOT_IMPLEMENTED",
+      "Автоприсоединение по домену ещё не реализовано",
+      501
     )
-  }
-
-  let user
-  try {
-    const result = await ssrClient.auth.getUser()
-    user = result.data?.user ?? null
-  } catch {
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при проверке аутентификации" } },
-      { status: 500 }
-    )
-  }
-
-  if (!user) {
-    return NextResponse.json(
-      { error: { code: "UNAUTHORIZED", message: "Требуется аутентификация" } },
-      { status: 401 }
-    )
-  }
-
-  let body: { autoJoinDomains: boolean }
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: { code: "BAD_REQUEST", message: "Некорректный JSON" } },
-      { status: 400 }
-    )
-  }
-
-  if (typeof body.autoJoinDomains !== "boolean") {
-    return NextResponse.json(
-      { error: { code: "BAD_REQUEST", message: "autoJoinDomains должен быть boolean" } },
-      { status: 400 }
-    )
-  }
-
-  // ── Fetch current workspace settings ──
-  const { data: settingsData } = await supabase
-    .from("user_settings")
-    .select("workspace")
-    .eq("user_id", user.id)
-    .maybeSingle()
-
-  const ws = (settingsData?.workspace ?? {}) as Record<string, any>
-  ws.autoJoinDomains = body.autoJoinDomains
-
-  try {
-    await supabase
-      .from("user_settings")
-      .upsert({
-        user_id: user.id,
-        workspace: ws,
-        updated_at: new Date().toISOString(),
-      })
-
-    return NextResponse.json({
-      success: true,
-      data: { autoJoinDomains: body.autoJoinDomains },
-    })
-  } catch (err: any) {
-    console.error("[PATCH /api/team/domains] save error:", err)
-    return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Ошибка при сохранении" } },
-      { status: 500 }
-    )
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("Unauthorized"))
+      return jsonError("UNAUTHORIZED", "Требуется аутентификация", 401)
+    if (err instanceof Error && err.message === "FORBIDDEN")
+      return jsonError("FORBIDDEN", "Недостаточно прав", 403)
+    return jsonError("INTERNAL_ERROR", "Ошибка обработки запроса", 500)
   }
 }

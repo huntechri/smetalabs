@@ -1,8 +1,7 @@
-'use server'
+"use server"
 
-import { z } from 'zod'
-import { revalidatePath } from 'next/cache'
-import { requireAuth, canManageTeam } from '@/lib/auth/permissions'
+import { z } from "zod"
+import { requireAuth } from "@/lib/auth/permissions"
 
 /**
  * ⚠️ SKELETONS — реальная логика будет добавлена после создания
@@ -16,71 +15,45 @@ import { requireAuth, canManageTeam } from '@/lib/auth/permissions'
 // ── Zod schemas ──
 
 const ChangeRoleSchema = z.object({
-  userId: z.string().uuid('Некорректный ID пользователя'),
-  newRole: z.enum(['owner', 'admin', 'manager', 'estimator', 'viewer']),
+  userId: z.string().uuid("Некорректный ID пользователя"),
+  newRole: z.enum(["owner", "admin", "manager", "estimator", "viewer"]),
 })
 
 const RemoveMemberSchema = z.object({
-  userId: z.string().uuid('Некорректный ID пользователя'),
+  userId: z.string().uuid("Некорректный ID пользователя"),
 })
 
 const SuspendMemberSchema = z.object({
-  userId: z.string().uuid('Некорректный ID пользователя'),
+  userId: z.string().uuid("Некорректный ID пользователя"),
 })
 
 const InviteMemberSchema = z.object({
-  email: z.string().email('Некорректный email'),
-  role: z.enum(['owner', 'admin', 'manager', 'estimator', 'viewer']),
+  email: z.string().email("Некорректный email"),
+  role: z.enum(["owner", "admin", "manager", "estimator", "viewer"]),
 })
 
 const RevokeInvitationSchema = z.object({
-  id: z.string().uuid('Некорректный ID приглашения'),
+  id: z.string().uuid("Некорректный ID приглашения"),
 })
 
 // ── changeRole ──
 
-export async function changeRole(
-  input: z.infer<typeof ChangeRoleSchema>
-) {
-  const user = await requireAuth()
-
-  if (!(await canManageTeam())) {
-    throw new Error('Forbidden: недостаточно прав для изменения ролей')
-  }
-
-  const parsed = ChangeRoleSchema.parse(input)
-
-  // TODO: реализовать после создания workspace_members схемы
-  // await db.update(workspaceMembers)
-  //   .set({ role: parsed.newRole })
-  //   .where(and(eq(...), eq(...)))
-
-  revalidatePath('/team')
-  return { success: true, message: `Роль изменена на ${parsed.newRole}` }
+export async function changeRole(input: z.infer<typeof ChangeRoleSchema>) {
+  await requireAuth()
+  ChangeRoleSchema.parse(input)
+  throw new Error(
+    "Not implemented: используйте workspace_members API после подключения безопасной операции"
+  )
 }
 
 // ── removeMember ──
 
-export async function removeMember(
-  input: z.infer<typeof RemoveMemberSchema>
-) {
-  const user = await requireAuth()
-
-  if (!(await canManageTeam())) {
-    throw new Error('Forbidden: недостаточно прав для удаления участников')
-  }
-
-  const parsed = RemoveMemberSchema.parse(input)
-
-  if (parsed.userId === user.id) {
-    throw new Error('Нельзя удалить самого себя. Используйте leaveWorkspace.')
-  }
-
-  // TODO: реализовать после создания workspace_members схемы
-  // await db.delete(workspaceMembers).where(...)
-
-  revalidatePath('/team')
-  return { success: true, message: 'Участник удалён' }
+export async function removeMember(input: z.infer<typeof RemoveMemberSchema>) {
+  await requireAuth()
+  RemoveMemberSchema.parse(input)
+  throw new Error(
+    "Not implemented: удаление участника выполняется только через scoped Team API"
+  )
 }
 
 // ── suspendMember ──
@@ -88,43 +61,21 @@ export async function removeMember(
 export async function suspendMember(
   input: z.infer<typeof SuspendMemberSchema>
 ) {
-  const user = await requireAuth()
-
-  if (!(await canManageTeam())) {
-    throw new Error('Forbidden: недостаточно прав для блокировки участников')
-  }
-
-  const parsed = SuspendMemberSchema.parse(input)
-
-  if (parsed.userId === user.id) {
-    throw new Error('Нельзя заблокировать самого себя')
-  }
-
-  // TODO: реализовать после создания workspace_members схемы
-  // await db.update(workspaceMembers).set({ status: 'suspended' }).where(...)
-
-  revalidatePath('/team')
-  return { success: true, message: 'Участник заблокирован' }
+  await requireAuth()
+  SuspendMemberSchema.parse(input)
+  throw new Error(
+    "Not implemented: блокировка участника выполняется только через scoped Team API"
+  )
 }
 
 // ── inviteMember ──
 
-export async function inviteMember(
-  input: z.infer<typeof InviteMemberSchema>
-) {
-  const user = await requireAuth()
-
-  if (!(await canManageTeam())) {
-    throw new Error('Forbidden: недостаточно прав для приглашения участников')
-  }
-
-  const parsed = InviteMemberSchema.parse(input)
-
-  // TODO: реализовать после создания workspace_invitations схемы
-  // await db.insert(workspaceInvitations).values({...})
-
-  revalidatePath('/team')
-  return { success: true, message: `Приглашение отправлено на ${parsed.email}` }
+export async function inviteMember(input: z.infer<typeof InviteMemberSchema>) {
+  await requireAuth()
+  InviteMemberSchema.parse(input)
+  throw new Error(
+    "Not implemented: приглашения выполняются только через scoped Team API"
+  )
 }
 
 // ── revokeInvitation ──
@@ -132,17 +83,9 @@ export async function inviteMember(
 export async function revokeInvitation(
   input: z.infer<typeof RevokeInvitationSchema>
 ) {
-  const user = await requireAuth()
-
-  if (!(await canManageTeam())) {
-    throw new Error('Forbidden: недостаточно прав для отзыва приглашений')
-  }
-
-  const parsed = RevokeInvitationSchema.parse(input)
-
-  // TODO: реализовать после создания workspace_invitations схемы
-  // await db.delete(workspaceInvitations).where(eq(...))
-
-  revalidatePath('/team')
-  return { success: true, message: 'Приглашение отозвано' }
+  await requireAuth()
+  RevokeInvitationSchema.parse(input)
+  throw new Error(
+    "Not implemented: отзыв приглашений выполняется только через scoped Team API"
+  )
 }

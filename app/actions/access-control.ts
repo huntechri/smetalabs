@@ -1,124 +1,111 @@
-'use server'
+"use server"
 
-import { z } from 'zod'
-import { revalidatePath } from 'next/cache'
-import { supabase } from '@/db'
-import { canManageTeam, requireAuth } from '@/lib/auth/permissions'
-
-// ── Zod schemas ──
+import { z } from "zod"
+import { revalidatePath } from "next/cache"
+import { supabase } from "@/db"
+import { requireAuth } from "@/lib/auth/permissions"
+import {
+  canManageTeamForWorkspace,
+  getWorkspaceMemberByUser,
+  requireCurrentWorkspace,
+} from "@/lib/auth/team"
 
 const AssignRoleSchema = z.object({
-  userId: z.string().uuid('Некорректный ID пользователя'),
-  roleId: z.string().uuid('Некорректный ID роли'),
+  userId: z.string().uuid("Некорректный ID пользователя"),
+  roleId: z.string().uuid("Некорректный ID роли"),
 })
 
 const RemoveRoleSchema = z.object({
-  userId: z.string().uuid('Некорректный ID пользователя'),
-  roleId: z.string().uuid('Некорректный ID роли'),
+  userId: z.string().uuid("Некорректный ID пользователя"),
+  roleId: z.string().uuid("Некорректный ID роли"),
 })
 
-// ── assignRole ──
-
-export async function assignRole(
-  input: z.infer<typeof AssignRoleSchema>
-) {
+async function requireWorkspaceRoleManager() {
   const user = await requireAuth()
-
-  // Проверка прав: только owner / admin могут назначать роли
-  if (!(await canManageTeam())) {
-    throw new Error('Forbidden: недостаточно прав для назначения ролей')
+  const ownerId = await requireCurrentWorkspace(user.id)
+  if (!(await canManageTeamForWorkspace(user.id, ownerId))) {
+    throw new Error("Forbidden: недостаточно прав для изменения ролей")
   }
-
-  const parsed = AssignRoleSchema.parse(input)
-
-  // Проверяем, существует ли уже такая связь
-  const { data: existing, error: checkErr } = await supabase
-    .from('user_roles')
-    .select('user_id')
-    .eq('user_id', parsed.userId)
-    .eq('role_id', parsed.roleId)
-
-  if (checkErr) {
-    console.error('[assignRole] check existing failed:', checkErr)
-    throw new Error('Ошибка при проверке существующей роли')
-  }
-
-  if (existing && existing.length > 0) {
-    return { success: true, message: 'Роль уже назначена' }
-  }
-
-  const { error: insertErr } = await supabase
-    .from('user_roles')
-    .insert({
-      user_id: parsed.userId,
-      role_id: parsed.roleId,
-      assigned_by: user.id,
-    })
-
-  if (insertErr) {
-    console.error('[assignRole] insert failed:', insertErr)
-    throw new Error('Ошибка при назначении роли')
-  }
-
-  revalidatePath('/team')
-  revalidatePath('/settings/access')
-
-  return { success: true, message: 'Роль назначена' }
+  return { user, ownerId }
 }
 
-// ── removeRole ──
+async function getRoleName(roleId: string) {
+  const { data, error } = await supabase
+    .from("roles")
+    .select("name, locked")
+    .eq("id", roleId)
+    .maybeSingle()
 
-export async function removeRole(
-  input: z.infer<typeof RemoveRoleSchema>
-) {
-  const user = await requireAuth()
+  if (error) throw error
+  if (!data) throw new Error("Роль не найдена")
+  return data as { name: string; locked: boolean }
+}
 
-  // Проверка прав
-  if (!(await canManageTeam())) {
-    throw new Error('Forbidden: недостаточно прав для снятия ролей')
+export async function assignRole(input: z.infer<typeof AssignRoleSchema>) {
+  const { user, ownerId } = await requireWorkspaceRoleManager()
+  const parsed = AssignRoleSchema.parse(input)
+  const role = await getRoleName(parsed.roleId)
+
+  if (role.name === "owner")
+    throw new Error("Нельзя назначить роль владельца этим действием")
+  if (!["admin", "manager", "estimator", "viewer"].includes(role.name)) {
+    throw new Error("Некорректная workspace-роль")
   }
 
+  const target = await getWorkspaceMemberByUser(parsed.userId, ownerId, true)
+  if (!target) throw new Error("Участник не найден в текущем workspace")
+  if (parsed.userId === ownerId || target.role === "owner") {
+    throw new Error("Нельзя изменить владельца workspace")
+  }
+  if (parsed.userId === user.id && role.name !== "admin") {
+    throw new Error("Нельзя понизить собственные права администратора")
+  }
+
+  const { error } = await supabase
+    .from("workspace_members")
+    .update({ role_id: parsed.roleId, updated_at: new Date().toISOString() })
+    .eq("user_id", parsed.userId)
+    .eq("owner_id", ownerId)
+
+  if (error) throw error
+
+  revalidatePath("/team")
+  revalidatePath("/settings/access")
+  return { success: true, message: "Роль workspace обновлена" }
+}
+
+export async function removeRole(input: z.infer<typeof RemoveRoleSchema>) {
+  await requireWorkspaceRoleManager()
   const parsed = RemoveRoleSchema.parse(input)
+  const role = await getRoleName(parsed.roleId)
 
-  // Проверяем, не заблокирована ли роль (locked = true)
-  const { data: roleData, error: roleErr } = await supabase
-    .from('roles')
-    .select('name, locked')
-    .eq('id', parsed.roleId)
-
-  if (roleErr) {
-    console.error('[removeRole] roles query failed:', roleErr)
-    throw new Error('Ошибка при проверке роли')
+  if (role.locked || role.name === "owner" || role.name === "admin") {
+    throw new Error(`Нельзя снять защищённую роль: ${role.name}`)
   }
 
-  const role = roleData?.[0]
+  const { ownerId } = await requireWorkspaceRoleManager()
+  const target = await getWorkspaceMemberByUser(parsed.userId, ownerId, true)
+  if (!target) throw new Error("Участник не найден в текущем workspace")
+  if (target.roleId !== parsed.roleId)
+    return { success: true, message: "Роль уже не назначена" }
 
-  if (!role) {
-    throw new Error('Роль не найдена')
-  }
+  const { data: viewerRole, error: roleError } = await supabase
+    .from("roles")
+    .select("id")
+    .eq("name", "viewer")
+    .maybeSingle()
+  if (roleError) throw roleError
+  if (!viewerRole?.id) throw new Error("Роль viewer не найдена")
 
-  if (role.locked) {
-    throw new Error(`Нельзя снять заблокированную роль: ${role.name}`)
-  }
+  const { error } = await supabase
+    .from("workspace_members")
+    .update({ role_id: viewerRole.id, updated_at: new Date().toISOString() })
+    .eq("user_id", parsed.userId)
+    .eq("owner_id", ownerId)
 
-  // Нельзя снять роль у самого себя
-  if (parsed.userId === user.id) {
-    throw new Error('Нельзя изменить свою собственную роль')
-  }
+  if (error) throw error
 
-  const { error: deleteErr } = await supabase
-    .from('user_roles')
-    .delete()
-    .eq('user_id', parsed.userId)
-    .eq('role_id', parsed.roleId)
-
-  if (deleteErr) {
-    console.error('[removeRole] delete failed:', deleteErr)
-    throw new Error('Ошибка при снятии роли')
-  }
-
-  revalidatePath('/team')
-  revalidatePath('/settings/access')
-
-  return { success: true, message: 'Роль снята' }
+  revalidatePath("/team")
+  revalidatePath("/settings/access")
+  return { success: true, message: "Роль workspace сброшена до viewer" }
 }

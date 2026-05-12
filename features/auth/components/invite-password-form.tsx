@@ -52,15 +52,29 @@ export function InvitePasswordForm({
 
     const { error } = await supabase.auth.updateUser({ password })
 
-    setIsPending(false)
-
     if (error) {
+      setIsPending(false)
       if (isAlreadySaved(error)) {
         router.replace("/dashboard")
         return
       }
 
-      setError(error.message ?? "Не удалось сохранить пароль. Попробуйте ещё раз.")
+      setError(
+        error.message ?? "Не удалось сохранить пароль. Попробуйте ещё раз."
+      )
+      return
+    }
+
+    const acceptResponse = await fetch("/api/team/invitations/accept", {
+      method: "POST",
+    })
+
+    setIsPending(false)
+
+    if (!acceptResponse.ok) {
+      setError(
+        "Пароль сохранён, но приглашение не удалось принять. Обратитесь к администратору workspace."
+      )
       return
     }
 
@@ -76,7 +90,8 @@ export function InvitePasswordForm({
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Придумайте пароль</h1>
                 <p className="text-balance text-muted-foreground">
-                  Установите пароль для входа в SmetaLab после принятия приглашения.
+                  Установите пароль для входа в SmetaLab после принятия
+                  приглашения.
                 </p>
               </div>
 
@@ -94,7 +109,9 @@ export function InvitePasswordForm({
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="confirmPassword">Повторите пароль</FieldLabel>
+                <FieldLabel htmlFor="confirmPassword">
+                  Повторите пароль
+                </FieldLabel>
                 <Input
                   id="confirmPassword"
                   type="password"

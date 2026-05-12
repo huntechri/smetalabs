@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 
 import { useState, useEffect } from "react"
@@ -19,7 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSettings, useUpdatePreferences } from "../hooks/use-account-settings"
+import {
+  useSettings,
+  useUpdatePreferences,
+} from "../hooks/use-account-settings"
 
 const themes = [
   { value: "system", label: "Системная" },
@@ -52,8 +56,11 @@ const estimateViews = [
 
 export function PreferencesSettingsCard() {
   const { settings, loading, error, refetch } = useSettings()
-  const { updatePreferences, loading: saving, error: saveError } =
-    useUpdatePreferences()
+  const {
+    updatePreferences,
+    loading: saving,
+    error: saveError,
+  } = useUpdatePreferences()
 
   const [theme, setTheme] = useState("system")
   const [density, setDensity] = useState("comfortable")
@@ -73,13 +80,14 @@ export function PreferencesSettingsCard() {
   }, [settings])
 
   const handleSave = async () => {
-    await updatePreferences({
+    const updated = await updatePreferences({
       theme: theme as "system" | "light" | "dark",
       density: density as "comfortable" | "compact",
       dateFormat,
       numberFormat,
       defaultEstimateView,
     })
+    if (updated) await refetch()
   }
 
   // ── Loading state ──

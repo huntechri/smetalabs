@@ -25,7 +25,11 @@ const WorkspaceSchema = z.object({
   registrationNumber: z.string().optional(),
   taxNumber: z.string().optional(),
   legalAddress: z.string().optional(),
-  billingEmail: z.string().email("Некорректный email").optional().or(z.literal("")),
+  billingEmail: z
+    .string()
+    .email("Некорректный email")
+    .optional()
+    .or(z.literal("")),
   companyPhone: z.string().optional(),
   defaultCurrency: z.string().optional(),
   defaultLocale: z.string().optional(),
@@ -53,31 +57,39 @@ const NotificationsSchema = z.object({
 // Helpers
 // ═══════════════════════════════════════════════════════════════
 
-/** Upsert a single JSONB column in user_settings. */
-async function upsertSettingsColumn(userId: string, column: string, data: Record<string, unknown>) {
-  const { data: existing } = await supabase
+/** Upsert a single JSONB column in user_settings by merging with existing keys. */
+async function upsertSettingsColumn(
+  userId: string,
+  column: string,
+  data: Record<string, unknown>
+) {
+  const { data: existing, error: selectError } = await supabase
     .from("user_settings")
-    .select("user_id")
+    .select(`user_id, ${column}`)
     .eq("user_id", userId)
     .maybeSingle()
+
+  if (selectError) throw selectError
+
+  const current = ((existing as Record<string, unknown> | null)?.[column] ??
+    {}) as Record<string, unknown>
+  const merged = { ...current, ...data }
 
   if (existing) {
     const { error } = await supabase
       .from("user_settings")
       .update({
-        [column]: data,
+        [column]: merged,
         updated_at: new Date().toISOString(),
       })
       .eq("user_id", userId)
 
     if (error) throw error
   } else {
-    const { error } = await supabase
-      .from("user_settings")
-      .insert({
-        user_id: userId,
-        [column]: data,
-      })
+    const { error } = await supabase.from("user_settings").insert({
+      user_id: userId,
+      [column]: merged,
+    })
 
     if (error) throw error
   }
@@ -93,7 +105,9 @@ async function getMergedSettings(userId: string, userEmail: string) {
 
   const { data: sData, error: sErr } = await supabase
     .from("user_settings")
-    .select("profile, workspace, preferences, notifications, security, updated_at")
+    .select(
+      "profile, workspace, preferences, notifications, security, updated_at"
+    )
     .eq("user_id", userId)
     .single()
 
@@ -140,15 +154,14 @@ async function getMergedSettings(userId: string, userEmail: string) {
  * - profiles.full_name, .phone, .position ← из data.displayName, data.phone, data.jobTitle
  * - user_settings.profile ← { language, timezone }
  */
-export async function updateProfile(
-  data: z.infer<typeof ProfileSchema>
-) {
+export async function updateProfile(data: z.infer<typeof ProfileSchema>) {
   const user = await requireAuth()
   const parsed = ProfileSchema.parse(data)
 
   // ── Update profiles table (public identity) ──
   const profileUpdate: Record<string, string> = {}
-  if (parsed.displayName !== undefined) profileUpdate.full_name = parsed.displayName
+  if (parsed.displayName !== undefined)
+    profileUpdate.full_name = parsed.displayName
   if (parsed.phone !== undefined) profileUpdate.phone = parsed.phone
   if (parsed.jobTitle !== undefined) profileUpdate.position = parsed.jobTitle
 
@@ -179,9 +192,7 @@ export async function updateProfile(
  * - profiles.workspace_name ← из data.workspaceName
  * - user_settings.workspace ← все юридические реквизиты
  */
-export async function updateWorkspace(
-  data: z.infer<typeof WorkspaceSchema>
-) {
+export async function updateWorkspace(data: z.infer<typeof WorkspaceSchema>) {
   const user = await requireAuth()
   const parsed = WorkspaceSchema.parse(data)
 
@@ -195,7 +206,8 @@ export async function updateWorkspace(
   }
 
   // ── Update user_settings.workspace (legal requisites only) ──
-  const { workspaceName: _wn, ...legalFields } = parsed
+  const legalFields: Partial<typeof parsed> = { ...parsed }
+  delete legalFields.workspaceName
   if (Object.keys(legalFields).length > 0) {
     await upsertSettingsColumn(user.id, "workspace", legalFields)
   }

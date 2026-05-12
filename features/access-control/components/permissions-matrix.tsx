@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 
 import React, { useMemo, useState } from "react"
@@ -61,7 +62,10 @@ export function PermissionsMatrix() {
       }))
 
       // Collect unique permissions across all roles
-      const permMap = new Map<string, { key: PermissionKey; label: string; group: string }>()
+      const permMap = new Map<
+        string,
+        { key: PermissionKey; label: string; group: string }
+      >()
       for (const role of roles) {
         for (const p of role.permissions) {
           if (!permMap.has(p.key)) {
@@ -85,7 +89,9 @@ export function PermissionsMatrix() {
       // Initial matrix: which permissions each role has
       const initialMatrix = {} as Record<Role, PermissionKey[]>
       for (const role of roles) {
-        initialMatrix[role.name] = role.permissions.map((p) => p.key as PermissionKey)
+        initialMatrix[role.name] = role.permissions.map(
+          (p) => p.key as PermissionKey
+        )
       }
 
       return { accessRoles, permissionGroups, permissions, initialMatrix }
@@ -147,7 +153,11 @@ export function PermissionsMatrix() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.reload()}
+          >
             Попробовать снова
           </Button>
         </CardContent>
@@ -209,7 +219,7 @@ export function PermissionsMatrix() {
                   <TableRow className="bg-muted/50">
                     <TableCell
                       colSpan={accessRoles.length + 1}
-                      className="font-medium text-xs"
+                      className="text-xs font-medium"
                     >
                       {group.label}
                     </TableCell>
@@ -238,12 +248,16 @@ export function PermissionsMatrix() {
             })}
           </TableBody>
         </Table>
-        <div className="flex items-center justify-between mt-4">
+        <div className="mt-4 flex items-center justify-between">
           <Button variant="outline" size="sm" onClick={resetMatrix}>
             Сбросить
           </Button>
-          <Button size="sm" onClick={() => console.log("save", matrix)}>
-            Сохранить
+          <Button
+            size="sm"
+            disabled
+            title="Сохранение матрицы будет подключено отдельной безопасной операцией"
+          >
+            Сохранить · скоро
           </Button>
         </div>
       </CardContent>

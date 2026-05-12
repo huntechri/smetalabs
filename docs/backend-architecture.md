@@ -50,27 +50,27 @@
 
 ## 1. Технологический стек
 
-| Компонент | Выбор | Обоснование |
-|---|---|---|
-| **База данных** | PostgreSQL (Supabase) | Реляционная модель идеальна для сметной системы: строгие связи проекты→сметы→работы→материалы. Финансовые данные требуют транзакций и целостности. Supabase — управляемый PostgreSQL, не нужно администрировать. |
-| **ORM** | Drizzle ORM | Лёгкий, типобезопасный, без кодогенерации (схема = TypeScript-код). Нативная интеграция с Server Components Next.js — edge-ready. Декларативные миграции. |
-| **Аутентификация** | Supabase Auth | Встроена в Supabase: OAuth (Google, GitHub), email/password, magic links. JWT-совместима, сессии — через cookies. Готовый UI-компонент или кастомный. |
-| **Мутации (запись)** | Next.js Server Actions | Нет дополнительного API-слоя для форм. Прямой вызов Drizzle из React Server Components. Сквозная типобезопасность: форма → action → БД. Прогрессивная деградация (без JS — обычная форма). |
-| **Чтение (GET)** | Next.js API Routes + Server Components | Прямой `fetch` в Server Components для большинства страниц. API Routes — для внешних потребителей, поиска, экспорта. |
-| **Файлы** | Supabase Storage | Изображения справочников, загружаемые документы (сметы, акты). RLS-политики на bucket'ах. |
-| **Валидация** | Zod | Типобезопасная валидация на границах: Server Actions, API Routes. Схемы — источник истины для типов. |
-| **Кэширование** | Next.js built-in + `revalidatePath`/`revalidateTag` | Минимальный подход: инвалидация кэша после мутаций. Redis на старте не нужен. |
+| Компонент            | Выбор                                               | Обоснование                                                                                                                                                                                                      |
+| -------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **База данных**      | PostgreSQL (Supabase)                               | Реляционная модель идеальна для сметной системы: строгие связи проекты→сметы→работы→материалы. Финансовые данные требуют транзакций и целостности. Supabase — управляемый PostgreSQL, не нужно администрировать. |
+| **ORM**              | Drizzle ORM                                         | Лёгкий, типобезопасный, без кодогенерации (схема = TypeScript-код). Нативная интеграция с Server Components Next.js — edge-ready. Декларативные миграции.                                                        |
+| **Аутентификация**   | Supabase Auth                                       | Встроена в Supabase: OAuth (Google, GitHub), email/password, magic links. JWT-совместима, сессии — через cookies. Готовый UI-компонент или кастомный.                                                            |
+| **Мутации (запись)** | Next.js Server Actions                              | Нет дополнительного API-слоя для форм. Прямой вызов Drizzle из React Server Components. Сквозная типобезопасность: форма → action → БД. Прогрессивная деградация (без JS — обычная форма).                       |
+| **Чтение (GET)**     | Next.js API Routes + Server Components              | Прямой `fetch` в Server Components для большинства страниц. API Routes — для внешних потребителей, поиска, экспорта.                                                                                             |
+| **Файлы**            | Supabase Storage                                    | Изображения справочников, загружаемые документы (сметы, акты). RLS-политики на bucket'ах.                                                                                                                        |
+| **Валидация**        | Zod                                                 | Типобезопасная валидация на границах: Server Actions, API Routes. Схемы — источник истины для типов.                                                                                                             |
+| **Кэширование**      | Next.js built-in + `revalidatePath`/`revalidateTag` | Минимальный подход: инвалидация кэша после мутаций. Redis на старте не нужен.                                                                                                                                    |
 
 ### Почему не альтернативы
 
-| Отвергнутый вариант | Причина |
-|---|---|
-| **Prisma** | Тяжелее Drizzle, кодогенерация добавляет сложность, холодный старт на Vercel медленнее. |
+| Отвергнутый вариант      | Причина                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **Prisma**               | Тяжелее Drizzle, кодогенерация добавляет сложность, холодный старт на Vercel медленнее.                 |
 | **REST API (отдельный)** | Избыточно для внутреннего использования. Server Actions покрывают все мутации, API Routes — только GET. |
-| **MongoDB** | Смета — реляционная предметная область. Связей больше, чем документов. |
-| **NextAuth.js** | Supabase Auth даёт больше из коробки: хранение пользователей, RLS, миграции учётных записей. |
-| **tRPC** | Добавляет слой абстракции. Server Actions проще для форм и решают ту же задачу. |
-| **GraphQL** | Избыточно. Формат данных фиксирован, проблемы over-fetching для внутреннего использования нет. |
+| **MongoDB**              | Смета — реляционная предметная область. Связей больше, чем документов.                                  |
+| **NextAuth.js**          | Supabase Auth даёт больше из коробки: хранение пользователей, RLS, миграции учётных записей.            |
+| **tRPC**                 | Добавляет слой абстракции. Server Actions проще для форм и решают ту же задачу.                         |
+| **GraphQL**              | Избыточно. Формат данных фиксирован, проблемы over-fetching для внутреннего использования нет.          |
 
 ---
 
@@ -606,27 +606,27 @@ IDX: idx_user_roles_user_id  ON (user_id)
 
 **Матрица RBAC (роль × разрешение):**
 
-| Разрешение (key)     | owner | admin | manager | estimator | viewer |
-|----------------------|:-----:|:-----:|:-------:|:---------:|:------:|
-| projects.read        |   ✓   |   ✓   |    ✓    |     ✓     |   ✓    |
-| projects.create      |   ✓   |   ✓   |    ✓    |     —     |   —    |
-| projects.update      |   ✓   |   ✓   |    ✓    |     —     |   —    |
-| projects.delete      |   ✓   |   ✓   |    —    |     —     |   —    |
-| estimates.read       |   ✓   |   ✓   |    ✓    |     ✓     |   ✓    |
-| estimates.create     |   ✓   |   ✓   |    ✓    |     ✓     |   —    |
-| estimates.update     |   ✓   |   ✓   |    ✓    |     ✓     |   —    |
-| estimates.delete     |   ✓   |   ✓   |    ✓    |     —     |   —    |
-| purchases.read       |   ✓   |   ✓   |    ✓    |     ✓     |   ✓    |
-| purchases.create     |   ✓   |   ✓   |    ✓    |     —     |   —    |
-| purchases.update     |   ✓   |   ✓   |    ✓    |     —     |   —    |
-| purchases.delete     |   ✓   |   ✓   |    —    |     —     |   —    |
-| team.read            |   ✓   |   ✓   |    ✓    |     —     |   —    |
-| team.create          |   ✓   |   ✓   |    —    |     —     |   —    |
-| team.update          |   ✓   |   ✓   |    —    |     —     |   —    |
-| team.delete          |   ✓   |   ✓   |    —    |     —     |   —    |
-| team.manage          |   ✓   |   ✓   |    —    |     —     |   —    |
-| billing.read         |   ✓   |   ✓   |    —    |     —     |   —    |
-| billing.manage       |   ✓   |   —    |    —    |     —     |   —    |
+| Разрешение (key) | owner | admin | manager | estimator | viewer |
+| ---------------- | :---: | :---: | :-----: | :-------: | :----: |
+| projects.read    |   ✓   |   ✓   |    ✓    |     ✓     |   ✓    |
+| projects.create  |   ✓   |   ✓   |    ✓    |     —     |   —    |
+| projects.update  |   ✓   |   ✓   |    ✓    |     —     |   —    |
+| projects.delete  |   ✓   |   ✓   |    —    |     —     |   —    |
+| estimates.read   |   ✓   |   ✓   |    ✓    |     ✓     |   ✓    |
+| estimates.create |   ✓   |   ✓   |    ✓    |     ✓     |   —    |
+| estimates.update |   ✓   |   ✓   |    ✓    |     ✓     |   —    |
+| estimates.delete |   ✓   |   ✓   |    ✓    |     —     |   —    |
+| purchases.read   |   ✓   |   ✓   |    ✓    |     ✓     |   ✓    |
+| purchases.create |   ✓   |   ✓   |    ✓    |     —     |   —    |
+| purchases.update |   ✓   |   ✓   |    ✓    |     —     |   —    |
+| purchases.delete |   ✓   |   ✓   |    —    |     —     |   —    |
+| team.read        |   ✓   |   ✓   |    ✓    |     —     |   —    |
+| team.create      |   ✓   |   ✓   |    —    |     —     |   —    |
+| team.update      |   ✓   |   ✓   |    —    |     —     |   —    |
+| team.delete      |   ✓   |   ✓   |    —    |     —     |   —    |
+| team.manage      |   ✓   |   ✓   |    —    |     —     |   —    |
+| billing.read     |   ✓   |   ✓   |    —    |     —     |   —    |
+| billing.manage   |   ✓   |   —   |    —    |     —     |   —    |
 
 #### 2.2.17a `workspace_members` — Участники workspace ✅ Реализовано
 
@@ -716,6 +716,7 @@ RLS:  workspace owner/admin — полный доступ в своём workspac
 ```
 
 **Примечания к матрице:**
+
 - `owner` имеет все права и не может быть понижен (`locked: true`).
 - `admin` имеет все права, кроме `billing.manage` (только owner управляет биллингом). Администратор может управлять командой (`team.manage`).
 - `manager` управляет проектами, сметами, закупками; видит команду, но не управляет.
@@ -760,6 +761,7 @@ RLS:  пользователь читает/редактирует только 
 ```
 
 **Почему JSONB, а не отдельные колонки:**
+
 - Настройки загружаются и сохраняются целым документом (одна форма = один запрос).
 - JSONB позволяет точное соответствие интерфейсам TypeScript без конвертации.
 - Не нужно писать миграции при добавлении нового поля в настройки — достаточно расширить интерфейс.
@@ -767,14 +769,14 @@ RLS:  пользователь читает/редактирует только 
 
 **Разделение данных (нет дублирования с profiles):**
 
-| Данные | Источник |
-|---|---|
-| displayName, phone, jobTitle | `profiles.full_name`, `.phone`, `.position` |
-| email | `auth.users.email` (Supabase Auth) |
-| workspaceName | `profiles.workspace_name` |
-| language, timezone | `user_settings.profile` |
-| Юр. реквизиты (companyLegalName, ...) | `user_settings.workspace` |
-| preferences, notifications, security | `user_settings` |
+| Данные                                | Источник                                    |
+| ------------------------------------- | ------------------------------------------- |
+| displayName, phone, jobTitle          | `profiles.full_name`, `.phone`, `.position` |
+| email                                 | `auth.users.email` (Supabase Auth)          |
+| workspaceName                         | `profiles.workspace_name`                   |
+| language, timezone                    | `user_settings.profile`                     |
+| Юр. реквизиты (companyLegalName, ...) | `user_settings.workspace`                   |
+| preferences, notifications, security  | `user_settings`                             |
 
 **Значения по умолчанию (DEFAULT):**
 
@@ -1028,13 +1030,13 @@ app/actions/
 
 ```typescript
 // Пример сигнатуры (Zod-валидация на входе)
-'use server'
+"use server"
 
-import { z } from 'zod'
-import { db } from '@/db'
-import { projects } from '@/db/schema/projects'
-import { revalidatePath } from 'next/cache'
-import { auth } from '@/lib/supabase/server'
+import { z } from "zod"
+import { db } from "@/db"
+import { projects } from "@/db/schema/projects"
+import { revalidatePath } from "next/cache"
+import { auth } from "@/lib/supabase/server"
 
 const CreateProjectSchema = z.object({
   title: z.string().min(1).max(200),
@@ -1046,13 +1048,15 @@ const CreateProjectSchema = z.object({
   endDate: z.string().optional(),
 })
 
-export async function createProject(input: z.infer<typeof CreateProjectSchema>) {
+export async function createProject(
+  input: z.infer<typeof CreateProjectSchema>
+) {
   const { data: session } = await auth.getSession()
-  if (!session) throw new Error('Unauthorized')
+  if (!session) throw new Error("Unauthorized")
 
   const parsed = CreateProjectSchema.parse(input)
   // ... Drizzle insert ...
-  revalidatePath('/projects')
+  revalidatePath("/projects")
   // return { id, ... }
 }
 ```
@@ -1133,15 +1137,15 @@ GET  /api/access-control/roles                       — доступные ро
 
 Для списковых эндпоинтов:
 
-| Параметр | Тип | Пример | Описание |
-|---|---|---|---|
-| `search` | string | `?search=бетон` | Полнотекстовый поиск по названию |
-| `status` | string | `?status=in_progress` | Фильтр по статусу |
-| `category` | string | `?category=Бетон` | Фильтр по категории |
-| `sort` | string | `?sort=created_at` | Поле сортировки |
-| `order` | string | `?order=desc` | Направление (asc / desc) |
-| `page` | number | `?page=1` | Номер страницы |
-| `pageSize` | number | `?pageSize=20` | Размер страницы |
+| Параметр   | Тип    | Пример                | Описание                         |
+| ---------- | ------ | --------------------- | -------------------------------- |
+| `search`   | string | `?search=бетон`       | Полнотекстовый поиск по названию |
+| `status`   | string | `?status=in_progress` | Фильтр по статусу                |
+| `category` | string | `?category=Бетон`     | Фильтр по категории              |
+| `sort`     | string | `?sort=created_at`    | Поле сортировки                  |
+| `order`    | string | `?order=desc`         | Направление (asc / desc)         |
+| `page`     | number | `?page=1`             | Номер страницы                   |
+| `pageSize` | number | `?pageSize=20`        | Размер страницы                  |
 
 ---
 
@@ -1305,7 +1309,9 @@ GET  /api/access-control/roles                       — доступные ро
 // Обновляет Supabase SSR-сессию через auth.getClaims().
 // API routes выполняют собственный auth/permission check.
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 }
 ```
 
@@ -1418,26 +1424,26 @@ features/projects/
 
 #### Детальные изменения по фичам
 
-| Фича | Хук меняется на | Server Actions | API Route (если нужно) |
-|---|---|---|---|
-| **Projects** | `useProjects` → Server Component + `db.query.projects.findMany()` | `createProject`, `updateProject`, `deleteProject` | `GET /api/projects` |
-| **Project Details** | `useProject(id)` → Server Component | — (использует actions projects) | `GET /api/projects/:id` |
-| **Estimates** | `useEstimates(projectId)` → Server Component | `createEstimate`, `updateEstimate`, `deleteEstimate` | `GET /api/projects/:id/estimates` |
-| **Estimate Works** | `useEstimateWorks(estimateId)` → Server Component | `createWork`, `updateWork`, `deleteWork`, `reorderWorks` | `GET /api/estimates/:id/works` |
-| **Estimate Materials** | `useEstimateMaterials(workId)` → Server Component | `createMaterial`, `updateMaterial`, `deleteMaterial` | `GET /api/estimates/:id/works/:workId/materials` |
-| **Purchases** | `usePurchases(estimateId)` → Server Component | `createPurchase`, `updatePurchase`, `deletePurchase` | `GET /api/estimates/:id/purchases` |
-| **Executions** | `useExecutions(estimateId)` → Server Component | `createExecution`, `updateExecution`, `deleteExecution` | `GET /api/estimates/:id/executions` |
-| **Global Purchases** | `useGlobalPurchases()` → Server Component | `createGlobalPurchase`, `updateGlobalPurchase`, `deleteGlobalPurchase` | `GET /api/global-purchases` |
-| **Dir. Materials** | `useDirectoryMaterials()` → Server Component | `createDirMaterial`, `updateDirMaterial`, `deleteDirMaterial` | `GET /api/directory/materials` |
-| **Dir. Works** | `useDirectoryWorks()` → Server Component | `createDirWork`, `updateDirWork`, `deleteDirWork` | `GET /api/directory/works` |
-| **Dir. Suppliers** | `useDirectorySuppliers()` → Server Component | `createDirSupplier`, `updateDirSupplier`, `deleteDirSupplier` | `GET /api/directory/suppliers` |
-| **Dir. Counterparties** | `useDirectoryCounterparties()` → Server Component | `createDirCounterparty`, `updateDirCounterparty`, `deleteDirCounterparty` | `GET /api/directory/counterparties` |
-| **Templates** | `useTemplates()` → Server Component | `createTemplate`, `updateTemplate`, `deleteTemplate`, `applyTemplate` | `GET /api/templates` |
-| **Access Control** | `useTeam()` → Server Component | `assignRole`, `removeRole` | `GET /api/access-control/roles` |
-| **Dashboard** | `useDashboardStats()` → Server Component | — (read-only) | `GET /api/dashboard/*` |
-| **Workspace Settings** | `useWorkspaceSettings()` → Server Component | `inviteMember`, `removeMember`, `changeRole`, `suspendMember`, `revokeInvitation`, `addDomain`, `removeDomain`, `leaveWorkspace`, `transferOwnership`, `archiveWorkspace`, `deleteWorkspace` | `GET /api/team/*` |
-| **Account Settings** | `useSettings()` → Server Component | `updateProfile`, `updateWorkspace`, `updatePreferences`, `updateNotifications`, `updateSecurity` | `GET /api/settings` |
-| **Auth** | `useAuth()` → Supabase Auth хуки | SignIn, SignUp, ResetPassword | — |
+| Фича                    | Хук меняется на                                                   | Server Actions                                                                                                                                                                               | API Route (если нужно)                           |
+| ----------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **Projects**            | `useProjects` → Server Component + `db.query.projects.findMany()` | `createProject`, `updateProject`, `deleteProject`                                                                                                                                            | `GET /api/projects`                              |
+| **Project Details**     | `useProject(id)` → Server Component                               | — (использует actions projects)                                                                                                                                                              | `GET /api/projects/:id`                          |
+| **Estimates**           | `useEstimates(projectId)` → Server Component                      | `createEstimate`, `updateEstimate`, `deleteEstimate`                                                                                                                                         | `GET /api/projects/:id/estimates`                |
+| **Estimate Works**      | `useEstimateWorks(estimateId)` → Server Component                 | `createWork`, `updateWork`, `deleteWork`, `reorderWorks`                                                                                                                                     | `GET /api/estimates/:id/works`                   |
+| **Estimate Materials**  | `useEstimateMaterials(workId)` → Server Component                 | `createMaterial`, `updateMaterial`, `deleteMaterial`                                                                                                                                         | `GET /api/estimates/:id/works/:workId/materials` |
+| **Purchases**           | `usePurchases(estimateId)` → Server Component                     | `createPurchase`, `updatePurchase`, `deletePurchase`                                                                                                                                         | `GET /api/estimates/:id/purchases`               |
+| **Executions**          | `useExecutions(estimateId)` → Server Component                    | `createExecution`, `updateExecution`, `deleteExecution`                                                                                                                                      | `GET /api/estimates/:id/executions`              |
+| **Global Purchases**    | `useGlobalPurchases()` → Server Component                         | `createGlobalPurchase`, `updateGlobalPurchase`, `deleteGlobalPurchase`                                                                                                                       | `GET /api/global-purchases`                      |
+| **Dir. Materials**      | `useDirectoryMaterials()` → Server Component                      | `createDirMaterial`, `updateDirMaterial`, `deleteDirMaterial`                                                                                                                                | `GET /api/directory/materials`                   |
+| **Dir. Works**          | `useDirectoryWorks()` → Server Component                          | `createDirWork`, `updateDirWork`, `deleteDirWork`                                                                                                                                            | `GET /api/directory/works`                       |
+| **Dir. Suppliers**      | `useDirectorySuppliers()` → Server Component                      | `createDirSupplier`, `updateDirSupplier`, `deleteDirSupplier`                                                                                                                                | `GET /api/directory/suppliers`                   |
+| **Dir. Counterparties** | `useDirectoryCounterparties()` → Server Component                 | `createDirCounterparty`, `updateDirCounterparty`, `deleteDirCounterparty`                                                                                                                    | `GET /api/directory/counterparties`              |
+| **Templates**           | `useTemplates()` → Server Component                               | `createTemplate`, `updateTemplate`, `deleteTemplate`, `applyTemplate`                                                                                                                        | `GET /api/templates`                             |
+| **Access Control**      | `useTeam()` → Server Component                                    | `assignRole`, `removeRole`                                                                                                                                                                   | `GET /api/access-control/roles`                  |
+| **Dashboard**           | `useDashboardStats()` → Server Component                          | — (read-only)                                                                                                                                                                                | `GET /api/dashboard/*`                           |
+| **Workspace Settings**  | `useWorkspaceSettings()` → Server Component                       | `inviteMember`, `removeMember`, `changeRole`, `suspendMember`, `revokeInvitation`, `addDomain`, `removeDomain`, `leaveWorkspace`, `transferOwnership`, `archiveWorkspace`, `deleteWorkspace` | `GET /api/team/*`                                |
+| **Account Settings**    | `useSettings()` → Server Component                                | `updateProfile`, `updateWorkspace`, `updatePreferences`, `updateNotifications`, `updateSecurity`                                                                                             | `GET /api/settings`                              |
+| **Auth**                | `useAuth()` → Supabase Auth хуки                                  | SignIn, SignUp, ResetPassword                                                                                                                                                                | —                                                |
 
 ### 5.3 Пример: миграция фичи Projects
 
@@ -1714,43 +1720,43 @@ CREATE POLICY "admin_manager_upload" ON storage.objects
 
 ### A. Сущность → Таблица
 
-| TypeScript-тип (из `types/`) | Таблица PostgreSQL | Примечание |
-|---|---|---|
-| `ProjectRow` | `projects` | |
-| `Work` | `estimate_works` | Внутри сметы |
-| `Material` | `estimate_materials` | Внутри работы |
-| `PurchaseRow` | `purchases` | Внутри сметы |
-| `ExecutionRow` | `executions` | Внутри сметы |
-| `GlobalPurchaseRow` | `global_purchases` | Автономная |
-| `DirectoryMaterialRow` | `directory_materials` | Справочник |
-| `DirectoryWorkRow` | `directory_works` | Справочник |
-| `DirectorySupplierRow` | `directory_suppliers` | Справочник |
-| `DirectoryCounterpartyRow` | `directory_counterparties` | Справочник |
-| RBAC (роли) | `roles` + `permissions` + `role_permissions` + `user_roles` | |
-| Workspace Members | `workspace_members` | Связь пользователь→workspace с ролью |
-| Workspace Invitations | `workspace_invitations` | Ожидающие приглашения |
-| Workspace Allowed Domains | `workspace_allowed_domains` | Белый список доменов |
-| Account Settings | `user_settings` | 1:1 с profiles |
+| TypeScript-тип (из `types/`) | Таблица PostgreSQL                                          | Примечание                           |
+| ---------------------------- | ----------------------------------------------------------- | ------------------------------------ |
+| `ProjectRow`                 | `projects`                                                  |                                      |
+| `Work`                       | `estimate_works`                                            | Внутри сметы                         |
+| `Material`                   | `estimate_materials`                                        | Внутри работы                        |
+| `PurchaseRow`                | `purchases`                                                 | Внутри сметы                         |
+| `ExecutionRow`               | `executions`                                                | Внутри сметы                         |
+| `GlobalPurchaseRow`          | `global_purchases`                                          | Автономная                           |
+| `DirectoryMaterialRow`       | `directory_materials`                                       | Справочник                           |
+| `DirectoryWorkRow`           | `directory_works`                                           | Справочник                           |
+| `DirectorySupplierRow`       | `directory_suppliers`                                       | Справочник                           |
+| `DirectoryCounterpartyRow`   | `directory_counterparties`                                  | Справочник                           |
+| RBAC (роли)                  | `roles` + `permissions` + `role_permissions` + `user_roles` |                                      |
+| Workspace Members            | `workspace_members`                                         | Связь пользователь→workspace с ролью |
+| Workspace Invitations        | `workspace_invitations`                                     | Ожидающие приглашения                |
+| Workspace Allowed Domains    | `workspace_allowed_domains`                                 | Белый список доменов                 |
+| Account Settings             | `user_settings`                                             | 1:1 с profiles                       |
 
 ### B. Страница → Запрашиваемые данные
 
-| Страница | Основной запрос | Связанные данные |
-|---|---|---|
-| `/dashboard` | Агрегации: количество проектов по статусам, бюджеты, прогресс | projects, estimates |
-| `/projects` | `projects.findMany()` | profiles (владелец), counterparties (заказчик) |
-| `/projects/[id]` | `projects.findOne({id})` + `estimates.findMany({projectId})` | profiles, counterparties |
-| `/projects/[id]/estimates/[eid]` | `estimates.findOne({id})` + works + materials | directory_works, directory_materials |
-| Вкладка Purchases | `purchases.findMany({estimateId})` | suppliers |
-| Вкладка Executions | `executions.findMany({estimateId})` | — |
-| `/directories/materials` | `directory_materials.findMany()` | profiles |
-| `/directories/works` | `directory_works.findMany()` | profiles |
-| `/directories/suppliers` | `directory_suppliers.findMany()` | profiles |
-| `/directories/counterparties` | `directory_counterparties.findMany()` | profiles |
-| `/procurements` | `global_purchases.findMany()` | suppliers, profiles |
-| `/team` | `workspace_members.findMany({ownerId})` + `workspace_invitations.findMany({ownerId})` + `workspace_allowed_domains.findMany({ownerId})` | profiles |
-| `/templates` | `templates.findMany()` | template_works, template_materials |
-| `/settings/account` | `profiles.findOne({userId})` + `user_settings.findOne({userId})` | — |
-| `/settings/access` | `roles.findMany()` + `permissions.findMany()` + `role_permissions.findMany()` | — |
+| Страница                         | Основной запрос                                                                                                                         | Связанные данные                               |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `/dashboard`                     | Агрегации: количество проектов по статусам, бюджеты, прогресс                                                                           | projects, estimates                            |
+| `/projects`                      | `projects.findMany()`                                                                                                                   | profiles (владелец), counterparties (заказчик) |
+| `/projects/[id]`                 | `projects.findOne({id})` + `estimates.findMany({projectId})`                                                                            | profiles, counterparties                       |
+| `/projects/[id]/estimates/[eid]` | `estimates.findOne({id})` + works + materials                                                                                           | directory_works, directory_materials           |
+| Вкладка Purchases                | `purchases.findMany({estimateId})`                                                                                                      | suppliers                                      |
+| Вкладка Executions               | `executions.findMany({estimateId})`                                                                                                     | —                                              |
+| `/directories/materials`         | `directory_materials.findMany()`                                                                                                        | profiles                                       |
+| `/directories/works`             | `directory_works.findMany()`                                                                                                            | profiles                                       |
+| `/directories/suppliers`         | `directory_suppliers.findMany()`                                                                                                        | profiles                                       |
+| `/directories/counterparties`    | `directory_counterparties.findMany()`                                                                                                   | profiles                                       |
+| `/procurements`                  | `global_purchases.findMany()`                                                                                                           | suppliers, profiles                            |
+| `/team`                          | `workspace_members.findMany({ownerId})` + `workspace_invitations.findMany({ownerId})` + `workspace_allowed_domains.findMany({ownerId})` | profiles                                       |
+| `/templates`                     | `templates.findMany()`                                                                                                                  | template_works, template_materials             |
+| `/settings/account`              | `profiles.findOne({userId})` + `user_settings.findOne({userId})`                                                                        | —                                              |
+| `/settings/access`               | `roles.findMany()` + `permissions.findMany()` + `role_permissions.findMany()`                                                           | —                                              |
 
 ### C. Связи Foreign Key (полный список)
 
@@ -1823,7 +1829,52 @@ permissions.id           ◀── role_permissions.permission_id
 - [x] Settings: API Route + Server Actions
 - [x] Workspace Settings: API Routes + Server Actions (inviteMember, leaveWorkspace, transferOwnership, deactivateAccount, resetPassword)
 - [ ] Dashboard: API Routes (агрегации)
-- [ ] Удалены все `__mocks__/` (projects, estimates, purchases, execution, directories/*, access-control, account-settings, workspace-settings, global-purchases)
+- [ ] Удалены все `__mocks__/` (projects, estimates, purchases, execution, directories/\*, access-control, account-settings, workspace-settings, global-purchases)
 - [ ] Хуки переписаны на реальные данные
 - [ ] Файловое хранилище Supabase Storage настроено (бакет 'materials')
 - [ ] Загрузка изображений материалов работает
+
+---
+
+## Issue #48 hardening addendum — auth/team/access
+
+### Tenant boundary
+
+For the current implementation `workspace_members.owner_id` is the authoritative workspace boundary. Server code must resolve the current workspace from authenticated membership using `lib/auth/team.ts` and then scope every team/access read or write by that `owner_id`. Client-provided `ownerId`, `roleId`, or `userId` values are never trusted without checking membership in the current workspace.
+
+Required helpers:
+
+- `requireCurrentWorkspace(userId)` — deterministic current workspace resolution.
+- `requireWorkspaceMember(userId, ownerId)` — active membership guard.
+- `canReadTeamForWorkspace(userId, ownerId)` — owner/admin/manager read guard.
+- `canManageTeamForWorkspace(userId, ownerId)` — owner/admin mutation guard.
+
+Workspace RBAC source of truth is `workspace_members.role_id -> roles`. The legacy/global `user_roles` table is not used for workspace-level authorization; reserve it only for future platform/global roles if needed.
+
+### Service-role policy
+
+`SUPABASE_SERVICE_ROLE_KEY` is server-only and bypasses RLS. Every service-role query in API routes or Server Actions must be preceded by Supabase Auth user verification and an explicit workspace/user permission guard. Every data query must include manual workspace/user scope (`owner_id`, `user_id`, or an equivalent checked boundary). Service-role clients are not allowed in Client Components.
+
+### Auth, invite, and password setup flow
+
+- `/auth/callback` remains for server-readable OTP/OAuth `token_hash` and `code` callbacks only.
+- Password reset and invite links redirect to `/set-password`, where the browser Supabase client consumes hash-token sessions and calls `supabase.auth.updateUser({ password })`.
+- Invitation acceptance is performed only after password update succeeds via `POST /api/team/invitations/accept` and `lib/auth/invitations.ts`.
+- Invite creation uses ordered operations: insert `workspace_invitations`, send Supabase invite email, and delete the pending invitation on email-send failure. It does not report success when email delivery fails.
+
+### Team/account/access safety rules
+
+- Team member reads, updates, deletes, password resets, invitations, and allowed domains are scoped to the current `workspace_members.owner_id`.
+- Member mutations require the target user to be a member of the current workspace.
+- Owners cannot be demoted/deleted through admin routes; self-demotion/self-delete lockout is blocked; last owner/admin removal is blocked where the operation is implemented.
+- Account settings JSONB subdocuments are merged with existing keys on update instead of replacing omitted fields.
+- Dangerous/skeleton actions that are not implemented return explicit `Not implemented` errors or HTTP 501, and UI affordances are disabled/labelled as coming soon.
+
+### Manual QA checklist
+
+- Invite user: pending invitation is workspace-scoped; failed email send leaves no false success.
+- Open invite or reset link: `/set-password` updates password; invite acceptance happens only after successful password update.
+- Team list/overview/invitations/domains: data only shows for current workspace.
+- Member role/status/delete/reset endpoints reject non-members, owner changes, self-lockout, and last admin/owner removal.
+- Account settings partial saves preserve unrelated JSONB fields and refresh visible UI.
+- Access matrix loads only for authenticated workspace readers and its save button is disabled until persistence exists.

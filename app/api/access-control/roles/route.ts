@@ -1,5 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/db'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NextRequest, NextResponse } from "next/server"
+import { supabase } from "@/db"
+import { requireAuth } from "@/lib/auth/permissions"
+import {
+  canReadTeamForWorkspace,
+  requireCurrentWorkspace,
+} from "@/lib/auth/team"
 
 /**
  * GET /api/access-control/roles
@@ -14,14 +20,44 @@ import { supabase } from '@/db'
  * }
  */
 export async function GET(_request: NextRequest) {
+  try {
+    const user = await requireAuth()
+    const ownerId = await requireCurrentWorkspace(user.id)
+    if (!(await canReadTeamForWorkspace(user.id, ownerId))) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "FORBIDDEN",
+            message: "Недостаточно прав для просмотра ролей",
+          },
+        },
+        { status: 403 }
+      )
+    }
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("Unauthorized")) {
+      return NextResponse.json(
+        {
+          error: { code: "UNAUTHORIZED", message: "Требуется аутентификация" },
+        },
+        { status: 401 }
+      )
+    }
+    throw err
+  }
+
   // ── Step 0: Check env vars ──
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error('[GET /api/access-control/roles] Supabase env vars not set')
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    console.error("[GET /api/access-control/roles] Supabase env vars not set")
     return NextResponse.json(
       {
         error: {
-          code: 'CONFIG_ERROR',
-          message: 'Supabase не настроен (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)',
+          code: "CONFIG_ERROR",
+          message:
+            "Supabase не настроен (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)",
         },
       },
       { status: 500 }
@@ -36,8 +72,8 @@ export async function GET(_request: NextRequest) {
   let allRoles
   try {
     const { data, error } = await supabase
-      .from('roles')
-      .select('id, name, label, locked, description, created_at')
+      .from("roles")
+      .select("id, name, label, locked, description, created_at")
 
     if (error) throw error
     allRoles = data ?? []
@@ -46,12 +82,12 @@ export async function GET(_request: NextRequest) {
       `[GET /api/access-control/roles] roles fetched: ${allRoles.length} rows`
     )
   } catch (err: any) {
-    console.error('[GET /api/access-control/roles] roles query failed:', err)
+    console.error("[GET /api/access-control/roles] roles query failed:", err)
     return NextResponse.json(
       {
         error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Ошибка при загрузке ролей',
+          code: "INTERNAL_ERROR",
+          message: "Ошибка при загрузке ролей",
           details: err?.message,
         },
       },
@@ -63,22 +99,28 @@ export async function GET(_request: NextRequest) {
   let allRolePerms: Array<{ role_id: string; permission_id: string }>
   try {
     const { data, error } = await supabase
-      .from('role_permissions')
-      .select('role_id, permission_id')
+      .from("role_permissions")
+      .select("role_id, permission_id")
 
     if (error) throw error
-    allRolePerms = (data ?? []) as Array<{ role_id: string; permission_id: string }>
+    allRolePerms = (data ?? []) as Array<{
+      role_id: string
+      permission_id: string
+    }>
 
     console.log(
       `[GET /api/access-control/roles] role_permissions fetched: ${allRolePerms.length} rows`
     )
   } catch (err: any) {
-    console.error('[GET /api/access-control/roles] role_permissions query failed:', err)
+    console.error(
+      "[GET /api/access-control/roles] role_permissions query failed:",
+      err
+    )
     return NextResponse.json(
       {
         error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Ошибка при загрузке связей ролей и разрешений',
+          code: "INTERNAL_ERROR",
+          message: "Ошибка при загрузке связей ролей и разрешений",
           details: err?.message,
         },
       },
@@ -90,8 +132,8 @@ export async function GET(_request: NextRequest) {
   let allPermissions
   try {
     const { data, error } = await supabase
-      .from('permissions')
-      .select('id, key, label, group_name, description')
+      .from("permissions")
+      .select("id, key, label, group_name, description")
 
     if (error) throw error
     allPermissions = data ?? []
@@ -100,12 +142,15 @@ export async function GET(_request: NextRequest) {
       `[GET /api/access-control/roles] permissions fetched: ${allPermissions.length} rows`
     )
   } catch (err: any) {
-    console.error('[GET /api/access-control/roles] permissions query failed:', err)
+    console.error(
+      "[GET /api/access-control/roles] permissions query failed:",
+      err
+    )
     return NextResponse.json(
       {
         error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Ошибка при загрузке разрешений',
+          code: "INTERNAL_ERROR",
+          message: "Ошибка при загрузке разрешений",
           details: err?.message,
         },
       },
@@ -159,12 +204,15 @@ export async function GET(_request: NextRequest) {
       },
     })
   } catch (err: any) {
-    console.error('[GET /api/access-control/roles] response building failed:', err)
+    console.error(
+      "[GET /api/access-control/roles] response building failed:",
+      err
+    )
     return NextResponse.json(
       {
         error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Ошибка при формировании ответа',
+          code: "INTERNAL_ERROR",
+          message: "Ошибка при формировании ответа",
         },
       },
       { status: 500 }

@@ -180,8 +180,9 @@ export async function POST(request: NextRequest) {
     // Отправляем реальное email-приглашение через Supabase Auth Admin
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
     let emailSent = false
+    let emailError: string | null = null
     try {
-      const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
+      const { data: inviteData, error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(email, {
         redirectTo: `${siteUrl}/signup?invite=${newInvitation.id}`,
         data: {
           invited_by: user.id,
@@ -190,25 +191,27 @@ export async function POST(request: NextRequest) {
         },
       })
       if (inviteErr) {
-        // Если пользователь уже существует — не ошибка, приглашение всё равно в БД
-        console.warn(
-          "[POST /api/team/invitations] inviteUserByEmail warning:",
-          inviteErr.message
+        emailError = inviteErr.message
+        console.error(
+          "[POST /api/team/invitations] inviteUserByEmail error:",
+          inviteErr
         )
       } else {
         emailSent = true
+        console.log("[POST /api/team/invitations] email sent to:", email, "user:", inviteData?.user?.id)
       }
     } catch (emailErr: any) {
-      console.warn(
+      emailError = emailErr?.message ?? String(emailErr)
+      console.error(
         "[POST /api/team/invitations] inviteUserByEmail threw:",
-        emailErr?.message ?? emailErr
+        emailError
       )
     }
 
     return NextResponse.json({
       success: true,
       data: newInvitation,
-      meta: { emailSent },
+      meta: { emailSent, emailError },
     })
   } catch (err: any) {
     console.error("[POST /api/team/invitations] save error:", err)

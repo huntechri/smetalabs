@@ -255,12 +255,17 @@ db/
 │   ├── 006_defer_invite_acceptance.sql
 │   ├── 007_advisor_policy_grants.sql
 │   ├── 008_private_rls_helpers.sql
-│   └── 009_transfer_workspace_ownership.sql
+│   ├── 009_transfer_workspace_ownership.sql
+│   └── 010_directory_works_foundation.sql
 └── schema/
     ├── index.ts
+    ├── directory-works.ts
     ├── profiles.ts
     ├── rbac.ts
-    └── user-settings.ts
+    ├── user-settings.ts
+    ├── workspace-allowed-domains.ts
+    ├── workspace-invitations.ts
+    └── workspace-members.ts
 ```
 
 Rules:
@@ -359,10 +364,11 @@ Ownership transfer uses `public.transfer_workspace_ownership(...)` from migratio
 /directories/works
   → features/directory-works/** currently owns UI/mocks
   → docs/directory-works-architecture.md fixes the production contract before migrations/API/UI/AI phases
-  → future phases #66-#71 implement DB, read API, CRUD, import/export, embeddings and performance hardening
+  → db/schema/directory-works.ts and db/migrations/010_directory_works_foundation.sql provide the DB foundation
+  → future phases #67-#71 implement read API, CRUD UI binding, import/export, embeddings generation and performance hardening
 ```
 
-The works catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; do not replace mocks or add DB/API behavior before the phase-specific issue owns that scope.
+The works catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; do not replace mocks or add API/UI behavior before the phase-specific issue owns that scope.
 
 ---
 

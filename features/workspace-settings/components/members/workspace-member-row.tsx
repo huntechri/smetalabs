@@ -31,6 +31,7 @@ export function WorkspaceMemberRow({
   actions: MemberActions
 }) {
   const isOwner = member.role === "owner"
+  const showEmail = Boolean(member.email && member.email !== member.name)
 
   return (
     <TableRow className={cn(isOwner && "bg-muted/30")}>
@@ -43,9 +44,11 @@ export function WorkspaceMemberRow({
           </Avatar>
           <div className="min-w-0">
             <p className="truncate text-xs font-medium">{member.name}</p>
-            <p className="truncate text-[0.65rem] text-muted-foreground">
-              {member.email}
-            </p>
+            {showEmail && (
+              <p className="truncate text-[0.65rem] text-muted-foreground">
+                {member.email}
+              </p>
+            )}
           </div>
         </div>
       </TableCell>

@@ -74,7 +74,24 @@ function ReadonlyField({
   return (
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
-      <div className="min-h-8 rounded-md border bg-muted/30 px-3 py-2 text-sm text-foreground">
+      <div className="flex h-7 w-full min-w-0 items-center rounded-md border border-input bg-input/20 px-2 py-0.5 text-sm text-foreground md:text-xs/relaxed dark:bg-input/30">
+        <span className="truncate">{value?.trim() || "—"}</span>
+      </div>
+    </div>
+  )
+}
+
+function ReadonlyTextAreaField({
+  label,
+  value,
+}: {
+  label: string
+  value: string | null | undefined
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label>{label}</Label>
+      <div className="flex min-h-16 w-full rounded-md border border-input bg-input/20 px-2 py-2 text-sm text-foreground md:text-xs/relaxed dark:bg-input/30">
         {value?.trim() || "—"}
       </div>
     </div>
@@ -221,7 +238,7 @@ export function WorkspaceSettingsCard({
               value={defaultTimezone}
             />
           </div>
-          <ReadonlyField label="Юридический адрес" value={legalAddress} />
+          <ReadonlyTextAreaField label="Юридический адрес" value={legalAddress} />
         </CardContent>
       </Card>
     )

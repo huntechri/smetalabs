@@ -1,7 +1,11 @@
 import type {
   DirectoryWork,
+  DirectoryWorkImportApplyResponse,
+  DirectoryWorkImportCreateInput,
+  DirectoryWorkImportPreviewResponse,
   DirectoryWorkMutationInput,
   DirectoryWorksCategoriesResponse,
+  DirectoryWorksExportFormat,
   DirectoryWorksListParams,
   DirectoryWorksListResponse,
 } from "../types"
@@ -107,6 +111,48 @@ export function archiveDirectoryWork(id: string) {
       method: "DELETE",
     }
   )
+}
+
+export function createDirectoryWorkImportJob(input: DirectoryWorkImportCreateInput) {
+  return fetchJson<DirectoryWorkImportPreviewResponse>(
+    "/api/directory-works/import-jobs",
+    "импорта работ",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    }
+  )
+}
+
+export function fetchDirectoryWorkImportJob(id: string) {
+  return fetchJson<DirectoryWorkImportPreviewResponse>(
+    `/api/directory-works/import-jobs/${id}`,
+    "статуса импорта работ"
+  )
+}
+
+export function applyDirectoryWorkImportJob(id: string) {
+  return fetchJson<DirectoryWorkImportApplyResponse>(
+    `/api/directory-works/import-jobs/${id}/apply`,
+    "применения импорта работ",
+    {
+      method: "POST",
+    }
+  )
+}
+
+export function buildDirectoryWorksExportHref(
+  format: DirectoryWorksExportFormat,
+  params: DirectoryWorksListParams = {}
+) {
+  const url = buildListUrl("/api/directory-works/export", {
+    ...params,
+    status: params.status ?? "active",
+    limit: undefined,
+    cursor: undefined,
+  })
+  const separator = url.includes("?") ? "&" : "?"
+  return `${url}${separator}format=${format}`
 }
 
 export function fetchDirectoryWorksCategories() {

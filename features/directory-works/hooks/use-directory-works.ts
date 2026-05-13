@@ -4,13 +4,16 @@ import { useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
+  applyDirectoryWorkImportJob,
   archiveDirectoryWork,
   createDirectoryWork,
+  createDirectoryWorkImportJob,
   fetchDirectoryWorks,
   updateDirectoryWork,
 } from "../api/directory-works-client"
 import { directoryWorksQueryKeys } from "../api/directory-works-query-keys"
 import type {
+  DirectoryWorkImportCreateInput,
   DirectoryWorkMutationInput,
   DirectoryWorksListParams,
   DirectoryWorksSort,
@@ -101,6 +104,27 @@ export function useDirectoryWorks() {
     },
   })
 
+  const createImportMutation = useMutation({
+    mutationFn: createDirectoryWorkImportJob,
+    onSuccess: async (response) => {
+      await queryClient.invalidateQueries({
+        queryKey: directoryWorksQueryKeys.importJob(response.data.job.id),
+      })
+    },
+  })
+
+  const applyImportMutation = useMutation({
+    mutationFn: applyDirectoryWorkImportJob,
+    onSuccess: async (response) => {
+      await Promise.all([
+        invalidateWorks(),
+        queryClient.invalidateQueries({
+          queryKey: directoryWorksQueryKeys.importJob(response.data.job.id),
+        }),
+      ])
+    },
+  })
+
   return {
     works: worksQuery.data?.data ?? [],
     meta: worksQuery.data?.meta ?? null,
@@ -112,11 +136,16 @@ export function useDirectoryWorks() {
       createMutation.error?.message ??
       updateMutation.error?.message ??
       archiveMutation.error?.message ??
+      createImportMutation.error?.message ??
+      applyImportMutation.error?.message ??
       null,
     saving:
       createMutation.isPending ||
       updateMutation.isPending ||
-      archiveMutation.isPending,
+      archiveMutation.isPending ||
+      createImportMutation.isPending ||
+      applyImportMutation.isPending,
+    importing: createImportMutation.isPending || applyImportMutation.isPending,
     refetch: async () => {
       await worksQuery.refetch()
     },
@@ -130,6 +159,14 @@ export function useDirectoryWorks() {
     },
     archiveWork: async (id: string) => {
       const response = await archiveMutation.mutateAsync(id)
+      return response.data
+    },
+    createImportJob: async (input: DirectoryWorkImportCreateInput) => {
+      const response = await createImportMutation.mutateAsync(input)
+      return response.data
+    },
+    applyImportJob: async (id: string) => {
+      const response = await applyImportMutation.mutateAsync(id)
       return response.data
     },
   }

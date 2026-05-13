@@ -29,3 +29,19 @@ export async function sendOwnPasswordResetEmailAction() {
     message: "Ссылка для сброса пароля отправлена на email",
   }
 }
+
+export async function revokeOtherSessionsAction() {
+  await requireAuth()
+  const client = await createClient()
+
+  const { error } = await client.auth.signOut({ scope: "others" })
+
+  if (error) {
+    throw new Error(`Ошибка завершения других сессий: ${error.message}`)
+  }
+
+  return {
+    success: true,
+    message: "Другие сессии завершены. Текущая сессия осталась активной.",
+  }
+}

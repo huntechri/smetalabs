@@ -22,6 +22,7 @@ export function AccountSettingsView() {
       />
       <WorkspaceSettingsCard
         workspace={settings?.workspace}
+        workspaceAccess={settings?.workspaceAccess}
         loading={loading}
         error={error}
         refetch={refetch}

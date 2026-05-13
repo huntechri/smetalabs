@@ -21,6 +21,7 @@ export function WorkspaceMembersMobileList({
     <div className="divide-y divide-border/50 sm:hidden">
       {members.map((member) => {
         const isOwner = member.role === "owner"
+        const showEmail = Boolean(member.email && member.email !== member.name)
 
         return (
           <div
@@ -42,9 +43,11 @@ export function WorkspaceMembersMobileList({
                   <LockKey className="ml-1 inline size-3 text-muted-foreground" />
                 )}
               </p>
-              <p className="truncate text-[0.65rem] text-muted-foreground">
-                {member.email}
-              </p>
+              {showEmail && (
+                <p className="truncate text-[0.65rem] text-muted-foreground">
+                  {member.email}
+                </p>
+              )}
               <div className="mt-1 flex items-center gap-2">
                 <WorkspaceMemberStatusBadge status={member.status} />
                 <span className="text-[0.6rem] text-muted-foreground">

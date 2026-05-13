@@ -1,6 +1,9 @@
 "use server"
 
-import { sendOwnPasswordResetEmailAction as sendOwnPasswordResetEmail } from "@/features/account-settings/server/password.actions"
+import {
+  revokeOtherSessionsAction as revokeOtherSessions,
+  sendOwnPasswordResetEmailAction as sendOwnPasswordResetEmail,
+} from "@/features/account-settings/server/password.actions"
 import { updateNotifications as updateAccountNotifications } from "@/features/account-settings/server/notifications.actions"
 import { updatePreferences as updateAccountPreferences } from "@/features/account-settings/server/preferences.actions"
 import { updateProfile as updateAccountProfile } from "@/features/account-settings/server/profile.actions"
@@ -30,4 +33,8 @@ export async function updateNotifications(data: Partial<NotificationSettings>) {
 
 export async function sendOwnPasswordResetEmailAction() {
   return sendOwnPasswordResetEmail()
+}
+
+export async function revokeOtherSessionsAction() {
+  return revokeOtherSessions()
 }

@@ -21,6 +21,11 @@ export interface WorkspaceSettings {
   defaultTimezone: string
 }
 
+export interface WorkspaceAccessInfo {
+  role: "owner" | "admin" | "manager" | "estimator" | "viewer" | null
+  canEditWorkspace: boolean
+}
+
 export interface AccountPreferences {
   theme: "system" | "light" | "dark"
   density: "comfortable" | "compact"

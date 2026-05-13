@@ -1,8 +1,8 @@
 # SmetaLabs — Filemap
 
-> Last updated: 2026-05-13
+> Last updated: 2026-05-14
 >
-> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md).
+> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md).
 
 ---
 
@@ -88,6 +88,7 @@ app/
 │
 └── api/
     ├── access-control/roles/route.ts
+    ├── directory-works/    # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
     ├── settings/route.ts   # account settings read boundary
     └── team/
         ├── overview/route.ts
@@ -147,6 +148,13 @@ features/
 ├── directories/
 ├── directory-materials/
 ├── directory-works/
+│   ├── api/                # client API, errors, mappers, query keys/cache tags
+│   ├── components/         # works directory view shell
+│   ├── directory-works-details/components/ # list rows, form dialog, import dialog
+│   ├── hooks/              # TanStack Query hooks and mutations
+│   ├── lib/                # pure events/helpers
+│   ├── server/             # repository/service/search/import/export/embeddings/observability
+│   └── types.ts            # feature-local works catalog types
 ├── directory-suppliers/
 ├── directory-counterparties/
 ├── access-control/
@@ -233,7 +241,7 @@ docs/
 ├── architecture.md                  # layer/routing/auth/API/UI rules
 ├── account-settings.md              # /settings/account behavior contract and feature status
 ├── backend-architecture.md          # backend/database/API target model
-├── directory-works-architecture.md  # production works catalog contract for #64/#65
+├── directory-works-architecture.md  # production works catalog contract and hardening notes for #64/#65-#71
 ├── design-system.md                 # visual system, tokens and component usage
 └── filemap.md                       # this compact map
 ```
@@ -256,7 +264,10 @@ db/
 │   ├── 007_advisor_policy_grants.sql
 │   ├── 008_private_rls_helpers.sql
 │   ├── 009_transfer_workspace_ownership.sql
-│   └── 010_directory_works_foundation.sql
+│   ├── 010_directory_works_foundation.sql
+│   ├── 011_directory_works_read_api.sql
+│   ├── 012_directory_works_ai_search.sql
+│   └── 013_directory_works_performance_hardening.sql
 └── schema/
     ├── index.ts
     ├── directory-works.ts
@@ -358,17 +369,17 @@ Ownership transfer uses `public.transfer_workspace_ownership(...)` from migratio
 
 `/team` is not the catch-all workspace settings screen. Workspace/security controls such as invite links and allowed-domain auto-join rules stay out of the primary team flow until a dedicated workspace/security settings route owns them.
 
-### Directory works backend contract
+### Directory works backend contract and implementation
 
 ```txt
 /directories/works
-  → features/directory-works/** currently owns UI/mocks
-  → docs/directory-works-architecture.md fixes the production contract before migrations/API/UI/AI phases
-  → db/schema/directory-works.ts and db/migrations/010_directory_works_foundation.sql provide the DB foundation
-  → future phases #67-#71 implement read API, CRUD UI binding, import/export, embeddings generation and performance hardening
+  → app/api/directory-works/** exposes workspace-scoped read/search/CRUD/import/export/AI routes
+  → features/directory-works/** owns UI hooks, dialogs, repository/service/search/import/export/embeddings
+  → docs/directory-works-architecture.md fixes the production contract and hardening strategy
+  → db/schema/directory-works.ts and db/migrations/010-013 provide DB foundation, read RPCs, AI search and performance hardening
 ```
 
-The works catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; do not replace mocks or add API/UI behavior before the phase-specific issue owns that scope.
+The works catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; do not route around `features/directory-works/server/**` for business logic or permission checks.
 
 ---
 

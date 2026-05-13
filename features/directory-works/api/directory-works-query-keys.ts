@@ -37,4 +37,6 @@ export const directoryWorksCacheTags = {
     `directory-works-import:${workspaceOwnerId}:${jobId}`,
   aiSearch: (workspaceOwnerId: string, queryHash: string) =>
     `directory-works-ai:${workspaceOwnerId}:${queryHash}`,
+  aiSearchIndex: (workspaceOwnerId: string) =>
+    `directory-works-ai:${workspaceOwnerId}:index`,
 }

@@ -23,6 +23,9 @@ type ReadonlySearchParams = {
   get: (name: string) => string | null
 }
 
+const DIRECTORY_WORKS_STALE_TIME_MS = 30_000
+const DIRECTORY_WORKS_GC_TIME_MS = 5 * 60_000
+
 function getStringParam(searchParams: ReadonlySearchParams, key: string) {
   const value = searchParams.get(key)?.trim()
   return value || undefined
@@ -65,6 +68,10 @@ export function useDirectoryWorks() {
   const worksQuery = useQuery({
     queryKey: directoryWorksQueryKeys.list(params),
     queryFn: () => fetchDirectoryWorks(params),
+    staleTime: DIRECTORY_WORKS_STALE_TIME_MS,
+    gcTime: DIRECTORY_WORKS_GC_TIME_MS,
+    refetchOnWindowFocus: true,
+    placeholderData: (previousData) => previousData,
   })
 
   const invalidateWorks = async () => {
@@ -91,6 +98,9 @@ export function useDirectoryWorks() {
       await queryClient.invalidateQueries({
         queryKey: directoryWorksQueryKeys.detail(response.data.id),
       })
+      await queryClient.invalidateQueries({
+        queryKey: directoryWorksQueryKeys.aiSearch({ query: response.data.title }),
+      })
     },
   })
 
@@ -100,6 +110,9 @@ export function useDirectoryWorks() {
       await invalidateWorks()
       await queryClient.invalidateQueries({
         queryKey: directoryWorksQueryKeys.detail(response.data.id),
+      })
+      await queryClient.invalidateQueries({
+        queryKey: directoryWorksQueryKeys.aiSearch({ query: response.data.title }),
       })
     },
   })
@@ -120,6 +133,9 @@ export function useDirectoryWorks() {
         invalidateWorks(),
         queryClient.invalidateQueries({
           queryKey: directoryWorksQueryKeys.importJob(response.data.job.id),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["directoryWorksAiSearch"],
         }),
       ])
     },

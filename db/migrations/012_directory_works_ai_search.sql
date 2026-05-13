@@ -90,9 +90,9 @@ AS $$
   semantic_matches AS (
     SELECT
       e.work_id AS id,
-      (1 - (e.embedding::extensions.vector(1536) <=> p_query_embedding))::double precision AS semantic_score,
+      (1 - (e.embedding::extensions.vector(1536) OPERATOR(extensions.<=>) p_query_embedding))::double precision AS semantic_score,
       row_number() OVER (
-        ORDER BY e.embedding::extensions.vector(1536) <=> p_query_embedding ASC
+        ORDER BY e.embedding::extensions.vector(1536) OPERATOR(extensions.<=>) p_query_embedding ASC
       ) AS semantic_rank
     FROM public.directory_work_embeddings e
     JOIN public.directory_works w
@@ -119,8 +119,8 @@ AS $$
         OR private.directory_work_normalize(w.unit_code) = private.directory_work_normalize(p_unit)
         OR private.directory_work_normalize(w.unit_label) = private.directory_work_normalize(p_unit)
       )
-      AND (1 - (e.embedding::extensions.vector(1536) <=> p_query_embedding)) >= input.threshold_value
-    ORDER BY e.embedding::extensions.vector(1536) <=> p_query_embedding ASC
+      AND (1 - (e.embedding::extensions.vector(1536) OPERATOR(extensions.<=>) p_query_embedding)) >= input.threshold_value
+    ORDER BY e.embedding::extensions.vector(1536) OPERATOR(extensions.<=>) p_query_embedding ASC
     LIMIT 50
   ),
   combined AS (

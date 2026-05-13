@@ -46,9 +46,12 @@ async function readJsonBody(request: NextRequest) {
   }
 }
 
-function toResponseBody(body: string | Buffer) {
+function toResponseBody(body: string | Buffer): BodyInit {
   if (typeof body === "string") return body
-  return new Uint8Array(body.buffer, body.byteOffset, body.byteLength)
+
+  const bytes = new Uint8Array(body.byteLength)
+  bytes.set(body)
+  return new Blob([bytes.buffer])
 }
 
 export function handleDirectoryWorksRouteError(

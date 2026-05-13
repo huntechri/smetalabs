@@ -1,5 +1,6 @@
 import type {
   DirectoryWork,
+  DirectoryWorkMutationInput,
   DirectoryWorksCategoriesResponse,
   DirectoryWorksListParams,
   DirectoryWorksListResponse,
@@ -68,6 +69,44 @@ export async function fetchDirectoryWork(id: string) {
     "работы"
   )
   return json.data
+}
+
+export function createDirectoryWork(input: DirectoryWorkMutationInput) {
+  return fetchJson<{ data: DirectoryWork }>(
+    "/api/directory-works",
+    "создания работы",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    }
+  )
+}
+
+export function updateDirectoryWork({
+  id,
+  input,
+}: {
+  id: string
+  input: DirectoryWorkMutationInput
+}) {
+  return fetchJson<{ data: DirectoryWork }>(
+    `/api/directory-works/${id}`,
+    "обновления работы",
+    {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }
+  )
+}
+
+export function archiveDirectoryWork(id: string) {
+  return fetchJson<{ data: DirectoryWork }>(
+    `/api/directory-works/${id}`,
+    "архивации работы",
+    {
+      method: "DELETE",
+    }
+  )
 }
 
 export function fetchDirectoryWorksCategories() {

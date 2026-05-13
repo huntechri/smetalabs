@@ -1,6 +1,6 @@
 # SmetaLabs — Filemap
 
-> Last updated: 2026-05-12 22:00 UTC
+> Last updated: 2026-05-13 22:00 UTC
 >
 > Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md).
 
@@ -13,13 +13,15 @@ smetalabs/
 ├── app/                    # Next.js App Router routes, layouts, API routes, server actions
 ├── components/             # shared app components and shadcn/ui primitives
 ├── db/                     # Drizzle client, schema, migrations, seed scripts
-├── docs/                   # architecture, filemap and design-system documentation
+├── docs/                   # architecture, backend, filemap, design-system, designer prompt, UI audit
 ├── features/               # feature-owned UI, hooks and screens
 ├── hooks/                  # global hooks only (`use-mobile.ts`)
 ├── lib/                    # shared infra, auth helpers, Supabase clients, utilities
 ├── public/                 # static assets
 ├── types/                  # shared cross-feature TypeScript types
 ├── proxy.ts                # Next middleware entry; delegates to lib/supabase/proxy.ts
+├── skills-lock.json        # agent skill lock file
+├── .agents/                # agent skill definitions (shadcn)
 ├── drizzle.config.ts       # Drizzle Kit config
 ├── components.json         # shadcn/ui config
 ├── eslint.config.mjs       # ESLint config

@@ -11,6 +11,8 @@ export type DirectoryAction = {
   label: string
   icon: React.ReactNode
   variant?: React.ComponentProps<typeof Button>["variant"]
+  disabled?: boolean
+  title?: string
   onClick?: () => void
 }
 
@@ -76,11 +78,13 @@ export function DirectoriesToolbar({
         <ButtonGroup className="flex-wrap">
           {actions.map((action) => (
             <Button
+              disabled={action.disabled}
               key={action.label}
+              onClick={action.onClick}
               size="sm"
+              title={action.title}
               type="button"
               variant={action.variant ?? "outline"}
-              onClick={action.onClick}
             >
               {action.icon}
               {action.label}

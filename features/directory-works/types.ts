@@ -103,6 +103,44 @@ export type DirectoryWorksCategoriesResponse = {
   }
 }
 
+export type DirectoryWorkAiSearchInput = {
+  query: string
+  category?: string
+  subcategory?: string
+  unit?: string
+  limit?: number
+  threshold?: number
+}
+
+export type DirectoryWorkAiSearchResult = DirectoryWork & {
+  semanticScore: number | null
+  textScore: number | null
+  hybridScore: number
+  matchReason: "exact_text" | "text_match" | "hybrid_match" | "semantic_match"
+}
+
+export type DirectoryWorkAiSearchResponse = {
+  data: DirectoryWorkAiSearchResult[]
+  meta: {
+    limit: number
+    total: number
+    modelName: string
+    dimensions: number
+    distanceOperator: "cosine"
+    threshold: number
+  }
+}
+
+export type DirectoryWorkEmbeddingProcessResponse = {
+  data: {
+    processed: number
+    failed: number
+    pending: number
+    modelName: string
+    dimensions: number
+  }
+}
+
 export type DirectoryWorkImportJobStatus =
   | "draft"
   | "uploaded"

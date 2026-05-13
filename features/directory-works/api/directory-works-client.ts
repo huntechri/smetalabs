@@ -1,5 +1,8 @@
 import type {
   DirectoryWork,
+  DirectoryWorkAiSearchInput,
+  DirectoryWorkAiSearchResponse,
+  DirectoryWorkEmbeddingProcessResponse,
   DirectoryWorkImportApplyResponse,
   DirectoryWorkImportCreateInput,
   DirectoryWorkImportPreviewResponse,
@@ -64,6 +67,17 @@ export function searchDirectoryWorks(params: DirectoryWorksListParams = {}) {
       ...params,
     }),
     "поиска работ"
+  )
+}
+
+export function aiSearchDirectoryWorks(input: DirectoryWorkAiSearchInput) {
+  return fetchJson<DirectoryWorkAiSearchResponse>(
+    "/api/directory-works/ai-search",
+    "AI-поиска работ",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    }
   )
 }
 
@@ -137,6 +151,17 @@ export function applyDirectoryWorkImportJob(id: string) {
     "применения импорта работ",
     {
       method: "POST",
+    }
+  )
+}
+
+export function processDirectoryWorkEmbeddings(limit = 20) {
+  return fetchJson<DirectoryWorkEmbeddingProcessResponse>(
+    "/api/directory-works/embeddings/process",
+    "генерации embeddings работ",
+    {
+      method: "POST",
+      body: JSON.stringify({ limit }),
     }
   )
 }

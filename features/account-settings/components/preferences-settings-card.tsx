@@ -1,13 +1,22 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 
-import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useUpdatePreferences } from "../hooks/use-account-settings"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import type { AccountPreferences } from "../types"
 
 type SettingsStateProps = {
@@ -48,21 +57,21 @@ function SelectField({
   id,
   label,
   value,
-  onChange,
   options,
 }: {
   id: string
   label: string
   value: string
-  onChange: (value: string) => void
   options: readonly (readonly [string, string])[]
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger id={id} className="w-full">
-          <SelectValue placeholder="Выберите значение" />
+      <Label htmlFor={id} className="text-muted-foreground">
+        {label}
+      </Label>
+      <Select value={value} disabled>
+        <SelectTrigger id={id} className="w-full opacity-70">
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {options.map(([optionValue, optionLabel]) => (
@@ -76,84 +85,63 @@ function SelectField({
   )
 }
 
-export function PreferencesSettingsCard({ preferences, loading, error, refetch }: SettingsStateProps) {
-  const { updatePreferences, loading: saving, error: saveError } = useUpdatePreferences()
-  const [theme, setTheme] = useState("system")
-  const [density, setDensity] = useState("comfortable")
-  const [dateFormat, setDateFormat] = useState("ДД.ММ.ГГГГ")
-  const [numberFormat, setNumberFormat] = useState("1 000,00")
-  const [defaultEstimateView, setDefaultEstimateView] = useState("table")
-
-  useEffect(() => {
-    const p = preferences
-    if (!p) return
-    setTheme(p.theme ?? "system")
-    setDensity(p.density ?? "comfortable")
-    setDateFormat(p.dateFormat ?? "ДД.ММ.ГГГГ")
-    setNumberFormat(p.numberFormat ?? "1 000,00")
-    setDefaultEstimateView(p.defaultEstimateView ?? "table")
-  }, [preferences])
-
-  async function handleSave() {
-    const updated = await updatePreferences({
-      theme: theme as "system" | "light" | "dark",
-      density: density as "comfortable" | "compact",
-      dateFormat,
-      numberFormat,
-      defaultEstimateView,
-    })
-    if (updated) await refetch()
-  }
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-48" />
-          <Skeleton className="h-3.5 w-72" />
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-1.5">
-              <Skeleton className="h-3.5 w-24" />
-              <Skeleton className="h-8 w-full" />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (error && !preferences) {
-    return (
-      <Card className="border-destructive/50">
-        <CardHeader>
-          <CardTitle>Настройки интерфейса</CardTitle>
-          <CardDescription className="text-destructive">Ошибка загрузки: {error}</CardDescription>
-        </CardHeader>
-        <CardFooter><Button variant="outline" onClick={refetch}>Повторить</Button></CardFooter>
-      </Card>
-    )
-  }
-
+export function PreferencesSettingsCard({ preferences }: SettingsStateProps) {
   return (
-    <Card>
+    <Card className="border-dashed bg-muted/20">
       <CardHeader>
-        <CardTitle>Настройки интерфейса</CardTitle>
-        <CardDescription>Персонализация внешнего вида и форматов отображения</CardDescription>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle>Настройки интерфейса</CardTitle>
+            <CardDescription>
+              Персонализация внешнего вида и форматов отображения находится в разработке.
+            </CardDescription>
+          </div>
+          <span className="w-fit rounded-md border bg-background px-2 py-1 text-xs font-medium text-muted-foreground">
+            Скоро
+          </span>
+        </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Эти параметры пока не влияют на интерфейс приложения. Мы оставили блок
+          видимым, чтобы обозначить запланированную персонализацию, но отключили
+          сохранение до полноценной реализации.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
-          <SelectField id="theme" label="Тема" value={theme} onChange={setTheme} options={fields.theme} />
-          <SelectField id="density" label="Плотность интерфейса" value={density} onChange={setDensity} options={fields.density} />
-          <SelectField id="dateFormat" label="Формат даты" value={dateFormat} onChange={setDateFormat} options={fields.dateFormat} />
-          <SelectField id="numberFormat" label="Формат чисел" value={numberFormat} onChange={setNumberFormat} options={fields.numberFormat} />
-          <SelectField id="defaultEstimateView" label="Вид смет по умолчанию" value={defaultEstimateView} onChange={setDefaultEstimateView} options={fields.defaultEstimateView} />
+          <SelectField
+            id="theme"
+            label="Тема"
+            value={preferences?.theme ?? "system"}
+            options={fields.theme}
+          />
+          <SelectField
+            id="density"
+            label="Плотность интерфейса"
+            value={preferences?.density ?? "comfortable"}
+            options={fields.density}
+          />
+          <SelectField
+            id="dateFormat"
+            label="Формат даты"
+            value={preferences?.dateFormat ?? "ДД.ММ.ГГГГ"}
+            options={fields.dateFormat}
+          />
+          <SelectField
+            id="numberFormat"
+            label="Формат чисел"
+            value={preferences?.numberFormat ?? "1 000,00"}
+            options={fields.numberFormat}
+          />
+          <SelectField
+            id="defaultEstimateView"
+            label="Вид смет по умолчанию"
+            value={preferences?.defaultEstimateView ?? "table"}
+            options={fields.defaultEstimateView}
+          />
         </div>
-        {saveError && <p className="text-xs text-destructive">Ошибка сохранения: {saveError}</p>}
       </CardContent>
       <CardFooter className="border-t pt-4">
-        <Button onClick={handleSave} disabled={saving}>{saving ? "Сохранение..." : "Сохранить"}</Button>
+        <Button disabled>Функция в разработке</Button>
       </CardFooter>
     </Card>
   )

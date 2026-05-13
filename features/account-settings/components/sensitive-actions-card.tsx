@@ -70,7 +70,7 @@ export function SensitiveActionsCard({
   const [deleteConfirmation, setDeleteConfirmation] = useState("")
 
   const isOwner = workspaceAccess?.role === "owner"
-  const isWorkspaceMember = workspaceAccess?.role !== null
+  const isWorkspaceMember = Boolean(workspaceAccess?.role)
   const displayWorkspaceName = workspaceName?.trim() || "workspace"
 
   const ownerCandidates = useMemo(

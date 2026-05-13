@@ -1,0 +1,46 @@
+import type { Role } from "@/types/roles"
+import type { ApiRole } from "../hooks/use-access-control"
+import type { PermissionDefinition, PermissionGroup, PermissionKey } from "../types"
+import { buildPermissionGroups } from "./permission-groups"
+
+export function buildPermissionMatrix(roles: ApiRole[]) {
+  if (!roles.length) {
+    return {
+      accessRoles: [],
+      permissionGroups: [],
+      permissions: [],
+      initialMatrix: {} as Record<Role, PermissionKey[]>,
+    }
+  }
+
+  const accessRoles = roles.map((role) => ({
+    id: role.name,
+    label: role.label,
+    locked: role.locked,
+  }))
+
+  const permMap = new Map<string, PermissionDefinition>()
+  for (const role of roles) {
+    for (const permission of role.permissions) {
+      if (!permMap.has(permission.key)) {
+        permMap.set(permission.key, {
+          key: permission.key as PermissionKey,
+          label: permission.label,
+          group: permission.groupName as PermissionGroup,
+        })
+      }
+    }
+  }
+
+  const permissions = Array.from(permMap.values())
+  const permissionGroups = buildPermissionGroups(permissions)
+  const initialMatrix = {} as Record<Role, PermissionKey[]>
+
+  for (const role of roles) {
+    initialMatrix[role.name] = role.permissions.map(
+      (permission) => permission.key as PermissionKey
+    )
+  }
+
+  return { accessRoles, permissionGroups, permissions, initialMatrix }
+}

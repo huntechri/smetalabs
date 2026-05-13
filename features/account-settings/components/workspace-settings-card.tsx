@@ -23,7 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useUpdateWorkspace } from "../hooks/use-account-settings"
-import type { SettingsResponse } from "../hooks/use-account-settings"
+import type { WorkspaceSettings } from "../types"
 
 const companyTypes = [
   { value: "ООО", label: "ООО" },
@@ -57,14 +57,14 @@ const timezones = [
 ]
 
 type SettingsStateProps = {
-  settings: SettingsResponse["data"] | null
+  workspace: Partial<WorkspaceSettings> | null | undefined
   loading: boolean
   error: string | null
   refetch: () => Promise<void>
 }
 
 export function WorkspaceSettingsCard({
-  settings,
+  workspace,
   loading,
   error,
   refetch,
@@ -88,8 +88,8 @@ export function WorkspaceSettingsCard({
   const [defaultTimezone, setDefaultTimezone] = useState("UTC")
 
   useEffect(() => {
-    if (settings?.workspace) {
-      const w = settings.workspace
+    if (workspace) {
+      const w = workspace
       setWorkspaceName(w.workspaceName ?? "")
       setCompanyLegalName(w.companyLegalName ?? "")
       setCompanyType(w.companyType ?? "ООО")
@@ -102,7 +102,7 @@ export function WorkspaceSettingsCard({
       setDefaultLocale(w.defaultLocale ?? "ru-RU")
       setDefaultTimezone(w.defaultTimezone ?? "UTC")
     }
-  }, [settings])
+  }, [workspace])
 
   const handleSave = async () => {
     const updated = await updateWorkspace({
@@ -146,7 +146,7 @@ export function WorkspaceSettingsCard({
     )
   }
 
-  if (error && !settings?.workspace) {
+  if (error && !workspace) {
     return (
       <Card className="border-destructive/50">
         <CardHeader>

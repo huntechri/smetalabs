@@ -82,7 +82,9 @@ export function useRoles() {
   }, [])
 
   useEffect(() => {
-    fetchRoles()
+    queueMicrotask(() => {
+      void fetchRoles()
+    })
   }, [fetchRoles])
 
   return { roles, loading, error, refetch: fetchRoles }

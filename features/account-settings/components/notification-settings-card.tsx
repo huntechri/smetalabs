@@ -8,11 +8,10 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useUpdateNotifications } from "../hooks/use-account-settings"
-import type { SettingsResponse } from "../hooks/use-account-settings"
 import type { NotificationSettings } from "../types"
 
 type SettingsStateProps = {
-  settings: SettingsResponse["data"] | null
+  notifications: Partial<NotificationSettings> | null | undefined
   loading: boolean
   error: string | null
   refetch: () => Promise<void>
@@ -38,15 +37,15 @@ const defaultNotifs: NotificationSettings = {
   weeklySummary: false,
 }
 
-export function NotificationSettingsCard({ settings, loading, error, refetch }: SettingsStateProps) {
+export function NotificationSettingsCard({ notifications, loading, error, refetch }: SettingsStateProps) {
   const { updateNotifications, loading: saving, error: saveError } = useUpdateNotifications()
   const [notifs, setNotifs] = useState<NotificationSettings>(defaultNotifs)
 
   useEffect(() => {
-    if (settings?.notifications) {
-      setNotifs({ ...defaultNotifs, ...settings.notifications })
+    if (notifications) {
+      setNotifs({ ...defaultNotifs, ...notifications })
     }
-  }, [settings])
+  }, [notifications])
 
   function handleToggle(key: keyof NotificationSettings, checked: boolean) {
     setNotifs((prev) => ({ ...prev, [key]: checked }))
@@ -76,7 +75,7 @@ export function NotificationSettingsCard({ settings, loading, error, refetch }: 
     )
   }
 
-  if (error && !settings?.notifications) {
+  if (error && !notifications) {
     return (
       <Card className="border-destructive/50">
         <CardHeader>

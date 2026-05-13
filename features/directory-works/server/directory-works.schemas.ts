@@ -1,5 +1,9 @@
 import { z } from "zod"
-import type { DirectoryWorksExportFormat, DirectoryWorksListParams } from "../types"
+import type {
+  DirectoryWorkAiSearchInput,
+  DirectoryWorksExportFormat,
+  DirectoryWorksListParams,
+} from "../types"
 import { normalizeDirectoryWorksListParams } from "./directory-works.search"
 
 const optionalTrimmedString = (maxLength: number) =>
@@ -105,6 +109,38 @@ export const directoryWorkImportCreateSchema = z
   })
   .strict()
 
+export const directoryWorkAiSearchSchema = z
+  .object({
+    query: requiredTrimmedString(240, "Поисковый запрос обязателен"),
+    category: optionalTrimmedString(120),
+    subcategory: optionalTrimmedString(120),
+    unit: optionalTrimmedString(80),
+    limit: z
+      .preprocess((value) => {
+        if (value === undefined || value === null || value === "") return 20
+        return Number(value)
+      }, z.number().int().min(1).max(50))
+      .default(20),
+    threshold: z
+      .preprocess((value) => {
+        if (value === undefined || value === null || value === "") return 0.72
+        return Number(value)
+      }, z.number().finite().min(0).max(1))
+      .default(0.72),
+  })
+  .strict()
+
+export const directoryWorkEmbeddingProcessSchema = z
+  .object({
+    limit: z
+      .preprocess((value) => {
+        if (value === undefined || value === null || value === "") return 20
+        return Number(value)
+      }, z.number().int().min(1).max(20))
+      .default(20),
+  })
+  .strict()
+
 export const directoryWorkIdSchema = z.string().uuid()
 export const directoryWorkCategoryStatusSchema = z
   .enum(["active", "archived"])
@@ -138,6 +174,16 @@ export function parseDirectoryWorkMutationBody(body: unknown) {
 
 export function parseDirectoryWorkImportCreateBody(body: unknown) {
   return directoryWorkImportCreateSchema.parse(body)
+}
+
+export function parseDirectoryWorkAiSearchBody(
+  body: unknown
+): DirectoryWorkAiSearchInput {
+  return directoryWorkAiSearchSchema.parse(body)
+}
+
+export function parseDirectoryWorkEmbeddingProcessBody(body: unknown) {
+  return directoryWorkEmbeddingProcessSchema.parse(body)
 }
 
 export function parseDirectoryWorkId(id: string) {

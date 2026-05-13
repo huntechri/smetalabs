@@ -1,6 +1,14 @@
-import type { DirectoryWorksListParams } from "../types"
+import type { DirectoryWorkAiSearchInput, DirectoryWorksListParams } from "../types"
 
 function compactParams(params: DirectoryWorksListParams = {}) {
+  return Object.fromEntries(
+    Object.entries(params).filter(
+      ([, value]) => value !== undefined && value !== ""
+    )
+  )
+}
+
+function compactAiParams(params: DirectoryWorkAiSearchInput) {
   return Object.fromEntries(
     Object.entries(params).filter(
       ([, value]) => value !== undefined && value !== ""
@@ -15,6 +23,8 @@ export const directoryWorksQueryKeys = {
   detail: (id: string) => ["directoryWork", id] as const,
   categories: () => ["directoryWorksCategories"] as const,
   importJob: (id: string) => ["directoryWorksImportJob", id] as const,
+  aiSearch: (params: DirectoryWorkAiSearchInput) =>
+    ["directoryWorksAiSearch", compactAiParams(params)] as const,
 }
 
 export const directoryWorksCacheTags = {
@@ -25,4 +35,6 @@ export const directoryWorksCacheTags = {
     `directory-works-categories:${workspaceOwnerId}`,
   importJob: (workspaceOwnerId: string, jobId: string) =>
     `directory-works-import:${workspaceOwnerId}:${jobId}`,
+  aiSearch: (workspaceOwnerId: string, queryHash: string) =>
+    `directory-works-ai:${workspaceOwnerId}:${queryHash}`,
 }

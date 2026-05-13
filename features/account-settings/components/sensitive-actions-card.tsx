@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/card"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -224,7 +225,12 @@ export function SensitiveActionsCard({
                   личный workspace.
                 </DialogDescription>
               </DialogHeader>
-              <DialogFooter showCloseButton>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline" disabled={pendingAction !== null}>
+                    Отмена
+                  </Button>
+                </DialogClose>
                 <Button
                   variant="destructive"
                   onClick={handleLeaveWorkspace}
@@ -300,7 +306,12 @@ export function SensitiveActionsCard({
                   </p>
                 ) : null}
               </div>
-              <DialogFooter showCloseButton>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline" disabled={pendingAction !== null}>
+                    Отмена
+                  </Button>
+                </DialogClose>
                 <Button
                   onClick={handleTransferOwnership}
                   disabled={
@@ -351,7 +362,12 @@ export function SensitiveActionsCard({
                   в workspace до повторной активации администратором.
                 </DialogDescription>
               </DialogHeader>
-              <DialogFooter showCloseButton>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline" disabled={pendingAction !== null}>
+                    Отмена
+                  </Button>
+                </DialogClose>
                 <Button
                   variant="destructive"
                   onClick={handleDeactivateAccount}
@@ -415,7 +431,12 @@ export function SensitiveActionsCard({
                   Текущее название: {displayWorkspaceName}
                 </p>
               </div>
-              <DialogFooter showCloseButton>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline" disabled={pendingAction !== null}>
+                    Отмена
+                  </Button>
+                </DialogClose>
                 <Button
                   variant="destructive"
                   onClick={handleDeleteWorkspace}

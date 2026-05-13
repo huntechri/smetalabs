@@ -6,5 +6,6 @@
 - Issue #70 was merged via PR #78: directory works embeddings and backend-first AI/hybrid search.
 - Follow-up hotfix `484adee96a90bd508fce68341f75a29358d3dc90` preserves the import row action literal type for production TypeScript builds.
 - Follow-up hotfix `69beac27c4a94a857370fcd985f24a399f66cfc0` converts XLSX export buffers to Web-compatible response bodies for Next.js production builds.
+- Vercel config `9f43546014606b464e976f1ac44fe9f6b3870c22` limits automated preview builds for non-primary branches.
 
 This file is documentation-only and does not affect runtime behavior.

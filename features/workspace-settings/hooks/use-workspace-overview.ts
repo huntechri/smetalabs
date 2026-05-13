@@ -1,31 +1,21 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import type { WorkspaceOverview } from "../types"
+import { useQuery } from "@tanstack/react-query"
 import { fetchWorkspaceOverview } from "../api/team-client"
+import { teamQueryKeys } from "../api/team-query-keys"
 
 export function useWorkspaceOverview() {
-  const [overview, setOverview] = useState<WorkspaceOverview | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const query = useQuery({
+    queryKey: teamQueryKeys.overview(),
+    queryFn: fetchWorkspaceOverview,
+  })
 
-  const refetch = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      setOverview(await fetchWorkspaceOverview())
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Неизвестная ошибка")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void refetch()
-    })
-  }, [refetch])
-
-  return { overview, loading, error, refetch }
+  return {
+    overview: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error?.message ?? null,
+    refetch: async () => {
+      await query.refetch()
+    },
+  }
 }

@@ -1,31 +1,31 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { AccountPreferences } from "../types"
-import type { SettingsResponse } from "../api/settings-client"
 import { updatePreferenceSettings } from "../api/settings-actions"
+import { settingsQueryKeys } from "../api/settings-query-keys"
 
 export function useUpdatePreferences() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: (data: Partial<AccountPreferences>) =>
+      updatePreferenceSettings(data),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: settingsQueryKeys.account(),
+      })
+    },
+  })
 
-  const mutate = useCallback(
-    async (
-      data: Partial<AccountPreferences>
-    ): Promise<SettingsResponse["data"] | null> => {
-      setLoading(true)
-      setError(null)
+  return {
+    updatePreferences: async (data: Partial<AccountPreferences>) => {
       try {
-        return await updatePreferenceSettings(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Неизвестная ошибка")
+        return await mutation.mutateAsync(data)
+      } catch {
         return null
-      } finally {
-        setLoading(false)
       }
     },
-    []
-  )
-
-  return { updatePreferences: mutate, loading, error }
+    loading: mutation.isPending,
+    error: mutation.error?.message ?? null,
+  }
 }

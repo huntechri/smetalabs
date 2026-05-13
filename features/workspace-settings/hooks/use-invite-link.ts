@@ -1,66 +1,41 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   fetchWorkspaceInviteLink,
   patchWorkspaceInviteLink,
 } from "../api/team-client"
+import { teamQueryKeys } from "../api/team-query-keys"
 
 export function useInviteLink() {
-  const [enabled, setEnabled] = useState(true)
-  const [url, setUrl] = useState<string | null>(null)
-  const [defaultRole, setDefaultRole] = useState("viewer")
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
-
-  const refetch = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await fetchWorkspaceInviteLink()
-      setEnabled(data.enabled)
-      setUrl(data.url)
-      setDefaultRole(data.defaultRole)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Неизвестная ошибка")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void refetch()
-    })
-  }, [refetch])
-
-  const updateInviteLink = useCallback(
-    async (updates: { enabled?: boolean; defaultRole?: string }) => {
-      setSaving(true)
-      setError(null)
-      try {
-        const data = await patchWorkspaceInviteLink(updates)
-        setEnabled(data.enabled)
-        setUrl(data.url)
-        setDefaultRole(data.defaultRole)
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Ошибка сохранения")
-      } finally {
-        setSaving(false)
-      }
+  const queryClient = useQueryClient()
+  const inviteLinkQuery = useQuery({
+    queryKey: teamQueryKeys.inviteLink(),
+    queryFn: fetchWorkspaceInviteLink,
+  })
+  const updateMutation = useMutation({
+    mutationFn: patchWorkspaceInviteLink,
+    onSuccess: (data) => {
+      queryClient.setQueryData(teamQueryKeys.inviteLink(), data)
     },
-    []
-  )
+  })
+  const data = inviteLinkQuery.data
 
   return {
-    enabled,
-    url,
-    defaultRole,
-    loading,
-    saving,
-    error,
-    refetch,
-    updateInviteLink,
+    enabled: data?.enabled ?? true,
+    url: data?.url ?? null,
+    defaultRole: data?.defaultRole ?? "viewer",
+    loading: inviteLinkQuery.isLoading,
+    saving: updateMutation.isPending,
+    error: inviteLinkQuery.error?.message ?? updateMutation.error?.message ?? null,
+    refetch: async () => {
+      await inviteLinkQuery.refetch()
+    },
+    updateInviteLink: async (updates: {
+      enabled?: boolean
+      defaultRole?: string
+    }) => {
+      await updateMutation.mutateAsync(updates)
+    },
   }
 }

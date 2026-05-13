@@ -1,31 +1,31 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { NotificationSettings } from "../types"
-import type { SettingsResponse } from "../api/settings-client"
 import { updateNotificationSettings } from "../api/settings-actions"
+import { settingsQueryKeys } from "../api/settings-query-keys"
 
 export function useUpdateNotifications() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: (data: Partial<NotificationSettings>) =>
+      updateNotificationSettings(data),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: settingsQueryKeys.account(),
+      })
+    },
+  })
 
-  const mutate = useCallback(
-    async (
-      data: Partial<NotificationSettings>
-    ): Promise<SettingsResponse["data"] | null> => {
-      setLoading(true)
-      setError(null)
+  return {
+    updateNotifications: async (data: Partial<NotificationSettings>) => {
       try {
-        return await updateNotificationSettings(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Неизвестная ошибка")
+        return await mutation.mutateAsync(data)
+      } catch {
         return null
-      } finally {
-        setLoading(false)
       }
     },
-    []
-  )
-
-  return { updateNotifications: mutate, loading, error }
+    loading: mutation.isPending,
+    error: mutation.error?.message ?? null,
+  }
 }

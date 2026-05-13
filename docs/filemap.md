@@ -158,8 +158,11 @@ Feature folder convention:
 
 ```txt
 features/<feature>/
+├── api/                    # feature-local clients/query keys for API routes or action wrappers
 ├── components/             # feature UI
-├── hooks/                  # feature-local client state/data hooks
+├── hooks/                  # feature-local client state/data hooks (TanStack Query for server state)
+├── lib/                    # pure feature helpers/builders
+├── server/                 # server-only feature actions/repositories/services when app/actions delegates
 ├── __mocks__/              # temporary/mock data when needed
 ├── types.ts                # private feature types when needed
 └── <subdomain>/components/ # optional deeper decomposition for large features
@@ -169,6 +172,7 @@ Rules:
 
 - feature UI imports primitives from `@/components/ui/*`;
 - feature UI may call API routes or server actions through approved boundaries;
+- server-state hooks should use `@tanstack/react-query` via `components/query-provider.tsx` and feature query-key factories;
 - feature folders should not mutate global app shell unless they are shell-specific files like `app-sidebar.tsx`.
 
 ---
@@ -327,8 +331,13 @@ Use `types/` only for shared cross-feature types. Keep feature-private types in 
 - `app/api/team/invite-link/route.ts` — explicit 501 because no authoritative workspace-scoped invite-link storage exists yet.
 - `app/api/access-control/roles/route.ts` — now requires authenticated workspace read permission.
 - `app/actions/access-control.ts` — workspace role mutations use `workspace_members.role_id`, not global `user_roles`.
-- `app/actions/settings.ts` — JSONB settings updates merge subdocuments rather than replacing omitted keys.
+- `app/actions/settings.ts` — compatibility server-action wrapper that delegates account settings updates/password reset to `features/account-settings/server/*`.
+- `features/account-settings/server/*` — schemas, repository/service helpers and domain actions for profile/workspace/preferences/notifications/password settings.
+- `features/account-settings/api/*` and `features/account-settings/hooks/*` — account settings client API/action wrappers and TanStack Query hooks.
 - `app/actions/team.ts` and `app/actions/workspace-settings.ts` — dangerous/skeleton actions return explicit Not implemented errors instead of false success.
 - `features/account-settings/components/sensitive-actions-card.tsx` — unimplemented dangerous actions are disabled/labelled coming soon.
+- `features/access-control/api/*`, `features/access-control/lib/*`, `features/access-control/hooks/use-permission-matrix-state.ts` — access-control query keys/client, pure matrix builders and draft state for the permissions matrix.
 - `features/access-control/components/permissions-matrix.tsx` — save action is disabled/labelled coming soon until persistence is implemented.
+- `features/workspace-settings/api/*` and `features/workspace-settings/hooks/*` — workspace/team API client, error mappers, query keys and TanStack Query hooks for members, overview, invitations, domains and invite link.
+- `features/workspace-settings/components/members/*` — decomposed team members section, table/mobile views, action/dialog hooks and row/menu/status components.
 - `features/auth/components/login-form.tsx`, `features/auth/components/signup-form.tsx` — unimplemented social auth buttons are hidden and replaced with explanatory copy.

@@ -1,31 +1,31 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { WorkspaceSettings } from "../types"
-import type { SettingsResponse } from "../api/settings-client"
 import { updateWorkspaceSettings } from "../api/settings-actions"
+import { settingsQueryKeys } from "../api/settings-query-keys"
 
 export function useUpdateWorkspace() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: (data: Partial<WorkspaceSettings>) =>
+      updateWorkspaceSettings(data),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: settingsQueryKeys.account(),
+      })
+    },
+  })
 
-  const mutate = useCallback(
-    async (
-      data: Partial<WorkspaceSettings>
-    ): Promise<SettingsResponse["data"] | null> => {
-      setLoading(true)
-      setError(null)
+  return {
+    updateWorkspace: async (data: Partial<WorkspaceSettings>) => {
       try {
-        return await updateWorkspaceSettings(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Неизвестная ошибка")
+        return await mutation.mutateAsync(data)
+      } catch {
         return null
-      } finally {
-        setLoading(false)
       }
     },
-    []
-  )
-
-  return { updateWorkspace: mutate, loading, error }
+    loading: mutation.isPending,
+    error: mutation.error?.message ?? null,
+  }
 }

@@ -1,8 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { Role } from "@/types/roles"
-import type { WorkspaceMember } from "../types"
 import {
   deleteWorkspaceMember,
   fetchWorkspaceMembers,
@@ -10,70 +9,49 @@ import {
   updateWorkspaceMemberRole,
   updateWorkspaceMemberSuspension,
 } from "../api/team-client"
+import { teamQueryKeys } from "../api/team-query-keys"
 
 export function useWorkspaceMembers() {
-  const [members, setMembers] = useState<WorkspaceMember[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const membersQuery = useQuery({
+    queryKey: teamQueryKeys.members(),
+    queryFn: fetchWorkspaceMembers,
+  })
 
-  const refetch = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      setMembers(await fetchWorkspaceMembers())
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Неизвестная ошибка")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const invalidateMembers = () =>
+    queryClient.invalidateQueries({ queryKey: teamQueryKeys.members() })
 
-  useEffect(() => {
-    queueMicrotask(() => {
-      void refetch()
-    })
-  }, [refetch])
-
-  const withRefetch = useCallback(
-    async (mutation: () => Promise<unknown>) => {
-      const result = await mutation()
-      await refetch()
-      return result
-    },
-    [refetch]
-  )
-
-  const updateRole = useCallback(
-    (userId: string, newRole: Role) =>
-      withRefetch(() => updateWorkspaceMemberRole(userId, newRole)),
-    [withRefetch]
-  )
-
-  const suspendMember = useCallback(
-    (userId: string, suspend: boolean) =>
-      withRefetch(() => updateWorkspaceMemberSuspension(userId, suspend)),
-    [withRefetch]
-  )
-
-  const removeMember = useCallback(
-    (userId: string) => withRefetch(() => deleteWorkspaceMember(userId)),
-    [withRefetch]
-  )
-
-  const resetPassword = useCallback(
-    (userId: string) =>
-      withRefetch(() => sendWorkspaceMemberPasswordReset(userId)),
-    [withRefetch]
-  )
+  const updateRoleMutation = useMutation({
+    mutationFn: ({ userId, role }: { userId: string; role: Role }) =>
+      updateWorkspaceMemberRole(userId, role),
+    onSuccess: invalidateMembers,
+  })
+  const suspendMemberMutation = useMutation({
+    mutationFn: ({ userId, suspend }: { userId: string; suspend: boolean }) =>
+      updateWorkspaceMemberSuspension(userId, suspend),
+    onSuccess: invalidateMembers,
+  })
+  const removeMemberMutation = useMutation({
+    mutationFn: deleteWorkspaceMember,
+    onSuccess: invalidateMembers,
+  })
+  const resetPasswordMutation = useMutation({
+    mutationFn: sendWorkspaceMemberPasswordReset,
+    onSuccess: invalidateMembers,
+  })
 
   return {
-    members,
-    loading,
-    error,
-    refetch,
-    updateRole,
-    suspendMember,
-    removeMember,
-    resetPassword,
+    members: membersQuery.data ?? [],
+    loading: membersQuery.isLoading,
+    error: membersQuery.error?.message ?? null,
+    refetch: async () => {
+      await membersQuery.refetch()
+    },
+    updateRole: (userId: string, role: Role) =>
+      updateRoleMutation.mutateAsync({ userId, role }),
+    suspendMember: (userId: string, suspend: boolean) =>
+      suspendMemberMutation.mutateAsync({ userId, suspend }),
+    removeMember: (userId: string) => removeMemberMutation.mutateAsync(userId),
+    resetPassword: (userId: string) => resetPasswordMutation.mutateAsync(userId),
   }
 }

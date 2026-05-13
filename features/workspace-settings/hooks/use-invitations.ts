@@ -1,52 +1,37 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import type { WorkspaceInvitation } from "../types"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   cancelWorkspaceInvitation,
   fetchWorkspaceInvitations,
   resendWorkspaceInvitation,
 } from "../api/team-client"
+import { teamQueryKeys } from "../api/team-query-keys"
 
 export function useInvitations() {
-  const [invitations, setInvitations] = useState<WorkspaceInvitation[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const refetch = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      setInvitations(await fetchWorkspaceInvitations())
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Неизвестная ошибка")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void refetch()
-    })
-  }, [refetch])
-
-  const cancelInvitation = useCallback(async (id: string) => {
-    await cancelWorkspaceInvitation(id)
-    setInvitations((prev) => prev.filter((inv) => inv.id !== id))
-  }, [])
-
-  const resendInvitation = useCallback(
-    (id: string) => resendWorkspaceInvitation(id),
-    []
-  )
+  const queryClient = useQueryClient()
+  const invitationsQuery = useQuery({
+    queryKey: teamQueryKeys.invitations(),
+    queryFn: fetchWorkspaceInvitations,
+  })
+  const cancelMutation = useMutation({
+    mutationFn: cancelWorkspaceInvitation,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: teamQueryKeys.invitations(),
+      })
+    },
+  })
+  const resendMutation = useMutation({ mutationFn: resendWorkspaceInvitation })
 
   return {
-    invitations,
-    loading,
-    error,
-    refetch,
-    cancelInvitation,
-    resendInvitation,
+    invitations: invitationsQuery.data ?? [],
+    loading: invitationsQuery.isLoading,
+    error: invitationsQuery.error?.message ?? null,
+    refetch: async () => {
+      await invitationsQuery.refetch()
+    },
+    cancelInvitation: (id: string) => cancelMutation.mutateAsync(id),
+    resendInvitation: (id: string) => resendMutation.mutateAsync(id),
   }
 }

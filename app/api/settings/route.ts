@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { supabase } from "@/db"
+import { getPrimaryWorkspace, getWorkspaceRole } from "@/lib/auth/team"
 
 /**
  * GET /api/settings
@@ -8,7 +9,7 @@ import { supabase } from "@/db"
  * Возвращает настройки текущего пользователя.
  * Формат ответа:
  * {
- *   "data": { profile, workspace, preferences, notifications, security },
+ *   "data": { profile, workspace, workspaceAccess, preferences, notifications, security },
  *   "meta": { updatedAt }
  * }
  */
@@ -62,12 +63,16 @@ export async function GET() {
     )
   }
 
-  // ── Step 2: Fetch profiles (public identity) ──
+  const ownerId = await getPrimaryWorkspace(user.id)
+  const workspaceRole = await getWorkspaceRole(user.id, ownerId)
+  const canEditWorkspace = workspaceRole === "owner"
+
+  // ── Step 2: Fetch current user's profile identity ──
   let profileData = null
   try {
     const { data: pData, error: pErr } = await supabase
       .from("profiles")
-      .select("full_name, phone, position, workspace_name")
+      .select("full_name, phone, position")
       .eq("id", user.id)
       .single()
 
@@ -80,11 +85,29 @@ export async function GET() {
     console.error("[GET /api/settings] profiles query threw:", err)
   }
 
-  // ── Step 3: Fetch user_settings (service_role bypasses RLS) ──
+  // ── Step 3: Fetch current workspace owner's profile identity ──
+  let workspaceProfileData = null
+  try {
+    const { data: wpData, error: wpErr } = await supabase
+      .from("profiles")
+      .select("workspace_name")
+      .eq("id", ownerId)
+      .single()
+
+    if (wpErr && wpErr.code !== "PGRST116") {
+      console.error("[GET /api/settings] workspace profile query failed:", wpErr)
+    } else {
+      workspaceProfileData = wpData
+    }
+  } catch (err) {
+    console.error("[GET /api/settings] workspace profile query threw:", err)
+  }
+
+  // ── Step 4: Fetch user_settings for current user and workspace owner ──
   try {
     const { data, error } = await supabase
       .from("user_settings")
-      .select("profile, workspace, preferences, notifications, security, updated_at")
+      .select("profile, preferences, notifications, security, updated_at")
       .eq("user_id", user.id)
       .single()
 
@@ -102,6 +125,33 @@ export async function GET() {
       )
     }
 
+    const { data: workspaceSettings, error: workspaceSettingsError } =
+      await supabase
+        .from("user_settings")
+        .select("workspace")
+        .eq("user_id", ownerId)
+        .single()
+
+    if (
+      workspaceSettingsError &&
+      workspaceSettingsError.code !== "PGRST116"
+    ) {
+      console.error(
+        "[GET /api/settings] workspace settings query failed:",
+        workspaceSettingsError
+      )
+      return NextResponse.json(
+        {
+          error: {
+            code: "INTERNAL_ERROR",
+            message: "Ошибка при загрузке настроек workspace",
+            details: workspaceSettingsError.message,
+          },
+        },
+        { status: 500 }
+      )
+    }
+
     // Merge profiles (public identity) + user_settings.profile (language, timezone)
     const mergedProfile = {
       displayName: profileData?.full_name ?? "",
@@ -112,25 +162,29 @@ export async function GET() {
       timezone: data?.profile?.timezone ?? "UTC",
     }
 
-    // Merge profiles.workspace_name + user_settings.workspace (legal requisites)
+    // Workspace data is owned by the current workspace owner, not by each member.
     const mergedWorkspace = {
-      workspaceName: profileData?.workspace_name ?? "",
-      companyLegalName: data?.workspace?.companyLegalName ?? "",
-      companyType: data?.workspace?.companyType ?? "",
-      registrationNumber: data?.workspace?.registrationNumber ?? "",
-      taxNumber: data?.workspace?.taxNumber ?? "",
-      legalAddress: data?.workspace?.legalAddress ?? "",
-      billingEmail: data?.workspace?.billingEmail ?? "",
-      companyPhone: data?.workspace?.companyPhone ?? "",
-      defaultCurrency: data?.workspace?.defaultCurrency ?? "RUB",
-      defaultLocale: data?.workspace?.defaultLocale ?? "ru-RU",
-      defaultTimezone: data?.workspace?.defaultTimezone ?? "UTC",
+      workspaceName: workspaceProfileData?.workspace_name ?? "",
+      companyLegalName: workspaceSettings?.workspace?.companyLegalName ?? "",
+      companyType: workspaceSettings?.workspace?.companyType ?? "",
+      registrationNumber: workspaceSettings?.workspace?.registrationNumber ?? "",
+      taxNumber: workspaceSettings?.workspace?.taxNumber ?? "",
+      legalAddress: workspaceSettings?.workspace?.legalAddress ?? "",
+      billingEmail: workspaceSettings?.workspace?.billingEmail ?? "",
+      companyPhone: workspaceSettings?.workspace?.companyPhone ?? "",
+      defaultCurrency: workspaceSettings?.workspace?.defaultCurrency ?? "RUB",
+      defaultLocale: workspaceSettings?.workspace?.defaultLocale ?? "ru-RU",
+      defaultTimezone: workspaceSettings?.workspace?.defaultTimezone ?? "UTC",
     }
 
     return NextResponse.json({
       data: {
         profile: mergedProfile,
         workspace: mergedWorkspace,
+        workspaceAccess: {
+          role: workspaceRole,
+          canEditWorkspace,
+        },
         preferences: data?.preferences ?? {},
         notifications: data?.notifications ?? {},
         security: data?.security ?? {},

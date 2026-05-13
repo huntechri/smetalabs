@@ -14,6 +14,7 @@ export const directoryWorksQueryKeys = {
     ["directoryWorks", compactParams(params)] as const,
   detail: (id: string) => ["directoryWork", id] as const,
   categories: () => ["directoryWorksCategories"] as const,
+  importJob: (id: string) => ["directoryWorksImportJob", id] as const,
 }
 
 export const directoryWorksCacheTags = {
@@ -22,4 +23,6 @@ export const directoryWorksCacheTags = {
     `directory-work:${workspaceOwnerId}:${workId}`,
   categories: (workspaceOwnerId: string) =>
     `directory-works-categories:${workspaceOwnerId}`,
+  importJob: (workspaceOwnerId: string, jobId: string) =>
+    `directory-works-import:${workspaceOwnerId}:${jobId}`,
 }

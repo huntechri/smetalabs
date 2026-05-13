@@ -9,10 +9,39 @@ const optionalTrimmedString = (maxLength: number) =>
     return trimmed.length > 0 ? trimmed : undefined
   }, z.string().max(maxLength).optional())
 
+const nullableTrimmedString = (maxLength: number) =>
+  z.preprocess((value) => {
+    if (value === null) return null
+    if (typeof value !== "string") return undefined
+    const trimmed = value.trim().replace(/\s+/g, " ")
+    return trimmed.length > 0 ? trimmed : null
+  }, z.string().max(maxLength).nullable().optional())
+
+const requiredTrimmedString = (maxLength: number, message: string) =>
+  z.preprocess((value) => {
+    if (typeof value !== "string") return value
+    return value.trim().replace(/\s+/g, " ")
+  }, z.string().min(1, message).max(maxLength))
+
+const rateAmountSchema = z.preprocess((value) => {
+  if (typeof value === "string" && value.trim() !== "") return Number(value)
+  return value
+}, z.number().finite().min(0, "Расценка не может быть отрицательной"))
+
 const directoryWorkStatusSchema = z.enum(["active", "archived"]).default("active")
 const directoryWorksSortSchema = z
   .enum(["relevance", "updated_desc", "title_asc"])
   .default("relevance")
+const directoryWorkPriceKindSchema = z
+  .enum(["base", "labor", "turnkey", "estimate", "custom"])
+  .default("base")
+const currencyCodeSchema = z
+  .preprocess((value) => {
+    if (typeof value !== "string") return "RUB"
+    const normalized = value.trim().toUpperCase()
+    return normalized || "RUB"
+  }, z.string().regex(/^[A-Z]{3}$/, "Код валюты должен быть в ISO-формате"))
+  .default("RUB")
 
 const directoryWorksCursorSchema = z.preprocess((value) => {
   if (value === undefined || value === null || value === "") return 0
@@ -35,6 +64,24 @@ export const directoryWorksListQuerySchema = z.object({
   sort: directoryWorksSortSchema,
 })
 
+export const directoryWorkMutationSchema = z
+  .object({
+    title: requiredTrimmedString(240, "Название обязательно"),
+    unit: requiredTrimmedString(80, "Единица измерения обязательна"),
+    rate: rateAmountSchema,
+    category: requiredTrimmedString(120, "Категория обязательна"),
+    subcategory: nullableTrimmedString(120),
+    code: nullableTrimmedString(80),
+    description: nullableTrimmedString(2000),
+    includedOperations: nullableTrimmedString(4000),
+    excludedOperations: nullableTrimmedString(4000),
+    sourceName: nullableTrimmedString(120),
+    sourceExternalRowKey: nullableTrimmedString(160),
+    currencyCode: currencyCodeSchema,
+    priceKind: directoryWorkPriceKindSchema,
+  })
+  .strict()
+
 export const directoryWorkIdSchema = z.string().uuid()
 export const directoryWorkCategoryStatusSchema = z
   .enum(["active", "archived"])
@@ -47,6 +94,10 @@ export function parseDirectoryWorksListParams(
   return normalizeDirectoryWorksListParams(
     directoryWorksListQuerySchema.parse(Object.fromEntries(searchParams))
   )
+}
+
+export function parseDirectoryWorkMutationBody(body: unknown) {
+  return directoryWorkMutationSchema.parse(body)
 }
 
 export function parseDirectoryWorkId(id: string) {

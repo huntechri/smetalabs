@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from "next/server"
 import { ZodError } from "zod"
 import { DirectoryWorksApiError } from "../api/directory-works-errors"
 import {
+  archiveDirectoryWork,
+  createDirectoryWork,
   getDirectoryWork,
   getDirectoryWorksCategories,
   listDirectoryWorks,
+  updateDirectoryWork,
 } from "./directory-works.service"
 import {
   parseDirectoryWorkCategoryStatus,
   parseDirectoryWorkId,
+  parseDirectoryWorkMutationBody,
   parseDirectoryWorksListParams,
 } from "./directory-works.schemas"
 
@@ -18,6 +22,18 @@ function jsonError(code: string, message: string, status: number) {
 
 function getZodMessage(error: ZodError) {
   return error.issues[0]?.message ?? "Некорректные параметры запроса"
+}
+
+async function readJsonBody(request: NextRequest) {
+  try {
+    return await request.json()
+  } catch {
+    throw new DirectoryWorksApiError(
+      "BAD_REQUEST",
+      "Некорректное тело запроса",
+      400
+    )
+  }
 }
 
 export function handleDirectoryWorksRouteError(
@@ -46,6 +62,17 @@ export async function handleDirectoryWorksListRequest(request: NextRequest) {
   }
 }
 
+export async function handleDirectoryWorkCreateRequest(request: NextRequest) {
+  try {
+    const body = await readJsonBody(request)
+    const input = parseDirectoryWorkMutationBody(body)
+    const response = await createDirectoryWork(input)
+    return NextResponse.json(response, { status: 201 })
+  } catch (err) {
+    return handleDirectoryWorksRouteError(err, "[POST /api/directory-works]")
+  }
+}
+
 export async function handleDirectoryWorkDetailRequest(id: string) {
   try {
     const workId = parseDirectoryWorkId(id)
@@ -55,6 +82,37 @@ export async function handleDirectoryWorkDetailRequest(id: string) {
     return handleDirectoryWorksRouteError(
       err,
       "[GET /api/directory-works/[id]]"
+    )
+  }
+}
+
+export async function handleDirectoryWorkUpdateRequest(
+  request: NextRequest,
+  id: string
+) {
+  try {
+    const workId = parseDirectoryWorkId(id)
+    const body = await readJsonBody(request)
+    const input = parseDirectoryWorkMutationBody(body)
+    const response = await updateDirectoryWork(workId, input)
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleDirectoryWorksRouteError(
+      err,
+      "[PATCH /api/directory-works/[id]]"
+    )
+  }
+}
+
+export async function handleDirectoryWorkArchiveRequest(id: string) {
+  try {
+    const workId = parseDirectoryWorkId(id)
+    const response = await archiveDirectoryWork(workId)
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleDirectoryWorksRouteError(
+      err,
+      "[DELETE /api/directory-works/[id]]"
     )
   }
 }

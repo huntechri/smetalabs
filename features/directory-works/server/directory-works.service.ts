@@ -1,16 +1,23 @@
+import { revalidateTag } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { requireCurrentWorkspace } from "@/lib/auth/team"
+import { getWorkspaceRole, requireCurrentWorkspace } from "@/lib/auth/team"
 import { DirectoryWorksApiError } from "../api/directory-works-errors"
-import type { DirectoryWorksListParams } from "../types"
+import type {
+  DirectoryWorkMutationInput,
+  DirectoryWorksListParams,
+} from "../types"
 import { directoryWorksCacheTags } from "../api/directory-works-query-keys"
 import {
+  archiveDirectoryWorkForWorkspace,
+  createDirectoryWorkForWorkspace,
   getDirectoryWorkCategoriesForWorkspace,
   getDirectoryWorkForWorkspace,
   listDirectoryWorksForWorkspace,
+  updateDirectoryWorkForWorkspace,
 } from "./directory-works.repository"
 import { normalizeDirectoryWorksListParams } from "./directory-works.search"
 
-type DirectoryWorksReadContext = {
+type DirectoryWorksContext = {
   userId: string
   workspaceOwnerId: string
   cacheTags: {
@@ -20,7 +27,9 @@ type DirectoryWorksReadContext = {
   }
 }
 
-export async function requireDirectoryWorksReadContext(): Promise<DirectoryWorksReadContext> {
+const WRITE_ROLES = new Set(["owner", "admin", "manager"])
+
+export async function requireDirectoryWorksReadContext(): Promise<DirectoryWorksContext> {
   const client = await createClient()
   const { data, error } = await client.auth.getUser()
 
@@ -57,6 +66,27 @@ export async function requireDirectoryWorksReadContext(): Promise<DirectoryWorks
   }
 }
 
+export async function requireDirectoryWorksWriteContext(): Promise<DirectoryWorksContext> {
+  const context = await requireDirectoryWorksReadContext()
+  const role = await getWorkspaceRole(context.userId, context.workspaceOwnerId)
+
+  if (!role || !WRITE_ROLES.has(role)) {
+    throw new DirectoryWorksApiError(
+      "FORBIDDEN",
+      "Недостаточно прав для изменения справочника работ",
+      403
+    )
+  }
+
+  return context
+}
+
+function revalidateDirectoryWorkTags(context: DirectoryWorksContext, workId?: string) {
+  revalidateTag(context.cacheTags.list, "max")
+  revalidateTag(context.cacheTags.categories, "max")
+  if (workId) revalidateTag(context.cacheTags.detail(workId), "max")
+}
+
 export async function listDirectoryWorks(params: DirectoryWorksListParams) {
   const context = await requireDirectoryWorksReadContext()
   const normalizedParams = normalizeDirectoryWorksListParams(params)
@@ -81,6 +111,46 @@ export async function getDirectoryWork(id: string) {
       cacheTag: context.cacheTags.detail(work.id),
     },
   }
+}
+
+export async function createDirectoryWork(input: DirectoryWorkMutationInput) {
+  const context = await requireDirectoryWorksWriteContext()
+  const work = await createDirectoryWorkForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    input
+  )
+
+  revalidateDirectoryWorkTags(context, work.id)
+  return { data: work }
+}
+
+export async function updateDirectoryWork(
+  id: string,
+  input: DirectoryWorkMutationInput
+) {
+  const context = await requireDirectoryWorksWriteContext()
+  const work = await updateDirectoryWorkForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id,
+    input
+  )
+
+  revalidateDirectoryWorkTags(context, work.id)
+  return { data: work }
+}
+
+export async function archiveDirectoryWork(id: string) {
+  const context = await requireDirectoryWorksWriteContext()
+  const work = await archiveDirectoryWorkForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id
+  )
+
+  revalidateDirectoryWorkTags(context, work.id)
+  return { data: work }
 }
 
 export async function getDirectoryWorksCategories(status: "active" | "archived") {

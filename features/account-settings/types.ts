@@ -45,6 +45,5 @@ export interface NotificationSettings {
 
 export interface SecurityInfo {
   twoFactorEnabled: boolean
-  lastLogin: string
-  activeSessionsCount: number
+  lastLogin: string | null
 }

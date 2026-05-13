@@ -342,4 +342,4 @@ A route or folder change without docs is considered incomplete.
 
 ## 10. Validation and checks
 
-Current package scripts define `pnpm typecheck`, `pnpm lint`, and `pnpm build` as the primary repository-level checks. There is no configured `test` script yet; do not report `npm test` or an automated unit test suite as executed until such a script exists in `package.json`.
+Current package scripts define `pnpm typecheck`, `pnpm lint`, and `pnpm build` as the primary repository-level checks. There is no configured `test` script yet; PR descriptions must not report `npm test` or an automated unit test suite as executed until such a script exists in `package.json`.

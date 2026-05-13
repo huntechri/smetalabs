@@ -2,7 +2,7 @@
 
 > Last updated: 2026-05-13
 >
-> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md).
+> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md).
 
 ---
 
@@ -13,7 +13,7 @@ smetalabs/
 ├── app/                    # Next.js App Router routes, layouts, API routes, server actions
 ├── components/             # shared app components and shadcn/ui primitives
 ├── db/                     # Drizzle client, schema, migrations, seed scripts
-├── docs/                   # architecture, filemap, account-settings and design-system documentation
+├── docs/                   # architecture, filemap, account-settings, directory-works and design-system documentation
 ├── features/               # feature-owned UI, hooks and screens
 ├── hooks/                  # global hooks only
 ├── lib/                    # shared infra, auth helpers, Supabase clients, utilities
@@ -230,11 +230,12 @@ Rules:
 
 ```txt
 docs/
-├── architecture.md         # layer/routing/auth/API/UI rules
-├── account-settings.md     # /settings/account behavior contract and feature status
-├── backend-architecture.md # backend/database/API target model
-├── design-system.md        # visual system, tokens and component usage
-└── filemap.md              # this compact map
+├── architecture.md                  # layer/routing/auth/API/UI rules
+├── account-settings.md              # /settings/account behavior contract and feature status
+├── backend-architecture.md          # backend/database/API target model
+├── directory-works-architecture.md  # production works catalog contract for #64/#65
+├── design-system.md                 # visual system, tokens and component usage
+└── filemap.md                       # this compact map
 ```
 
 ---
@@ -352,6 +353,17 @@ Ownership transfer uses `public.transfer_workspace_ownership(...)` from migratio
 
 `/team` is not the catch-all workspace settings screen. Workspace/security controls such as invite links and allowed-domain auto-join rules stay out of the primary team flow until a dedicated workspace/security settings route owns them.
 
+### Directory works backend contract
+
+```txt
+/directories/works
+  → features/directory-works/** currently owns UI/mocks
+  → docs/directory-works-architecture.md fixes the production contract before migrations/API/UI/AI phases
+  → future phases #66-#71 implement DB, read API, CRUD, import/export, embeddings and performance hardening
+```
+
+The works catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; do not replace mocks or add DB/API behavior before the phase-specific issue owns that scope.
+
 ---
 
 ## Quick placement guide
@@ -372,6 +384,7 @@ Ownership transfer uses `public.transfer_workspace_ownership(...)` from migratio
 | shadcn primitive                       | `components/ui/*.tsx`                                  |
 | Business UI                            | `features/<feature>/components/*.tsx`                  |
 | Account settings behavior docs         | `docs/account-settings.md`                             |
+| Works catalog backend contract         | `docs/directory-works-architecture.md`                 |
 
 ---
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { ZodError } from "zod"
 import { DirectoryWorksApiError } from "../api/directory-works-errors"
 import {
+  aiSearchDirectoryWorks,
   applyDirectoryWorkImportJob,
   archiveDirectoryWork,
   createDirectoryWork,
@@ -11,10 +12,13 @@ import {
   getDirectoryWorkImportJob,
   getDirectoryWorksCategories,
   listDirectoryWorks,
+  processDirectoryWorkEmbeddings,
   updateDirectoryWork,
 } from "./directory-works.service"
 import {
+  parseDirectoryWorkAiSearchBody,
   parseDirectoryWorkCategoryStatus,
+  parseDirectoryWorkEmbeddingProcessBody,
   parseDirectoryWorkId,
   parseDirectoryWorkImportCreateBody,
   parseDirectoryWorkMutationBody,
@@ -197,6 +201,36 @@ export async function handleDirectoryWorksExportRequest(request: NextRequest) {
     return handleDirectoryWorksRouteError(
       err,
       "[GET /api/directory-works/export]"
+    )
+  }
+}
+
+export async function handleDirectoryWorksAiSearchRequest(request: NextRequest) {
+  try {
+    const body = await readJsonBody(request)
+    const input = parseDirectoryWorkAiSearchBody(body)
+    const response = await aiSearchDirectoryWorks(input)
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleDirectoryWorksRouteError(
+      err,
+      "[POST /api/directory-works/ai-search]"
+    )
+  }
+}
+
+export async function handleDirectoryWorkEmbeddingsProcessRequest(
+  request: NextRequest
+) {
+  try {
+    const body = await readJsonBody(request)
+    const input = parseDirectoryWorkEmbeddingProcessBody(body)
+    const response = await processDirectoryWorkEmbeddings(input.limit)
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleDirectoryWorksRouteError(
+      err,
+      "[POST /api/directory-works/embeddings/process]"
     )
   }
 }

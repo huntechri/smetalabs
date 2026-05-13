@@ -73,10 +73,6 @@ BEGIN
   FROM public.user_settings
   WHERE user_id = p_old_owner_id;
 
-  DELETE FROM public.workspace_members
-  WHERE user_id = p_new_owner_id
-    AND owner_id = p_old_owner_id;
-
   UPDATE public.workspace_members
   SET owner_id = p_new_owner_id,
       updated_at = now()

@@ -46,7 +46,11 @@ export function AccountSettingsView() {
         refetch={refetch}
       />
       <Separator />
-      <SensitiveActionsCard />
+      <SensitiveActionsCard
+        workspaceAccess={settings?.workspaceAccess}
+        workspaceName={settings?.workspace?.workspaceName}
+        refetch={refetch}
+      />
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 > Last updated: 2026-05-13
 >
-> Scope: `/settings/account`, `app/api/settings`, `app/actions/settings`, and `features/account-settings/**` after PR #59, PR #60, and PR #61.
+> Scope: `/settings/account`, `app/api/settings`, `app/actions/settings`, and `features/account-settings/**` after PR #59, PR #60, PR #61 and account dangerous actions wiring.
 
 This document describes the current production-facing behavior of account settings. It is intentionally narrow: it documents what is real, what is read-only, and what remains future scope so UI controls do not imply functionality that is not implemented.
 
@@ -211,13 +211,96 @@ Do not display `Включена` / `Выключена` unless the value comes 
 
 ## 8. Sensitive actions card
 
-Dangerous account/workspace actions remain disabled or future-scope unless explicitly implemented with production-safe backend behavior.
+The dangerous actions card is now backed by explicit server actions in `features/account-settings/server/dangerous.actions.ts` and exported through `app/actions/settings.ts`.
+
+### Покинуть workspace
+
+Real action for non-owner members only.
+
+Flow:
+
+```txt
+SensitiveActionsCard
+  → leaveWorkspaceAction()
+  → delete current user's workspace_members row for current owner_id
+  → if the user has no remaining active membership, create a personal owner workspace
+  → redirect to /dashboard
+```
 
 Rules:
 
-- no false `{ success: true }` for actions that are not implemented;
-- no destructive operation should be exposed without explicit auth checks and confirmation UI;
-- workspace-level destructive actions do not belong in account settings unless the route owns a clear workspace/security contract.
+- owner cannot leave their own workspace;
+- owner must transfer ownership or delete workspace instead;
+- if the user has another active workspace, `getPrimaryWorkspace()` will resolve it after leaving;
+- if no active workspace remains, the action creates a personal workspace membership.
+
+### Передать права владельца
+
+Real owner-only action.
+
+Flow:
+
+```txt
+SensitiveActionsCard
+  → transferWorkspaceOwnershipAction({ targetUserId })
+  → public.transfer_workspace_ownership(oldOwnerId, newOwnerId)
+  → old owner remains admin
+  → new owner becomes owner
+  → workspace profile/settings ownership moves to the new owner row
+```
+
+Rules:
+
+- target user must be an active member of the current workspace;
+- target user must not already own another workspace in the implicit `owner_id` model;
+- the transfer runs through a database function so membership, invitations, domains and owner-owned workspace settings move atomically.
+
+### Деактивировать аккаунт
+
+Real self-service action for non-owner users.
+
+Flow:
+
+```txt
+SensitiveActionsCard
+  → deactivateAccountAction()
+  → update all active workspace_members rows for current user to status = suspended
+  → browser client signs out
+  → redirect to /login
+```
+
+Rules:
+
+- owner cannot deactivate the account while owning a workspace;
+- owner must transfer ownership or delete workspace first;
+- the account is not deleted from Supabase Auth;
+- reactivation is done by an administrator through workspace member status management in `/team`;
+- `getPrimaryWorkspace()` must not fall back to a synthetic workspace for suspended/invited-only users.
+
+### Удалить workspace
+
+Real owner-only action for the currently connected workspace tables.
+
+Flow:
+
+```txt
+SensitiveActionsCard
+  → deleteWorkspaceAction({ confirmation })
+  → delete workspace_invitations by owner_id
+  → delete workspace_allowed_domains by owner_id
+  → delete workspace_members by owner_id
+  → clear owner profile workspace fields and user_settings.workspace
+  → create a personal owner workspace if no active membership remains
+  → redirect to /dashboard
+```
+
+Rules:
+
+- only the owner can delete workspace;
+- confirmation must match the workspace name or `DELETE`;
+- owner Auth account/profile is not deleted;
+- current implementation deletes only the workspace tables currently connected to production data;
+- when projects/estimates/business modules become workspace-scoped, workspace deletion must be extended before those modules are enabled for real data.
 
 ---
 
@@ -243,7 +326,8 @@ Do not implement these as incidental account-settings work:
 - active-device list with user-agent/IP/location metadata;
 - notification delivery system;
 - global theme/density runtime personalization;
-- deleting account or deleting/transferring workspace ownership;
+- deleting the Supabase Auth account itself;
+- deleting future business data until those modules are connected to workspace-scoped production tables;
 - migrating from `owner_id` workspace boundary to explicit `workspaces` table.
 
 Each item requires a dedicated issue, backend contract, and documentation update.

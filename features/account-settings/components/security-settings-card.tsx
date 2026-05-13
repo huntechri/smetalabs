@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Spinner } from "@phosphor-icons/react"
 import { toast } from "sonner"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -155,16 +154,13 @@ export function SecuritySettingsCard({
               Дополнительная защита аккаунта будет подключена отдельной задачей
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">Скоро</Badge>
-            <Button
-              variant="outline"
-              disabled
-              title="Настройка 2FA будет подключена отдельной задачей"
-            >
-              Настроить · скоро
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            disabled
+            title="Настройка 2FA будет подключена отдельной задачей"
+          >
+            Настроить · скоро
+          </Button>
         </div>
 
         <div className="flex items-center justify-between gap-4 py-1">

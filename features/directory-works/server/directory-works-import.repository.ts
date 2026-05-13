@@ -317,7 +317,7 @@ export async function createDirectoryWorkImportJobForWorkspace(
 ): Promise<DirectoryWorkImportPreviewResponse> {
   const fallbackSourceName = toNullableString(input.sourceName)
   const seen = new Map<string, number>()
-  const rows = input.rows.map((rawData, index) => {
+  const rows: PreparedImportRow[] = input.rows.map((rawData, index) => {
     const normalized = normalizeImportRow(rawData, fallbackSourceName)
     const { errors, warnings, ...normalizedData } = normalized
     const dedupeFingerprint = buildDedupeFingerprint(normalizedData)
@@ -332,12 +332,15 @@ export async function createDirectoryWorkImportJobForWorkspace(
 
     if (status === "valid" && warnings.length > 0) status = "warning"
 
+    const action: DirectoryWorkImportRowAction =
+      status === "valid" || status === "warning" ? "create" : "skip"
+
     return {
       rowNumber: index + 1,
       rawData,
       normalizedData,
       status,
-      action: status === "valid" || status === "warning" ? "create" : "skip",
+      action,
       errorMessages: errors,
       warningMessages: warnings,
       dedupeFingerprint,

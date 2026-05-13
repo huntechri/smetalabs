@@ -16,7 +16,7 @@ import { ROLE_LABELS, type Role } from "@/types/roles"
 import type { WorkspaceMember } from "../../types"
 import {
   EDITABLE_ROLES,
-  formatRelative,
+  formatMemberActivity,
   getInitials,
   type MemberActions,
 } from "./member-utils"
@@ -83,7 +83,7 @@ export function WorkspaceMemberRow({
         <WorkspaceMemberStatusBadge status={member.status} />
       </TableCell>
       <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
-        {formatRelative(member.lastActiveAt)}
+        {formatMemberActivity(member)}
       </TableCell>
       <TableCell className="text-right">
         <WorkspaceMemberActionsMenu member={member} actions={actions} />

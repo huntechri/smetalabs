@@ -43,3 +43,14 @@ export function formatRelative(dateStr: string) {
   if (diffDays < 30) return `${diffDays} дн. назад`
   return formatDate(dateStr)
 }
+
+export function formatMemberActivity(member: WorkspaceMember) {
+  if (member.lastActiveAt && member.lastActiveAt !== "—") {
+    return formatRelative(member.lastActiveAt)
+  }
+
+  if (member.status === "invited") return "Не входил"
+  if (member.status === "suspended") return "Заблокирован"
+
+  return "Нет данных"
+}

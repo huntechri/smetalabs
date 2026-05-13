@@ -18,6 +18,26 @@ async function getAuthenticatedUser() {
   return data.user
 }
 
+async function getAuthEmailsByUserId(userIds: string[]) {
+  const entries = await Promise.all(
+    userIds.map(async (id) => {
+      const { data, error } = await supabase.auth.admin.getUserById(id)
+
+      if (error) {
+        console.warn("[GET /api/team/members] Failed to load auth email", {
+          userId: id,
+          message: error.message,
+        })
+        return [id, null] as const
+      }
+
+      return [id, data.user?.email ?? null] as const
+    })
+  )
+
+  return new Map(entries)
+}
+
 /** GET /api/team/members — scoped to current workspace_members.owner_id. */
 export async function GET(_request: NextRequest) {
   try {
@@ -53,6 +73,7 @@ export async function GET(_request: NextRequest) {
 
     if (profilesError) throw profilesError
 
+    const authEmailMap = await getAuthEmailsByUserId(userIds)
     const profilesMap = new Map((profiles ?? []).map((p: any) => [p.id, p]))
     const memberRows = new Map((members ?? []).map((m: any) => [m.user_id, m]))
 
@@ -76,11 +97,14 @@ export async function GET(_request: NextRequest) {
           id === ownerId && !role?.name ? "owner" : (role?.name ?? null)
         const roleLabel =
           id === ownerId && !role?.label ? "Владелец" : (role?.label ?? null)
+        const email = authEmailMap.get(id) ?? null
+        const fullName =
+          typeof profile.full_name === "string" ? profile.full_name.trim() : ""
 
         return {
           id: profile.id,
-          name: profile.full_name ?? "Без имени",
-          email: null,
+          name: fullName || email || "Без имени",
+          email,
           avatarUrl: profile.avatar_url,
           phone: profile.phone,
           position: profile.position,

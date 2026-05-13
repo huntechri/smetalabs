@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { ZodError } from "zod"
 import { DirectoryWorksApiError } from "../api/directory-works-errors"
 import {
+  applyDirectoryWorkImportJob,
   archiveDirectoryWork,
   createDirectoryWork,
+  createDirectoryWorkImportJob,
+  exportDirectoryWorks,
   getDirectoryWork,
+  getDirectoryWorkImportJob,
   getDirectoryWorksCategories,
   listDirectoryWorks,
   updateDirectoryWork,
@@ -12,7 +16,9 @@ import {
 import {
   parseDirectoryWorkCategoryStatus,
   parseDirectoryWorkId,
+  parseDirectoryWorkImportCreateBody,
   parseDirectoryWorkMutationBody,
+  parseDirectoryWorksExportParams,
   parseDirectoryWorksListParams,
 } from "./directory-works.schemas"
 
@@ -128,6 +134,69 @@ export async function handleDirectoryWorksCategoriesRequest(request: NextRequest
     return handleDirectoryWorksRouteError(
       err,
       "[GET /api/directory-works/categories]"
+    )
+  }
+}
+
+export async function handleDirectoryWorkImportCreateRequest(request: NextRequest) {
+  try {
+    const body = await readJsonBody(request)
+    const input = parseDirectoryWorkImportCreateBody(body)
+    const response = await createDirectoryWorkImportJob(input)
+    return NextResponse.json(response, { status: 201 })
+  } catch (err) {
+    return handleDirectoryWorksRouteError(
+      err,
+      "[POST /api/directory-works/import-jobs]"
+    )
+  }
+}
+
+export async function handleDirectoryWorkImportDetailRequest(id: string) {
+  try {
+    const jobId = parseDirectoryWorkId(id)
+    const response = await getDirectoryWorkImportJob(jobId)
+    return NextResponse.json({ data: response })
+  } catch (err) {
+    return handleDirectoryWorksRouteError(
+      err,
+      "[GET /api/directory-works/import-jobs/[id]]"
+    )
+  }
+}
+
+export async function handleDirectoryWorkImportApplyRequest(id: string) {
+  try {
+    const jobId = parseDirectoryWorkId(id)
+    const response = await applyDirectoryWorkImportJob(jobId)
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleDirectoryWorksRouteError(
+      err,
+      "[POST /api/directory-works/import-jobs/[id]/apply]"
+    )
+  }
+}
+
+export async function handleDirectoryWorksExportRequest(request: NextRequest) {
+  try {
+    const { format, params } = parseDirectoryWorksExportParams(
+      request.nextUrl.searchParams
+    )
+    const file = await exportDirectoryWorks(format, params)
+    const date = new Date().toISOString().slice(0, 10)
+
+    return new NextResponse(file.body, {
+      headers: {
+        "Cache-Control": "no-store",
+        "Content-Disposition": `attachment; filename="directory-works-${date}.${file.extension}"`,
+        "Content-Type": file.contentType,
+      },
+    })
+  } catch (err) {
+    return handleDirectoryWorksRouteError(
+      err,
+      "[GET /api/directory-works/export]"
     )
   }
 }

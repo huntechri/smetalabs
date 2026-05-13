@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { DirectoryWorksListParams } from "../types"
+import type { DirectoryWorksExportFormat, DirectoryWorksListParams } from "../types"
 import { normalizeDirectoryWorksListParams } from "./directory-works.search"
 
 const optionalTrimmedString = (maxLength: number) =>
@@ -53,6 +53,13 @@ const directoryWorksLimitSchema = z.preprocess((value) => {
   return Number(value)
 }, z.number().int().min(1).max(100).default(50))
 
+const directoryWorksExportFormatSchema = z.enum(["csv", "xlsx"]).default("csv")
+
+const importRowsSchema = z
+  .array(z.record(z.string(), z.unknown()))
+  .min(1, "Файл не содержит строк для импорта")
+  .max(1000, "За один импорт можно загрузить не более 1000 строк")
+
 export const directoryWorksListQuerySchema = z.object({
   q: optionalTrimmedString(240),
   category: optionalTrimmedString(120),
@@ -82,6 +89,22 @@ export const directoryWorkMutationSchema = z
   })
   .strict()
 
+export const directoryWorkImportCreateSchema = z
+  .object({
+    rows: importRowsSchema,
+    fileName: nullableTrimmedString(255),
+    fileMimeType: nullableTrimmedString(120),
+    fileSizeBytes: z
+      .preprocess((value) => {
+        if (value === null || value === undefined || value === "") return null
+        return Number(value)
+      }, z.number().int().nonnegative().nullable())
+      .optional(),
+    sourceName: nullableTrimmedString(120),
+    options: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict()
+
 export const directoryWorkIdSchema = z.string().uuid()
 export const directoryWorkCategoryStatusSchema = z
   .enum(["active", "archived"])
@@ -96,8 +119,25 @@ export function parseDirectoryWorksListParams(
   )
 }
 
+export function parseDirectoryWorksExportParams(searchParams: URLSearchParams): {
+  format: DirectoryWorksExportFormat
+  params: DirectoryWorksListParams
+} {
+  const values = Object.fromEntries(searchParams)
+  const format = directoryWorksExportFormatSchema.parse(values.format)
+  delete values.format
+  const params = normalizeDirectoryWorksListParams(
+    directoryWorksListQuerySchema.omit({ limit: true, cursor: true }).parse(values)
+  )
+  return { format, params }
+}
+
 export function parseDirectoryWorkMutationBody(body: unknown) {
   return directoryWorkMutationSchema.parse(body)
+}
+
+export function parseDirectoryWorkImportCreateBody(body: unknown) {
+  return directoryWorkImportCreateSchema.parse(body)
 }
 
 export function parseDirectoryWorkId(id: string) {

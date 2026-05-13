@@ -2,23 +2,34 @@
 
 import { useEffect, useState } from "react"
 import type { DirectoryWork } from "@/features/directory-works/types"
+import { buildDirectoryWorksExportHref } from "@/features/directory-works/api/directory-works-client"
 import { useDirectoryWorks } from "@/features/directory-works/hooks/use-directory-works"
-import { DIRECTORY_WORKS_CREATE_EVENT } from "@/features/directory-works/lib/directory-works-events"
+import {
+  DIRECTORY_WORKS_CREATE_EVENT,
+  DIRECTORY_WORKS_EXPORT_EVENT,
+  DIRECTORY_WORKS_IMPORT_EVENT,
+} from "@/features/directory-works/lib/directory-works-events"
 import { DirectoryWorkFormDialog } from "./directory-work-form-dialog"
+import { DirectoryWorkImportDialog } from "./directory-work-import-dialog"
 import { DirectoryWorksRow } from "./directory-works-row"
 
 export function DirectoryWorksSection() {
   const {
+    applyImportJob,
     archiveWork,
+    createImportJob,
     createWork,
     error,
+    importing,
     isFetching,
     loading,
+    params,
     saving,
     updateWork,
     works,
   } = useDirectoryWorks()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [editingWork, setEditingWork] = useState<DirectoryWork | null>(null)
 
   useEffect(() => {
@@ -26,11 +37,22 @@ export function DirectoryWorksSection() {
       setEditingWork(null)
       setDialogOpen(true)
     }
+    const handleImport = () => {
+      setImportDialogOpen(true)
+    }
+    const handleExport = () => {
+      window.location.assign(buildDirectoryWorksExportHref("xlsx", params))
+    }
 
     window.addEventListener(DIRECTORY_WORKS_CREATE_EVENT, handleCreate)
-    return () =>
+    window.addEventListener(DIRECTORY_WORKS_IMPORT_EVENT, handleImport)
+    window.addEventListener(DIRECTORY_WORKS_EXPORT_EVENT, handleExport)
+    return () => {
       window.removeEventListener(DIRECTORY_WORKS_CREATE_EVENT, handleCreate)
-  }, [])
+      window.removeEventListener(DIRECTORY_WORKS_IMPORT_EVENT, handleImport)
+      window.removeEventListener(DIRECTORY_WORKS_EXPORT_EVENT, handleExport)
+    }
+  }, [params])
 
   const handleEdit = (work: DirectoryWork) => {
     setEditingWork(work)
@@ -87,6 +109,16 @@ export function DirectoryWorksSection() {
           setDialogOpen(false)
           setEditingWork(null)
         }}
+      />
+
+      <DirectoryWorkImportDialog
+        importing={importing}
+        onApplyJob={async (id) => {
+          await applyImportJob(id)
+        }}
+        onCreateJob={createImportJob}
+        onOpenChange={setImportDialogOpen}
+        open={importDialogOpen}
       />
     </>
   )

@@ -2,7 +2,11 @@
 
 import { Suspense } from "react"
 import { DirectoriesToolbar } from "@/features/directories/components/directories-toolbar"
-import { dispatchDirectoryWorksCreateEvent } from "@/features/directory-works/lib/directory-works-events"
+import {
+  dispatchDirectoryWorksCreateEvent,
+  dispatchDirectoryWorksExportEvent,
+  dispatchDirectoryWorksImportEvent,
+} from "@/features/directory-works/lib/directory-works-events"
 import { PlusIcon, FileArrowDownIcon, ExportIcon } from "@phosphor-icons/react"
 
 const worksActions = [
@@ -14,14 +18,12 @@ const worksActions = [
   {
     label: "Импорт",
     icon: <FileArrowDownIcon data-icon="inline-start" />,
-    disabled: true,
-    title: "Импорт будет реализован в issue #69",
+    onClick: dispatchDirectoryWorksImportEvent,
   },
   {
     label: "Экспорт",
     icon: <ExportIcon data-icon="inline-start" />,
-    disabled: true,
-    title: "Экспорт будет реализован в issue #69",
+    onClick: dispatchDirectoryWorksExportEvent,
   },
 ]
 

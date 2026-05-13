@@ -82,7 +82,7 @@ app/
 │
 ├── actions/
 │   ├── access-control.ts
-│   ├── settings.ts         # delegates account settings mutations/security actions to features/account-settings/server
+│   ├── settings.ts         # delegates account settings mutations/security/dangerous actions to features/account-settings/server
 │   ├── team.ts
 │   └── workspace-settings.ts
 │
@@ -154,7 +154,7 @@ features/
 │   ├── api/                # settings client/action adapters and query keys
 │   ├── components/         # profile/workspace/preferences/notifications/security/sensitive cards
 │   ├── hooks/              # TanStack Query hooks and settings mutations
-│   ├── server/             # schemas, repository/service, profile/workspace/preferences/notifications/password actions
+│   ├── server/             # schemas, repository/service, profile/workspace/preferences/notifications/password/dangerous actions
 │   └── types.ts            # feature-local account settings types
 └── workspace-settings/
     ├── api/                # team client, mappers, errors and query keys
@@ -221,6 +221,7 @@ Rules:
 - `lib/supabase/proxy.ts` is the source of truth for middleware route protection.
 - Auth helper logic belongs in `lib/auth/**`.
 - `lib/auth/activity.ts` is a lightweight activity signal for workspace members, not an audit log or online-presence system.
+- `lib/auth/team.ts` must not resolve a synthetic active workspace for users that only have invited/suspended memberships.
 - Do not put React screens/components in `lib/`.
 
 ---
@@ -252,7 +253,8 @@ db/
 │   ├── 005_rls_advisor_cleanup.sql
 │   ├── 006_defer_invite_acceptance.sql
 │   ├── 007_advisor_policy_grants.sql
-│   └── 008_private_rls_helpers.sql
+│   ├── 008_private_rls_helpers.sql
+│   └── 009_transfer_workspace_ownership.sql
 └── schema/
     ├── index.ts
     ├── profiles.ts
@@ -320,11 +322,22 @@ Use `types/` only for shared cross-feature types. Keep feature-private types in 
 /settings/account
   → features/account-settings/components/account-settings-view.tsx
   → useSettings() / GET /api/settings
-  → settings cards call app/actions/settings.ts for mutations/security actions
+  → settings cards call app/actions/settings.ts for mutations/security/dangerous actions
   → features/account-settings/server/**
 ```
 
 Current account settings behavior is documented in `docs/account-settings.md`. Do not add active controls to `/settings/account` unless they are real, read-only, or explicitly disabled future functionality.
+
+### Account dangerous actions
+
+```txt
+/settings/account → SensitiveActionsCard
+  → leaveWorkspaceAction / transferWorkspaceOwnershipAction / deactivateAccountAction / deleteWorkspaceAction
+  → features/account-settings/server/dangerous.actions.ts
+  → workspace_members / workspace_invitations / workspace_allowed_domains / owner profile-settings
+```
+
+Ownership transfer uses `public.transfer_workspace_ownership(...)` from migration `009_transfer_workspace_ownership.sql` so the implicit `owner_id` workspace boundary moves atomically.
 
 ### Workspace team management
 
@@ -337,7 +350,7 @@ Current account settings behavior is documented in `docs/account-settings.md`. D
   → public.workspace_* tables / Supabase Auth admin API
 ```
 
-`/team` is not the catch-all workspace settings screen. Workspace/security controls such as invite links, allowed-domain auto-join rules and workspace danger actions stay out of the primary team flow until a dedicated workspace/security settings route owns them.
+`/team` is not the catch-all workspace settings screen. Workspace/security controls such as invite links and allowed-domain auto-join rules stay out of the primary team flow until a dedicated workspace/security settings route owns them.
 
 ---
 
@@ -371,6 +384,7 @@ Current account settings behavior is documented in `docs/account-settings.md`. D
 - `features/account-settings/components/preferences-settings-card.tsx` — interface preferences remain visible but disabled as future functionality until runtime personalization is wired.
 - `features/account-settings/components/security-settings-card.tsx` — password reset is active, 2FA is disabled future scope, other sessions can be revoked, and last login is shown from Supabase Auth.
 - `features/account-settings/server/password.actions.ts` — owns self password reset email and revoke-other-sessions actions.
+- `features/account-settings/server/dangerous.actions.ts` — owns leave workspace, transfer ownership, deactivate account and delete workspace actions for `/settings/account`.
 
 ---
 
@@ -387,11 +401,11 @@ Current account settings behavior is documented in `docs/account-settings.md`. D
 - `app/api/team/invite-link/route.ts` — explicit 501 because no authoritative workspace-scoped invite-link storage exists yet.
 - `app/api/access-control/roles/route.ts` — now requires authenticated workspace read permission.
 - `app/actions/access-control.ts` — workspace role mutations use `workspace_members.role_id`, not global `user_roles`.
-- `app/actions/settings.ts` — compatibility server-action wrapper that delegates account settings updates/password reset/session security actions to `features/account-settings/server/*`.
-- `features/account-settings/server/*` — schemas, repository/service helpers and domain actions for profile/workspace/preferences/notifications/password settings.
+- `app/actions/settings.ts` — compatibility server-action wrapper that delegates account settings updates/password reset/session security/dangerous actions to `features/account-settings/server/*`.
+- `features/account-settings/server/*` — schemas, repository/service helpers and domain actions for profile/workspace/preferences/notifications/password/dangerous settings.
 - `features/account-settings/api/*` and `features/account-settings/hooks/*` — account settings client API/action wrappers and TanStack Query hooks.
 - `app/actions/team.ts` and `app/actions/workspace-settings.ts` — dangerous/skeleton actions return explicit Not implemented errors instead of false success.
-- `features/account-settings/components/sensitive-actions-card.tsx` — unimplemented dangerous actions are disabled/labelled coming soon.
+- `features/account-settings/components/sensitive-actions-card.tsx` — dangerous actions are wired with confirmation dialogs and role-based guards.
 - `features/access-control/api/*`, `features/access-control/lib/*`, `features/access-control/hooks/use-permission-matrix-state.ts` — access-control query keys/client, pure matrix builders and draft state for the permissions matrix.
 - `features/access-control/components/permissions-matrix.tsx` — save action is disabled/labelled coming soon until persistence is implemented.
 - `features/workspace-settings/api/*` and `features/workspace-settings/hooks/*` — workspace/team API client, error mappers, query keys and TanStack Query hooks for members, overview, invitations, domains and invite link.

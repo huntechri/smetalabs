@@ -82,9 +82,9 @@ export async function requireDirectoryWorksWriteContext(): Promise<DirectoryWork
 }
 
 function revalidateDirectoryWorkTags(context: DirectoryWorksContext, workId?: string) {
-  revalidateTag(context.cacheTags.list)
-  revalidateTag(context.cacheTags.categories)
-  if (workId) revalidateTag(context.cacheTags.detail(workId))
+  revalidateTag(context.cacheTags.list, "max")
+  revalidateTag(context.cacheTags.categories, "max")
+  if (workId) revalidateTag(context.cacheTags.detail(workId), "max")
 }
 
 export async function listDirectoryWorks(params: DirectoryWorksListParams) {

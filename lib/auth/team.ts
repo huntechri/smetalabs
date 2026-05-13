@@ -55,16 +55,19 @@ function toMember(row: any): WorkspaceMember {
  * Resolve the current workspace deterministically.
  *
  * Current data model uses workspace_members.owner_id as the workspace boundary.
- * Prefer the user's own workspace when present, otherwise the oldest active
- * membership. If no membership exists yet, fall back to userId so early owner
- * accounts created before workspace_members keep working.
+ * Prefer the user's own active workspace when present, otherwise the oldest
+ * active membership. If no membership rows exist yet, fall back to userId so
+ * early owner accounts created before workspace_members keep working.
+ *
+ * Suspended/invited-only users must not fall back to a synthetic owner
+ * workspace, otherwise account deactivation would be bypassed by middleware and
+ * server actions that call this helper.
  */
 export async function getPrimaryWorkspace(userId: string): Promise<string> {
   const { data, error } = await supabase
     .from("workspace_members")
     .select("owner_id,user_id,status,created_at,roles!inner(name)")
     .eq("user_id", userId)
-    .eq("status", "active")
     .order("created_at", { ascending: true })
 
   if (error) {
@@ -72,8 +75,18 @@ export async function getPrimaryWorkspace(userId: string): Promise<string> {
   }
 
   const memberships = data ?? []
-  const ownWorkspace = memberships.find((m: any) => m.owner_id === userId)
-  return ownWorkspace?.owner_id ?? memberships[0]?.owner_id ?? userId
+  const activeMemberships = memberships.filter(
+    (membership: any) => membership.status === "active"
+  )
+
+  if (activeMemberships.length === 0 && memberships.length > 0) {
+    throw new Error("WORKSPACE_MEMBER_REQUIRED")
+  }
+
+  const ownWorkspace = activeMemberships.find(
+    (m: any) => m.owner_id === userId
+  )
+  return ownWorkspace?.owner_id ?? activeMemberships[0]?.owner_id ?? userId
 }
 
 export async function requireCurrentWorkspace(userId: string): Promise<string> {

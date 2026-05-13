@@ -177,6 +177,11 @@ export async function GET() {
       defaultTimezone: workspaceSettings?.workspace?.defaultTimezone ?? "UTC",
     }
 
+    const security = {
+      twoFactorEnabled: data?.security?.twoFactorEnabled ?? false,
+      lastLogin: user.last_sign_in_at ?? null,
+    }
+
     return NextResponse.json({
       data: {
         profile: mergedProfile,
@@ -187,7 +192,7 @@ export async function GET() {
         },
         preferences: data?.preferences ?? {},
         notifications: data?.notifications ?? {},
-        security: data?.security ?? {},
+        security,
       },
       meta: { updatedAt: data?.updated_at ?? null },
     })

@@ -3,19 +3,11 @@
 import { LockKey } from "@phosphor-icons/react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
-import { ROLE_LABELS, type Role } from "@/types/roles"
+import { ROLE_LABELS } from "@/types/roles"
 import type { WorkspaceMember } from "../../types"
 import {
-  EDITABLE_ROLES,
   formatMemberActivity,
   getInitials,
   type MemberActions,
@@ -53,31 +45,10 @@ export function WorkspaceMemberRow({
         </div>
       </TableCell>
       <TableCell className="hidden sm:table-cell">
-        {isOwner ? (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <LockKey className="size-3" />
-            <span>{ROLE_LABELS[member.role]}</span>
-          </div>
-        ) : (
-          <Select
-            value={member.role}
-            disabled={isOwner}
-            onValueChange={(role) =>
-              void actions.onChangeRole(member, role as Role)
-            }
-          >
-            <SelectTrigger className="h-7 w-[130px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {EDITABLE_ROLES.map((r) => (
-                <SelectItem key={r} value={r}>
-                  {ROLE_LABELS[r]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          {isOwner && <LockKey className="size-3" />}
+          <span>{ROLE_LABELS[member.role]}</span>
+        </div>
       </TableCell>
       <TableCell>
         <WorkspaceMemberStatusBadge status={member.status} />

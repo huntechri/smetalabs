@@ -46,6 +46,11 @@ async function readJsonBody(request: NextRequest) {
   }
 }
 
+function toResponseBody(body: string | Buffer) {
+  if (typeof body === "string") return body
+  return new Uint8Array(body.buffer, body.byteOffset, body.byteLength)
+}
+
 export function handleDirectoryWorksRouteError(
   err: unknown,
   routeLabel: string
@@ -190,7 +195,7 @@ export async function handleDirectoryWorksExportRequest(request: NextRequest) {
     const file = await exportDirectoryWorks(format, params)
     const date = new Date().toISOString().slice(0, 10)
 
-    return new NextResponse(file.body, {
+    return new NextResponse(toResponseBody(file.body), {
       headers: {
         "Cache-Control": "no-store",
         "Content-Disposition": `attachment; filename="directory-works-${date}.${file.extension}"`,

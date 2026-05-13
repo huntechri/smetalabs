@@ -27,6 +27,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { createClient } from "@/lib/supabase/client"
 import { fetchWorkspaceMembers } from "@/features/workspace-settings/api/team-client"
 import type { WorkspaceAccessInfo } from "../types"
@@ -260,27 +269,31 @@ export function SensitiveActionsCard({
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col gap-2 py-2">
-                <label className="text-sm font-medium" htmlFor="new-owner">
+                <Label htmlFor="new-owner" className="text-muted-foreground">
                   Новый владелец
-                </label>
-                <select
-                  id="new-owner"
+                </Label>
+                <Select
                   value={selectedOwnerId}
-                  onChange={(event) => setSelectedOwnerId(event.target.value)}
+                  onValueChange={setSelectedOwnerId}
                   disabled={membersLoading || pendingAction !== null}
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <option value="">
-                    {membersLoading
-                      ? "Загрузка участников..."
-                      : "Выберите участника"}
-                  </option>
-                  {ownerCandidates.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.name || member.email || member.id} · {member.role}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger id="new-owner" className="w-full">
+                    <SelectValue
+                      placeholder={
+                        membersLoading
+                          ? "Загрузка участников..."
+                          : "Выберите участника"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ownerCandidates.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.name || member.email || member.id} · {member.role}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {ownerCandidates.length === 0 && !membersLoading ? (
                   <p className="text-xs text-muted-foreground">
                     Нет активных участников, которым можно передать ownership.
@@ -385,19 +398,18 @@ export function SensitiveActionsCard({
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col gap-2 py-2">
-                <label
-                  className="text-sm font-medium"
+                <Label
                   htmlFor="delete-workspace-confirmation"
+                  className="text-muted-foreground"
                 >
                   Подтверждение
-                </label>
-                <input
+                </Label>
+                <Input
                   id="delete-workspace-confirmation"
                   value={deleteConfirmation}
                   onChange={(event) => setDeleteConfirmation(event.target.value)}
                   placeholder={displayWorkspaceName}
                   disabled={pendingAction !== null}
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <p className="text-xs text-muted-foreground">
                   Текущее название: {displayWorkspaceName}

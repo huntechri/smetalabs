@@ -1,6 +1,6 @@
 # SmetaLabs — Architecture Guide
 
-> Last updated: 2026-05-12
+> Last updated: 2026-05-13
 >
 > Scope: production-facing architecture rules for the current Next.js 16 + Supabase Auth + Drizzle + shadcn/ui codebase.
 
@@ -52,6 +52,9 @@ Use this layer for:
 
 - forms, tables, cards and screens specific to one product feature;
 - feature hooks such as filtering/search/view state;
+- feature-local `api/` clients and query-key factories for API routes/server action wrappers;
+- TanStack Query hooks for server state (`useQuery`/`useMutation`), with invalidation owned by the feature hook;
+- feature-local `server/` modules when `app/actions/*` delegates domain actions into the feature boundary;
 - fallback mocks while backend integration is incomplete.
 
 Do not put shadcn primitives here. Import primitives from `@/components/ui/*`.

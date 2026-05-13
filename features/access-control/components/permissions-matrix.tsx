@@ -18,7 +18,7 @@ import { PermissionsMatrixTable } from "./permissions-matrix-table"
 import { PermissionsMatrixToolbar } from "./permissions-matrix-toolbar"
 
 export function PermissionsMatrix() {
-  const { roles, loading, error } = useRoles()
+  const { roles, loading, error, refetch } = useRoles()
   const derived = useMemo(() => buildPermissionMatrix(roles), [roles])
   const { matrix, togglePermission, resetMatrix } = usePermissionMatrixState(
     derived.initialMatrix
@@ -29,7 +29,7 @@ export function PermissionsMatrix() {
   }
 
   if (error) {
-    return <PermissionsMatrixError error={error} />
+    return <PermissionsMatrixError error={error} onRetry={refetch} />
   }
 
   if (!derived.accessRoles.length) {

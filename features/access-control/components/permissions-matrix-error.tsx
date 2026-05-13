@@ -9,7 +9,13 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-export function PermissionsMatrixError({ error }: { error: string }) {
+export function PermissionsMatrixError({
+  error,
+  onRetry,
+}: {
+  error: string
+  onRetry: () => void | Promise<void>
+}) {
   return (
     <Card className="overflow-auto border-destructive/30">
       <CardHeader>
@@ -19,11 +25,7 @@ export function PermissionsMatrixError({ error }: { error: string }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.location.reload()}
-        >
+        <Button variant="outline" size="sm" onClick={() => void onRetry()}>
           Попробовать снова
         </Button>
       </CardContent>

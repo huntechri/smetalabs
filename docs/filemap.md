@@ -1,6 +1,6 @@
 # SmetaLabs — Filemap
 
-> Last updated: 2026-05-12
+> Last updated: 2026-05-13
 >
 > Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md).
 

@@ -19,6 +19,22 @@ export type DirectoryWorksListParams = {
   sort?: DirectoryWorksSort
 }
 
+export type DirectoryWorkMutationInput = {
+  title: string
+  unit: string
+  rate: number
+  category: string
+  subcategory?: string | null
+  code?: string | null
+  description?: string | null
+  includedOperations?: string | null
+  excludedOperations?: string | null
+  sourceName?: string | null
+  sourceExternalRowKey?: string | null
+  currencyCode?: string
+  priceKind?: DirectoryWorkPriceKind
+}
+
 export type DirectoryWork = {
   id: string
   title: string

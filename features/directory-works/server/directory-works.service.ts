@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getWorkspaceRole, requireCurrentWorkspace } from "@/lib/auth/team"
 import { DirectoryWorksApiError } from "../api/directory-works-errors"
 import type {
+  DirectoryWorkAiSearchInput,
   DirectoryWorkImportCreateInput,
   DirectoryWorkMutationInput,
   DirectoryWorksExportFormat,
@@ -22,6 +23,12 @@ import {
   createDirectoryWorkImportJobForWorkspace,
   getDirectoryWorkImportJobForWorkspace,
 } from "./directory-works-import.repository"
+import {
+  aiSearchDirectoryWorksForWorkspace,
+  enqueueDirectoryWorkEmbedding,
+  enqueueDirectoryWorkEmbeddings,
+  processDirectoryWorkEmbeddingQueue,
+} from "./directory-works.embeddings"
 import {
   buildDirectoryWorksExportFile,
   getDirectoryWorksForExport,
@@ -139,6 +146,7 @@ export async function createDirectoryWork(input: DirectoryWorkMutationInput) {
     input
   )
 
+  await enqueueDirectoryWorkEmbedding(context.workspaceOwnerId, work)
   revalidateDirectoryWorkTags(context, work.id)
   return { data: work }
 }
@@ -155,6 +163,7 @@ export async function updateDirectoryWork(
     input
   )
 
+  await enqueueDirectoryWorkEmbedding(context.workspaceOwnerId, work)
   revalidateDirectoryWorkTags(context, work.id)
   return { data: work }
 }
@@ -211,6 +220,21 @@ export async function applyDirectoryWorkImportJob(id: string) {
     context.userId,
     id
   )
+  const appliedJob = await getDirectoryWorkImportJobForWorkspace(
+    context.workspaceOwnerId,
+    id
+  )
+  const appliedWorks = await Promise.all(
+    (appliedJob?.rows ?? [])
+      .map((row) => row.appliedWorkId)
+      .filter((workId): workId is string => Boolean(workId))
+      .map((workId) => getDirectoryWorkForWorkspace(context.workspaceOwnerId, workId))
+  )
+
+  await enqueueDirectoryWorkEmbeddings(
+    context.workspaceOwnerId,
+    appliedWorks.filter((work): work is NonNullable<typeof work> => Boolean(work))
+  )
 
   revalidateDirectoryWorkTags(context)
   revalidateImportTags(context, response.data.job.id)
@@ -224,4 +248,14 @@ export async function exportDirectoryWorks(
   const context = await requireDirectoryWorksReadContext()
   const works = await getDirectoryWorksForExport(context.workspaceOwnerId, params)
   return buildDirectoryWorksExportFile(works, format)
+}
+
+export async function aiSearchDirectoryWorks(input: DirectoryWorkAiSearchInput) {
+  const context = await requireDirectoryWorksReadContext()
+  return aiSearchDirectoryWorksForWorkspace(context.workspaceOwnerId, input)
+}
+
+export async function processDirectoryWorkEmbeddings(limit: number) {
+  const context = await requireDirectoryWorksWriteContext()
+  return processDirectoryWorkEmbeddingQueue(context.workspaceOwnerId, limit)
 }

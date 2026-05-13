@@ -2,7 +2,7 @@
 
 > Last updated: 2026-05-13
 >
-> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md).
+> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md).
 
 ---
 
@@ -13,7 +13,7 @@ smetalabs/
 ├── app/                    # Next.js App Router routes, layouts, API routes, server actions
 ├── components/             # shared app components and shadcn/ui primitives
 ├── db/                     # Drizzle client, schema, migrations, seed scripts
-├── docs/                   # architecture, filemap and design-system documentation
+├── docs/                   # architecture, filemap, account-settings and design-system documentation
 ├── features/               # feature-owned UI, hooks and screens
 ├── hooks/                  # global hooks only
 ├── lib/                    # shared infra, auth helpers, Supabase clients, utilities
@@ -82,13 +82,13 @@ app/
 │
 ├── actions/
 │   ├── access-control.ts
-│   ├── settings.ts
+│   ├── settings.ts         # delegates account settings mutations/security actions to features/account-settings/server
 │   ├── team.ts
 │   └── workspace-settings.ts
 │
 └── api/
     ├── access-control/roles/route.ts
-    ├── settings/route.ts
+    ├── settings/route.ts   # account settings read boundary
     └── team/
         ├── overview/route.ts
         ├── invitations/
@@ -113,7 +113,7 @@ app/
 - `app/(auth)/**` owns auth pages only.
 - `app/(main)/**` owns protected product routes only.
 - `app/api/**` owns JSON route handlers.
-- `app/actions/**` owns server actions.
+- `app/actions/**` owns server actions and compatibility wrappers.
 - Route files should delegate UI to `features/**` whenever the screen grows beyond simple composition.
 
 ---
@@ -151,7 +151,15 @@ features/
 ├── directory-counterparties/
 ├── access-control/
 ├── account-settings/
+│   ├── api/                # settings client/action adapters and query keys
+│   ├── components/         # profile/workspace/preferences/notifications/security/sensitive cards
+│   ├── hooks/              # TanStack Query hooks and settings mutations
+│   ├── server/             # schemas, repository/service, profile/workspace/preferences/notifications/password actions
+│   └── types.ts            # feature-local account settings types
 └── workspace-settings/
+    ├── api/                # team client, mappers, errors and query keys
+    ├── components/         # team/workspace settings UI sections
+    └── hooks/              # workspace/team query and mutation hooks
 ```
 
 Feature folder convention:
@@ -182,6 +190,7 @@ Rules:
 ```txt
 components/
 ├── ui/                     # shadcn/ui primitives and approved primitive extensions
+├── query-provider.tsx      # TanStack Query app provider
 ├── theme-provider.tsx
 └── nav-documents.tsx       # legacy/template navigation component
 ```
@@ -197,8 +206,13 @@ lib/
 ├── supabase/
 │   ├── client.ts           # browser client
 │   ├── server.ts           # server client
-│   └── proxy.ts            # session refresh + route protection
-├── auth/                   # auth, RBAC and workspace helpers
+│   └── proxy.ts            # session refresh, route protection and workspace activity touch
+├── auth/
+│   ├── activity.ts         # throttled workspace_members.last_active_at touch helper
+│   ├── actions.ts
+│   ├── invitations.ts
+│   ├── permissions.ts
+│   └── team.ts
 └── utils.ts                # generic utilities
 ```
 
@@ -206,7 +220,21 @@ Rules:
 
 - `lib/supabase/proxy.ts` is the source of truth for middleware route protection.
 - Auth helper logic belongs in `lib/auth/**`.
+- `lib/auth/activity.ts` is a lightweight activity signal for workspace members, not an audit log or online-presence system.
 - Do not put React screens/components in `lib/`.
+
+---
+
+## `docs/`
+
+```txt
+docs/
+├── architecture.md         # layer/routing/auth/API/UI rules
+├── account-settings.md     # /settings/account behavior contract and feature status
+├── backend-architecture.md # backend/database/API target model
+├── design-system.md        # visual system, tokens and component usage
+└── filemap.md              # this compact map
+```
 
 ---
 
@@ -214,7 +242,7 @@ Rules:
 
 ```txt
 db/
-├── index.ts                # Drizzle client
+├── index.ts                # Drizzle client / Supabase service-role client wrapper
 ├── seed.ts                 # RBAC seed
 ├── seed-settings.ts        # user settings seed
 ├── migrations/
@@ -222,7 +250,9 @@ db/
 │   ├── 003_workspace_tables.sql
 │   ├── 004_auth_invitation_flow.sql
 │   ├── 005_rls_advisor_cleanup.sql
-│   └── 006_defer_invite_acceptance.sql
+│   ├── 006_defer_invite_acceptance.sql
+│   ├── 007_advisor_policy_grants.sql
+│   └── 008_private_rls_helpers.sql
 └── schema/
     ├── index.ts
     ├── profiles.ts
@@ -274,14 +304,27 @@ Use `types/` only for shared cross-feature types. Keep feature-private types in 
 
 ```txt
 /team invite action or /api/team/invitations
-  → supabase.auth.admin.inviteUserByEmail(... redirectTo: /set-password)
+  → supabase.auth.admin.inviteUserByEmail(... redirectTo: /auth/callback)
   → user opens email link
-  → Supabase verifies token
+  → /auth/callback verifies token_hash/code and creates session
   → /set-password
-  → features/auth/components/set-password-form.tsx
+  → features/auth/components/invite-password-form.tsx
   → supabase.auth.updateUser({ password })
+  → /api/team/invitations/accept
   → /dashboard
 ```
+
+### Account settings
+
+```txt
+/settings/account
+  → features/account-settings/components/account-settings-view.tsx
+  → useSettings() / GET /api/settings
+  → settings cards call app/actions/settings.ts for mutations/security actions
+  → features/account-settings/server/**
+```
+
+Current account settings behavior is documented in `docs/account-settings.md`. Do not add active controls to `/settings/account` unless they are real, read-only, or explicitly disabled future functionality.
 
 ### Workspace team management
 
@@ -315,6 +358,19 @@ Use `types/` only for shared cross-feature types. Keep feature-private types in 
 | SQL migration                          | `db/migrations/*.sql`                                  |
 | shadcn primitive                       | `components/ui/*.tsx`                                  |
 | Business UI                            | `features/<feature>/components/*.tsx`                  |
+| Account settings behavior docs         | `docs/account-settings.md`                             |
+
+---
+
+## Recent account/team/settings updates
+
+- `app/api/team/members/route.ts` — workspace-scoped team member reads include email identity from Supabase Auth admin lookup, with display-name fallback to email when profile name is empty.
+- `lib/auth/activity.ts` and `lib/supabase/proxy.ts` — authenticated non-API navigation touches active `workspace_members.last_active_at` with throttling.
+- `features/workspace-settings/components/members/*` — team member rows/mobile lists hide duplicate email display and use `last_active_at` for member activity labels.
+- `app/api/settings/route.ts` — account settings read boundary returns `workspaceAccess` and security data using real Auth-derived fields where available.
+- `features/account-settings/components/preferences-settings-card.tsx` — interface preferences remain visible but disabled as future functionality until runtime personalization is wired.
+- `features/account-settings/components/security-settings-card.tsx` — password reset is active, 2FA is disabled future scope, other sessions can be revoked, and last login is shown from Supabase Auth.
+- `features/account-settings/server/password.actions.ts` — owns self password reset email and revoke-other-sessions actions.
 
 ---
 
@@ -331,7 +387,7 @@ Use `types/` only for shared cross-feature types. Keep feature-private types in 
 - `app/api/team/invite-link/route.ts` — explicit 501 because no authoritative workspace-scoped invite-link storage exists yet.
 - `app/api/access-control/roles/route.ts` — now requires authenticated workspace read permission.
 - `app/actions/access-control.ts` — workspace role mutations use `workspace_members.role_id`, not global `user_roles`.
-- `app/actions/settings.ts` — compatibility server-action wrapper that delegates account settings updates/password reset to `features/account-settings/server/*`.
+- `app/actions/settings.ts` — compatibility server-action wrapper that delegates account settings updates/password reset/session security actions to `features/account-settings/server/*`.
 - `features/account-settings/server/*` — schemas, repository/service helpers and domain actions for profile/workspace/preferences/notifications/password settings.
 - `features/account-settings/api/*` and `features/account-settings/hooks/*` — account settings client API/action wrappers and TanStack Query hooks.
 - `app/actions/team.ts` and `app/actions/workspace-settings.ts` — dangerous/skeleton actions return explicit Not implemented errors instead of false success.

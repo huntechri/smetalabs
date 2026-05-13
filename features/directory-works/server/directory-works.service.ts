@@ -3,7 +3,9 @@ import { createClient } from "@/lib/supabase/server"
 import { getWorkspaceRole, requireCurrentWorkspace } from "@/lib/auth/team"
 import { DirectoryWorksApiError } from "../api/directory-works-errors"
 import type {
+  DirectoryWorkImportCreateInput,
   DirectoryWorkMutationInput,
+  DirectoryWorksExportFormat,
   DirectoryWorksListParams,
 } from "../types"
 import { directoryWorksCacheTags } from "../api/directory-works-query-keys"
@@ -15,6 +17,15 @@ import {
   listDirectoryWorksForWorkspace,
   updateDirectoryWorkForWorkspace,
 } from "./directory-works.repository"
+import {
+  applyDirectoryWorkImportJobForWorkspace,
+  createDirectoryWorkImportJobForWorkspace,
+  getDirectoryWorkImportJobForWorkspace,
+} from "./directory-works-import.repository"
+import {
+  buildDirectoryWorksExportFile,
+  getDirectoryWorksForExport,
+} from "./directory-works.export"
 import { normalizeDirectoryWorksListParams } from "./directory-works.search"
 
 type DirectoryWorksContext = {
@@ -24,6 +35,7 @@ type DirectoryWorksContext = {
     list: string
     categories: string
     detail: (workId: string) => string
+    importJob: (jobId: string) => string
   }
 }
 
@@ -52,6 +64,8 @@ export async function requireDirectoryWorksReadContext(): Promise<DirectoryWorks
         categories: directoryWorksCacheTags.categories(workspaceOwnerId),
         detail: (workId: string) =>
           directoryWorksCacheTags.detail(workspaceOwnerId, workId),
+        importJob: (jobId: string) =>
+          directoryWorksCacheTags.importJob(workspaceOwnerId, jobId),
       },
     }
   } catch (err) {
@@ -85,6 +99,10 @@ function revalidateDirectoryWorkTags(context: DirectoryWorksContext, workId?: st
   revalidateTag(context.cacheTags.list, "max")
   revalidateTag(context.cacheTags.categories, "max")
   if (workId) revalidateTag(context.cacheTags.detail(workId), "max")
+}
+
+function revalidateImportTags(context: DirectoryWorksContext, jobId: string) {
+  revalidateTag(context.cacheTags.importJob(jobId), "max")
 }
 
 export async function listDirectoryWorks(params: DirectoryWorksListParams) {
@@ -156,4 +174,54 @@ export async function archiveDirectoryWork(id: string) {
 export async function getDirectoryWorksCategories(status: "active" | "archived") {
   const context = await requireDirectoryWorksReadContext()
   return getDirectoryWorkCategoriesForWorkspace(context.workspaceOwnerId, status)
+}
+
+export async function createDirectoryWorkImportJob(
+  input: DirectoryWorkImportCreateInput
+) {
+  const context = await requireDirectoryWorksWriteContext()
+  const response = await createDirectoryWorkImportJobForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    input
+  )
+
+  revalidateImportTags(context, response.data.job.id)
+  return response
+}
+
+export async function getDirectoryWorkImportJob(id: string) {
+  const context = await requireDirectoryWorksReadContext()
+  const response = await getDirectoryWorkImportJobForWorkspace(
+    context.workspaceOwnerId,
+    id
+  )
+
+  if (!response) {
+    throw new DirectoryWorksApiError("NOT_FOUND", "Import job не найден", 404)
+  }
+
+  return response
+}
+
+export async function applyDirectoryWorkImportJob(id: string) {
+  const context = await requireDirectoryWorksWriteContext()
+  const response = await applyDirectoryWorkImportJobForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id
+  )
+
+  revalidateDirectoryWorkTags(context)
+  revalidateImportTags(context, response.data.job.id)
+  return response
+}
+
+export async function exportDirectoryWorks(
+  format: DirectoryWorksExportFormat,
+  params: DirectoryWorksListParams
+) {
+  const context = await requireDirectoryWorksReadContext()
+  const works = await getDirectoryWorksForExport(context.workspaceOwnerId, params)
+  return buildDirectoryWorksExportFile(works, format)
 }

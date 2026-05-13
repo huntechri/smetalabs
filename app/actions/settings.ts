@@ -1,6 +1,12 @@
 "use server"
 
 import {
+  deactivateAccountAction as deactivateAccount,
+  deleteWorkspaceAction as deleteWorkspace,
+  leaveWorkspaceAction as leaveWorkspace,
+  transferWorkspaceOwnershipAction as transferWorkspaceOwnership,
+} from "@/features/account-settings/server/dangerous.actions"
+import {
   revokeOtherSessionsAction as revokeOtherSessions,
   sendOwnPasswordResetEmailAction as sendOwnPasswordResetEmail,
 } from "@/features/account-settings/server/password.actions"
@@ -37,4 +43,22 @@ export async function sendOwnPasswordResetEmailAction() {
 
 export async function revokeOtherSessionsAction() {
   return revokeOtherSessions()
+}
+
+export async function leaveWorkspaceAction() {
+  return leaveWorkspace()
+}
+
+export async function transferWorkspaceOwnershipAction(input: {
+  targetUserId: string
+}) {
+  return transferWorkspaceOwnership(input)
+}
+
+export async function deactivateAccountAction() {
+  return deactivateAccount()
+}
+
+export async function deleteWorkspaceAction(input: { confirmation: string }) {
+  return deleteWorkspace(input)
 }

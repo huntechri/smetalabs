@@ -3,6 +3,7 @@ import type {
   AccountProfile,
   NotificationSettings,
   SecurityInfo,
+  WorkspaceAccessInfo,
   WorkspaceSettings,
 } from "../types"
 
@@ -10,6 +11,7 @@ export interface SettingsResponse {
   data: {
     profile: Partial<AccountProfile>
     workspace: Partial<WorkspaceSettings>
+    workspaceAccess: WorkspaceAccessInfo
     preferences: Partial<AccountPreferences>
     notifications: Partial<NotificationSettings>
     security: Partial<SecurityInfo>

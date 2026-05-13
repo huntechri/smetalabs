@@ -23,7 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useUpdateWorkspace } from "../hooks/use-account-settings"
-import type { WorkspaceSettings } from "../types"
+import type { WorkspaceAccessInfo, WorkspaceSettings } from "../types"
 
 const companyTypes = [
   { value: "ООО", label: "ООО" },
@@ -58,13 +58,32 @@ const timezones = [
 
 type SettingsStateProps = {
   workspace: Partial<WorkspaceSettings> | null | undefined
+  workspaceAccess: WorkspaceAccessInfo | null | undefined
   loading: boolean
   error: string | null
   refetch: () => Promise<void>
 }
 
+function ReadonlyField({
+  label,
+  value,
+}: {
+  label: string
+  value: string | null | undefined
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label>{label}</Label>
+      <div className="min-h-8 rounded-md border bg-muted/30 px-3 py-2 text-sm text-foreground">
+        {value?.trim() || "—"}
+      </div>
+    </div>
+  )
+}
+
 export function WorkspaceSettingsCard({
   workspace,
+  workspaceAccess,
   loading,
   error,
   refetch,
@@ -74,6 +93,8 @@ export function WorkspaceSettingsCard({
     loading: saving,
     error: saveError,
   } = useUpdateWorkspace()
+
+  const canEditWorkspace = workspaceAccess?.canEditWorkspace === true
 
   const [workspaceName, setWorkspaceName] = useState("")
   const [companyLegalName, setCompanyLegalName] = useState("")
@@ -105,6 +126,8 @@ export function WorkspaceSettingsCard({
   }, [workspace])
 
   const handleSave = async () => {
+    if (!canEditWorkspace) return
+
     const updated = await updateWorkspace({
       workspaceName,
       companyLegalName,
@@ -160,6 +183,46 @@ export function WorkspaceSettingsCard({
             Повторить
           </Button>
         </CardFooter>
+      </Card>
+    )
+  }
+
+  if (!canEditWorkspace) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Рабочее пространство</CardTitle>
+          <CardDescription>
+            Данные workspace, к которому у вас есть доступ. Изменять эти данные может только владелец workspace.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ReadonlyField label="Название workspace" value={workspaceName} />
+            <ReadonlyField
+              label="Юридическое название компании"
+              value={companyLegalName}
+            />
+            <ReadonlyField label="Тип компании" value={companyType} />
+            <ReadonlyField
+              label="Регистрационный номер"
+              value={registrationNumber}
+            />
+            <ReadonlyField label="ИНН / Налоговый номер" value={taxNumber} />
+            <ReadonlyField label="Email для счетов" value={billingEmail} />
+            <ReadonlyField label="Телефон компании" value={companyPhone} />
+            <ReadonlyField
+              label="Валюта по умолчанию"
+              value={defaultCurrency}
+            />
+            <ReadonlyField label="Локаль по умолчанию" value={defaultLocale} />
+            <ReadonlyField
+              label="Часовой пояс по умолчанию"
+              value={defaultTimezone}
+            />
+          </div>
+          <ReadonlyField label="Юридический адрес" value={legalAddress} />
+        </CardContent>
       </Card>
     )
   }

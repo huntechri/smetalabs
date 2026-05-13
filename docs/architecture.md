@@ -4,7 +4,7 @@
 >
 > Scope: production-facing architecture rules for the current Next.js 16 + Supabase Auth + Drizzle + shadcn/ui codebase.
 
-This document is the architectural contract for where code belongs and how new features should be added. For the compact directory map, see [`docs/filemap.md`](./filemap.md). For visual/design rules, see [`docs/design-system.md`](./design-system.md).
+This document is the architectural contract for where code belongs and how new features should be added. For the compact directory map, see [`docs/filemap.md`](./filemap.md). For visual/design rules, see [`docs/design-system.md`](./design-system.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md).
 
 ---
 
@@ -149,6 +149,8 @@ Current areas:
 - `/settings/account`
 - `/settings/access`
 
+`/settings/account` owns authenticated account profile, workspace display/editing rules, account-level notification preferences, security actions and any explicitly disabled future account controls. Its current behavior contract is documented in [`docs/account-settings.md`](./account-settings.md). User-visible controls on this route must not imply functionality that is not wired to backend/runtime behavior.
+
 `/team` owns team management only: workspace/team summary, members, manual email invites, pending invitations and role reference/management. It must not render catch-all workspace settings controls such as invite links, allowed-domain auto-join policy, workspace ownership transfer or danger-zone actions until those controls have a dedicated workspace/security settings route and production-safe backend contract.
 
 ### Auth callback route
@@ -237,6 +239,8 @@ Use `app/actions/**` when:
 
 Both patterns must validate input with schemas or explicit checks.
 
+Account settings use both patterns deliberately: `app/api/settings/route.ts` is the read boundary, while `app/actions/settings.ts` delegates mutations/security actions into `features/account-settings/server/**`. Keep this split unless there is a clear reason to move a specific operation.
+
 ---
 
 ## 6. Data flow patterns
@@ -267,6 +271,16 @@ Client form/action
 Every workspace/team mutation must check the current user first. Do not trust client-provided role or owner fields.
 
 Common helpers live in `lib/auth/**`.
+
+### Account settings behavior discipline
+
+Account settings controls must be one of three states:
+
+- real: wired to backend/runtime behavior and safe to use;
+- read-only: displays authoritative data without pretending it can mutate it;
+- future: disabled with explicit copy and no successful mutation path.
+
+Do not show fake counters, stale JSONB-derived security values, or enabled save buttons for controls that do not change runtime behavior.
 
 ### Staged RBAC and permission matrix strategy
 
@@ -354,14 +368,15 @@ Do not put `reports-view.tsx` in `components/ui/`. It is not a primitive.
 
 ## 9. Documentation maintenance rule
 
-When a PR changes routing, auth flow, folder ownership or public feature structure, update at least one of:
+When a PR changes routing, auth flow, folder ownership, public feature structure, or user-visible account/settings behavior, update at least one of:
 
 - `docs/architecture.md`
 - `docs/filemap.md`
 - `docs/design-system.md`
+- `docs/account-settings.md`
 - `README.md`
 
-A route or folder change without docs is considered incomplete.
+A route, folder, account-settings behavior or public feature change without docs is considered incomplete.
 
 ## 10. Validation and checks
 

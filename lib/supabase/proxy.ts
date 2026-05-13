@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
+import { touchWorkspaceActivity } from "@/lib/auth/activity"
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -36,6 +38,10 @@ export async function updateSession(request: NextRequest) {
 
   const user = data?.claims
   const { pathname } = request.nextUrl
+
+  if (user?.sub && !pathname.startsWith("/api/")) {
+    await touchWorkspaceActivity(user.sub)
+  }
 
   // ── Auth callback — always allow (OAuth / email confirm) ──
   if (pathname.startsWith("/auth/callback")) {

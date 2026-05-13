@@ -24,7 +24,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useUpdateProfile } from "../hooks/use-account-settings"
-import type { SettingsResponse } from "../hooks/use-account-settings"
+import type { AccountProfile } from "../types"
 
 const languages = [
   { value: "ru", label: "Русский" },
@@ -46,14 +46,14 @@ const timezones = [
 ]
 
 type SettingsStateProps = {
-  settings: SettingsResponse["data"] | null
+  profile: Partial<AccountProfile> | null | undefined
   loading: boolean
   error: string | null
   refetch: () => Promise<void>
 }
 
 export function ProfileSettingsCard({
-  settings,
+  profile,
   loading,
   error,
   refetch,
@@ -71,17 +71,16 @@ export function ProfileSettingsCard({
   const [timezone, setTimezone] = useState("UTC")
 
   useEffect(() => {
-    if (settings?.profile) {
-      const p = settings.profile
+    if (profile) {
+      const p = profile
       setDisplayName(p.displayName ?? "")
       setPhone(p.phone ?? "")
       setJobTitle(p.jobTitle ?? "")
       setLanguage(p.language ?? "ru")
       setTimezone(p.timezone ?? "UTC")
     }
-  }, [settings])
+  }, [profile])
 
-  const profile = settings?.profile
 
   const handleSave = async () => {
     const updated = await updateProfile({

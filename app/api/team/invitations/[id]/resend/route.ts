@@ -5,11 +5,18 @@ import { requireAuth } from "@/lib/auth/permissions"
 
 type RouteContext = { params: Promise<{ id: string }> }
 
+function getRequestOrigin(request: NextRequest) {
+  const forwardedHost = request.headers.get("x-forwarded-host")
+  const host = forwardedHost ?? request.headers.get("host") ?? "localhost:3000"
+  const proto = request.headers.get("x-forwarded-proto") ?? "http"
+  return `${proto}://${host}`
+}
+
 function jsonError(code: string, message: string, status: number) {
   return NextResponse.json({ error: { code, message } }, { status })
 }
 
-export async function POST(_request: NextRequest, { params }: RouteContext) {
+export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
     const user = await requireAuth()
     const { id } = await params
@@ -41,14 +48,11 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
       )
     }
 
-    const siteUrl =
-      process.env.NEXT_PUBLIC_APP_URL ??
-      process.env.NEXT_PUBLIC_SITE_URL ??
-      "http://localhost:3000"
+    const origin = getRequestOrigin(request)
     const { error } = await supabase.auth.admin.inviteUserByEmail(
       invitation.email,
       {
-        redirectTo: `${siteUrl}/set-password`,
+        redirectTo: `${origin}/auth/callback`,
         data: { invitation_id: id },
       }
     )

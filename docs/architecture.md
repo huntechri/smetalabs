@@ -1,6 +1,6 @@
 # SmetaLabs — Architecture Guide
 
-> Last updated: 2026-05-12
+> Last updated: 2026-05-13
 >
 > Scope: production-facing architecture rules for the current Next.js 16 + Supabase Auth + Drizzle + shadcn/ui codebase.
 
@@ -52,6 +52,9 @@ Use this layer for:
 
 - forms, tables, cards and screens specific to one product feature;
 - feature hooks such as filtering/search/view state;
+- feature-local `api/` clients and query-key factories for API routes/server action wrappers;
+- TanStack Query hooks for server state (`useQuery`/`useMutation`), with invalidation owned by the feature hook;
+- feature-local `server/` modules when `app/actions/*` delegates domain actions into the feature boundary;
 - fallback mocks while backend integration is incomplete.
 
 Do not put shadcn primitives here. Import primitives from `@/components/ui/*`.
@@ -163,32 +166,55 @@ The expected invite flow is:
 ```txt
 Admin sends invite
   ↓
-Supabase creates invite email
+App calls Supabase admin invite with redirectTo = current origin + /auth/callback
+  ↓
+Supabase invite email template builds /auth/callback?token_hash=...&type=invite&next=/set-password
   ↓
 User opens invite link
   ↓
-Supabase verifies one-time token and creates an invite session
+app/auth/callback verifies token_hash and creates an invite session
   ↓
 App lands on /set-password
   ↓
 User sets password through supabase.auth.updateUser({ password })
+  ↓
+App accepts the pending workspace invitation
   ↓
 App redirects to /dashboard
 ```
 
 Important rules:
 
-- Invite redirect target must be `/set-password`, not `/dashboard`.
+- App code must pass `redirectTo` as the current request origin plus `/auth/callback`; do not pass `/set-password` directly from invite endpoints.
+- The Supabase invite email template must append `token_hash`, `type=invite` and `next=/set-password` to `{{ .RedirectTo }}`.
 - `/set-password` must be allowed by `lib/supabase/proxy.ts`; otherwise the app may redirect to `/login` before the browser client finishes processing the invite session.
-- Supabase Redirect URLs must include the exact production and local callback targets used by the app.
+- Supabase Redirect URLs must include the exact production, preview and local callback targets used by the app.
 - Old invite links are one-time links. Do not debug current behavior with already-opened links.
+- Repeated invite tests on the same email may reuse an existing Auth user whose metadata points to an older invitation. `acceptInvitationIfPresent()` must therefore prefer metadata when valid, but fall back to the latest pending invitation for the authenticated email.
+
+Required Supabase invite email template shape:
+
+```html
+<h2>Вы приглашены в SmetaLab</h2>
+
+<p>Вас пригласили присоединиться к рабочей области SmetaLab.</p>
+
+<p>
+  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=invite&next=/set-password">
+    Принять приглашение
+  </a>
+</p>
+
+<p>Если вы не ожидали это письмо, просто проигнорируйте его.</p>
+```
 
 Recommended Supabase Redirect URLs:
 
 ```txt
-https://smetalabs.vercel.app/set-password
 https://smetalabs.vercel.app/auth/callback
-http://localhost:3000/set-password
+https://smetalabs.vercel.app/**
+https://smetalabs-git-*-smetalabs.vercel.app/auth/callback
+https://smetalabs-git-*-smetalabs.vercel.app/**
 http://localhost:3000/auth/callback
 http://localhost:3000/**
 ```
@@ -336,3 +362,7 @@ When a PR changes routing, auth flow, folder ownership or public feature structu
 - `README.md`
 
 A route or folder change without docs is considered incomplete.
+
+## 10. Validation and checks
+
+Current package scripts define `pnpm typecheck`, `pnpm lint`, and `pnpm build` as the primary repository-level checks. There is no configured `test` script yet; PR descriptions must not report `npm test` or an automated unit test suite as executed until such a script exists in `package.json`.

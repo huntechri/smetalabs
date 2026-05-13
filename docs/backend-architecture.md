@@ -2,10 +2,10 @@
 
 > **Статус:** Активная разработка (фазы 1-2 реализованы)
 > **Версия:** 1.1
-> **Дата:** 2026-05-12
+> **Дата:** 2026-05-13
 > **Контекст:** Next.js 16 + shadcn/ui + Tailwind v4, деплой на Vercel.
-> Текущее состояние — только фронтенд на моках (`__mocks__/`).
-> Документ описывает целевой backend.
+> Текущее состояние — backend-интеграция частично реализована для auth/team/access/settings; часть feature-модулей всё ещё использует `__mocks__/`.
+> Документ описывает целевой backend и отмечает уже реализованные границы.
 
 ---
 
@@ -1438,10 +1438,10 @@ features/projects/
 | **Dir. Suppliers**      | `useDirectorySuppliers()` → Server Component                      | `createDirSupplier`, `updateDirSupplier`, `deleteDirSupplier`                                                                                                                                | `GET /api/directory/suppliers`                   |
 | **Dir. Counterparties** | `useDirectoryCounterparties()` → Server Component                 | `createDirCounterparty`, `updateDirCounterparty`, `deleteDirCounterparty`                                                                                                                    | `GET /api/directory/counterparties`              |
 | **Templates**           | `useTemplates()` → Server Component                               | `createTemplate`, `updateTemplate`, `deleteTemplate`, `applyTemplate`                                                                                                                        | `GET /api/templates`                             |
-| **Access Control**      | `useTeam()` → Server Component                                    | `assignRole`, `removeRole`                                                                                                                                                                   | `GET /api/access-control/roles`                  |
+| **Access Control**      | TanStack Query hook `useRoles()`                                    | `assignRole`, `removeRole`                                                                                                                                                                   | `GET /api/access-control/roles`                  |
 | **Dashboard**           | `useDashboardStats()` → Server Component                          | — (read-only)                                                                                                                                                                                | `GET /api/dashboard/*`                           |
-| **Workspace Settings**  | `useWorkspaceSettings()` → Server Component                       | `inviteMember`, `removeMember`, `changeRole`, `suspendMember`, `revokeInvitation`, `addDomain`, `removeDomain`, `leaveWorkspace`, `transferOwnership`, `archiveWorkspace`, `deleteWorkspace` | `GET /api/team/*`                                |
-| **Account Settings**    | `useSettings()` → Server Component                                | `updateProfile`, `updateWorkspace`, `updatePreferences`, `updateNotifications`, `updateSecurity`                                                                                             | `GET /api/settings`                              |
+| **Workspace Settings**  | TanStack Query hooks `useWorkspace*()`                       | `inviteMember`, `removeMember`, `changeRole`, `suspendMember`, `revokeInvitation`, `addDomain`, `removeDomain`, `leaveWorkspace`, `transferOwnership`, `archiveWorkspace`, `deleteWorkspace` | `GET /api/team/*`                                |
+| **Account Settings**    | TanStack Query hook `useSettings()`                                | `updateProfile`, `updateWorkspace`, `updatePreferences`, `updateNotifications`, `updateSecurity`                                                                                             | `GET /api/settings`                              |
 | **Auth**                | `useAuth()` → Supabase Auth хуки                                  | SignIn, SignUp, ResetPassword                                                                                                                                                                | —                                                |
 
 ### 5.3 Пример: миграция фичи Projects

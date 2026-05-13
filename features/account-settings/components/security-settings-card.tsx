@@ -10,18 +10,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton"
 
 import { sendOwnPasswordResetEmailAction } from "@/app/actions/settings"
-import type { SettingsResponse } from "../hooks/use-account-settings"
+import type { SecurityInfo } from "../types"
 
 type SettingsStateProps = {
-  settings: SettingsResponse["data"] | null
+  security: Partial<SecurityInfo> | null | undefined
   loading: boolean
   error: string | null
   refetch: () => Promise<void>
 }
 
-export function SecuritySettingsCard({ settings, loading, error, refetch }: SettingsStateProps) {
+export function SecuritySettingsCard({ security, loading, error, refetch }: SettingsStateProps) {
   const [resettingPassword, setResettingPassword] = useState(false)
-  const security = settings?.security
 
   const formattedLastLogin = security?.lastLogin
     ? new Date(security.lastLogin).toLocaleString("ru-RU", {
@@ -38,8 +37,12 @@ export function SecuritySettingsCard({ settings, loading, error, refetch }: Sett
     try {
       const result = await sendOwnPasswordResetEmailAction()
       toast.success(result.message ?? "Ссылка для сброса пароля отправлена")
-    } catch (err: any) {
-      toast.error(err?.message ?? "Ошибка отправки ссылки для сброса пароля")
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Ошибка отправки ссылки для сброса пароля"
+      )
     } finally {
       setResettingPassword(false)
     }

@@ -1,23 +1,50 @@
 "use client"
 
-import { ProfileSettingsCard } from "./profile-settings-card"
-import { WorkspaceSettingsCard } from "./workspace-settings-card"
-import { PreferencesSettingsCard } from "./preferences-settings-card"
+import { Separator } from "@/components/ui/separator"
 import { NotificationSettingsCard } from "./notification-settings-card"
+import { PreferencesSettingsCard } from "./preferences-settings-card"
+import { ProfileSettingsCard } from "./profile-settings-card"
 import { SecuritySettingsCard } from "./security-settings-card"
 import { SensitiveActionsCard } from "./sensitive-actions-card"
-import { useSettings } from "../hooks/use-account-settings"
+import { WorkspaceSettingsCard } from "./workspace-settings-card"
+import { useSettings } from "../hooks/use-settings"
 
 export function AccountSettingsView() {
-  const settingsState = useSettings()
+  const { settings, loading, error, refetch } = useSettings()
 
   return (
     <div className="flex flex-col gap-6">
-      <ProfileSettingsCard {...settingsState} />
-      <WorkspaceSettingsCard {...settingsState} />
-      <PreferencesSettingsCard {...settingsState} />
-      <NotificationSettingsCard {...settingsState} />
-      <SecuritySettingsCard {...settingsState} />
+      <ProfileSettingsCard
+        profile={settings?.profile}
+        loading={loading}
+        error={error}
+        refetch={refetch}
+      />
+      <WorkspaceSettingsCard
+        workspace={settings?.workspace}
+        loading={loading}
+        error={error}
+        refetch={refetch}
+      />
+      <PreferencesSettingsCard
+        preferences={settings?.preferences}
+        loading={loading}
+        error={error}
+        refetch={refetch}
+      />
+      <NotificationSettingsCard
+        notifications={settings?.notifications}
+        loading={loading}
+        error={error}
+        refetch={refetch}
+      />
+      <SecuritySettingsCard
+        security={settings?.security}
+        loading={loading}
+        error={error}
+        refetch={refetch}
+      />
+      <Separator />
       <SensitiveActionsCard />
     </div>
   )

@@ -8,10 +8,10 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useUpdatePreferences } from "../hooks/use-account-settings"
-import type { SettingsResponse } from "../hooks/use-account-settings"
+import type { AccountPreferences } from "../types"
 
 type SettingsStateProps = {
-  settings: SettingsResponse["data"] | null
+  preferences: Partial<AccountPreferences> | null | undefined
   loading: boolean
   error: string | null
   refetch: () => Promise<void>
@@ -76,7 +76,7 @@ function SelectField({
   )
 }
 
-export function PreferencesSettingsCard({ settings, loading, error, refetch }: SettingsStateProps) {
+export function PreferencesSettingsCard({ preferences, loading, error, refetch }: SettingsStateProps) {
   const { updatePreferences, loading: saving, error: saveError } = useUpdatePreferences()
   const [theme, setTheme] = useState("system")
   const [density, setDensity] = useState("comfortable")
@@ -85,14 +85,14 @@ export function PreferencesSettingsCard({ settings, loading, error, refetch }: S
   const [defaultEstimateView, setDefaultEstimateView] = useState("table")
 
   useEffect(() => {
-    const p = settings?.preferences
+    const p = preferences
     if (!p) return
     setTheme(p.theme ?? "system")
     setDensity(p.density ?? "comfortable")
     setDateFormat(p.dateFormat ?? "ДД.ММ.ГГГГ")
     setNumberFormat(p.numberFormat ?? "1 000,00")
     setDefaultEstimateView(p.defaultEstimateView ?? "table")
-  }, [settings])
+  }, [preferences])
 
   async function handleSave() {
     const updated = await updatePreferences({
@@ -124,7 +124,7 @@ export function PreferencesSettingsCard({ settings, loading, error, refetch }: S
     )
   }
 
-  if (error && !settings?.preferences) {
+  if (error && !preferences) {
     return (
       <Card className="border-destructive/50">
         <CardHeader>

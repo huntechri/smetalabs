@@ -1,7 +1,10 @@
 "use client"
 
 import { Suspense, useState } from "react"
-import { DirectoriesToolbar } from "@/features/directories/components/directories-toolbar"
+import {
+  DirectoriesToolbar,
+  type DirectoryAction,
+} from "@/features/directories/components/directories-toolbar"
 import { DirectoryWorksCategoryFilter } from "@/features/directory-works/components/directory-works-category-filter"
 import {
   dispatchDirectoryWorksCreateEvent,
@@ -13,7 +16,7 @@ import { PlusIcon, FileArrowDownIcon, ExportIcon, FunnelIcon } from "@phosphor-i
 function WorksToolbarContent() {
   const [filtersOpen, setFiltersOpen] = useState(false)
 
-  const worksActions = [
+  const worksActions: DirectoryAction[] = [
     {
       label: "Фильтр",
       icon: <FunnelIcon data-icon="inline-start" />,

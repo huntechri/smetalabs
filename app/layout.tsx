@@ -1,18 +1,8 @@
-import { Geist_Mono, Nunito_Sans } from "next/font/google"
-
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AppQueryProvider } from "@/components/query-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils";
-
-const nunitoSans = Nunito_Sans({ subsets: ['latin'], variable: '--font-sans' })
-
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
 
 export default function RootLayout({
   children,
@@ -20,11 +10,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="ru"
-      suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", nunitoSans.variable)}
-    >
+    <html lang="ru" suppressHydrationWarning className="antialiased font-sans">
       <body>
         <ThemeProvider>
           <AppQueryProvider>

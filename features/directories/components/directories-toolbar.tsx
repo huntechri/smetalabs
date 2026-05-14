@@ -13,6 +13,7 @@ export type DirectoryAction = {
   variant?: React.ComponentProps<typeof Button>["variant"]
   disabled?: boolean
   title?: string
+  hideLabel?: boolean
   onClick?: () => void
 }
 
@@ -86,12 +87,16 @@ export function DirectoriesToolbar({
                 key={action.label}
                 onClick={action.onClick}
                 size="sm"
-                title={action.title}
+                title={action.title ?? action.label}
                 type="button"
                 variant={action.variant ?? "outline"}
               >
                 {action.icon}
-                {action.label}
+                {action.hideLabel ? (
+                  <span className="sr-only">{action.label}</span>
+                ) : (
+                  action.label
+                )}
               </Button>
             ))}
           </ButtonGroup>

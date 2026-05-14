@@ -154,3 +154,14 @@ export function getExactTotalCount(rows: DirectoryWorkRpcRow[]) {
   if (firstTotal === undefined || firstTotal === null) return null
   return toNumber(firstTotal)
 }
+
+export function getTotalCount(
+  rows: DirectoryWorkRpcRow[],
+  cursor = 0,
+  visibleCount = rows.length,
+  hasMore = false
+) {
+  const exactTotal = getExactTotalCount(rows)
+  if (exactTotal !== null) return exactTotal
+  return cursor + visibleCount + (hasMore ? 1 : 0)
+}

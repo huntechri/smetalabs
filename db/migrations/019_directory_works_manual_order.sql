@@ -31,6 +31,46 @@ ALTER TABLE public.directory_works
 CREATE INDEX IF NOT EXISTS idx_directory_works_workspace_sort_order
   ON public.directory_works(workspace_owner_id, status, deleted_at, sort_order, id);
 
+CREATE OR REPLACE FUNCTION private.set_directory_work_imported_sort_order()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_job_created_at timestamptz;
+BEGIN
+  IF NEW.applied_work_id IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'UPDATE' AND NEW.applied_work_id IS NOT DISTINCT FROM OLD.applied_work_id THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT j.created_at
+    INTO v_job_created_at
+  FROM public.directory_work_import_jobs j
+  WHERE j.workspace_owner_id = NEW.workspace_owner_id
+    AND j.id = NEW.job_id
+  LIMIT 1;
+
+  UPDATE public.directory_works w
+  SET sort_order = -1 * (extract(epoch from coalesce(v_job_created_at, now()))::numeric * 1000) + NEW.row_number
+  WHERE w.workspace_owner_id = NEW.workspace_owner_id
+    AND w.id = NEW.applied_work_id;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_directory_work_import_rows_sort_order ON public.directory_work_import_rows;
+CREATE TRIGGER trg_directory_work_import_rows_sort_order
+  AFTER INSERT OR UPDATE OF applied_work_id
+  ON public.directory_work_import_rows
+  FOR EACH ROW
+  EXECUTE FUNCTION private.set_directory_work_imported_sort_order();
+
 CREATE OR REPLACE FUNCTION public.search_directory_works(
   p_workspace_owner_id uuid,
   p_q text DEFAULT NULL,

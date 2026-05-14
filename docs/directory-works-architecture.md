@@ -660,7 +660,7 @@ Auth-sensitive dynamic endpoints may avoid persistent server caching, but they m
 
 ## 11. Indexing, diagnostics and observability
 
-Migrations 010-015 provide the database foundation, regular search RPCs, AI search RPC/vector index, hardening indexes/diagnostics, service-role private-helper grants and the optimized update RPC.
+Migrations 010-016 provide the database foundation, regular search RPCs, AI search RPC/vector index, hardening indexes/diagnostics, service-role private-helper grants, the optimized update RPC and large-catalog read/search hardening.
 
 Index families:
 
@@ -689,7 +689,24 @@ Vector:
 - directory_work_embeddings.embedding HNSW cosine index for 1536-dimensional embeddings
 ```
 
-Performance hardening adds partial/composite indexes for active catalog list/search/export, alias/keyword lookups, import job polling/apply and embedding queue maintenance.
+Performance hardening adds partial/composite indexes for active catalog list/search/export, alias/keyword lookups, import job polling/apply and embedding queue maintenance. Migration 016 adds exact-code/source expression indexes and normalized category/unit filter indexes for the 100k-row read/search strategy.
+
+Large-catalog read/search strategy:
+
+- empty `/directories/works` browse requests are handled as an indexed list path, skip relevance ranking, skip alias/keyword aggregation and return only a bounded page plus one sentinel row;
+- exact `q=<code>` and `q=<source_external_row_key>` requests use targeted lower-case expression indexes before any fuzzy ranking;
+- general text search first builds bounded candidates from title/FTS/trigram, aliases and keywords, then aggregates aliases/keywords only for that candidate set;
+- the legacy numeric cursor remains accepted for the UI contract, but interactive offset work is capped at 5,000 rows; deeper extraction must use the bounded export flow or a staged/background job;
+- export is still request-lifecycle bounded and reads at most 10,000 rows in 100-row chunks.
+
+Representative non-production load data can be created with `db/scripts/seed-directory-works-load-test.sql`:
+
+```bash
+psql "$DATABASE_URL" \
+  -v workspace_owner_id='<workspace-owner-id>' \
+  -v row_count='100000' \
+  -f db/scripts/seed-directory-works-load-test.sql
+```
 
 Service-role-only diagnostics:
 

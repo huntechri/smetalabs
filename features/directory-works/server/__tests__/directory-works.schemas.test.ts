@@ -30,6 +30,17 @@ describe("directory works schemas", () => {
     })
   })
 
+  it("bounds deep interactive cursors for large catalogs", () => {
+    const params = parseDirectoryWorksListParams(
+      new URLSearchParams({ cursor: "250000", limit: "100" })
+    )
+
+    expect(params).toMatchObject({
+      cursor: 5000,
+      limit: 100,
+    })
+  })
+
   it("validates and normalizes mutation payloads", () => {
     const input = parseDirectoryWorkMutationBody({
       title: "  Штукатурка   стен  ",

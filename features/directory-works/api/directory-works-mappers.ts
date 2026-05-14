@@ -91,7 +91,9 @@ export function mapDirectoryWorkRow(row: DirectoryWorkRpcRow): DirectoryWork {
   }
 }
 
-export function mapDirectoryWorkCategories(rows: DirectoryWorkCategoryRpcRow[]) {
+export function mapDirectoryWorkCategories(
+  rows: DirectoryWorkCategoryRpcRow[]
+) {
   const categories = new Map<string, DirectoryWorkCategoryOption>()
   const subcategoryTotals = new Map<string, number>()
   const units = new Map<string, DirectoryWorkUnitOption>()
@@ -148,5 +150,6 @@ export function mapDirectoryWorkCategories(rows: DirectoryWorkCategoryRpcRow[]) 
 }
 
 export function getTotalCount(rows: DirectoryWorkRpcRow[]) {
-  return toNumber(rows[0]?.total_count)
+  const exactTotal = toNumber(rows[0]?.total_count)
+  return exactTotal > 0 ? exactTotal : rows.length
 }

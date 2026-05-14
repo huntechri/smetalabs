@@ -47,6 +47,7 @@ export function DirectoriesToolbar({
     } else {
       params.delete("q")
     }
+    params.delete("cursor")
 
     const nextSearch = params.toString()
     router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)

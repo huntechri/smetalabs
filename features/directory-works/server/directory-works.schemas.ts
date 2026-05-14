@@ -73,6 +73,13 @@ const importFileSizeBytesSchema = z
   }, z.number().finite("Размер файла должен быть числом").int("Размер файла должен быть целым числом").nonnegative("Размер файла не может быть отрицательным").max(MAX_IMPORT_FILE_SIZE_BYTES, "Размер файла не должен превышать 50 МБ").nullable())
   .optional()
 
+const insertAfterWorkIdSchema = z
+  .preprocess((value) => {
+    if (value === null || value === undefined || value === "") return null
+    return value
+  }, z.string().uuid().nullable())
+  .optional()
+
 export const directoryWorksListQuerySchema = z.object({
   q: optionalTrimmedString(240),
   category: optionalTrimmedString(120),
@@ -99,6 +106,7 @@ export const directoryWorkMutationSchema = z
     sourceExternalRowKey: nullableTrimmedString(160),
     currencyCode: currencyCodeSchema,
     priceKind: directoryWorkPriceKindSchema,
+    insertAfterWorkId: insertAfterWorkIdSchema,
   })
   .strict()
 

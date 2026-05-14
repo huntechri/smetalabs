@@ -196,11 +196,13 @@ AI search
 embedding processing
 ```
 
-Slow operations at or above 750ms emit:
+Slow operations at or above 500ms emit:
 
 ```txt
 [directory-works:slow-path]
 ```
+
+The emitted payload includes `slowThresholdMs` so logs can be interpreted without checking source code.
 
 Development non-slow operations emit:
 

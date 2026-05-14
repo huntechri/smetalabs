@@ -8,7 +8,7 @@
 
 This document is the canonical contract for the works catalog. It started as the #65 backend contract and now reflects the implemented state after the DB foundation, read/search API, UI backend integration, staged import/export, AI/hybrid search and performance hardening phases.
 
-The current UI may still expose a compact projection (`Название / Ед. изм. / Расценка / Категория`), but the backend preserves structured data for tenant isolation, import staging, deduplication, full-text/fuzzy search, semantic search and targeted cache invalidation.
+The current UI may expose a compact projection (`Код / Название / Ед. изм. / Расценка / Категория`), while the backend preserves structured data for tenant isolation, import staging, deduplication, full-text/fuzzy search, semantic search and targeted cache invalidation.
 
 ---
 
@@ -66,6 +66,7 @@ The current workspace model is still owner-bound rather than a separate `workspa
   → db/migrations/011_directory_works_read_api.sql
   → db/migrations/012_directory_works_ai_search.sql
   → db/migrations/013_directory_works_performance_hardening.sql
+  → db/migrations/014_private_service_role_grants.sql
 ```
 
 Feature responsibilities:
@@ -74,7 +75,7 @@ Feature responsibilities:
 - `features/directory-works/hooks/**` owns TanStack Query reads/mutations and invalidation behavior.
 - `features/directory-works/server/**` owns repository/service/search/import/export/embedding/observability logic.
 - `app/api/directory-works/**` owns HTTP boundaries and delegates domain logic into `features/directory-works/server/**`.
-- `db/schema/directory-works.ts` and migrations 010-013 own the database contract.
+- `db/schema/directory-works.ts` and migrations 010-014 own the database contract.
 
 Do not move SQL, permission checks, import apply logic or embedding generation into UI components.
 
@@ -123,6 +124,7 @@ deleted_at                timestamptz             no        Soft-delete timestam
 Required UI projection:
 
 ```txt
+code        <- directory_works.code
 title       <- directory_works.title
 unit        <- directory_works.unit_label or unit_code
 rate        <- directory_works.rate_amount + currency_code
@@ -312,7 +314,8 @@ Rules:
 - edit preserves extended fields that are not exposed in the first compact manual form;
 - delete/archive is implemented as soft archive;
 - create/update/import apply enqueue or mark embedding work for asynchronous processing;
-- list/detail/categories and relevant AI-search cache keys are invalidated after material changes.
+- list/detail/categories and relevant AI-search cache keys are invalidated after material changes;
+- server-side service-role repositories may write only after application-level authorization checks and must retain access to private trigger/helper functions through explicit database grants.
 
 ---
 
@@ -640,7 +643,7 @@ Auth-sensitive dynamic endpoints may avoid persistent server caching, but they m
 
 ## 11. Indexing, diagnostics and observability
 
-Migrations 010-013 provide the database foundation, regular search RPCs, AI search RPC/vector index and hardening indexes/diagnostics.
+Migrations 010-014 provide the database foundation, regular search RPCs, AI search RPC/vector index, hardening indexes/diagnostics and service-role private-helper grants.
 
 Index families:
 
@@ -706,7 +709,8 @@ Implementation notes:
 - RLS is the last line of defense, not the only authorization layer;
 - import and embedding processors must never process rows outside the job's workspace;
 - storage paths for import files must be private and workspace-scoped if file persistence is used;
-- RPC execute grants for workspace-parameterized search/AI helpers stay restricted and should not allow browser clients to bypass the API boundary.
+- RPC execute grants for workspace-parameterized search/AI helpers stay restricted and should not allow browser clients to bypass the API boundary;
+- `service_role` must have explicit `USAGE` on schema `private` and `EXECUTE` on private helper/trigger functions because server-side writes run after API authorization and fire private trigger functions.
 
 ---
 

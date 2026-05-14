@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button"
 import type { DirectoryWork } from "@/features/directory-works/types"
 import { ArchiveIcon, PencilSimpleIcon } from "@phosphor-icons/react"
+import { DirectoryWorksCode } from "./directory-works-code"
+import { DirectoryWorksMetricGroup } from "./directory-works-metric-group"
 import { DirectoryWorksName } from "./directory-works-name"
 import { DirectoryWorksValue } from "./directory-works-value"
-import { DirectoryWorksMetricGroup } from "./directory-works-metric-group"
 
 export function DirectoryWorksRow({
   row,
@@ -18,17 +19,15 @@ export function DirectoryWorksRow({
 }) {
   return (
     <div className="border-b border-dashed border-green-500 last:border-b-0">
-      <div className="m-3 grid gap-3 rounded-md border border-dashed border-green-500 p-3 transition-colors hover:bg-muted/50 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]">
-        <div className="flex min-w-0 flex-col gap-3 rounded-md border border-dashed border-green-300 p-2">
+      <div className="m-3 grid gap-3 rounded-md border border-dashed border-green-500 p-3 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(420px,1fr)_minmax(480px,0.85fr)]">
+        <div className="grid min-w-0 gap-3 rounded-md border border-dashed border-green-300 p-2 sm:grid-cols-[minmax(112px,0.28fr)_minmax(0,1fr)]">
+          <DirectoryWorksCode value={row.code} />
           <DirectoryWorksName value={row.title} />
         </div>
 
-        <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)_auto]">
-          <DirectoryWorksMetricGroup title="Ед. изм">
+        <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[minmax(220px,0.85fr)_minmax(180px,1fr)_auto]">
+          <DirectoryWorksMetricGroup title="Ед. изм / Расценка">
             <DirectoryWorksValue label="Ед." value={row.unit} />
-          </DirectoryWorksMetricGroup>
-
-          <DirectoryWorksMetricGroup title="Расценка">
             <DirectoryWorksValue
               label="Цена"
               strong

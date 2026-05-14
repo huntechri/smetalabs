@@ -24,7 +24,7 @@ export type DirectoryWorksMetricContext = {
   errorCode?: string
 }
 
-const SLOW_OPERATION_MS = 750
+const SLOW_OPERATION_MS = 500
 
 function now() {
   return typeof performance !== "undefined" ? performance.now() : Date.now()
@@ -45,6 +45,7 @@ export function recordDirectoryWorksMetric(
     subsystem: "directory-works",
     operation,
     durationMs: Math.round(durationMs),
+    slowThresholdMs: SLOW_OPERATION_MS,
     ...sanitizeContext(context),
   }
 

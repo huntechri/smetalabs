@@ -52,6 +52,8 @@ WITH settings AS (
     currency_code,
     price_kind,
     status,
+    created_by,
+    updated_by,
     created_at,
     updated_at
   )
@@ -72,6 +74,8 @@ WITH settings AS (
     'RUB',
     CASE WHEN g.row_number % 5 = 0 THEN 'labor'::public.directory_work_price_kind ELSE 'base'::public.directory_work_price_kind END,
     'active'::public.directory_work_status,
+    g.workspace_owner_id,
+    g.workspace_owner_id,
     now() - ((g.row_number % 365) || ' days')::interval,
     now() - ((g.row_number % 30) || ' minutes')::interval
   FROM generated g
@@ -82,14 +86,15 @@ WITH settings AS (
     title,
     replace(source_external_row_key, 'issue-90-', '')::integer AS rn
 )
-INSERT INTO public.work_aliases (workspace_owner_id, work_id, alias, normalized_alias, source, weight)
+INSERT INTO public.work_aliases (workspace_owner_id, work_id, alias, normalized_alias, source, weight, created_by)
 SELECT
   i.workspace_owner_id,
   i.id,
   format('Алиас %s', i.code),
   private.directory_work_normalize(format('Алиас %s', i.code)),
   'import'::public.directory_work_term_source,
-  1
+  1,
+  i.workspace_owner_id
 FROM inserted i
 WHERE i.rn % 10 = 0
 ON CONFLICT (workspace_owner_id, work_id, normalized_alias) WHERE deleted_at IS NULL DO NOTHING;
@@ -101,14 +106,15 @@ WITH seeded AS (
     AND source_name = 'load-test-issue-90'
     AND deleted_at IS NULL
 )
-INSERT INTO public.work_keywords (workspace_owner_id, work_id, keyword, normalized_keyword, source, weight)
+INSERT INTO public.work_keywords (workspace_owner_id, work_id, keyword, normalized_keyword, source, weight, created_by)
 SELECT
   s.workspace_owner_id,
   s.id,
   CASE WHEN s.rn % 2 = 0 THEN 'штукатурка' ELSE 'монтаж' END,
   private.directory_work_normalize(CASE WHEN s.rn % 2 = 0 THEN 'штукатурка' ELSE 'монтаж' END),
   'import'::public.directory_work_term_source,
-  1
+  1,
+  s.workspace_owner_id
 FROM seeded s
 WHERE s.rn % 8 = 0
 ON CONFLICT (workspace_owner_id, work_id, normalized_keyword) WHERE deleted_at IS NULL DO NOTHING;

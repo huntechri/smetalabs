@@ -133,7 +133,7 @@ export function DirectoryWorksSection() {
         </div>
 
         {meta ? (
-          <div className="flex flex-col gap-3 border-t border-dashed border-t-purple-500 p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-t border-dashed border-t-purple-600 p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <div>
               Показано {pageStart}–{pageEnd}. Всего: {totalLabel}
               {isFetching ? " · обновление..." : ""}

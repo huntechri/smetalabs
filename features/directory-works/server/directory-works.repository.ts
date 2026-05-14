@@ -168,7 +168,7 @@ export async function listDirectoryWorksForWorkspace(
   const rows = ((data ?? []) as DirectoryWorkRpcRow[]).filter(Boolean)
   const visibleRows = rows.slice(0, params.limit)
   const hasMore = rows.length > params.limit
-  const total = getTotalCount(rows)
+  const total = getTotalCount(rows, params.cursor, visibleRows.length, hasMore)
 
   const meta: DirectoryWorksListMeta = {
     limit: params.limit,

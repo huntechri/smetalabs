@@ -1,14 +1,36 @@
 # Directory works architecture
 
-> Status: contract for issue #65, part of epic #64.
-> Scope: backend/DB/search/import/cache architecture for `/directories/works`.
-> Non-goal: this document does not create migrations, API routes, UI bindings, import processors or embedding jobs.
+> Last updated: 2026-05-14
+>
+> Status: implemented production backend contract for epic #64, phases #65-#71.
+>
+> Scope: DB schema, search, CRUD, import/export, embeddings, cache/indexing and observability architecture for `/directories/works`.
 
-This document fixes the production contract for the works directory before DB foundation, read API, CRUD, import/export, embeddings and performance phases are implemented. The current UI may continue to show only `Название / Ед. изм. / Расценка / Категория`, but the backend contract must preserve enough structured data for tenant isolation, import staging, deduplication, full-text/fuzzy search, semantic search and targeted cache invalidation.
+This document is the canonical contract for the works catalog. It started as the #65 backend contract and now reflects the implemented state after the DB foundation, read/search API, UI backend integration, staged import/export, AI/hybrid search and performance hardening phases.
+
+The current UI may still expose a compact projection (`Название / Ед. изм. / Расценка / Категория`), but the backend preserves structured data for tenant isolation, import staging, deduplication, full-text/fuzzy search, semantic search and targeted cache invalidation.
 
 ---
 
-## 1. Ownership and tenant boundary
+## 1. Phase status
+
+Epic #64 directory works phases are represented as follows:
+
+```txt
+#65 contract/documentation                → docs/directory-works-architecture.md
+#66 DB foundation                         → db/schema/directory-works.ts + migration 010
+#67 read API and regular search           → migration 011 + app/api/directory-works read/search routes
+#68 UI backend integration/manual CRUD    → feature hooks/dialogs + POST/PATCH/DELETE routes
+#69 import/export staging flow            → import job routes, CSV staging preview/apply, CSV/XLSX export
+#70 embeddings and AI/hybrid search       → migration 012 + ai-search and embeddings process routes
+#71 cache/indexing/performance hardening  → migration 013 + observability/cache/indexing helpers
+```
+
+The old contract-phase non-goals no longer apply globally. They only describe what was intentionally excluded from the original documentation-only #65 slice.
+
+---
+
+## 2. Ownership and tenant boundary
 
 The tenant boundary for the subsystem is `workspace_owner_id`.
 
@@ -19,17 +41,46 @@ workspace_owner_id = workspace_members.owner_id
 Rules:
 
 - every canonical, supporting, import and embedding table stores `workspace_owner_id` as a required column;
-- API routes, server actions and repositories must resolve the current workspace server-side through the authenticated user and the existing workspace helper layer;
+- API routes, server actions and repositories resolve the current workspace server-side through the authenticated user and the workspace helper layer;
 - clients must never provide `workspace_owner_id` as an authority source;
-- RLS policies and private DB helpers must filter by `workspace_owner_id` and authenticated membership;
+- RLS policies and private DB helpers filter by `workspace_owner_id` and authenticated membership;
 - service-role access is allowed only server-side after an explicit permission check;
-- rows from archived/deleted works must not appear in normal list/search responses unless a route explicitly asks for them and the user has sufficient permission.
+- archived/deleted works are excluded from normal list/search responses unless a route explicitly opts into them and the user has sufficient permission.
 
-The existing implicit workspace model is based on owner-owned workspaces rather than a separate `workspaces` table. This contract therefore avoids introducing a new global workspace entity.
+The current workspace model is still owner-bound rather than a separate `workspaces` table. Do not introduce a parallel workspace identity only for this subsystem.
 
 ---
 
-## 2. Canonical table: `directory_works`
+## 3. Runtime ownership map
+
+```txt
+/directories/works
+  → app/(main)/directories/works/page.tsx
+  → features/directory-works/components/directory-works-view.tsx
+  → features/directory-works/hooks/**
+  → features/directory-works/api/**
+  → app/api/directory-works/**
+  → features/directory-works/server/**
+  → db/schema/directory-works.ts
+  → db/migrations/010_directory_works_foundation.sql
+  → db/migrations/011_directory_works_read_api.sql
+  → db/migrations/012_directory_works_ai_search.sql
+  → db/migrations/013_directory_works_performance_hardening.sql
+```
+
+Feature responsibilities:
+
+- `features/directory-works/api/**` owns client fetchers, mappers, errors, cache tags and query keys.
+- `features/directory-works/hooks/**` owns TanStack Query reads/mutations and invalidation behavior.
+- `features/directory-works/server/**` owns repository/service/search/import/export/embedding/observability logic.
+- `app/api/directory-works/**` owns HTTP boundaries and delegates domain logic into `features/directory-works/server/**`.
+- `db/schema/directory-works.ts` and migrations 010-013 own the database contract.
+
+Do not move SQL, permission checks, import apply logic or embedding generation into UI components.
+
+---
+
+## 4. Canonical table: `directory_works`
 
 `directory_works` stores the canonical workspace-scoped works used by estimates, templates, imports and search.
 
@@ -58,7 +109,7 @@ source_external_row_key   text                    no        Source row id/code f
 dedupe_fingerprint        text                    yes       Stable normalized fingerprint for duplicate detection.
 search_text               text                    yes       Denormalized search document.
 search_fts                tsvector                yes       Full-text vector generated from search_text and weighted fields.
-status                    text                    yes       active | archived. draft only if a draft persistence strategy is accepted.
+status                    text                    yes       active | archived.
 version                   integer                 yes       Optimistic/concurrency version, starts at 1.
 created_by                uuid                    yes       Auth user who created the row.
 updated_by                uuid                    no        Last auth user who changed the row.
@@ -88,9 +139,10 @@ Canonical write rules:
 - `dedupe_fingerprint` is recalculated on create/update/import apply;
 - `search_text` and `search_fts` are recalculated on create/update/import apply;
 - canonical rows are not created from empty UI draft rows;
-- physical deletion is not the default because works can be referenced by estimates/templates.
+- physical deletion is not the default because works can be referenced by estimates/templates;
+- manual delete/archive paths soft-archive through `status = archived`, `archived_at`, and version increment.
 
-Suggested `price_kind` values:
+Supported `price_kind` values:
 
 ```txt
 base
@@ -100,20 +152,20 @@ estimate
 custom
 ```
 
-Suggested `status` values for canonical rows:
+Supported canonical `status` values:
 
 ```txt
 active
 archived
 ```
 
-`draft` is intentionally excluded until a separate draft persistence strategy is accepted. UI drafts should remain client-local or form-local in the initial CRUD phase.
+`draft` is intentionally excluded from canonical rows until a separate draft persistence strategy is accepted. UI drafts should remain client-local or form-local.
 
 ---
 
-## 3. Supporting tables
+## 5. Supporting tables
 
-### 3.1 `work_aliases`
+### 5.1 `work_aliases`
 
 Alternative names and synonyms for a canonical work.
 
@@ -140,9 +192,9 @@ Rules:
 
 - alias rows inherit tenant scope from `workspace_owner_id` and must match the parent work's owner id;
 - aliases participate in exact/prefix/fuzzy search and semantic embedding input;
-- duplicate aliases should be unique per `workspace_owner_id + work_id + normalized_alias` where `deleted_at is null`.
+- duplicate aliases are unique per `workspace_owner_id + work_id + normalized_alias` where `deleted_at is null`.
 
-### 3.2 `work_keywords`
+### 5.2 `work_keywords`
 
 Search keywords and tags used for exact/fuzzy ranking and embedding input.
 
@@ -168,12 +220,103 @@ deleted_at          timestamptz    no        Soft-delete.
 Rules:
 
 - keywords are not a substitute for categories;
-- duplicate keywords should be unique per `workspace_owner_id + work_id + normalized_keyword` where `deleted_at is null`;
-- keywords are weighted lower than exact code/title matches but higher than generic description matches.
+- duplicate keywords are unique per `workspace_owner_id + work_id + normalized_keyword` where `deleted_at is null`;
+- keywords rank lower than exact code/title matches but higher than generic description matches.
 
 ---
 
-## 4. Import staging tables
+## 6. Read/search API
+
+The regular read/search API exposes these routes:
+
+```txt
+GET /api/directory-works
+GET /api/directory-works/:id
+GET /api/directory-works/search
+GET /api/directory-works/categories
+```
+
+Supported query parameters:
+
+```txt
+q
+category
+subcategory
+unit
+status
+limit
+cursor
+sort
+```
+
+Default filters:
+
+```txt
+workspace_owner_id = current workspace owner id
+status = active
+deleted_at is null
+```
+
+The API returns UI fields plus minimal metadata needed for editing:
+
+```txt
+id
+title
+unit_code
+unit_label
+rate_amount
+currency_code
+price_kind
+category
+subcategory
+code
+status
+version
+updated_at
+```
+
+Regular ranking order:
+
+```txt
+1. exact code or source_external_row_key match
+2. exact normalized_title match
+3. normalized_title prefix match
+4. alias exact/prefix match
+5. keyword exact/prefix match
+6. weighted full-text rank over search_fts
+7. trigram similarity over normalized_title/search_text/aliases/keywords
+8. category/subcategory boost
+9. recency/version tie-breakers only after relevance
+```
+
+Exact code/title matches must stay above weak semantic matches in the final hybrid experience.
+
+---
+
+## 7. Manual CRUD
+
+Manual UI writes are routed through API handlers and feature server modules:
+
+```txt
+POST   /api/directory-works
+PATCH  /api/directory-works/:id
+DELETE /api/directory-works/:id
+```
+
+Rules:
+
+- writes require authenticated workspace access and write permission for the current workspace;
+- input is validated with Zod schemas;
+- writes never trust client-provided `workspace_owner_id`;
+- create/update recalculates normalized/search/dedupe fields;
+- edit preserves extended fields that are not exposed in the first compact manual form;
+- delete/archive is implemented as soft archive;
+- create/update/import apply enqueue or mark embedding work for asynchronous processing;
+- list/detail/categories and relevant AI-search cache keys are invalidated after material changes.
+
+---
+
+## 8. Import/export staging flow
 
 Import never writes raw uploaded data directly into `directory_works`. The flow is staged:
 
@@ -191,7 +334,27 @@ upload/select file
 → targeted cache invalidation
 ```
 
-### 4.1 `directory_work_import_jobs`
+Current import/export routes:
+
+```txt
+POST /api/directory-works/import-jobs
+GET  /api/directory-works/import-jobs/:id
+POST /api/directory-works/import-jobs/:id/apply
+GET  /api/directory-works/export
+```
+
+Current behavior:
+
+- CSV import is supported through local parsing and server-side staging validation.
+- Import preview persists job rows in `directory_work_import_jobs` and `directory_work_import_rows`.
+- Apply processes valid/warning rows in chunks and supports `create`/`skip` style decisions.
+- Imported aliases and keywords are inserted into `work_aliases` and `work_keywords`.
+- XLSX export is supported using a minimal OpenXML ZIP writer without a new dependency.
+- CSV export is supported for the current filtered works catalog.
+- Export remains uncached and bounded by the export row cap.
+- Import job detail remains uncached because progress freshness is more important than reuse.
+
+### 8.1 `directory_work_import_jobs`
 
 ```txt
 TABLE public.directory_work_import_jobs
@@ -243,7 +406,7 @@ failed
 cancelled
 ```
 
-### 4.2 `directory_work_import_rows`
+### 8.2 `directory_work_import_rows`
 
 ```txt
 TABLE public.directory_work_import_rows
@@ -283,11 +446,7 @@ applied
 skipped
 ```
 
-Import confirmation must support `create` and `skip` initially. `update existing` can be added after conflict review UX is explicit enough to avoid silent merges.
-
----
-
-## 5. Import row contract
+### 8.3 Import row contract
 
 Supported import fields:
 
@@ -345,7 +504,7 @@ No import path may silently merge ambiguous rows. Exact duplicates can be marked
 
 ---
 
-## 6. Embedding table
+## 9. Embeddings and AI/hybrid search
 
 Embeddings are stored separately so AI search can evolve without changing canonical work rows.
 
@@ -370,7 +529,23 @@ updated_at              timestamptz    yes       Default now().
 ────────────────────────────────────────────────────────────────
 ```
 
-Embedding input must include the extended work meaning, not just the title:
+Current AI routes:
+
+```txt
+POST /api/directory-works/ai-search
+POST /api/directory-works/embeddings/process
+```
+
+Current model strategy:
+
+```txt
+model_name: text-embedding-3-small
+dimensions: 1536
+distance operator: cosine via pgvector <=>
+default semantic threshold: 0.72
+```
+
+Embedding input must include extended work meaning, not just the title:
 
 ```txt
 title
@@ -387,92 +562,15 @@ price_kind
 
 Generation rules:
 
-- create/import does not synchronously call an embedding provider;
-- create/import marks embedding work as `pending` or enqueues a background job;
+- create/import does not synchronously call the embedding provider;
+- create/import records pending/stale embedding work;
 - updates to embedding input fields mark existing embeddings as `stale`;
 - failed generation stores `status = failed` and `last_error` for retry/observability;
 - AI search filters by current `workspace_owner_id` and excludes deleted/archived works by default;
-- provider API keys and source data sent to providers stay server-only.
+- provider API keys and source data sent to providers stay server-only;
+- embedding processing is bounded by batch limits and is outside CRUD/import transactions.
 
-The concrete model name, dimensions, distance operator and HNSW index parameters are finalized in the AI/hybrid search phase.
-
----
-
-## 7. Search contract
-
-Production search is hybrid, but it has two distinct modes:
-
-1. regular text search: exact, normalized, full-text, trigram/fuzzy;
-2. AI/semantic search: embedding similarity plus regular text boosts.
-
-The regular read/search API is implemented before AI search.
-
-### 7.1 Regular search inputs
-
-```txt
-q
-category
-subcategory
-unit
-status
-limit
-cursor
-sort
-```
-
-Default filters:
-
-```txt
-workspace_owner_id = current workspace owner id
-status = active
-deleted_at is null
-```
-
-The API should return UI fields plus minimal metadata needed for future editing:
-
-```txt
-id
-title
-unit_code
-unit_label
-rate_amount
-currency_code
-price_kind
-category
-subcategory
-code
-status
-version
-updated_at
-```
-
-### 7.2 Ranking order
-
-Recommended text ranking order:
-
-```txt
-1. exact code or source_external_row_key match
-2. exact normalized_title match
-3. normalized_title prefix match
-4. alias exact/prefix match
-5. keyword exact/prefix match
-6. weighted full-text rank over search_fts
-7. trigram similarity over normalized_title/search_text/aliases/keywords
-8. category/subcategory boost
-9. recency/version tie-breakers only after relevance
-```
-
-Exact code/title matches must stay above weak semantic matches in the final hybrid experience.
-
-### 7.3 AI and hybrid search
-
-Recommended endpoint for semantic mode:
-
-```txt
-POST /api/directory-works/ai-search
-```
-
-Request:
+AI search request fields:
 
 ```txt
 query
@@ -483,33 +581,20 @@ limit?
 threshold?
 ```
 
-Response fields:
+AI search response includes the work UI fields plus:
 
 ```txt
-work UI fields
 semantic_score
 text_score
 hybrid_score
 match_reason
 ```
 
-Hybrid ranking combines:
-
-```txt
-exact/code boost
-normalized title boost
-alias/keyword boost
-full-text rank
-trigram similarity
-semantic similarity
-category/subcategory boost
-```
-
-Semantic search must not become the only search mechanism. Exact and high-confidence text matches are returned before lower-confidence semantic matches.
+Hybrid ranking combines exact/code boosts, normalized title boosts, alias/keyword boosts, full-text rank, trigram similarity, semantic similarity and category/subcategory boosts. Semantic search must not become the only search mechanism.
 
 ---
 
-## 8. Cache and invalidation contract
+## 10. Cache and invalidation contract
 
 Server cache tags:
 
@@ -519,6 +604,7 @@ directory-work:<workspaceOwnerId>:<workId>
 directory-works-categories:<workspaceOwnerId>
 directory-works-import:<workspaceOwnerId>:<jobId>
 directory-works-ai:<workspaceOwnerId>:<queryHash>
+directory-works-ai-index:<workspaceOwnerId>
 ```
 
 TanStack Query keys:
@@ -531,59 +617,73 @@ TanStack Query keys:
 ['directoryWorksAiSearch', queryHash]
 ```
 
+Current cache strategy:
+
+- list/search/detail/categories/AI search can use short TTL server caching through workspace-scoped tags;
+- mutation, import polling, export and embedding queue paths are cache-bypassed;
+- list queries use tuned TanStack Query stale/gc times, focus refetch and placeholder previous data;
+- import job detail remains uncached for progress freshness;
+- export remains uncached and bounded.
+
 Invalidation rules:
 
 - create/update/archive/delete invalidates list, detail and categories for the affected workspace;
 - import job status changes invalidate the import job key only;
-- import apply completion invalidates the works list, categories and changed detail records;
-- embedding generation changes invalidate AI search only when results can materially change;
-- mutation handlers should prefer targeted invalidation over global application refetch.
+- import apply completion invalidates works list, categories and changed detail records;
+- embedding generation invalidates AI search only when results can materially change;
+- mutation handlers prefer targeted invalidation over global application refetch;
+- AI-search invalidation must include the AI search index tag when embeddings or embedding input changes.
 
-Auth-sensitive dynamic endpoints may avoid persistent server caching, but they must still expose a consistent invalidation strategy so the CRUD/import phases do not invent incompatible keys.
+Auth-sensitive dynamic endpoints may avoid persistent server caching, but they must still expose a consistent invalidation strategy so CRUD/import/AI phases do not invent incompatible keys.
 
 ---
 
-## 9. Conceptual indexes
+## 11. Indexing, diagnostics and observability
 
-The DB foundation phase should translate these into concrete SQL/Drizzle definitions.
+Migrations 010-013 provide the database foundation, regular search RPCs, AI search RPC/vector index and hardening indexes/diagnostics.
 
-B-tree / partial indexes:
+Index families:
 
 ```txt
-workspace_owner_id + status + deleted_at
-workspace_owner_id + category + subcategory
-workspace_owner_id + normalized_title
-workspace_owner_id + code where code is not null and deleted_at is null
-workspace_owner_id + source_name + source_external_row_key where source_external_row_key is not null
-workspace_owner_id + dedupe_fingerprint
-workspace_owner_id + updated_at
-work_aliases: workspace_owner_id + work_id + normalized_alias
-work_keywords: workspace_owner_id + work_id + normalized_keyword
-import_jobs: workspace_owner_id + status + created_at
-import_rows: workspace_owner_id + job_id + status
-```
+B-tree / partial:
+- workspace_owner_id + status + deleted_at
+- workspace_owner_id + category + subcategory
+- workspace_owner_id + normalized_title
+- workspace_owner_id + code where code is not null and deleted_at is null
+- workspace_owner_id + source_name + source_external_row_key where source_external_row_key is not null
+- workspace_owner_id + dedupe_fingerprint
+- workspace_owner_id + updated_at
+- work_aliases: workspace_owner_id + work_id + normalized_alias
+- work_keywords: workspace_owner_id + work_id + normalized_keyword
+- import_jobs: workspace_owner_id + status + created_at
+- import_rows: workspace_owner_id + job_id + status
 
 GIN / full-text / trigram:
+- directory_works.search_fts
+- trigram normalized_title
+- trigram search_text
+- trigram work_aliases.normalized_alias
+- trigram work_keywords.normalized_keyword
 
-```txt
-directory_works.search_fts
-trigram normalized_title
-trigram search_text
-trigram work_aliases.normalized_alias
-trigram work_keywords.normalized_keyword
+Vector:
+- directory_work_embeddings.embedding HNSW cosine index for 1536-dimensional embeddings
 ```
 
-Vector indexes:
+Performance hardening adds partial/composite indexes for active catalog list/search/export, alias/keyword lookups, import job polling/apply and embedding queue maintenance.
+
+Service-role-only diagnostics:
 
 ```txt
-directory_work_embeddings.embedding HNSW or IVFFLAT after model/dimensions are fixed
+explain_directory_works_search_plan(...)
+explain_directory_work_categories_plan(...)
+get_directory_works_performance_snapshot(...)
 ```
 
-Do not add expensive vector index parameters until the AI phase fixes model dimensions and expected data volume.
+Runtime observability helpers live in `features/directory-works/server/directory-works.observability.ts` and are intended for lightweight slow-path diagnostics, not a full analytics/audit system.
 
 ---
 
-## 10. Security and RLS design
+## 12. Security and RLS design
 
 All subsystem tables require RLS.
 
@@ -605,32 +705,28 @@ Implementation notes:
 - API repositories still perform server-side permission checks before service-role writes;
 - RLS is the last line of defense, not the only authorization layer;
 - import and embedding processors must never process rows outside the job's workspace;
-- storage paths for import files must be private and workspace-scoped if file persistence is used.
+- storage paths for import files must be private and workspace-scoped if file persistence is used;
+- RPC execute grants for workspace-parameterized search/AI helpers stay restricted and should not allow browser clients to bypass the API boundary.
 
 ---
 
-## 11. Phase boundaries
+## 13. Validation expectations
 
-This contract enables the following sequence:
+For code changes in this subsystem, PRs should report the real state of:
 
 ```txt
-#65 contract/documentation
-#66 DB foundation: schema, migration, RLS, indexes
-#67 read API and regular search
-#68 UI backend integration and manual CRUD
-#69 import/export via staging jobs
-#70 embeddings and AI/hybrid search
-#71 cache/indexing/performance hardening
+pnpm typecheck
+pnpm build
+pnpm lint
+pnpm test      # when unit tests are relevant or touched
 ```
 
-Strict non-goals for this contract phase:
+Database changes should also include a Supabase migration smoke test when possible. For migration 013 performance validation, useful checks are:
 
-- no migrations;
-- no Supabase production DB changes;
-- no route handlers/server actions;
-- no UI changes;
-- no replacement of mocks;
-- no import/export implementation;
-- no embedding generation;
-- no work on notification architecture (#56);
-- no broad component/hook refactor (#57).
+```sql
+select public.explain_directory_works_search_plan('<workspace-owner-id>'::uuid, 'штукатурка');
+select public.explain_directory_work_categories_plan('<workspace-owner-id>'::uuid);
+select * from public.get_directory_works_performance_snapshot('<workspace-owner-id>'::uuid);
+```
+
+If local dependency installation or runtime access is unavailable, the PR must say so directly instead of claiming checks passed.

@@ -280,7 +280,7 @@ export function DirectoryWorkImportDialog({
           ) : null}
 
           {preview ? (
-            <div className="grid gap-3 rounded-md border border-dashed border-fuchsia-500 p-3">
+            <div className="grid gap-3 rounded-md border border-dashed border-teal-700 p-3">
               <div className="grid gap-2 text-sm sm:grid-cols-5">
                 <span>Всего: {preview.job.totalRows}</span>
                 <span>Готово: {preview.job.validRows}</span>

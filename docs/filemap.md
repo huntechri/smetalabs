@@ -18,12 +18,14 @@ smetalabs/
 ├── hooks/                  # global hooks only
 ├── lib/                    # shared infra, auth helpers, Supabase clients, utilities
 ├── public/                 # static assets
+├── scripts/                # automation/deployment helper scripts
 ├── types/                  # shared cross-feature TypeScript types
 ├── proxy.ts                # Next middleware entry; delegates to lib/supabase/proxy.ts
 ├── drizzle.config.ts       # Drizzle Kit config
 ├── components.json         # shadcn/ui config
 ├── eslint.config.mjs       # ESLint config
 ├── next.config.mjs         # Next.js config
+├── vercel.json             # Vercel deployment and ignored-build configuration
 ├── package.json            # scripts and dependencies
 └── README.md
 ```
@@ -234,16 +236,32 @@ Rules:
 
 ---
 
+## `scripts/`
+
+```txt
+scripts/
+└── vercel-ignore-build.mjs # Vercel ignored-build helper; builds primary branches and ignores non-primary branches
+```
+
+Rules:
+
+- deployment helper scripts belong in `scripts/**`, not in feature folders;
+- scripts that affect CI/deployment behavior must be documented in `docs/architecture.md` and this filemap;
+- keep branch/build behavior aligned with `vercel.json`.
+
+---
+
 ## `docs/`
 
 ```txt
 docs/
-├── architecture.md                  # layer/routing/auth/API/UI rules
-├── account-settings.md              # /settings/account behavior contract and feature status
-├── backend-architecture.md          # backend/database/API target model
-├── directory-works-architecture.md  # production works catalog contract and hardening notes for #64/#65-#71
-├── design-system.md                 # visual system, tokens and component usage
-└── filemap.md                       # this compact map
+├── architecture.md                         # layer/routing/auth/API/UI/deployment rules
+├── account-settings.md                     # /settings/account behavior contract and feature status
+├── backend-architecture.md                 # backend/database/API target model
+├── directory-works-architecture.md         # production works catalog contract for #64/#65-#71
+├── directory-works-performance-hardening.md # #71 cache/indexing/diagnostics notes
+├── design-system.md                        # visual system, tokens and component usage
+└── filemap.md                              # this compact map
 ```
 
 ---
@@ -304,6 +322,18 @@ types/
 ```
 
 Use `types/` only for shared cross-feature types. Keep feature-private types in `features/<feature>/types.ts`.
+
+---
+
+## Root deployment configuration
+
+```txt
+vercel.json
+  → git.deploymentEnabled disables feature/codex/agent/internal branch patterns
+  → ignoreCommand delegates to scripts/vercel-ignore-build.mjs
+```
+
+Current rule: `master` and `main` are primary branches that should build; non-primary branches are ignored by the script unless deployment rules are intentionally changed.
 
 ---
 
@@ -381,6 +411,17 @@ Ownership transfer uses `public.transfer_workspace_ownership(...)` from migratio
 
 The works catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; do not route around `features/directory-works/server/**` for business logic or permission checks.
 
+### Vercel preview/build guard
+
+```txt
+push branch
+  → vercel.json git.deploymentEnabled filters branch patterns
+  → scripts/vercel-ignore-build.mjs checks VERCEL_GIT_COMMIT_REF
+  → master/main build; non-primary branches are ignored by the script
+```
+
+Do not assume every pushed branch creates a preview deployment.
+
 ---
 
 ## Quick placement guide
@@ -398,6 +439,8 @@ The works catalog must stay workspace-scoped through `workspace_owner_id = works
 | Supabase client/session infrastructure | `lib/supabase/*.ts`                                    |
 | DB schema                              | `db/schema/*.ts`                                       |
 | SQL migration                          | `db/migrations/*.sql`                                  |
+| Deployment helper script               | `scripts/*.mjs`                                        |
+| Vercel deployment config               | `vercel.json`                                          |
 | shadcn primitive                       | `components/ui/*.tsx`                                  |
 | Business UI                            | `features/<feature>/components/*.tsx`                  |
 | Account settings behavior docs         | `docs/account-settings.md`                             |
@@ -415,6 +458,19 @@ The works catalog must stay workspace-scoped through `workspace_owner_id = works
 - `features/account-settings/components/security-settings-card.tsx` — password reset is active, 2FA is disabled future scope, other sessions can be revoked, and last login is shown from Supabase Auth.
 - `features/account-settings/server/password.actions.ts` — owns self password reset email and revoke-other-sessions actions.
 - `features/account-settings/server/dangerous.actions.ts` — owns leave workspace, transfer ownership, deactivate account and delete workspace actions for `/settings/account`.
+
+---
+
+## Recent directory/deployment updates
+
+- `docs/directory-works-architecture.md` — canonical implemented architecture for #64/#65-#71, including DB foundation, search, CRUD, import/export, AI search, cache/indexing and observability.
+- `docs/directory-works-performance-hardening.md` — focused #71 notes for cache/indexing/performance diagnostics.
+- `db/migrations/010_directory_works_foundation.sql` — canonical/supporting/import/embedding table foundation and RLS.
+- `db/migrations/011_directory_works_read_api.sql` — regular search/detail/categories RPC layer.
+- `db/migrations/012_directory_works_ai_search.sql` — pgvector-backed AI/hybrid search foundation.
+- `db/migrations/013_directory_works_performance_hardening.sql` — partial/composite indexes and service-role diagnostics.
+- `features/directory-works/server/directory-works.observability.ts` — lightweight slow-path observability helpers.
+- `scripts/vercel-ignore-build.mjs` and `vercel.json` — guarded Vercel build/deployment behavior for primary vs non-primary branches.
 
 ---
 

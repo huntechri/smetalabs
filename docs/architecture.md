@@ -1,10 +1,10 @@
 # SmetaLabs — Architecture Guide
 
-> Last updated: 2026-05-13
+> Last updated: 2026-05-14
 >
-> Scope: production-facing architecture rules for the current Next.js 16 + Supabase Auth + Drizzle + shadcn/ui codebase.
+> Scope: production-facing architecture rules for the current Next.js 16 + Supabase Auth/Postgres + Drizzle + TanStack Query + shadcn/ui codebase.
 
-This document is the architectural contract for where code belongs and how new features should be added. For the compact directory map, see [`docs/filemap.md`](./filemap.md). For visual/design rules, see [`docs/design-system.md`](./design-system.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md).
+This document is the architectural contract for where code belongs and how new features should be added. For the compact directory map, see [`docs/filemap.md`](./filemap.md). For visual/design rules, see [`docs/design-system.md`](./design-system.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md).
 
 ---
 
@@ -12,16 +12,22 @@ This document is the architectural contract for where code belongs and how new f
 
 | Area | Current choice |
 |---|---|
-| Framework | Next.js 16, App Router |
-| UI | shadcn/ui primitives in `components/ui/` |
+| Framework | Next.js 16.1, App Router |
+| Runtime UI | React 19 |
+| UI primitives | shadcn/ui primitives in `components/ui/` |
 | Styling | Tailwind CSS v4, semantic CSS variables in `app/globals.css` |
-| Language | TypeScript |
+| Language | TypeScript 5.9 |
 | Auth | Supabase Auth with `@supabase/ssr` |
-| Database | PostgreSQL through Drizzle ORM |
+| Database | Supabase PostgreSQL through Drizzle ORM |
+| Server state | TanStack Query v5, feature-owned query-key factories |
+| Validation | Zod at API/server-action boundaries |
 | RBAC | `roles`, `permissions`, `role_permissions`, workspace membership/invitations |
+| Search | PostgreSQL full-text/trigram search; pgvector for directory works AI search |
+| Tests | Vitest scripts are present in `package.json` |
 | Package manager | pnpm |
+| Deployment | Vercel with guarded preview-build configuration |
 
-The project is no longer frontend-only. Auth, RBAC, workspace/team management, settings APIs, Drizzle schema and migrations are already present.
+The project is not frontend-only. Auth, RBAC, workspace/team management, account settings, Drizzle schema, SQL migrations, route handlers, server actions, directory works backend/search/import/export/AI search and performance hardening are already present.
 
 ---
 
@@ -42,11 +48,12 @@ Avoid here:
 
 - large reusable UI blocks;
 - business-specific widgets that can live in `features/**`;
-- direct database logic inside UI pages.
+- direct database logic inside UI pages;
+- workspace/permission decisions based on client-provided owner or role fields.
 
-### `features/` — feature UI and client orchestration
+### `features/` — feature UI, client orchestration and domain boundaries
 
-`features/<feature>/` owns domain-specific UI, hooks and screens.
+`features/<feature>/` owns domain-specific UI, hooks, API adapters, query keys and feature-local server modules.
 
 Use this layer for:
 
@@ -54,8 +61,8 @@ Use this layer for:
 - feature hooks such as filtering/search/view state;
 - feature-local `api/` clients and query-key factories for API routes/server action wrappers;
 - TanStack Query hooks for server state (`useQuery`/`useMutation`), with invalidation owned by the feature hook;
-- feature-local `server/` modules when `app/actions/*` delegates domain actions into the feature boundary;
-- fallback mocks while backend integration is incomplete.
+- feature-local `server/` modules when `app/actions/*` or `app/api/**` delegates domain logic into the feature boundary;
+- fallback mocks only while backend integration is explicitly incomplete.
 
 Do not put shadcn primitives here. Import primitives from `@/components/ui/*`.
 
@@ -70,9 +77,14 @@ Rules:
 - no feature-specific labels, API calls or domain state;
 - prefer composition in `features/**` over creating wrappers here.
 
-### `components/` — cross-app non-feature components
+### `components/` — cross-app non-feature infrastructure
 
 Use this only for app-wide building blocks such as providers, theme infrastructure or truly generic shared components.
+
+Current examples:
+
+- `components/query-provider.tsx` — TanStack Query app provider;
+- `components/theme-provider.tsx` — app theme infrastructure.
 
 ### `lib/` — shared server/client infrastructure
 
@@ -80,7 +92,7 @@ Current important areas:
 
 - `lib/supabase/client.ts` — browser Supabase client;
 - `lib/supabase/server.ts` — server Supabase client;
-- `lib/supabase/proxy.ts` — session refresh and route protection logic;
+- `lib/supabase/proxy.ts` — session refresh, route protection and workspace activity touch logic;
 - `lib/auth/**` — auth/RBAC/workspace helpers;
 - `lib/utils.ts` — low-level utility helpers.
 
@@ -99,9 +111,7 @@ Rules:
 
 ### `types/` — shared domain types
 
-Use `types/` for cross-feature TypeScript types that are consumed from more than one feature.
-
-If a type is private to one feature, keep it inside that feature.
+Use `types/` for cross-feature TypeScript types that are consumed from more than one feature. If a type is private to one feature, keep it inside that feature.
 
 ---
 
@@ -130,7 +140,7 @@ Current pages:
 - `/forgot-password`
 - `/set-password`
 
-`/set-password` is used after an invited user accepts a Supabase invite. The page sets the password through the browser Supabase client using `supabase.auth.updateUser({ password })` after the invite session exists.
+`/set-password` is used after invited-user and reset-password flows. The page updates the password through the browser Supabase client after a valid Auth session exists.
 
 ### Main app routes
 
@@ -143,6 +153,7 @@ Current areas:
 - `/projects/[projectId]`
 - `/projects/[projectId]/estimates/[estimateId]`
 - `/directories/*`
+- `/directories/works`
 - `/procurements`
 - `/team`
 - `/templates`
@@ -153,11 +164,35 @@ Current areas:
 
 `/team` owns team management only: workspace/team summary, members, manual email invites, pending invitations and role reference/management. It must not render catch-all workspace settings controls such as invite links, allowed-domain auto-join policy, workspace ownership transfer or danger-zone actions until those controls have a dedicated workspace/security settings route and production-safe backend contract.
 
+`/directories/works` owns the production works catalog UI. It must use the `features/directory-works/**` boundary and the workspace-scoped `app/api/directory-works/**` route handlers for reads, search, manual CRUD, import/export and AI search.
+
 ### Auth callback route
 
-`app/auth/callback/route.ts` handles Supabase callback patterns such as `token_hash` and `code`. It should not hard-code dashboard redirects when a `next` value is present.
+`app/auth/callback/route.ts` handles Supabase callback patterns such as `token_hash` and `code`. It should not hard-code dashboard redirects when a validated `next` value is present.
 
 Do not use this route for generic page rendering. It is a request boundary.
+
+### Directory works API routes
+
+Current directory works routes are workspace-scoped and server-authoritative:
+
+```txt
+GET    /api/directory-works
+POST   /api/directory-works
+GET    /api/directory-works/search
+GET    /api/directory-works/categories
+GET    /api/directory-works/:id
+PATCH  /api/directory-works/:id
+DELETE /api/directory-works/:id
+POST   /api/directory-works/import-jobs
+GET    /api/directory-works/import-jobs/:id
+POST   /api/directory-works/import-jobs/:id/apply
+GET    /api/directory-works/export
+POST   /api/directory-works/ai-search
+POST   /api/directory-works/embeddings/process
+```
+
+These routes must resolve the current workspace server-side. Clients must never pass `workspace_owner_id` as an authority source.
 
 ---
 
@@ -229,7 +264,8 @@ Use `app/api/**/route.ts` when:
 
 - the client needs JSON via fetch;
 - there is a REST-style collection/member endpoint;
-- the route is consumed by multiple components.
+- the route is consumed by multiple components;
+- the route is a read/search/export/import/processor boundary.
 
 Use `app/actions/**` when:
 
@@ -241,6 +277,8 @@ Both patterns must validate input with schemas or explicit checks.
 
 Account settings use both patterns deliberately: `app/api/settings/route.ts` is the read boundary, while `app/actions/settings.ts` delegates mutations/security actions into `features/account-settings/server/**`. Keep this split unless there is a clear reason to move a specific operation.
 
+Directory works uses API routes for read/search/CRUD/import/export/AI search because the feature is table/search-heavy and client state is coordinated through TanStack Query hooks.
+
 ---
 
 ## 6. Data flow patterns
@@ -251,6 +289,7 @@ Account settings use both patterns deliberately: `app/api/settings/route.ts` is 
 Page/layout
   → feature component
   → feature hook or API route
+  → feature server/service/repository boundary when needed
   → lib/auth or db layer
   → Supabase/Postgres
 ```
@@ -260,15 +299,16 @@ Page/layout
 ```txt
 Client form/action
   → server action or app/api route
+  → schema validation
   → permission check
   → DB/Auth mutation
-  → revalidate/return JSON
+  → targeted revalidation/invalidation
   → UI refresh
 ```
 
 ### Permission flow
 
-Every workspace/team mutation must check the current user first. Do not trust client-provided role or owner fields.
+Every workspace/team/directory mutation must check the current user first. Do not trust client-provided role, owner or workspace fields.
 
 Common helpers live in `lib/auth/**`.
 
@@ -289,7 +329,7 @@ The current stage is role-based workspace access, not fully editable permission-
 Until the core business modules are stable, runtime access control must stay coarse-grained and predictable:
 
 - `owner` and `admin` manage workspace/team operations;
-- `manager` can read workspace/team data where explicitly allowed;
+- `manager` can read workspace/team data where explicitly allowed and can write directory works where the feature contract allows it;
 - `estimator` and `viewer` receive restricted access;
 - tenant boundaries are resolved through workspace membership, not client-provided workspace IDs.
 
@@ -316,6 +356,8 @@ estimates.update
 estimates.delete
 team.read
 team.manage
+directoryWorks.read
+directoryWorks.manage
 billing.read
 billing.manage
 ```
@@ -338,18 +380,73 @@ Some safety invariants must remain outside the editable matrix and cannot be dis
 
 ---
 
-## 7. UI architecture rules
+## 7. Directory works production boundary
+
+The works catalog is no longer only a UI/mock or documentation contract. Epic #64 phases #65-#71 are represented in the codebase:
+
+```txt
+#65 contract/documentation
+#66 DB foundation
+#67 read API and regular search
+#68 UI backend integration and manual CRUD
+#69 import/export staging flow
+#70 embeddings and AI/hybrid search
+#71 cache/indexing/performance hardening
+```
+
+Current ownership:
+
+```txt
+/directories/works
+  → app/(main)/directories/works/page.tsx
+  → features/directory-works/components/directory-works-view.tsx
+  → features/directory-works/hooks/**
+  → features/directory-works/api/**
+  → app/api/directory-works/**
+  → features/directory-works/server/**
+  → db/schema/directory-works.ts + db/migrations/010-013
+```
+
+Rules:
+
+- tenant boundary is `workspace_owner_id = workspace_members.owner_id`;
+- API routes resolve the workspace server-side through auth helpers;
+- reads exclude `deleted_at` and default to active works unless explicitly scoped otherwise;
+- manual delete is a soft archive, not physical deletion;
+- import uses staging jobs/rows before canonical writes;
+- embedding generation is asynchronous through a process endpoint and never runs inside CRUD/import transactions;
+- server cache tags and TanStack Query keys must stay aligned with `docs/directory-works-architecture.md`;
+- mutation/import/embedding paths must invalidate targeted list/detail/category/AI-search keys, not globally refetch the app.
+
+---
+
+## 8. UI architecture rules
 
 - Use `components/ui/**` primitives directly.
 - Put feature-specific UI in `features/<feature>/components/**`.
 - Put feature-specific hooks in `features/<feature>/hooks/**`.
+- Put feature-specific server-state clients/query keys in `features/<feature>/api/**`.
 - Do not duplicate generic table/dialog/form primitives unless the pattern is proven reusable across features.
 - Avoid global wrappers unless they are app-wide infrastructure.
 - Keep visual decisions aligned with `docs/design-system.md`.
 
 ---
 
-## 8. Adding a new feature
+## 9. Deployment and preview-build guard
+
+Vercel deployment is configured through `vercel.json` and `scripts/vercel-ignore-build.mjs`.
+
+Current rule:
+
+- primary branches `master` and `main` are allowed to build;
+- non-primary branches are ignored by the ignore command;
+- `feature/*`, `feature-*`, `codex-*`, `agent-*` and `internal-*` are disabled through Vercel git deployment settings.
+
+Do not rely on every pushed branch producing a preview deployment. When a task requires preview QA, confirm the branch naming/deployment rules before assuming a Vercel URL will exist.
+
+---
+
+## 10. Adding a new feature
 
 For a new feature named `reports`:
 
@@ -357,27 +454,47 @@ For a new feature named `reports`:
 app/(main)/reports/page.tsx
 features/reports/components/reports-view.tsx
 features/reports/hooks/use-reports.ts
-features/reports/types.ts      # only if private to the feature
-app/api/reports/route.ts       # only if client fetch is required
-types/report.ts                # only if shared across features
+features/reports/api/reports-client.ts       # if client fetch/query state is required
+features/reports/api/reports-query-keys.ts   # if TanStack Query is used
+features/reports/server/reports.service.ts   # if domain server logic is needed
+features/reports/types.ts                    # only if private to the feature
+app/api/reports/route.ts                     # only if JSON/API boundary is required
+types/report.ts                             # only if shared across features
 ```
 
 Do not put `reports-view.tsx` in `components/ui/`. It is not a primitive.
 
 ---
 
-## 9. Documentation maintenance rule
+## 11. Documentation maintenance rule
 
-When a PR changes routing, auth flow, folder ownership, public feature structure, or user-visible account/settings behavior, update at least one of:
+When a PR changes routing, auth flow, folder ownership, public feature structure, database schema, migrations, cache strategy, deployment behavior, or user-visible account/settings behavior, update at least one of:
 
 - `docs/architecture.md`
+- `docs/backend-architecture.md`
 - `docs/filemap.md`
 - `docs/design-system.md`
 - `docs/account-settings.md`
+- `docs/directory-works-architecture.md`
 - `README.md`
 
-A route, folder, account-settings behavior or public feature change without docs is considered incomplete.
+A route, folder, account-settings behavior, public feature, DB schema, cache contract or deployment behavior change without docs is considered incomplete.
 
-## 10. Validation and checks
+Do not create duplicate documentation files for the same concern. Update the canonical existing document.
 
-Current package scripts define `pnpm typecheck`, `pnpm lint`, and `pnpm build` as the primary repository-level checks. There is no configured `test` script yet; PR descriptions must not report `npm test` or an automated unit test suite as executed until such a script exists in `package.json`.
+---
+
+## 12. Validation and checks
+
+Current package scripts define these repository-level checks:
+
+```txt
+pnpm typecheck
+pnpm lint
+pnpm build
+pnpm test
+pnpm test:watch
+pnpm test:coverage
+```
+
+PR descriptions must distinguish between checks actually run and checks still required. Historical lint debt or unavailable local dependency installs must be stated explicitly rather than reported as passing.

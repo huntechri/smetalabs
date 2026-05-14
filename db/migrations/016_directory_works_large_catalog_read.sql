@@ -73,6 +73,7 @@ AS $$
 DECLARE
   v_raw_q text := nullif(trim(coalesce(p_q, '')), '');
   v_normalized_q text := nullif(private.directory_work_normalize(p_q), '');
+  v_raw_q_lower text := lower(nullif(trim(coalesce(p_q, '')), ''));
   v_query_fts tsquery := NULL;
   v_category text := nullif(private.directory_work_normalize(p_category), '');
   v_subcategory text := nullif(private.directory_work_normalize(p_subcategory), '');
@@ -144,7 +145,10 @@ BEGIN
     WHERE w.workspace_owner_id = p_workspace_owner_id
       AND w.deleted_at IS NULL
       AND w.status = v_status
-      AND (lower(coalesce(w.code, '')) = lower(v_raw_q) OR lower(coalesce(w.source_external_row_key, '')) = lower(v_raw_q))
+      AND (
+        (w.code IS NOT NULL AND lower(w.code) = v_raw_q_lower)
+        OR (w.source_external_row_key IS NOT NULL AND lower(w.source_external_row_key) = v_raw_q_lower)
+      )
       AND (v_category IS NULL OR private.directory_work_normalize(w.category) = v_category)
       AND (v_subcategory IS NULL OR private.directory_work_normalize(coalesce(w.subcategory, '')) = v_subcategory)
       AND (
@@ -164,7 +168,10 @@ BEGIN
       WHERE w.workspace_owner_id = p_workspace_owner_id
         AND w.deleted_at IS NULL
         AND w.status = v_status
-        AND (lower(coalesce(w.code, '')) = lower(v_raw_q) OR lower(coalesce(w.source_external_row_key, '')) = lower(v_raw_q))
+        AND (
+          (w.code IS NOT NULL AND lower(w.code) = v_raw_q_lower)
+          OR (w.source_external_row_key IS NOT NULL AND lower(w.source_external_row_key) = v_raw_q_lower)
+        )
         AND (v_category IS NULL OR private.directory_work_normalize(w.category) = v_category)
         AND (v_subcategory IS NULL OR private.directory_work_normalize(coalesce(w.subcategory, '')) = v_subcategory)
         AND (
@@ -222,8 +229,9 @@ BEGIN
     RETURN;
   END IF;
 
-  -- General search: cap expensive fuzzy candidates before lateral aggregation and
-  -- final ordering. Alias/keyword arrays are read only for the bounded candidate set.
+  -- General search: apply workspace/status/category/unit filters before candidate
+  -- caps so broad fuzzy terms cannot fill the cap with rows from other filters.
+  -- Alias/keyword arrays are read only for the bounded filtered candidate set.
   RETURN QUERY
   WITH work_candidates AS (
     SELECT
@@ -241,6 +249,13 @@ BEGIN
     WHERE w.workspace_owner_id = p_workspace_owner_id
       AND w.deleted_at IS NULL
       AND w.status = v_status
+      AND (v_category IS NULL OR private.directory_work_normalize(w.category) = v_category)
+      AND (v_subcategory IS NULL OR private.directory_work_normalize(coalesce(w.subcategory, '')) = v_subcategory)
+      AND (
+        v_unit IS NULL
+        OR private.directory_work_normalize(w.unit_code) = v_unit
+        OR private.directory_work_normalize(w.unit_label) = v_unit
+      )
       AND (
         w.normalized_title = v_normalized_q
         OR w.normalized_title LIKE v_normalized_q || '%'
@@ -259,6 +274,18 @@ BEGIN
         + extensions.similarity(wa.normalized_alias, v_normalized_q) * 90
       )::double precision) AS candidate_rank
     FROM public.work_aliases wa
+    JOIN public.directory_works w
+      ON w.id = wa.work_id
+     AND w.workspace_owner_id = p_workspace_owner_id
+     AND w.deleted_at IS NULL
+     AND w.status = v_status
+     AND (v_category IS NULL OR private.directory_work_normalize(w.category) = v_category)
+     AND (v_subcategory IS NULL OR private.directory_work_normalize(coalesce(w.subcategory, '')) = v_subcategory)
+     AND (
+       v_unit IS NULL
+       OR private.directory_work_normalize(w.unit_code) = v_unit
+       OR private.directory_work_normalize(w.unit_label) = v_unit
+     )
     WHERE wa.workspace_owner_id = p_workspace_owner_id
       AND wa.deleted_at IS NULL
       AND (
@@ -278,6 +305,18 @@ BEGIN
         + extensions.similarity(wk.normalized_keyword, v_normalized_q) * 90
       )::double precision) AS candidate_rank
     FROM public.work_keywords wk
+    JOIN public.directory_works w
+      ON w.id = wk.work_id
+     AND w.workspace_owner_id = p_workspace_owner_id
+     AND w.deleted_at IS NULL
+     AND w.status = v_status
+     AND (v_category IS NULL OR private.directory_work_normalize(w.category) = v_category)
+     AND (v_subcategory IS NULL OR private.directory_work_normalize(coalesce(w.subcategory, '')) = v_subcategory)
+     AND (
+       v_unit IS NULL
+       OR private.directory_work_normalize(w.unit_code) = v_unit
+       OR private.directory_work_normalize(w.unit_label) = v_unit
+     )
     WHERE wk.workspace_owner_id = p_workspace_owner_id
       AND wk.deleted_at IS NULL
       AND (
@@ -339,13 +378,6 @@ BEGIN
         AND wk.work_id = w.id
         AND wk.deleted_at IS NULL
     ) keyword_terms ON true
-    WHERE (v_category IS NULL OR private.directory_work_normalize(w.category) = v_category)
-      AND (v_subcategory IS NULL OR private.directory_work_normalize(coalesce(w.subcategory, '')) = v_subcategory)
-      AND (
-        v_unit IS NULL
-        OR private.directory_work_normalize(w.unit_code) = v_unit
-        OR private.directory_work_normalize(w.unit_label) = v_unit
-      )
   )
   SELECT
     ranked.id,

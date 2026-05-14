@@ -76,6 +76,26 @@ function toMutationRow(
   }
 }
 
+function mapDirectoryWorkMutationError(error: { code?: string; message?: string }) {
+  if (error.code === "23505" && error.message?.includes("DIRECTORY_WORK_CODE_DUPLICATE")) {
+    return new DirectoryWorksApiError(
+      "BAD_REQUEST",
+      "Работа с таким кодом уже существует",
+      400
+    )
+  }
+
+  if (error.code === "23505" && error.message?.includes("DIRECTORY_WORK_SOURCE_DUPLICATE")) {
+    return new DirectoryWorksApiError(
+      "BAD_REQUEST",
+      "Работа с таким внешним идентификатором уже существует",
+      400
+    )
+  }
+
+  return error
+}
+
 async function assertDirectoryWorkUniqueFields(
   workspaceOwnerId: string,
   input: DirectoryWorkMutationInput,
@@ -216,35 +236,34 @@ export async function updateDirectoryWorkForWorkspace(
   id: string,
   input: DirectoryWorkMutationInput
 ): Promise<DirectoryWork> {
-  const existing = await getDirectoryWorkForWorkspace(workspaceOwnerId, id)
-  if (!existing) {
+  const { data, error } = await supabase.rpc("update_directory_work_with_embedding", {
+    p_workspace_owner_id: workspaceOwnerId,
+    p_user_id: userId,
+    p_id: id,
+    p_title: input.title,
+    p_unit: input.unit,
+    p_rate: input.rate,
+    p_category: input.category,
+    p_subcategory: input.subcategory ?? null,
+    p_code: input.code ?? null,
+    p_description: input.description ?? null,
+    p_included_operations: input.includedOperations ?? null,
+    p_excluded_operations: input.excludedOperations ?? null,
+    p_source_name: input.sourceName ?? null,
+    p_source_external_row_key: input.sourceExternalRowKey ?? null,
+    p_currency_code: input.currencyCode ?? "RUB",
+    p_price_kind: input.priceKind ?? "base",
+    p_enqueue_embedding: true,
+  })
+
+  if (error) throw mapDirectoryWorkMutationError(error)
+
+  const row = ((data ?? []) as DirectoryWorkRpcRow[])[0]
+  if (!row) {
     throw new DirectoryWorksApiError("NOT_FOUND", "Работа не найдена", 404)
   }
 
-  await assertDirectoryWorkUniqueFields(workspaceOwnerId, input, id)
-
-  const { error } = await supabase
-    .from("directory_works")
-    .update({
-      ...toMutationRow(workspaceOwnerId, userId, input),
-      version: existing.version + 1,
-    })
-    .eq("workspace_owner_id", workspaceOwnerId)
-    .eq("id", id)
-    .is("deleted_at", null)
-
-  if (error) throw error
-
-  const work = await getDirectoryWorkForWorkspace(workspaceOwnerId, id)
-  if (!work) {
-    throw new DirectoryWorksApiError(
-      "INTERNAL_ERROR",
-      "Обновлённая работа не найдена",
-      500
-    )
-  }
-
-  return work
+  return mapDirectoryWorkRow(row)
 }
 
 export async function archiveDirectoryWorkForWorkspace(

@@ -1,7 +1,7 @@
 # Directory works performance hardening
 
 > Status: implementation notes for issue #71, part of epic #64.
-> Scope: cache, indexing, query diagnostics, import/export reliability, AI search invalidation and observability for `/directories/works`.
+> Scope: cache, indexing, query diagnostics, import/export reliability, AI search invalidation, RPC-backed mutation hot paths and observability for `/directories/works`.
 
 Issue #71 is the hardening pass after the DB foundation, read API, CRUD UI, import/export and AI/hybrid search phases. It does not change the business model of the works catalog. It tightens the existing implementation around real query patterns and gives maintainers DB and application-level signals for slow paths.
 
@@ -84,6 +84,116 @@ workspace_owner_id + work_id + model_name + dimensions + generated_at DESC for r
 ```
 
 This supports bounded queue processing and work-scoped invalidation after create/update/import.
+
+---
+
+## RPC-backed mutation hot paths
+
+After Vercel Functions were moved to `fra1` and Supabase remained in `eu-west-1`, the remaining update latency was caused mainly by sequential backend-to-Supabase round trips, not by PostgreSQL execution time.
+
+The original update path performed multiple Supabase/PostgREST calls:
+
+```txt
+auth/workspace/role checks
+→ read current work
+→ uniqueness checks
+→ update directory_works
+→ read updated work
+→ update stale embedding rows
+→ upsert pending embedding row
+→ cache invalidation
+```
+
+Migration `015_directory_work_update_rpc.sql` introduces `public.update_directory_work_with_embedding(...)`. The HTTP contract remains unchanged:
+
+```txt
+PATCH /api/directory-works/:id
+```
+
+The optimized server flow is:
+
+```txt
+PATCH route
+→ Zod validation
+→ require authenticated user
+→ require current workspace
+→ require write role: owner/admin/manager
+→ repository calls public.update_directory_work_with_embedding(...)
+→ revalidate directory works cache tags
+```
+
+The RPC owns only database-local mutation work:
+
+```txt
+check row exists in workspace
+check code uniqueness
+check source_name + source_external_row_key uniqueness
+normalize title/unit/category fields
+update directory_works
+return the updated UI projection
+mark old embedding rows stale
+upsert the new pending embedding row
+```
+
+Security requirements for mutation RPCs:
+
+```txt
+SECURITY DEFINER
+SET search_path = ''
+REVOKE EXECUTE FROM PUBLIC, anon, authenticated
+GRANT EXECUTE TO service_role
+```
+
+The browser must continue calling the Next.js route only. Mutation RPCs are service-role-only and may be called only after application-level authorization.
+
+For future interactive mutation hot paths, prefer a single service-role-only RPC when all of these are true:
+
+```txt
+1. The mutation needs multiple related DB reads/writes.
+2. The reads/writes must happen sequentially for correctness.
+3. The operation is called from interactive UI, such as save/edit/archive.
+4. The operation can return a stable projection to the API layer.
+5. Authorization can be checked before the RPC call.
+```
+
+Avoid implementing hot mutations as many sequential Supabase/PostgREST calls from server code when those calls only coordinate database-local work.
+
+Good candidates:
+
+```txt
+update canonical directory row + uniqueness checks + search fields + queue markers
+archive row + version bump + dependent queue/cache marker
+bulk apply import rows in chunks
+status transitions with summary counters
+```
+
+Poor candidates:
+
+```txt
+single simple read
+pure UI projection mapping
+third-party API calls
+logic that requires user/session objects inside SQL
+operations where browser clients need direct access
+```
+
+CRUD routes must not synchronously call the embedding provider. They should only enqueue or mark embedding work. Provider calls remain in the bounded embedding processor route:
+
+```txt
+POST /api/directory-works/embeddings/process
+```
+
+For update, `update_directory_work_with_embedding(...)` creates or updates the pending embedding queue row directly, so the service layer must not enqueue the same work a second time after the RPC returns.
+
+Database-specific mutation errors should be mapped in the repository/service layer into stable API errors. Current mappings:
+
+```txt
+DIRECTORY_WORK_CODE_DUPLICATE   → 400 Работа с таким кодом уже существует
+DIRECTORY_WORK_SOURCE_DUPLICATE → 400 Работа с таким внешним идентификатором уже существует
+empty/invalid input             → validation should normally be caught by Zod before RPC
+```
+
+The API response contract should stay stable even if the database implementation changes.
 
 ---
 
@@ -227,11 +337,12 @@ Imports already apply rows in chunks. The hardening pass improves DB indexes aro
 Do not remove the broad foundation indexes until real `EXPLAIN` plans show they are unused or harmful. The first post-merge tuning workflow should be:
 
 ```txt
-1. Apply migration 013 to preview/staging.
+1. Apply migrations to preview/staging.
 2. Seed or import representative works data.
 3. Run search/category diagnostics for common filters and queries.
 4. Check Supabase/Postgres slow query logs.
-5. Only then add/drop indexes in a new migration.
+5. Check `[directory-works:slow-path]` in Vercel logs.
+6. Only then add/drop indexes or introduce new mutation RPCs in a new migration.
 ```
 
 For production-scale datasets, consider adding dedicated cursor pagination based on `(updated_at, id)` and `(normalized_title, id)` instead of offset pagination. That is intentionally out of scope for #71 because the public API currently exposes numeric cursor offsets.

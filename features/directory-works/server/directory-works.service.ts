@@ -213,7 +213,6 @@ export async function updateDirectoryWork(
       )
   )
 
-  await enqueueDirectoryWorkEmbedding(context.workspaceOwnerId, work)
   revalidateDirectoryWorkTags(context, work.id)
   return { data: work }
 }

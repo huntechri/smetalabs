@@ -7,7 +7,7 @@ export function DirectoryWorksView() {
       <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border border-dashed border-red-500 p-1">
         <Suspense
           fallback={
-            <div className="rounded-lg border border-dashed border-gray-400 p-4 text-sm text-muted-foreground">
+            <div className="rounded-lg border border-dashed border-orange-500 p-4 text-sm text-muted-foreground">
               Загрузка работ...
             </div>
           }

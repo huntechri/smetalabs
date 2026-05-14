@@ -306,14 +306,14 @@ function mapRow(row: ImportRowDbRow): DirectoryWorkImportRow {
 function getCounts(rows: PreparedImportRow[]) {
   return rows.reduce(
     (acc, row) => {
-      acc.totalRows += 1
-      acc.parsedRows += 1
-      if (row.status === "valid") acc.validRows += 1
-      if (row.status === "warning") acc.warningRows += 1
-      if (row.status === "error") acc.errorRows += 1
+      acc.total_rows += 1
+      acc.parsed_rows += 1
+      if (row.status === "valid") acc.valid_rows += 1
+      if (row.status === "warning") acc.warning_rows += 1
+      if (row.status === "error") acc.error_rows += 1
       return acc
     },
-    { totalRows: 0, parsedRows: 0, validRows: 0, warningRows: 0, errorRows: 0 }
+    { total_rows: 0, parsed_rows: 0, valid_rows: 0, warning_rows: 0, error_rows: 0 }
   )
 }
 

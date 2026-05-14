@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import type { DirectoryWork } from "@/features/directory-works/types"
 import { buildDirectoryWorksExportHref } from "@/features/directory-works/api/directory-works-client"
 import { useDirectoryWorks } from "@/features/directory-works/hooks/use-directory-works"
@@ -14,6 +15,9 @@ import { DirectoryWorkImportDialog } from "./directory-work-import-dialog"
 import { DirectoryWorksRow } from "./directory-works-row"
 
 export function DirectoryWorksSection() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const {
     applyImportJob,
     archiveWork,
@@ -23,6 +27,7 @@ export function DirectoryWorksSection() {
     importing,
     isFetching,
     loading,
+    meta,
     params,
     saving,
     updateWork,
@@ -63,6 +68,24 @@ export function DirectoryWorksSection() {
     void archiveWork(work.id).catch(() => undefined)
   }
 
+  const setCursor = (cursor: number) => {
+    const nextParams = new URLSearchParams(searchParams.toString())
+    if (cursor > 0) {
+      nextParams.set("cursor", String(cursor))
+    } else {
+      nextParams.delete("cursor")
+    }
+    const query = nextParams.toString()
+    router.push(query ? `${pathname}?${query}` : pathname)
+  }
+
+  const pageStart = works.length > 0 ? params.cursor + 1 : 0
+  const pageEnd = params.cursor + works.length
+  const totalLabel = meta?.hasMore
+    ? `минимум ${meta.total}`
+    : String(meta?.total ?? works.length)
+  const previousCursor = Math.max(params.cursor - params.limit, 0)
+
   return (
     <>
       <section className="flex flex-col overflow-hidden rounded-lg border border-dashed border-gray-400 bg-card text-card-foreground shadow-sm">
@@ -93,6 +116,33 @@ export function DirectoryWorksSection() {
             />
           ))}
         </div>
+
+        {meta ? (
+          <div className="flex flex-col gap-3 border-t border-dashed border-gray-300 p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              Показано {pageStart}–{pageEnd}. Всего: {totalLabel}
+              {isFetching ? " · обновление..." : ""}
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="rounded-md border px-3 py-1.5 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={params.cursor === 0 || loading || isFetching}
+                onClick={() => setCursor(previousCursor)}
+              >
+                Назад
+              </button>
+              <button
+                type="button"
+                className="rounded-md border px-3 py-1.5 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!meta.hasMore || loading || isFetching}
+                onClick={() => setCursor(meta.nextCursor ?? params.cursor + params.limit)}
+              >
+                Вперёд
+              </button>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <DirectoryWorkFormDialog

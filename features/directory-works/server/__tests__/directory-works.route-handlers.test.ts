@@ -158,6 +158,55 @@ describe("directory works route handlers", () => {
     )
   })
 
+  it("rejects oversized import files before service calls", async () => {
+    const response = await handlers.handleDirectoryWorkImportCreateRequest(
+      request("https://app.test/api/directory-works/import-jobs", {
+        method: "POST",
+        body: JSON.stringify({
+          fileName: "works.csv",
+          fileSizeBytes: 51 * 1024 * 1024,
+          rows: [validBody],
+        }),
+      })
+    )
+    const body = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(body.error).toMatchObject({
+      code: "BAD_REQUEST",
+      message: "Размер файла не должен превышать 50 МБ",
+    })
+    expect(mocks.createImport).not.toHaveBeenCalled()
+  })
+
+  it("returns readable import create failures", async () => {
+    mocks.createImport.mockRejectedValueOnce(
+      new DirectoryWorksApiError(
+        "IMPORT_JOB_CREATE_FAILED",
+        "Не удалось создать импорт. Проверьте файл и попробуйте снова.",
+        400
+      )
+    )
+
+    const response = await handlers.handleDirectoryWorkImportCreateRequest(
+      request("https://app.test/api/directory-works/import-jobs", {
+        method: "POST",
+        body: JSON.stringify({
+          fileName: "works.csv",
+          rows: [validBody],
+        }),
+      })
+    )
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: {
+        code: "IMPORT_JOB_CREATE_FAILED",
+        message: "Не удалось создать импорт. Проверьте файл и попробуйте снова.",
+      },
+    })
+  })
+
   it("applies import jobs and returns service response", async () => {
     const response = await handlers.handleDirectoryWorkImportApplyRequest(
       "22222222-2222-4222-8222-222222222222"

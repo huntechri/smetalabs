@@ -61,5 +61,4 @@ export const mockNotifications: NotificationSettings = {
 export const mockSecurity: SecurityInfo = {
   twoFactorEnabled: false,
   lastLogin: "2026-05-11T09:15:00+03:00",
-  activeSessionsCount: 3,
 }

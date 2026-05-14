@@ -196,10 +196,19 @@ AI search
 embedding processing
 ```
 
-Slow operations at or above 750ms emit:
+Slow operations emit:
 
 ```txt
 [directory-works:slow-path]
+```
+
+The thresholds are operation-specific:
+
+```txt
+read defaults:       750ms
+manual mutations:    1500ms
+AI search:           1500ms
+bulk/import/export:  3000ms
 ```
 
 Development non-slow operations emit:

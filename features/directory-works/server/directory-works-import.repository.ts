@@ -78,6 +78,41 @@ type PreparedImportRow = {
   dedupeFingerprint: string
 }
 
+type SupabaseWriteError = {
+  code?: string
+  message?: string
+  details?: string
+  hint?: string
+}
+
+function isSupabaseWriteError(error: unknown): error is SupabaseWriteError {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "message" in error &&
+      typeof (error as { message?: unknown }).message === "string"
+  )
+}
+
+function throwImportCreateError(error: unknown): never {
+  if (isSupabaseWriteError(error)) {
+    console.error("[directory-works.import.create]", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    })
+
+    throw new DirectoryWorksApiError(
+      "IMPORT_JOB_CREATE_FAILED",
+      error.message || "Не удалось создать импорт. Проверьте файл и попробуйте снова.",
+      400
+    )
+  }
+
+  throw error
+}
+
 function toNumber(value: unknown) {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : 0
@@ -367,7 +402,7 @@ export async function createDirectoryWorkImportJobForWorkspace(
     .select("*")
     .single()
 
-  if (jobError) throw jobError
+  if (jobError) throwImportCreateError(jobError)
 
   const { error: rowsError } = await supabase.from("directory_work_import_rows").insert(
     rows.map((row) => ({
@@ -383,7 +418,7 @@ export async function createDirectoryWorkImportJobForWorkspace(
       dedupe_fingerprint: row.dedupeFingerprint,
     }))
   )
-  if (rowsError) throw rowsError
+  if (rowsError) throwImportCreateError(rowsError)
 
   return {
     data: {

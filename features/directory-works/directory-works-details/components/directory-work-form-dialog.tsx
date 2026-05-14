@@ -50,12 +50,14 @@ function getErrorMessage(error: unknown) {
 }
 
 export function DirectoryWorkFormDialog({
+  insertAfterWork,
   open,
   onOpenChange,
   work,
   saving,
   onSubmit,
 }: {
+  insertAfterWork?: DirectoryWork | null
   open: boolean
   onOpenChange: (open: boolean) => void
   work: DirectoryWork | null
@@ -120,15 +122,22 @@ export function DirectoryWorkFormDialog({
     }
   }
 
+  const title = work
+    ? "Редактировать работу"
+    : insertAfterWork
+      ? "Добавить работу ниже"
+      : "Новая работа"
+
+  const description = insertAfterWork
+    ? `Новая работа будет добавлена ниже: ${insertAfterWork.title}`
+    : "Заполните обязательные поля. Пустая работа не будет сохранена в справочник."
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{work ? "Редактировать работу" : "Новая работа"}</DialogTitle>
-          <DialogDescription>
-            Заполните обязательные поля. Пустая работа не будет сохранена в
-            справочник.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>

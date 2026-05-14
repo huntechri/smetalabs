@@ -38,10 +38,12 @@ export function DirectoryWorksSection() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [editingWork, setEditingWork] = useState<DirectoryWork | null>(null)
+  const [insertAfterWork, setInsertAfterWork] = useState<DirectoryWork | null>(null)
 
   useEffect(() => {
     const handleCreate = () => {
       setEditingWork(null)
+      setInsertAfterWork(null)
       setDialogOpen(true)
     }
     const handleImport = () => {
@@ -63,6 +65,13 @@ export function DirectoryWorksSection() {
 
   const handleEdit = (work: DirectoryWork) => {
     setEditingWork(work)
+    setInsertAfterWork(null)
+    setDialogOpen(true)
+  }
+
+  const handleInsertAfter = (work: DirectoryWork) => {
+    setEditingWork(null)
+    setInsertAfterWork(work)
     setDialogOpen(true)
   }
 
@@ -116,6 +125,7 @@ export function DirectoryWorksSection() {
               key={row.id}
               onArchive={handleArchive}
               onEdit={handleEdit}
+              onInsertAfter={handleInsertAfter}
               row={row}
               saving={saving || isFetching}
             />
@@ -151,18 +161,26 @@ export function DirectoryWorksSection() {
       </section>
 
       <DirectoryWorkFormDialog
+        insertAfterWork={insertAfterWork}
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open)
+          if (!open) setInsertAfterWork(null)
+        }}
         saving={saving}
         work={editingWork}
         onSubmit={async (input) => {
           if (editingWork) {
             await updateWork(editingWork.id, input)
           } else {
-            await createWork(input)
+            await createWork({
+              ...input,
+              insertAfterWorkId: insertAfterWork?.id ?? null,
+            })
           }
           setDialogOpen(false)
           setEditingWork(null)
+          setInsertAfterWork(null)
         }}
       />
 

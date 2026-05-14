@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import type { DirectoryWork } from "@/features/directory-works/types"
-import { ArchiveIcon, PencilSimpleIcon } from "@phosphor-icons/react"
+import { ArchiveIcon, PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react"
 import { DirectoryWorksCode } from "./directory-works-code"
 import { DirectoryWorksMetricGroup } from "./directory-works-metric-group"
 import { DirectoryWorksName } from "./directory-works-name"
@@ -11,11 +11,13 @@ export function DirectoryWorksRow({
   saving,
   onArchive,
   onEdit,
+  onInsertAfter,
 }: {
   row: DirectoryWork
   saving: boolean
   onArchive: (row: DirectoryWork) => void
   onEdit: (row: DirectoryWork) => void
+  onInsertAfter: (row: DirectoryWork) => void
 }) {
   return (
     <div className="border-b border-dashed border-green-500 last:border-b-0">
@@ -40,6 +42,16 @@ export function DirectoryWorksRow({
           </DirectoryWorksMetricGroup>
 
           <div className="flex items-center justify-end gap-1 rounded-md border border-dashed border-muted-foreground/30 p-2">
+            <Button
+              aria-label={`Добавить работу ниже ${row.title}`}
+              disabled={saving}
+              onClick={() => onInsertAfter(row)}
+              size="icon-sm"
+              type="button"
+              variant="ghost"
+            >
+              <PlusIcon />
+            </Button>
             <Button
               aria-label={`Редактировать ${row.title}`}
               disabled={saving}

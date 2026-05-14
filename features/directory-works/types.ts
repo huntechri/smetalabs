@@ -33,6 +33,7 @@ export type DirectoryWorkMutationInput = {
   sourceExternalRowKey?: string | null
   currencyCode?: string
   priceKind?: DirectoryWorkPriceKind
+  insertAfterWorkId?: string | null
 }
 
 export type DirectoryWork = {
@@ -186,7 +187,10 @@ export type DirectoryWorkImportRawRow = Partial<{
   effective_date: string
 }>
 
-export type DirectoryWorkImportNormalizedRow = DirectoryWorkMutationInput & {
+export type DirectoryWorkImportNormalizedRow = Omit<
+  DirectoryWorkMutationInput,
+  "insertAfterWorkId"
+> & {
   aliases: string[]
   keywords: string[]
   vatRate: number | null

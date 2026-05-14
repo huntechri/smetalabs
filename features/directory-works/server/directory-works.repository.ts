@@ -16,6 +16,7 @@ import {
   type DirectoryWorkCategoryRpcRow,
   type DirectoryWorkRpcRow,
 } from "../api/directory-works-mappers"
+import { getSortOrderForNewDirectoryWork } from "./directory-works.ordering"
 
 type NormalizedListParams = Required<
   Pick<DirectoryWorksListParams, "status" | "limit" | "cursor" | "sort">
@@ -206,12 +207,18 @@ export async function createDirectoryWorkForWorkspace(
 ): Promise<DirectoryWork> {
   await assertDirectoryWorkUniqueFields(workspaceOwnerId, input)
 
+  const sortOrder = await getSortOrderForNewDirectoryWork(
+    workspaceOwnerId,
+    input.insertAfterWorkId
+  )
+
   const { data, error } = await supabase
     .from("directory_works")
     .insert({
       ...toMutationRow(workspaceOwnerId, userId, input),
       created_by: userId,
       status: "active",
+      sort_order: sortOrder,
     })
     .select("id")
     .single()

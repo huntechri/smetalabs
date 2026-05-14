@@ -3,6 +3,7 @@ export type DirectoryWorksApiErrorCode =
   | "UNAUTHORIZED"
   | "FORBIDDEN"
   | "NOT_FOUND"
+  | "IMPORT_JOB_CREATE_FAILED"
   | "INTERNAL_ERROR"
 
 export class DirectoryWorksApiError extends Error {

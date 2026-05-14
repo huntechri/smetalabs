@@ -6,6 +6,8 @@ import type {
 } from "../types"
 import { normalizeDirectoryWorksListParams } from "./directory-works.search"
 
+const MAX_IMPORT_FILE_SIZE_BYTES = 50 * 1024 * 1024
+
 const optionalTrimmedString = (maxLength: number) =>
   z.preprocess((value) => {
     if (typeof value !== "string") return undefined
@@ -64,6 +66,13 @@ const importRowsSchema = z
   .min(1, "Файл не содержит строк для импорта")
   .max(1000, "За один импорт можно загрузить не более 1000 строк")
 
+const importFileSizeBytesSchema = z
+  .preprocess((value) => {
+    if (value === null || value === undefined || value === "") return null
+    return Number(value)
+  }, z.number().finite("Размер файла должен быть числом").int("Размер файла должен быть целым числом").nonnegative("Размер файла не может быть отрицательным").max(MAX_IMPORT_FILE_SIZE_BYTES, "Размер файла не должен превышать 50 МБ").nullable())
+  .optional()
+
 export const directoryWorksListQuerySchema = z.object({
   q: optionalTrimmedString(240),
   category: optionalTrimmedString(120),
@@ -98,12 +107,7 @@ export const directoryWorkImportCreateSchema = z
     rows: importRowsSchema,
     fileName: nullableTrimmedString(255),
     fileMimeType: nullableTrimmedString(120),
-    fileSizeBytes: z
-      .preprocess((value) => {
-        if (value === null || value === undefined || value === "") return null
-        return Number(value)
-      }, z.number().int().nonnegative().nullable())
-      .optional(),
+    fileSizeBytes: importFileSizeBytesSchema,
     sourceName: nullableTrimmedString(120),
     options: z.record(z.string(), z.unknown()).optional(),
   })

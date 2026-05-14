@@ -221,6 +221,43 @@ Use real workspace ids from a non-production or preview dataset first.
 
 ---
 
+## 100k-row read/search hardening
+
+Issue #90 extends the original hardening with a repeatable non-production load-test seed and an optimized `search_directory_works(...)` implementation for large catalogs. Use `db/scripts/seed-directory-works-load-test.sql` only against staging/preview workspaces:
+
+```bash
+psql "$DATABASE_URL" \
+  -v workspace_owner_id='<workspace-owner-id>' \
+  -v row_count='100000' \
+  -f db/scripts/seed-directory-works-load-test.sql
+```
+
+The final strategy keeps the public API shape stable while changing the internal read plan:
+
+- empty browse/list requests are an indexed list path, not a relevance search; they skip `count(*) OVER()` and do not aggregate aliases/keywords for the intermediate workspace set;
+- exact code/source-key queries are checked first through lower-case expression indexes and return the targeted hit set without fuzzy/trigram ranking;
+- general fuzzy search is candidate-capped before final ranking: work title/FTS/trigram candidates are capped separately from alias and keyword candidates, and alias/keyword arrays are aggregated only after the candidate set is bounded;
+- category/subcategory/unit filters use normalized expression indexes on active rows;
+- interactive numeric cursors are accepted for compatibility but capped at 5,000 rows so deep pagination cannot force unbounded `OFFSET` work;
+- export remains synchronous but bounded to 10,000 rows and reads the list endpoint in 100-row chunks. Larger exports should move to a staged/background flow before raising that cap.
+
+Benchmark checklist for PRs that touch this path:
+
+```txt
+GET /api/directory-works?sort=updated_desc
+GET /api/directory-works?sort=title_asc
+GET /api/directory-works?q=<exact code>
+GET /api/directory-works?q=<title prefix>
+GET /api/directory-works?q=<fuzzy text>
+GET /api/directory-works?category=<category>
+GET /api/directory-works/categories
+GET /api/directory-works/export?format=csv
+```
+
+Record p50/p95 response time, Vercel runtime/region, row counts, candidate sizes and whether EXPLAIN uses the intended indexes. In this local implementation pass, live Supabase/Vercel timings were not available; run the checklist against staging after applying migration 016 and the load-test seed.
+
+---
+
 ## Server cache strategy
 
 Read paths now use short-lived `unstable_cache` with workspace-scoped tags:

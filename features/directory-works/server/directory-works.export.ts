@@ -1,7 +1,7 @@
 import type { DirectoryWork, DirectoryWorksListParams } from "../types"
 import { listDirectoryWorksForWorkspace } from "./directory-works.repository"
 
-const EXPORT_LIMIT = 500
+const EXPORT_LIMIT = 100
 const MAX_EXPORT_ROWS = 10000
 
 const EXPORT_COLUMNS: Array<{

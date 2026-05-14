@@ -285,7 +285,12 @@ db/
 │   ├── 010_directory_works_foundation.sql
 │   ├── 011_directory_works_read_api.sql
 │   ├── 012_directory_works_ai_search.sql
-│   └── 013_directory_works_performance_hardening.sql
+│   ├── 013_directory_works_performance_hardening.sql
+│   ├── 014_private_service_role_grants.sql
+│   ├── 015_directory_work_update_rpc.sql
+│   └── 016_directory_works_large_catalog_read.sql
+├── scripts/
+│   └── seed-directory-works-load-test.sql
 └── schema/
     ├── index.ts
     ├── directory-works.ts
@@ -469,6 +474,8 @@ Do not assume every pushed branch creates a preview deployment.
 - `db/migrations/011_directory_works_read_api.sql` — regular search/detail/categories RPC layer.
 - `db/migrations/012_directory_works_ai_search.sql` — pgvector-backed AI/hybrid search foundation.
 - `db/migrations/013_directory_works_performance_hardening.sql` — partial/composite indexes and service-role diagnostics.
+- `db/migrations/016_directory_works_large_catalog_read.sql` — 100k-catalog read/search indexes and optimized search RPC.
+- `db/scripts/seed-directory-works-load-test.sql` — repeatable non-production 100k-row directory works load-test seed.
 - `features/directory-works/server/directory-works.observability.ts` — lightweight slow-path observability helpers.
 - `scripts/vercel-ignore-build.mjs` and `vercel.json` — guarded Vercel build/deployment behavior for primary vs non-primary branches.
 

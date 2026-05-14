@@ -91,7 +91,9 @@ export function mapDirectoryWorkRow(row: DirectoryWorkRpcRow): DirectoryWork {
   }
 }
 
-export function mapDirectoryWorkCategories(rows: DirectoryWorkCategoryRpcRow[]) {
+export function mapDirectoryWorkCategories(
+  rows: DirectoryWorkCategoryRpcRow[]
+) {
   const categories = new Map<string, DirectoryWorkCategoryOption>()
   const subcategoryTotals = new Map<string, number>()
   const units = new Map<string, DirectoryWorkUnitOption>()
@@ -110,7 +112,7 @@ export function mapDirectoryWorkCategories(rows: DirectoryWorkCategoryRpcRow[]) 
     categoryOption.total += total
 
     if (subcategory) {
-      const key = `${category}\u0000${subcategory}`
+      const key = `${category}::${subcategory}`
       subcategoryTotals.set(key, (subcategoryTotals.get(key) ?? 0) + total)
     }
 
@@ -125,7 +127,7 @@ export function mapDirectoryWorkCategories(rows: DirectoryWorkCategoryRpcRow[]) 
   }
 
   for (const [key, total] of subcategoryTotals) {
-    const [category, name = ""] = key.split("\u0000")
+    const [category, name = ""] = key.split("::")
     const option = categories.get(category)
     if (option && name) option.subcategories.push({ name, total })
   }
@@ -147,6 +149,19 @@ export function mapDirectoryWorkCategories(rows: DirectoryWorkCategoryRpcRow[]) 
   }
 }
 
-export function getTotalCount(rows: DirectoryWorkRpcRow[]) {
-  return toNumber(rows[0]?.total_count)
+export function getExactTotalCount(rows: DirectoryWorkRpcRow[]) {
+  const firstTotal = rows[0]?.total_count
+  if (firstTotal === undefined || firstTotal === null) return null
+  return toNumber(firstTotal)
+}
+
+export function getTotalCount(
+  rows: DirectoryWorkRpcRow[],
+  cursor = 0,
+  visibleCount = rows.length,
+  hasMore = false
+) {
+  const exactTotal = getExactTotalCount(rows)
+  if (exactTotal !== null) return exactTotal
+  return cursor + visibleCount + (hasMore ? 1 : 0)
 }

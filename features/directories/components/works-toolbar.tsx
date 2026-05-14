@@ -21,6 +21,7 @@ function WorksToolbarContent() {
       label: "Фильтр",
       icon: <FunnelIcon data-icon="inline-start" />,
       variant: filtersOpen ? "default" : "outline",
+      hideLabel: true,
       onClick: () => setFiltersOpen((current) => !current),
     },
     {

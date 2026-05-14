@@ -10,6 +10,8 @@ This document is the canonical contract for the works catalog. It started as the
 
 The current UI may expose a compact projection (`Код / Название / Ед. изм. / Расценка / Категория`), while the backend preserves structured data for tenant isolation, import staging, deduplication, full-text/fuzzy search, semantic search and targeted cache invalidation.
 
+For mutation hot paths, also follow `docs/directory-works-rpc-mutation-pattern.md`. Interactive mutations that coordinate several database-local reads/writes should prefer service-role-only RPCs after application-level authorization instead of multiple sequential Supabase/PostgREST calls.
+
 ---
 
 ## 1. Phase status
@@ -67,6 +69,7 @@ The current workspace model is still owner-bound rather than a separate `workspa
   → db/migrations/012_directory_works_ai_search.sql
   → db/migrations/013_directory_works_performance_hardening.sql
   → db/migrations/014_private_service_role_grants.sql
+  → db/migrations/015_directory_work_update_rpc.sql
 ```
 
 Feature responsibilities:
@@ -75,7 +78,7 @@ Feature responsibilities:
 - `features/directory-works/hooks/**` owns TanStack Query reads/mutations and invalidation behavior.
 - `features/directory-works/server/**` owns repository/service/search/import/export/embedding/observability logic.
 - `app/api/directory-works/**` owns HTTP boundaries and delegates domain logic into `features/directory-works/server/**`.
-- `db/schema/directory-works.ts` and migrations 010-014 own the database contract.
+- `db/schema/directory-works.ts` and migrations 010-015 own the database contract.
 
 Do not move SQL, permission checks, import apply logic or embedding generation into UI components.
 
@@ -315,7 +318,20 @@ Rules:
 - delete/archive is implemented as soft archive;
 - create/update/import apply enqueue or mark embedding work for asynchronous processing;
 - list/detail/categories and relevant AI-search cache keys are invalidated after material changes;
-- server-side service-role repositories may write only after application-level authorization checks and must retain access to private trigger/helper functions through explicit database grants.
+- server-side service-role repositories may write only after application-level authorization checks and must retain access to private trigger/helper functions through explicit database grants;
+- interactive mutation hot paths that coordinate several database-local reads/writes should use a service-role-only RPC after API authorization; see `update_directory_work_with_embedding(...)` and `docs/directory-works-rpc-mutation-pattern.md`.
+
+Current update path:
+
+```txt
+PATCH /api/directory-works/:id
+→ validate body
+→ require workspace write context
+→ public.update_directory_work_with_embedding(...)
+→ revalidate list/detail/categories/AI-index cache tags
+```
+
+The update RPC performs row existence check, uniqueness checks, normalization, `directory_works` update, updated projection return and embedding queue upsert in one database-local operation. The service layer must not enqueue the same embedding work again after this RPC returns.
 
 ---
 
@@ -374,22 +390,22 @@ file_mime_type        text           no        CSV/XLSX/etc.
 file_size_bytes       bigint         no        Upload size.
 storage_bucket        text           no        Private bucket if file is stored.
 storage_path          text           no        Workspace-scoped private object path.
-total_rows            integer        yes       Default 0.
-parsed_rows           integer        yes       Default 0.
-valid_rows            integer        yes       Default 0.
-warning_rows          integer        yes       Default 0.
-error_rows            integer        yes       Default 0.
-duplicate_rows        integer        yes       Default 0.
-conflict_rows         integer        yes       Default 0.
-applied_rows          integer        yes       Default 0.
-skipped_rows          integer        yes       Default 0.
-options               jsonb          yes       Parser/apply options.
-summary               jsonb          yes       Preview/apply summary.
-last_error            text           no        Last processing error.
-started_at            timestamptz    no        Processing start.
-completed_at          timestamptz    no        Processing completion.
-created_at            timestamptz    yes       Default now().
-updated_at            timestamptz    yes       Default now().
+total_rows            integer       yes       Default 0.
+parsed_rows           integer       yes       Default 0.
+valid_rows            integer       yes       Default 0.
+warning_rows          integer       yes       Default 0.
+error_rows            integer       yes       Default 0.
+duplicate_rows        integer       yes       Default 0.
+conflict_rows         integer       yes       Default 0.
+applied_rows          integer       yes       Default 0.
+skipped_rows          integer       yes       Default 0.
+options               jsonb         yes       Parser/apply options.
+summary               jsonb         yes       Preview/apply summary.
+last_error            text          no        Last processing error.
+started_at            timestamptz   no        Processing start.
+completed_at          timestamptz   no        Processing completion.
+created_at            timestamptz   yes       Default now().
+updated_at            timestamptz   yes       Default now().
 ────────────────────────────────────────────────────────────────
 ```
 
@@ -571,7 +587,8 @@ Generation rules:
 - failed generation stores `status = failed` and `last_error` for retry/observability;
 - AI search filters by current `workspace_owner_id` and excludes deleted/archived works by default;
 - provider API keys and source data sent to providers stay server-only;
-- embedding processing is bounded by batch limits and is outside CRUD/import transactions.
+- embedding processing is bounded by batch limits and is outside CRUD/import transactions;
+- update mutations enqueue embedding work inside `update_directory_work_with_embedding(...)`; do not enqueue a second time in the service after update.
 
 AI search request fields:
 
@@ -643,7 +660,7 @@ Auth-sensitive dynamic endpoints may avoid persistent server caching, but they m
 
 ## 11. Indexing, diagnostics and observability
 
-Migrations 010-014 provide the database foundation, regular search RPCs, AI search RPC/vector index, hardening indexes/diagnostics and service-role private-helper grants.
+Migrations 010-015 provide the database foundation, regular search RPCs, AI search RPC/vector index, hardening indexes/diagnostics, service-role private-helper grants and the optimized update RPC.
 
 Index families:
 
@@ -710,7 +727,8 @@ Implementation notes:
 - import and embedding processors must never process rows outside the job's workspace;
 - storage paths for import files must be private and workspace-scoped if file persistence is used;
 - RPC execute grants for workspace-parameterized search/AI helpers stay restricted and should not allow browser clients to bypass the API boundary;
-- `service_role` must have explicit `USAGE` on schema `private` and `EXECUTE` on private helper/trigger functions because server-side writes run after API authorization and fire private trigger functions.
+- `service_role` must have explicit `USAGE` on schema `private` and `EXECUTE` on private helper/trigger functions because server-side writes run after API authorization and fire private trigger functions;
+- mutation RPCs such as `update_directory_work_with_embedding(...)` must stay service-role-only and must be called only after application-level authorization.
 
 ---
 
@@ -731,6 +749,16 @@ Database changes should also include a Supabase migration smoke test when possib
 select public.explain_directory_works_search_plan('<workspace-owner-id>'::uuid, 'штукатурка');
 select public.explain_directory_work_categories_plan('<workspace-owner-id>'::uuid);
 select * from public.get_directory_works_performance_snapshot('<workspace-owner-id>'::uuid);
+```
+
+For mutation RPC changes, include a smoke test that verifies:
+
+```txt
+RPC executes through service_role
+browser roles cannot execute it directly
+row projection is returned in mapper-compatible shape
+version increments
+embedding queue state is maintained
 ```
 
 If local dependency installation or runtime access is unavailable, the PR must say so directly instead of claiming checks passed.

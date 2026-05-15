@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useDirectoryMaterials } from "@/features/directory-materials/hooks/use-directory-materials"
 import { DIRECTORY_MATERIALS_CREATE_EVENT } from "@/features/directory-materials/lib/directory-materials-events"
@@ -36,8 +38,12 @@ function DirectoryMaterialsRowsSkeleton() {
 }
 
 export function DirectoryMaterialsSection() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const {
     materials,
+    meta,
     loading,
     error,
     isFetching,
@@ -61,6 +67,16 @@ export function DirectoryMaterialsSection() {
     }
   }, [])
 
+  const goToCursor = (cursor: number) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (cursor <= 0) {
+      params.delete("cursor")
+    } else {
+      params.set("cursor", String(cursor))
+    }
+    router.push(params.toString() ? `${pathname}?${params}` : pathname)
+  }
+
   const handleEdit = (material: DirectoryMaterial) => {
     setSelectedMaterial(material)
     setFormOpen(true)
@@ -82,6 +98,10 @@ export function DirectoryMaterialsSection() {
 
     await createMaterial(input)
   }
+
+  const hasPreviousPage = Boolean(meta && meta.cursor > 0)
+  const previousCursor = meta ? Math.max(0, meta.cursor - meta.limit) : 0
+  const currentPage = meta ? Math.floor(meta.cursor / meta.limit) + 1 : 1
 
   const dialog = (
     <DirectoryMaterialFormDialog
@@ -145,6 +165,31 @@ export function DirectoryMaterialsSection() {
             />
           ))}
         </div>
+        {meta ? (
+          <div className="flex items-center justify-between gap-3 border-t px-4 py-3 text-xs text-muted-foreground">
+            <span>
+              Страница {currentPage}. Всего материалов: {meta.total}.
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                disabled={!hasPreviousPage || isFetching}
+                onClick={() => goToCursor(previousCursor)}
+                type="button"
+                variant="outline"
+              >
+                Назад
+              </Button>
+              <Button
+                disabled={!meta.hasMore || !meta.nextCursor || isFetching}
+                onClick={() => meta.nextCursor !== null && goToCursor(meta.nextCursor)}
+                type="button"
+                variant="outline"
+              >
+                Вперёд
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </section>
     </>
   )

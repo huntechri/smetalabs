@@ -43,6 +43,12 @@ type DirectoryMaterialsContext = {
   }
 }
 
+type ImportApplyWithAiIds = Awaited<ReturnType<typeof applyDirectoryMaterialImportJobForWorkspace>> & {
+  data: Awaited<ReturnType<typeof applyDirectoryMaterialImportJobForWorkspace>>["data"] & {
+    appliedMaterialIds?: string[]
+  }
+}
+
 const WRITE_ROLES = new Set(["owner", "admin", "manager"])
 const LIST_CACHE_REVALIDATE_SECONDS = 30
 const DETAIL_CACHE_REVALIDATE_SECONDS = 120
@@ -246,16 +252,14 @@ export async function getDirectoryMaterialImportJob(id: string) {
 
 export async function applyDirectoryMaterialImportJob(id: string) {
   const context = await requireDirectoryMaterialsWriteContext()
-  const response = await applyDirectoryMaterialImportJobForWorkspace(
+  const response = (await applyDirectoryMaterialImportJobForWorkspace(
     context.workspaceOwnerId,
     context.userId,
     id
-  )
+  )) as ImportApplyWithAiIds
 
-  if (response.data.appliedMaterialIds) {
-    for (const materialId of response.data.appliedMaterialIds) {
-      await enqueueDirectoryMaterialEmbeddingForWorkspace(context.workspaceOwnerId, materialId)
-    }
+  for (const materialId of response.data.appliedMaterialIds ?? []) {
+    await enqueueDirectoryMaterialEmbeddingForWorkspace(context.workspaceOwnerId, materialId)
   }
 
   revalidateDirectoryMaterialTags(context)

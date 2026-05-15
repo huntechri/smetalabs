@@ -50,6 +50,11 @@ const directoryMaterialsLimitSchema = z.preprocess((value) => {
   return Number(value)
 }, z.number().int().min(1).max(100).default(50))
 
+const directoryMaterialsExportLimitSchema = z.preprocess((value) => {
+  if (value === undefined || value === null || value === "") return 5000
+  return Number(value)
+}, z.number().int().min(1).max(5000).default(5000))
+
 export const directoryMaterialsListQuerySchema = z.object({
   q: optionalTrimmedString(240),
   category: optionalTrimmedString(120),
@@ -60,6 +65,12 @@ export const directoryMaterialsListQuerySchema = z.object({
   limit: directoryMaterialsLimitSchema,
   cursor: directoryMaterialsCursorSchema,
   sort: directoryMaterialsSortSchema,
+})
+
+export const directoryMaterialsExportQuerySchema = directoryMaterialsListQuerySchema.extend({
+  format: z.enum(["csv"]).default("csv"),
+  limit: directoryMaterialsExportLimitSchema,
+  cursor: z.literal(0).default(0),
 })
 
 export const directoryMaterialMutationSchema = z
@@ -104,6 +115,18 @@ export function parseDirectoryMaterialsListParams(
   return normalizeDirectoryMaterialsListParams(
     directoryMaterialsListQuerySchema.parse(Object.fromEntries(searchParams))
   )
+}
+
+export function parseDirectoryMaterialsExportParams(searchParams: URLSearchParams) {
+  const parsed = directoryMaterialsExportQuerySchema.parse(
+    Object.fromEntries(searchParams)
+  )
+  const { format, ...params } = parsed
+
+  return {
+    format,
+    params: normalizeDirectoryMaterialsListParams(params),
+  }
 }
 
 export function parseDirectoryMaterialMutationBody(body: unknown) {

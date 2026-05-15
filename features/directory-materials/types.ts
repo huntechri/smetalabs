@@ -1,5 +1,6 @@
 export type DirectoryMaterialStatus = "active" | "archived"
 export type DirectoryMaterialsSort = "relevance" | "updated_desc" | "name_asc"
+export type DirectoryMaterialsExportFormat = "csv"
 
 export type DirectoryMaterialsListParams = {
   q?: string
@@ -99,4 +100,10 @@ export type DirectoryMaterialsCategoriesResponse = {
     totalUnits: number
     totalSuppliers: number
   }
+}
+
+export type DirectoryMaterialsExportFile = {
+  body: string
+  contentType: string
+  extension: DirectoryMaterialsExportFormat
 }

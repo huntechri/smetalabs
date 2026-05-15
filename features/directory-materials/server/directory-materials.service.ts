@@ -6,6 +6,7 @@ import { DirectoryMaterialsApiError } from "../api/directory-materials-errors"
 import { directoryMaterialsCacheTags } from "../api/directory-materials-query-keys"
 import type {
   DirectoryMaterialMutationInput,
+  DirectoryMaterialsExportFormat,
   DirectoryMaterialsListParams,
 } from "../types"
 import {
@@ -16,6 +17,7 @@ import {
   listDirectoryMaterialsForWorkspace,
   updateDirectoryMaterialForWorkspace,
 } from "./directory-materials.repository"
+import { buildDirectoryMaterialsExportFile } from "./directory-materials.export"
 import { normalizeDirectoryMaterialsListParams } from "./directory-materials.schemas"
 
 type DirectoryMaterialsContext = {
@@ -192,4 +194,22 @@ export async function getDirectoryMaterialsCategories(
       tags: [context.cacheTags.categories, context.cacheTags.list],
     }
   )()
+}
+
+export async function exportDirectoryMaterials(
+  format: DirectoryMaterialsExportFormat,
+  params: DirectoryMaterialsListParams
+) {
+  const context = await requireDirectoryMaterialsReadContext()
+  const normalizedParams = normalizeDirectoryMaterialsListParams({
+    ...params,
+    cursor: 0,
+    limit: params.limit ?? 5000,
+  })
+  const response = await listDirectoryMaterialsForWorkspace(
+    context.workspaceOwnerId,
+    normalizedParams
+  )
+
+  return buildDirectoryMaterialsExportFile(response.data, format)
 }

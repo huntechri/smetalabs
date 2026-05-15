@@ -17,7 +17,7 @@ export function DirectoryWorksValue({
       variant="outline"
       className={cn(
         "gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums",
-        strong && "font-semibold",
+        strong && "font-medium",
         className
       )}
     >

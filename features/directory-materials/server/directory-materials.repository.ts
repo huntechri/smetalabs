@@ -132,10 +132,11 @@ function applyDirectoryMaterialSort<T extends { order: (column: string, options?
 
 async function assertDirectoryMaterialUniqueFields(
   workspaceOwnerId: string,
-  input: DirectoryMaterialMutationInput
+  input: DirectoryMaterialMutationInput,
+  currentMaterialId?: string
 ) {
   if (input.code?.trim()) {
-    const { data, error } = await supabase
+    let query = supabase
       .from("directory_materials")
       .select("id")
       .eq("workspace_owner_id", workspaceOwnerId)
@@ -143,6 +144,9 @@ async function assertDirectoryMaterialUniqueFields(
       .is("deleted_at", null)
       .limit(1)
 
+    if (currentMaterialId) query = query.neq("id", currentMaterialId)
+
+    const { data, error } = await query
     if (error) throw error
     if ((data ?? []).length > 0) {
       throw new DirectoryMaterialsApiError(
@@ -154,7 +158,7 @@ async function assertDirectoryMaterialUniqueFields(
   }
 
   if (input.sourceName?.trim() && input.sourceExternalRowKey?.trim()) {
-    const { data, error } = await supabase
+    let query = supabase
       .from("directory_materials")
       .select("id")
       .eq("workspace_owner_id", workspaceOwnerId)
@@ -163,6 +167,9 @@ async function assertDirectoryMaterialUniqueFields(
       .is("deleted_at", null)
       .limit(1)
 
+    if (currentMaterialId) query = query.neq("id", currentMaterialId)
+
+    const { data, error } = await query
     if (error) throw error
     if ((data ?? []).length > 0) {
       throw new DirectoryMaterialsApiError(
@@ -171,6 +178,37 @@ async function assertDirectoryMaterialUniqueFields(
         400
       )
     }
+  }
+}
+
+function toMaterialMutationRow(
+  workspaceOwnerId: string,
+  userId: string,
+  input: DirectoryMaterialMutationInput
+) {
+  const unit = input.unit.trim().replace(/\s+/g, " ")
+
+  return {
+    workspace_owner_id: workspaceOwnerId,
+    name: input.name.trim().replace(/\s+/g, " "),
+    normalized_name: "pending",
+    unit_code: normalizeUnitCode(unit),
+    unit_label: unit,
+    price_amount: input.price,
+    currency_code: input.currencyCode ?? "RUB",
+    category: input.category.trim().replace(/\s+/g, " "),
+    subcategory: toNullableString(input.subcategory),
+    code: toNullableString(input.code),
+    supplier_name: toNullableString(input.supplierName),
+    supplier_id: null,
+    image_url: toNullableString(input.imageUrl),
+    description: toNullableString(input.description),
+    source_name: toNullableString(input.sourceName),
+    source_external_row_key: toNullableString(input.sourceExternalRowKey),
+    dedupe_fingerprint: "pending",
+    search_text: "pending",
+    search_fts: "",
+    updated_by: userId,
   }
 }
 
@@ -201,17 +239,15 @@ export async function listDirectoryMaterialsForWorkspace(
   const visibleRows = rows.slice(0, params.limit)
   const hasMore = rows.length > params.limit
 
-  const meta: DirectoryMaterialsListMeta = {
-    limit: params.limit,
-    cursor: params.cursor,
-    nextCursor: hasMore ? params.cursor + params.limit : null,
-    hasMore,
-    total: count ?? params.cursor + visibleRows.length + (hasMore ? 1 : 0),
-  }
-
   return {
     data: visibleRows.map(mapDirectoryMaterialRow),
-    meta,
+    meta: {
+      limit: params.limit,
+      cursor: params.cursor,
+      nextCursor: hasMore ? params.cursor + params.limit : null,
+      hasMore,
+      total: count ?? params.cursor + visibleRows.length + (hasMore ? 1 : 0),
+    },
   }
 }
 
@@ -244,34 +280,13 @@ export async function createDirectoryMaterialForWorkspace(
 ): Promise<DirectoryMaterial> {
   await assertDirectoryMaterialUniqueFields(workspaceOwnerId, input)
 
-  const unit = input.unit.trim().replace(/\s+/g, " ")
-
   const { data, error } = await supabase
     .from("directory_materials")
     .insert({
-      workspace_owner_id: workspaceOwnerId,
-      name: input.name.trim().replace(/\s+/g, " "),
-      normalized_name: "pending",
-      unit_code: normalizeUnitCode(unit),
-      unit_label: unit,
-      price_amount: input.price,
-      currency_code: input.currencyCode ?? "RUB",
-      category: input.category.trim().replace(/\s+/g, " "),
-      subcategory: toNullableString(input.subcategory),
-      code: toNullableString(input.code),
-      supplier_name: toNullableString(input.supplierName),
-      supplier_id: null,
-      image_url: toNullableString(input.imageUrl),
-      description: toNullableString(input.description),
-      source_name: toNullableString(input.sourceName),
-      source_external_row_key: toNullableString(input.sourceExternalRowKey),
-      dedupe_fingerprint: "pending",
-      search_text: "pending",
-      search_fts: "",
+      ...toMaterialMutationRow(workspaceOwnerId, userId, input),
       status: "active",
       version: 1,
       created_by: userId,
-      updated_by: userId,
     })
     .select("id")
     .single()
@@ -283,6 +298,43 @@ export async function createDirectoryMaterialForWorkspace(
     throw new DirectoryMaterialsApiError(
       "INTERNAL_ERROR",
       "Созданный материал не найден",
+      500
+    )
+  }
+
+  return material
+}
+
+export async function updateDirectoryMaterialForWorkspace(
+  workspaceOwnerId: string,
+  userId: string,
+  id: string,
+  input: DirectoryMaterialMutationInput
+): Promise<DirectoryMaterial> {
+  const existing = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
+  if (!existing) {
+    throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
+  }
+
+  await assertDirectoryMaterialUniqueFields(workspaceOwnerId, input, id)
+
+  const { error } = await supabase
+    .from("directory_materials")
+    .update({
+      ...toMaterialMutationRow(workspaceOwnerId, userId, input),
+      version: existing.version + 1,
+    })
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .eq("id", id)
+    .is("deleted_at", null)
+
+  if (error) throw error
+
+  const material = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
+  if (!material) {
+    throw new DirectoryMaterialsApiError(
+      "INTERNAL_ERROR",
+      "Обновлённый материал не найден",
       500
     )
   }
@@ -361,11 +413,7 @@ export async function getDirectoryMaterialCategoriesForWorkspace(
   )
 
   return {
-    data: {
-      categories,
-      units,
-      suppliers,
-    },
+    data: { categories, units, suppliers },
     meta: {
       totalCategories: categories.length,
       totalUnits: units.length,

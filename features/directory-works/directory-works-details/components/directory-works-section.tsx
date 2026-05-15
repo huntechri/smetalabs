@@ -151,7 +151,6 @@ export function DirectoryWorksSection() {
           <div className="flex flex-col gap-3 border-t border-border p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <div>
               Показано {pageStart}–{pageEnd}. Всего: {totalLabel}
-              {isFetching ? " · обновление..." : ""}
             </div>
             <div className="flex gap-2">
               <Button

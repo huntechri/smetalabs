@@ -12,6 +12,14 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import type {
   DirectoryWorkImportCreateInput,
   DirectoryWorkImportPreviewResponse,
@@ -274,14 +282,14 @@ export function DirectoryWorkImportDialog({
           </div>
 
           {file ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs/relaxed text-muted-foreground">
               Выбран файл: {file.name}, {formatBytes(file.size)}
             </p>
           ) : null}
 
           {preview ? (
             <div className="grid gap-3 rounded-md border border-dashed border-teal-700 p-3">
-              <div className="grid gap-2 text-sm sm:grid-cols-5">
+              <div className="grid gap-2 text-xs/relaxed sm:grid-cols-5">
                 <span>Всего: {preview.job.totalRows}</span>
                 <span>Готово: {preview.job.validRows}</span>
                 <span>Предупреждения: {preview.job.warningRows}</span>
@@ -290,46 +298,46 @@ export function DirectoryWorkImportDialog({
               </div>
 
               <div className="max-h-80 overflow-auto rounded-md border">
-                <table className="w-full min-w-[720px] text-left text-sm">
-                  <thead className="bg-muted text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2 font-medium">#</th>
-                      <th className="px-3 py-2 font-medium">Статус</th>
-                      <th className="px-3 py-2 font-medium">Название</th>
-                      <th className="px-3 py-2 font-medium">Ед.</th>
-                      <th className="px-3 py-2 font-medium">Расценка</th>
-                      <th className="px-3 py-2 font-medium">Сообщения</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table className="min-w-[720px]">
+                  <TableHeader className="bg-muted text-muted-foreground">
+                    <TableRow>
+                      <TableHead>#</TableHead>
+                      <TableHead>Статус</TableHead>
+                      <TableHead>Название</TableHead>
+                      <TableHead>Ед.</TableHead>
+                      <TableHead>Расценка</TableHead>
+                      <TableHead>Сообщения</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {rows.slice(0, 50).map((row) => {
                       const normalized = row.normalizedData as Record<string, unknown>
                       const messages = [...row.errorMessages, ...row.warningMessages]
                       return (
-                        <tr key={row.id} className="border-t">
-                          <td className="px-3 py-2">{row.rowNumber}</td>
-                          <td className="px-3 py-2">{STATUS_LABELS[row.status]}</td>
-                          <td className="px-3 py-2">{String(normalized.title ?? "—")}</td>
-                          <td className="px-3 py-2">{String(normalized.unit ?? "—")}</td>
-                          <td className="px-3 py-2">{String(normalized.rate ?? "—")}</td>
-                          <td className="px-3 py-2 text-muted-foreground">
+                        <TableRow key={row.id}>
+                          <TableCell>{row.rowNumber}</TableCell>
+                          <TableCell>{STATUS_LABELS[row.status]}</TableCell>
+                          <TableCell>{String(normalized.title ?? "—")}</TableCell>
+                          <TableCell>{String(normalized.unit ?? "—")}</TableCell>
+                          <TableCell>{String(normalized.rate ?? "—")}</TableCell>
+                          <TableCell className="text-muted-foreground">
                             {messages.length > 0 ? messages.join("; ") : "—"}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       )
                     })}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
               {rows.length > 50 ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs/relaxed text-muted-foreground">
                   В preview показаны первые 50 строк из {rows.length}.
                 </p>
               ) : null}
             </div>
           ) : null}
 
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <p className="text-xs/relaxed text-destructive">{error}</p> : null}
         </div>
 
         <DialogFooter showCloseButton={false}>

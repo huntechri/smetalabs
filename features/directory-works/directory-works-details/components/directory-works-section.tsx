@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import type { DirectoryWork } from "@/features/directory-works/types"
 import { buildDirectoryWorksExportHref } from "@/features/directory-works/api/directory-works-client"
 import { useDirectoryWorks } from "@/features/directory-works/hooks/use-directory-works"
@@ -100,6 +101,8 @@ export function DirectoryWorksSection() {
     : String(meta?.total ?? works.length)
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
+  const showListLoader = loading || (isFetching && works.length > 0)
+  const listLoaderLabel = loading ? "Загрузка работ..." : "Обновление списка..."
 
   return (
     <>
@@ -110,13 +113,7 @@ export function DirectoryWorksSection() {
           </div>
         ) : null}
 
-        <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="p-4 text-xs/relaxed text-muted-foreground">
-              Загрузка работ...
-            </div>
-          ) : null}
-
+        <div className="scrollbar-subtle relative min-h-0 flex-1 overflow-y-auto">
           {!loading && works.length === 0 ? (
             <div className="p-4 text-xs/relaxed text-muted-foreground">
               Работы не найдены. Добавьте первую работу вручную или измените поиск.
@@ -133,13 +130,21 @@ export function DirectoryWorksSection() {
               saving={saving || isFetching}
             />
           ))}
+
+          {showListLoader ? (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+              <div className="flex items-center gap-2 rounded-md border border-border bg-card/95 px-3 py-2 text-xs/relaxed text-muted-foreground shadow-sm">
+                <Spinner className="size-4" />
+                {listLoaderLabel}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {meta ? (
           <div className="flex flex-col gap-3 border-t border-border p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <div>
               Показано {pageStart}–{pageEnd}. Всего: {totalLabel}
-              {isFetching ? " · обновление..." : ""}
             </div>
             <div className="flex gap-2">
               <Button

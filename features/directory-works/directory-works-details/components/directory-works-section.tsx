@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Spinner } from "@/components/ui/spinner"
 import type { DirectoryWork } from "@/features/directory-works/types"
 import { buildDirectoryWorksExportHref } from "@/features/directory-works/api/directory-works-client"
 import { useDirectoryWorks } from "@/features/directory-works/hooks/use-directory-works"
@@ -51,6 +50,16 @@ function DirectoryWorksRowSkeleton() {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+export function DirectoryWorksRowsSkeleton() {
+  return (
+    <div aria-label="Загрузка работ" aria-busy="true">
+      {Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
+        <DirectoryWorksRowSkeleton key={index} />
+      ))}
     </div>
   )
 }
@@ -138,8 +147,7 @@ export function DirectoryWorksSection() {
     : String(meta?.total ?? works.length)
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
-  const showInitialSkeleton = loading && works.length === 0
-  const showUpdatingOverlay = isFetching && !loading && works.length > 0
+  const showSkeletonRows = loading || isFetching
 
   return (
     <>
@@ -151,39 +159,26 @@ export function DirectoryWorksSection() {
         ) : null}
 
         <div className="scrollbar-subtle relative min-h-0 flex-1 overflow-y-auto">
-          {showInitialSkeleton ? (
-            <div aria-label="Загрузка работ" aria-busy="true">
-              {Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
-                <DirectoryWorksRowSkeleton key={index} />
-              ))}
-            </div>
-          ) : null}
+          {showSkeletonRows ? <DirectoryWorksRowsSkeleton /> : null}
 
-          {!loading && works.length === 0 ? (
+          {!showSkeletonRows && works.length === 0 ? (
             <div className="p-4 text-xs/relaxed text-muted-foreground">
               Работы не найдены. Добавьте первую работу вручную или измените поиск.
             </div>
           ) : null}
 
-          {works.map((row) => (
-            <DirectoryWorksRow
-              key={row.id}
-              onArchive={handleArchive}
-              onEdit={handleEdit}
-              onInsertAfter={handleInsertAfter}
-              row={row}
-              saving={saving || isFetching}
-            />
-          ))}
-
-          {showUpdatingOverlay ? (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
-              <div className="flex items-center gap-2 rounded-md border border-border bg-card/95 px-3 py-2 text-xs/relaxed text-muted-foreground shadow-sm">
-                <Spinner className="size-4" />
-                Обновление списка...
-              </div>
-            </div>
-          ) : null}
+          {!showSkeletonRows
+            ? works.map((row) => (
+                <DirectoryWorksRow
+                  key={row.id}
+                  onArchive={handleArchive}
+                  onEdit={handleEdit}
+                  onInsertAfter={handleInsertAfter}
+                  row={row}
+                  saving={saving || isFetching}
+                />
+              ))
+            : null}
         </div>
 
         {meta ? (

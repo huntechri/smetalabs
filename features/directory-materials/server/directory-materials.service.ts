@@ -23,6 +23,11 @@ import {
   createDirectoryMaterialImportJobForWorkspace,
   getDirectoryMaterialImportJobForWorkspace,
 } from "./directory-materials-import.repository"
+import {
+  enqueueDirectoryMaterialEmbeddingForWorkspace,
+  processDirectoryMaterialEmbeddingsForWorkspace,
+  searchDirectoryMaterialsAiForWorkspace,
+} from "./directory-materials-ai"
 import { buildDirectoryMaterialsExportFile } from "./directory-materials.export"
 import { normalizeDirectoryMaterialsListParams } from "./directory-materials.schemas"
 
@@ -162,6 +167,7 @@ export async function createDirectoryMaterial(input: DirectoryMaterialMutationIn
     input
   )
 
+  await enqueueDirectoryMaterialEmbeddingForWorkspace(context.workspaceOwnerId, material.id)
   revalidateDirectoryMaterialTags(context, material.id)
   return { data: material }
 }
@@ -178,6 +184,7 @@ export async function updateDirectoryMaterial(
     input
   )
 
+  await enqueueDirectoryMaterialEmbeddingForWorkspace(context.workspaceOwnerId, material.id)
   revalidateDirectoryMaterialTags(context, material.id)
   return { data: material }
 }
@@ -245,9 +252,39 @@ export async function applyDirectoryMaterialImportJob(id: string) {
     id
   )
 
+  if (response.data.appliedMaterialIds) {
+    for (const materialId of response.data.appliedMaterialIds) {
+      await enqueueDirectoryMaterialEmbeddingForWorkspace(context.workspaceOwnerId, materialId)
+    }
+  }
+
   revalidateDirectoryMaterialTags(context)
   revalidateImportTags(context, response.data.job.id)
   return response
+}
+
+export async function processDirectoryMaterialEmbeddings(input: { limit?: number }) {
+  const context = await requireDirectoryMaterialsWriteContext()
+  const response = await processDirectoryMaterialEmbeddingsForWorkspace(
+    context.workspaceOwnerId,
+    input.limit
+  )
+
+  revalidateTag(context.cacheTags.aiSearchIndex, "max")
+  return response
+}
+
+export async function searchDirectoryMaterialsAi(input: {
+  query: string
+  category?: string | null
+  subcategory?: string | null
+  unit?: string | null
+  limit?: number
+  threshold?: number
+}) {
+  const context = await requireDirectoryMaterialsReadContext()
+
+  return searchDirectoryMaterialsAiForWorkspace(context.workspaceOwnerId, input)
 }
 
 export async function exportDirectoryMaterials(

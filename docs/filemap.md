@@ -1,8 +1,8 @@
 # SmetaLabs — Filemap
 
-> Last updated: 2026-05-14 22:00 UTC
+> Last updated: 2026-05-15 22:00 UTC
 >
-> Документация актуальна на 2026-05-14
+> Документация актуальна на 2026-05-15
 >
 > Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md).
 

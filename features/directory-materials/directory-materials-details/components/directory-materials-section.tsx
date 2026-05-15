@@ -1,7 +1,11 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useDirectoryMaterials } from "@/features/directory-materials/hooks/use-directory-materials"
+import { DIRECTORY_MATERIALS_CREATE_EVENT } from "@/features/directory-materials/lib/directory-materials-events"
+import type { DirectoryMaterialMutationInput } from "@/features/directory-materials/types"
+import { DirectoryMaterialFormDialog } from "./directory-material-form-dialog"
 import { DirectoryMaterialsRow } from "./directory-materials-row"
 
 function DirectoryMaterialsRowsSkeleton() {
@@ -29,44 +33,79 @@ function DirectoryMaterialsRowsSkeleton() {
 }
 
 export function DirectoryMaterialsSection() {
-  const { materials, loading, error, isFetching } = useDirectoryMaterials()
+  const { materials, loading, error, isFetching, saving, createMaterial } =
+    useDirectoryMaterials()
+  const [createOpen, setCreateOpen] = useState(false)
+
+  useEffect(() => {
+    const handleCreate = () => setCreateOpen(true)
+    window.addEventListener(DIRECTORY_MATERIALS_CREATE_EVENT, handleCreate)
+    return () => {
+      window.removeEventListener(DIRECTORY_MATERIALS_CREATE_EVENT, handleCreate)
+    }
+  }, [])
+
+  const handleCreateSubmit = async (input: DirectoryMaterialMutationInput) => {
+    await createMaterial(input)
+  }
+
+  const dialog = (
+    <DirectoryMaterialFormDialog
+      onOpenChange={setCreateOpen}
+      onSubmit={handleCreateSubmit}
+      open={createOpen}
+      saving={saving}
+    />
+  )
 
   if (loading) {
     return (
-      <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
-        <DirectoryMaterialsRowsSkeleton />
-      </section>
+      <>
+        {dialog}
+        <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
+          <DirectoryMaterialsRowsSkeleton />
+        </section>
+      </>
     )
   }
 
   if (error) {
     return (
-      <section className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm">
-        <h2 className="text-base font-semibold">Не удалось загрузить материалы</h2>
-        <p className="mt-1 max-w-md text-sm text-muted-foreground">{error}</p>
-      </section>
+      <>
+        {dialog}
+        <section className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm">
+          <h2 className="text-base font-semibold">Не удалось загрузить материалы</h2>
+          <p className="mt-1 max-w-md text-sm text-muted-foreground">{error}</p>
+        </section>
+      </>
     )
   }
 
   if (materials.length === 0) {
     return (
-      <section className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm">
-        <h2 className="text-base font-semibold">Материалы не найдены</h2>
-        <p className="mt-1 max-w-md text-sm text-muted-foreground">
-          Добавьте первый материал вручную или измените поиск.
-        </p>
-      </section>
+      <>
+        {dialog}
+        <section className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm">
+          <h2 className="text-base font-semibold">Материалы не найдены</h2>
+          <p className="mt-1 max-w-md text-sm text-muted-foreground">
+            Добавьте первый материал вручную или измените поиск.
+          </p>
+        </section>
+      </>
     )
   }
 
   return (
-    <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
-      {isFetching ? <div className="h-1 bg-muted" /> : null}
-      <div className="flex flex-col divide-y">
-        {materials.map((row) => (
-          <DirectoryMaterialsRow key={row.id} row={row} />
-        ))}
-      </div>
-    </section>
+    <>
+      {dialog}
+      <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
+        {isFetching ? <div className="h-1 bg-muted" /> : null}
+        <div className="flex flex-col divide-y">
+          {materials.map((row) => (
+            <DirectoryMaterialsRow key={row.id} row={row} />
+          ))}
+        </div>
+      </section>
+    </>
   )
 }

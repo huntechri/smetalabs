@@ -87,6 +87,23 @@ export function createDirectoryMaterial(input: DirectoryMaterialMutationInput) {
   )
 }
 
+export function updateDirectoryMaterial({
+  id,
+  input,
+}: {
+  id: string
+  input: DirectoryMaterialMutationInput
+}) {
+  return fetchJson<{ data: DirectoryMaterial }>(
+    `/api/directory-materials/${id}`,
+    "обновления материала",
+    {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }
+  )
+}
+
 export function fetchDirectoryMaterialsCategories() {
   return fetchJson<DirectoryMaterialsCategoriesResponse>(
     "/api/directory-materials/categories",

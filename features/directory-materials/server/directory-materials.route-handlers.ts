@@ -6,6 +6,7 @@ import {
   getDirectoryMaterial,
   getDirectoryMaterialsCategories,
   listDirectoryMaterials,
+  updateDirectoryMaterial,
 } from "./directory-materials.service"
 import {
   parseDirectoryMaterialCategoryStatus,
@@ -86,6 +87,24 @@ export async function handleDirectoryMaterialDetailRequest(id: string) {
     return handleDirectoryMaterialsRouteError(
       err,
       "[GET /api/directory-materials/[id]]"
+    )
+  }
+}
+
+export async function handleDirectoryMaterialUpdateRequest(
+  request: NextRequest,
+  id: string
+) {
+  try {
+    const materialId = parseDirectoryMaterialId(id)
+    const body = await readJsonBody(request)
+    const input = parseDirectoryMaterialMutationBody(body)
+    const response = await updateDirectoryMaterial(materialId, input)
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[PATCH /api/directory-materials/[id]]"
     )
   }
 }

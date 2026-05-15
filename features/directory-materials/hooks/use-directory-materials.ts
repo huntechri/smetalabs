@@ -2,10 +2,14 @@
 
 import { useMemo } from "react"
 import { useSearchParams } from "next/navigation"
-import { useQuery } from "@tanstack/react-query"
-import { fetchDirectoryMaterials } from "../api/directory-materials-client"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  createDirectoryMaterial,
+  fetchDirectoryMaterials,
+} from "../api/directory-materials-client"
 import { directoryMaterialsQueryKeys } from "../api/directory-materials-query-keys"
 import type {
+  DirectoryMaterialMutationInput,
   DirectoryMaterialsListParams,
   DirectoryMaterialsSort,
 } from "../types"
@@ -56,6 +60,7 @@ function getListParams(searchParams: ReadonlySearchParams): DirectoryMaterialsLi
 
 export function useDirectoryMaterials() {
   const searchParams = useSearchParams()
+  const queryClient = useQueryClient()
   const params = useMemo(() => getListParams(searchParams), [searchParams])
 
   const materialsQuery = useQuery({
@@ -67,15 +72,37 @@ export function useDirectoryMaterials() {
     placeholderData: (previousData) => previousData,
   })
 
+  const invalidateMaterials = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: directoryMaterialsQueryKeys.all }),
+      queryClient.invalidateQueries({ queryKey: directoryMaterialsQueryKeys.categories() }),
+    ])
+  }
+
+  const createMutation = useMutation({
+    mutationFn: createDirectoryMaterial,
+    onSuccess: async (response) => {
+      await invalidateMaterials()
+      await queryClient.invalidateQueries({
+        queryKey: directoryMaterialsQueryKeys.detail(response.data.id),
+      })
+    },
+  })
+
   return {
     materials: materialsQuery.data?.data ?? [],
     meta: materialsQuery.data?.meta ?? null,
     params,
     loading: materialsQuery.isLoading,
     isFetching: materialsQuery.isFetching,
-    error: materialsQuery.error?.message ?? null,
+    error: materialsQuery.error?.message ?? createMutation.error?.message ?? null,
+    saving: createMutation.isPending,
     refetch: async () => {
       await materialsQuery.refetch()
+    },
+    createMaterial: async (input: DirectoryMaterialMutationInput) => {
+      const response = await createMutation.mutateAsync(input)
+      return response.data
     },
   }
 }

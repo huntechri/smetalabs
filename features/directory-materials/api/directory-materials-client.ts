@@ -1,5 +1,8 @@
 import type {
   DirectoryMaterial,
+  DirectoryMaterialImportApplyResponse,
+  DirectoryMaterialImportCreateInput,
+  DirectoryMaterialImportPreviewResponse,
   DirectoryMaterialMutationInput,
   DirectoryMaterialsCategoriesResponse,
   DirectoryMaterialsListParams,
@@ -109,6 +112,34 @@ export function archiveDirectoryMaterial(id: string) {
     `/api/directory-materials/${id}`,
     "архивирования материала",
     { method: "DELETE" }
+  )
+}
+
+export function createDirectoryMaterialImportJob(
+  input: DirectoryMaterialImportCreateInput
+) {
+  return fetchJson<DirectoryMaterialImportPreviewResponse>(
+    "/api/directory-materials/import-jobs",
+    "импорта материалов",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    }
+  )
+}
+
+export function fetchDirectoryMaterialImportJob(id: string) {
+  return fetchJson<DirectoryMaterialImportPreviewResponse>(
+    `/api/directory-materials/import-jobs/${id}`,
+    "статуса импорта материалов"
+  )
+}
+
+export function applyDirectoryMaterialImportJob(id: string) {
+  return fetchJson<DirectoryMaterialImportApplyResponse>(
+    `/api/directory-materials/import-jobs/${id}/apply`,
+    "применения импорта материалов",
+    { method: "POST" }
   )
 }
 

@@ -13,6 +13,7 @@ import {
   getDirectoryMaterialCategoriesForWorkspace,
   getDirectoryMaterialForWorkspace,
   listDirectoryMaterialsForWorkspace,
+  updateDirectoryMaterialForWorkspace,
 } from "./directory-materials.repository"
 import { normalizeDirectoryMaterialsListParams } from "./directory-materials.schemas"
 
@@ -142,6 +143,22 @@ export async function createDirectoryMaterial(input: DirectoryMaterialMutationIn
   const material = await createDirectoryMaterialForWorkspace(
     context.workspaceOwnerId,
     context.userId,
+    input
+  )
+
+  revalidateDirectoryMaterialTags(context, material.id)
+  return { data: material }
+}
+
+export async function updateDirectoryMaterial(
+  id: string,
+  input: DirectoryMaterialMutationInput
+) {
+  const context = await requireDirectoryMaterialsWriteContext()
+  const material = await updateDirectoryMaterialForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id,
     input
   )
 

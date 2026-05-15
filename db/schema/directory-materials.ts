@@ -23,9 +23,9 @@ const tsvector = customType<{ data: string }>({
   },
 })
 
-const vector = customType<{ data: number[]; driverData: string }>({
+const vector1536 = customType<{ data: number[]; driverData: string }>({
   dataType() {
-    return "vector"
+    return "vector(1536)"
   },
 })
 
@@ -148,7 +148,7 @@ export const directoryMaterialEmbeddings = pgTable(
     modelName: text("model_name").notNull(),
     dimensions: integer("dimensions").notNull(),
     contentHash: text("content_hash").notNull(),
-    embedding: vector("embedding"),
+    embedding: vector1536("embedding"),
     status: directoryMaterialEmbeddingStatusEnum("status")
       .notNull()
       .default("pending"),
@@ -184,6 +184,9 @@ export const directoryMaterialEmbeddings = pgTable(
       t.workspaceOwnerId,
       t.materialId
     ),
+    index("idx_directory_material_embeddings_ready_model")
+      .on(t.workspaceOwnerId, t.modelName, t.dimensions, t.status, t.updatedAt)
+      .where(sql`${t.status} = 'ready'`),
     check("chk_directory_material_embeddings_model_name_not_empty", sql`btrim(${t.modelName}) <> ''`),
     check("chk_directory_material_embeddings_dimensions_positive", sql`${t.dimensions} > 0`),
     check("chk_directory_material_embeddings_content_hash_not_empty", sql`btrim(${t.contentHash}) <> ''`),

@@ -20,14 +20,14 @@ export function DirectoryWorksRow({
   onInsertAfter: (row: DirectoryWork) => void
 }) {
   return (
-    <div className="border-b border-dashed border-b-green-700 last:border-b-0">
-      <div className="m-3 grid gap-3 rounded-md border border-dashed border-pink-600 p-3 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(420px,1fr)_minmax(480px,0.85fr)]">
-        <div className="grid min-w-0 gap-3 rounded-md border border-dashed border-cyan-600 p-2 sm:grid-cols-[minmax(112px,0.28fr)_minmax(0,1fr)]">
+    <div className="border-b border-border last:border-b-0">
+      <div className="m-3 grid gap-3 rounded-md border border-border p-3 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(420px,1fr)_minmax(480px,0.85fr)]">
+        <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(112px,0.28fr)_minmax(0,1fr)]">
           <DirectoryWorksCode value={row.code} />
           <DirectoryWorksName value={row.title} />
         </div>
 
-        <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-amber-700 p-1.5 md:grid-cols-[minmax(220px,0.85fr)_minmax(180px,1fr)_auto]">
+        <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(220px,0.85fr)_minmax(180px,1fr)_auto]">
           <DirectoryWorksMetricGroup title="Ед. изм / Расценка">
             <DirectoryWorksValue label="Ед." value={row.unit} />
             <DirectoryWorksValue
@@ -41,7 +41,7 @@ export function DirectoryWorksRow({
             <DirectoryWorksValue label="Кат." value={row.category} />
           </DirectoryWorksMetricGroup>
 
-          <div className="flex items-center justify-end gap-1 rounded-md border border-dashed border-indigo-700 p-2">
+          <div className="flex items-center justify-end gap-1 rounded-md border border-border p-2">
             <Button
               aria-label={`Добавить работу ниже ${row.title}`}
               disabled={saving}

@@ -20,7 +20,7 @@ export function DirectoryWorksRow({
   onInsertAfter: (row: DirectoryWork) => void
 }) {
   return (
-    <div className="m-3 grid gap-3 rounded-md border border-border p-3 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(420px,1fr)_minmax(480px,0.85fr)]">
+    <div className="mx-3 my-1.5 grid gap-3 rounded-md border border-border p-3 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(420px,1fr)_minmax(480px,0.85fr)]">
       <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(112px,0.28fr)_minmax(0,1fr)]">
         <DirectoryWorksCode value={row.code} />
         <DirectoryWorksName value={row.title} />

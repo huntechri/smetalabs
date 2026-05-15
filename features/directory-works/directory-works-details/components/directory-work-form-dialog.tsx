@@ -202,7 +202,7 @@ export function DirectoryWorkFormDialog({
             </div>
           </div>
 
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {error ? <p className="text-xs/relaxed text-destructive">{error}</p> : null}
 
           <DialogFooter showCloseButton={false}>
             <Button

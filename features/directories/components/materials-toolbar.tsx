@@ -5,6 +5,13 @@ import { DirectoriesToolbar } from "@/features/directories/components/directorie
 import { dispatchDirectoryMaterialsCreateEvent } from "@/features/directory-materials/lib/directory-materials-events"
 import { PlusIcon, FileArrowDownIcon, ExportIcon } from "@phosphor-icons/react"
 
+function exportDirectoryMaterials() {
+  const searchParams = new URLSearchParams(window.location.search)
+  searchParams.set("format", "csv")
+  searchParams.delete("cursor")
+  window.location.href = `/api/directory-materials/export?${searchParams.toString()}`
+}
+
 const materialsActions = [
   {
     label: "Добавить",
@@ -20,8 +27,8 @@ const materialsActions = [
   {
     label: "Экспорт",
     icon: <ExportIcon data-icon="inline-start" />,
-    disabled: true,
-    title: "Экспорт материалов будет подключён позже",
+    onClick: exportDirectoryMaterials,
+    title: "Экспорт материалов в CSV",
   },
 ]
 

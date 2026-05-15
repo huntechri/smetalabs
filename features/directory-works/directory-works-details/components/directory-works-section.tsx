@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { Button } from "@/components/ui/button"
 import type { DirectoryWork } from "@/features/directory-works/types"
 import { buildDirectoryWorksExportHref } from "@/features/directory-works/api/directory-works-client"
 import { useDirectoryWorks } from "@/features/directory-works/hooks/use-directory-works"
@@ -104,17 +105,19 @@ export function DirectoryWorksSection() {
     <>
       <section className="flex flex-col overflow-hidden rounded-lg border border-dashed border-yellow-500 bg-card text-card-foreground shadow-sm">
         {error ? (
-          <div className="m-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <div className="m-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs/relaxed text-destructive">
             {error}
           </div>
         ) : null}
 
         {loading ? (
-          <div className="p-4 text-sm text-muted-foreground">Загрузка работ...</div>
+          <div className="p-4 text-xs/relaxed text-muted-foreground">
+            Загрузка работ...
+          </div>
         ) : null}
 
         {!loading && works.length === 0 ? (
-          <div className="p-4 text-sm text-muted-foreground">
+          <div className="p-4 text-xs/relaxed text-muted-foreground">
             Работы не найдены. Добавьте первую работу вручную или измените поиск.
           </div>
         ) : null}
@@ -133,28 +136,30 @@ export function DirectoryWorksSection() {
         </div>
 
         {meta ? (
-          <div className="flex flex-col gap-3 border-t border-dashed border-t-purple-600 p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-t border-dashed border-t-purple-600 p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <div>
               Показано {pageStart}–{pageEnd}. Всего: {totalLabel}
               {isFetching ? " · обновление..." : ""}
             </div>
             <div className="flex gap-2">
-              <button
+              <Button
                 type="button"
-                className="rounded-md border px-3 py-1.5 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                size="sm"
+                variant="outline"
                 disabled={currentCursor === 0 || loading || isFetching}
                 onClick={() => setCursor(previousCursor)}
               >
                 Назад
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="rounded-md border px-3 py-1.5 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                size="sm"
+                variant="outline"
                 disabled={!meta.hasMore || loading || isFetching}
                 onClick={() => setCursor(nextCursor)}
               >
                 Вперёд
-              </button>
+              </Button>
             </div>
           </div>
         ) : null}

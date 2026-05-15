@@ -1,6 +1,18 @@
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { DirectoryWork } from "@/features/directory-works/types"
-import { ArchiveIcon, PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react"
+import {
+  ArchiveIcon,
+  GearSixIcon,
+  PencilSimpleIcon,
+  PlusIcon,
+} from "@phosphor-icons/react"
 import { DirectoryWorksCode } from "./directory-works-code"
 import { DirectoryWorksMetricGroup } from "./directory-works-metric-group"
 import { DirectoryWorksName } from "./directory-works-name"
@@ -38,38 +50,38 @@ export function DirectoryWorksRow({
 
         <DirectoryWorksMetricGroup title="Категория">
           <DirectoryWorksValue label="Кат." value={row.category} />
-          <div className="ml-auto flex items-center gap-1">
-            <Button
-              aria-label={`Добавить работу ниже ${row.title}`}
-              disabled={saving}
-              onClick={() => onInsertAfter(row)}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            >
-              <PlusIcon />
-            </Button>
-            <Button
-              aria-label={`Редактировать ${row.title}`}
-              disabled={saving}
-              onClick={() => onEdit(row)}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            >
-              <PencilSimpleIcon />
-            </Button>
-            <Button
-              aria-label={`Архивировать ${row.title}`}
-              disabled={saving}
-              onClick={() => onArchive(row)}
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-            >
-              <ArchiveIcon />
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                aria-label={`Действия для ${row.title}`}
+                className="ml-auto"
+                disabled={saving}
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              >
+                <GearSixIcon />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={() => onInsertAfter(row)}>
+                <PlusIcon />
+                Добавить ниже
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(row)}>
+                <PencilSimpleIcon />
+                Редактировать
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => onArchive(row)}
+                variant="destructive"
+              >
+                <ArchiveIcon />
+                Архивировать
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </DirectoryWorksMetricGroup>
       </div>
     </div>

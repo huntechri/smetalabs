@@ -13,6 +13,21 @@ export type DirectoryMaterialsListParams = {
   sort?: DirectoryMaterialsSort
 }
 
+export type DirectoryMaterialMutationInput = {
+  name: string
+  unit: string
+  price: number
+  category: string
+  subcategory?: string | null
+  code?: string | null
+  supplierName?: string | null
+  imageUrl?: string | null
+  description?: string | null
+  sourceName?: string | null
+  sourceExternalRowKey?: string | null
+  currencyCode?: string
+}
+
 export type DirectoryMaterial = {
   id: string
   name: string

@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS public.directory_material_embeddings (
   model_name text NOT NULL,
   dimensions integer NOT NULL,
   content_hash text NOT NULL,
-  embedding extensions.vector,
+  embedding extensions.vector(1536),
   status public.directory_material_embedding_status NOT NULL DEFAULT 'pending',
   embedding_input_text text NOT NULL,
   generated_at timestamptz,
@@ -200,6 +200,8 @@ CREATE TABLE IF NOT EXISTS public.directory_material_embeddings (
     ON DELETE CASCADE,
   CONSTRAINT chk_directory_material_embeddings_model_name_not_empty CHECK (btrim(model_name) <> ''),
   CONSTRAINT chk_directory_material_embeddings_dimensions_positive CHECK (dimensions > 0),
+  CONSTRAINT chk_directory_material_embeddings_dimensions_fixed CHECK (dimensions = 1536),
+  CONSTRAINT chk_directory_material_embeddings_model_fixed CHECK (model_name = 'text-embedding-3-small'),
   CONSTRAINT chk_directory_material_embeddings_content_hash_not_empty CHECK (btrim(content_hash) <> ''),
   CONSTRAINT chk_directory_material_embeddings_input_not_empty CHECK (btrim(embedding_input_text) <> '')
 );
@@ -284,7 +286,17 @@ CREATE INDEX IF NOT EXISTS idx_directory_material_embeddings_workspace_status
 CREATE INDEX IF NOT EXISTS idx_directory_material_embeddings_workspace_material
   ON public.directory_material_embeddings(workspace_owner_id, material_id);
 
--- Vector indexes are intentionally deferred until the AI phase fixes model and dimensions.
+CREATE INDEX IF NOT EXISTS idx_directory_material_embeddings_ready_model
+  ON public.directory_material_embeddings(workspace_owner_id, model_name, dimensions, status, updated_at)
+  WHERE status = 'ready';
+
+CREATE INDEX IF NOT EXISTS idx_directory_material_embeddings_ready_vector_cosine_1536
+  ON public.directory_material_embeddings
+  USING hnsw (embedding extensions.vector_cosine_ops)
+  WHERE status = 'ready'
+    AND model_name = 'text-embedding-3-small'
+    AND dimensions = 1536
+    AND embedding IS NOT NULL;
 
 -- 6. RLS
 ALTER TABLE public.directory_materials ENABLE ROW LEVEL SECURITY;

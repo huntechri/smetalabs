@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import type { DirectoryWork } from "@/features/directory-works/types"
 import { buildDirectoryWorksExportHref } from "@/features/directory-works/api/directory-works-client"
 import { useDirectoryWorks } from "@/features/directory-works/hooks/use-directory-works"
@@ -100,6 +101,7 @@ export function DirectoryWorksSection() {
     : String(meta?.total ?? works.length)
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
+  const showUpdatingIndicator = isFetching && !loading && works.length > 0
 
   return (
     <>
@@ -112,8 +114,16 @@ export function DirectoryWorksSection() {
 
         <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-xs/relaxed text-muted-foreground">
+            <div className="flex items-center gap-2 p-4 text-xs/relaxed text-muted-foreground">
+              <Spinner className="size-3" />
               Загрузка работ...
+            </div>
+          ) : null}
+
+          {showUpdatingIndicator ? (
+            <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-card/95 px-4 py-2 text-xs/relaxed text-muted-foreground backdrop-blur supports-backdrop-filter:bg-card/80">
+              <Spinner className="size-3" />
+              Обновление списка...
             </div>
           ) : null}
 

@@ -540,6 +540,7 @@ export async function applyDirectoryMaterialImportJobForWorkspace(
     .eq("id", id)
 
   let appliedRows = 0
+  const appliedMaterialIds: string[] = []
 
   try {
     for (let index = 0; index < rows.length; index += APPLY_CHUNK_SIZE) {
@@ -556,6 +557,7 @@ export async function applyDirectoryMaterialImportJobForWorkspace(
       const materialIds = ((data ?? []) as Array<{ id: string }>).map(
         (material) => material.id
       )
+      appliedMaterialIds.push(...materialIds)
       await Promise.all(
         chunk.map((row, rowIndex) =>
           supabase
@@ -586,7 +588,14 @@ export async function applyDirectoryMaterialImportJobForWorkspace(
       .single()
     if (error) throw error
 
-    return { data: { job: mapJob(updatedJob as ImportJobDbRow), appliedRows, skippedRows } }
+    return {
+      data: {
+        job: mapJob(updatedJob as ImportJobDbRow),
+        appliedRows,
+        skippedRows,
+        appliedMaterialIds,
+      },
+    }
   } catch (err) {
     await supabase
       .from("directory_material_import_jobs")

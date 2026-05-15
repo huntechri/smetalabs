@@ -8,6 +8,33 @@ const optionalTrimmedString = (maxLength: number) =>
     return trimmed.length > 0 ? trimmed : undefined
   }, z.string().max(maxLength).optional())
 
+const nullableTrimmedString = (maxLength: number) =>
+  z.preprocess((value) => {
+    if (value === null) return null
+    if (typeof value !== "string") return undefined
+    const trimmed = value.trim().replace(/\s+/g, " ")
+    return trimmed.length > 0 ? trimmed : null
+  }, z.string().max(maxLength).nullable().optional())
+
+const requiredTrimmedString = (maxLength: number, message: string) =>
+  z.preprocess((value) => {
+    if (typeof value !== "string") return value
+    return value.trim().replace(/\s+/g, " ")
+  }, z.string().min(1, message).max(maxLength))
+
+const priceAmountSchema = z.preprocess((value) => {
+  if (typeof value === "string" && value.trim() !== "") return Number(value)
+  return value
+}, z.number().finite().min(0, "Цена не может быть отрицательной"))
+
+const currencyCodeSchema = z
+  .preprocess((value) => {
+    if (typeof value !== "string") return "RUB"
+    const normalized = value.trim().toUpperCase()
+    return normalized || "RUB"
+  }, z.string().regex(/^[A-Z]{3}$/, "Код валюты должен быть в ISO-формате"))
+  .default("RUB")
+
 const directoryMaterialStatusSchema = z.enum(["active", "archived"]).default("active")
 const directoryMaterialsSortSchema = z
   .enum(["relevance", "updated_desc", "name_asc"])
@@ -35,6 +62,23 @@ export const directoryMaterialsListQuerySchema = z.object({
   sort: directoryMaterialsSortSchema,
 })
 
+export const directoryMaterialMutationSchema = z
+  .object({
+    name: requiredTrimmedString(240, "Название обязательно"),
+    unit: requiredTrimmedString(80, "Единица измерения обязательна"),
+    price: priceAmountSchema,
+    category: requiredTrimmedString(120, "Категория обязательна"),
+    subcategory: nullableTrimmedString(120),
+    code: nullableTrimmedString(80),
+    supplierName: nullableTrimmedString(160),
+    imageUrl: nullableTrimmedString(1000),
+    description: nullableTrimmedString(2000),
+    sourceName: nullableTrimmedString(120),
+    sourceExternalRowKey: nullableTrimmedString(160),
+    currencyCode: currencyCodeSchema,
+  })
+  .strict()
+
 export const directoryMaterialIdSchema = z.string().uuid()
 export const directoryMaterialCategoryStatusSchema = z
   .enum(["active", "archived"])
@@ -60,6 +104,10 @@ export function parseDirectoryMaterialsListParams(
   return normalizeDirectoryMaterialsListParams(
     directoryMaterialsListQuerySchema.parse(Object.fromEntries(searchParams))
   )
+}
+
+export function parseDirectoryMaterialMutationBody(body: unknown) {
+  return directoryMaterialMutationSchema.parse(body)
 }
 
 export function parseDirectoryMaterialId(id: string) {

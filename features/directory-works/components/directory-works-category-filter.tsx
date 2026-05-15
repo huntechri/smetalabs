@@ -70,7 +70,7 @@ export function DirectoryWorksCategoryFilter({ open }: { open: boolean }) {
   if (!open) return null
 
   return (
-    <div className="rounded-lg border border-dashed border-cyan-200 bg-card/60 p-2 shadow-sm">
+    <div className="rounded-lg border border-border bg-card/60 p-2 shadow-sm">
       <div className="flex flex-col gap-2 @3xl/main:flex-row @3xl/main:items-center">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-foreground">Фильтр по разделам</p>

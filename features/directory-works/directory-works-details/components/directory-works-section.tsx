@@ -103,7 +103,7 @@ export function DirectoryWorksSection() {
 
   return (
     <>
-      <section className="flex flex-col overflow-hidden rounded-lg border border-dashed border-yellow-500 bg-card text-card-foreground shadow-sm">
+      <section className="flex flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-sm">
         {error ? (
           <div className="m-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs/relaxed text-destructive">
             {error}
@@ -122,21 +122,19 @@ export function DirectoryWorksSection() {
           </div>
         ) : null}
 
-        <div className="flex flex-col">
-          {works.map((row) => (
-            <DirectoryWorksRow
-              key={row.id}
-              onArchive={handleArchive}
-              onEdit={handleEdit}
-              onInsertAfter={handleInsertAfter}
-              row={row}
-              saving={saving || isFetching}
-            />
-          ))}
-        </div>
+        {works.map((row) => (
+          <DirectoryWorksRow
+            key={row.id}
+            onArchive={handleArchive}
+            onEdit={handleEdit}
+            onInsertAfter={handleInsertAfter}
+            row={row}
+            saving={saving || isFetching}
+          />
+        ))}
 
         {meta ? (
-          <div className="flex flex-col gap-3 border-t border-dashed border-t-purple-600 p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-t border-border p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <div>
               Показано {pageStart}–{pageEnd}. Всего: {totalLabel}
               {isFetching ? " · обновление..." : ""}

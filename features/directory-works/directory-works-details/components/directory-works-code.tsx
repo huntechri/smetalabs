@@ -2,7 +2,7 @@ export function DirectoryWorksCode({ value }: { value: string | null }) {
   const code = value?.trim()
 
   return (
-    <div className="min-w-0 rounded-md border border-dashed border-green-300 p-2">
+    <div className="min-w-0 rounded-md border border-border p-2">
       <span className="mb-1 block text-xs text-muted-foreground uppercase">
         Код
       </span>

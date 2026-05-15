@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm"
 import {
   check,
   customType,
+  foreignKey,
   index,
   integer,
   numeric,
@@ -22,10 +23,21 @@ const tsvector = customType<{ data: string }>({
   },
 })
 
+const vector = customType<{ data: number[]; driverData: string }>({
+  dataType() {
+    return "vector"
+  },
+})
+
 export const directoryMaterialStatusEnum = pgEnum("directory_material_status", [
   "active",
   "archived",
 ])
+
+export const directoryMaterialEmbeddingStatusEnum = pgEnum(
+  "directory_material_embedding_status",
+  ["pending", "ready", "stale", "failed"]
+)
 
 export const directoryMaterials = pgTable(
   "directory_materials",
@@ -121,6 +133,63 @@ export const directoryMaterials = pgTable(
     check(
       "chk_directory_materials_currency_uppercase",
       sql`${t.currencyCode} ~ '^[A-Z]{3}$'`
+    ),
+  ]
+)
+
+export const directoryMaterialEmbeddings = pgTable(
+  "directory_material_embeddings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceOwnerId: uuid("workspace_owner_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    materialId: uuid("material_id").notNull(),
+    modelName: text("model_name").notNull(),
+    dimensions: integer("dimensions").notNull(),
+    contentHash: text("content_hash").notNull(),
+    embedding: vector("embedding"),
+    status: directoryMaterialEmbeddingStatusEnum("status")
+      .notNull()
+      .default("pending"),
+    embeddingInputText: text("embedding_input_text").notNull(),
+    generatedAt: timestamp("generated_at", { withTimezone: true }),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      name: "fk_directory_material_embeddings_material_workspace",
+      columns: [t.materialId, t.workspaceOwnerId],
+      foreignColumns: [directoryMaterials.id, directoryMaterials.workspaceOwnerId],
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    uniqueIndex("uq_directory_material_embeddings_material_model_hash").on(
+      t.workspaceOwnerId,
+      t.materialId,
+      t.modelName,
+      t.contentHash
+    ),
+    index("idx_directory_material_embeddings_workspace_status").on(
+      t.workspaceOwnerId,
+      t.status
+    ),
+    index("idx_directory_material_embeddings_workspace_material").on(
+      t.workspaceOwnerId,
+      t.materialId
+    ),
+    check("chk_directory_material_embeddings_model_name_not_empty", sql`btrim(${t.modelName}) <> ''`),
+    check("chk_directory_material_embeddings_dimensions_positive", sql`${t.dimensions} > 0`),
+    check("chk_directory_material_embeddings_content_hash_not_empty", sql`btrim(${t.contentHash}) <> ''`),
+    check(
+      "chk_directory_material_embeddings_input_not_empty",
+      sql`btrim(${t.embeddingInputText}) <> ''`
     ),
   ]
 )

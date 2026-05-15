@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS public.directory_material_import_jobs (
   completed_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT uq_directory_material_import_jobs_id_workspace UNIQUE (id, workspace_owner_id),
   CONSTRAINT chk_directory_material_import_jobs_counts_non_negative CHECK (
     total_rows >= 0 AND
     parsed_rows >= 0 AND
@@ -88,7 +89,7 @@ CREATE TABLE IF NOT EXISTS public.directory_material_import_jobs (
 CREATE TABLE IF NOT EXISTS public.directory_material_import_rows (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   workspace_owner_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  job_id uuid NOT NULL REFERENCES public.directory_material_import_jobs(id) ON DELETE CASCADE,
+  job_id uuid NOT NULL,
   row_number integer NOT NULL,
   raw_data jsonb NOT NULL DEFAULT '{}'::jsonb,
   normalized_data jsonb NOT NULL DEFAULT '{}'::jsonb,
@@ -96,10 +97,10 @@ CREATE TABLE IF NOT EXISTS public.directory_material_import_rows (
   action directory_material_import_row_action,
   error_messages jsonb NOT NULL DEFAULT '[]'::jsonb,
   warning_messages jsonb NOT NULL DEFAULT '[]'::jsonb,
-  duplicate_material_id uuid,
+  duplicate_material_id uuid REFERENCES public.directory_materials(id) ON DELETE SET NULL,
   conflict_material_ids uuid[] NOT NULL DEFAULT '{}'::uuid[],
   dedupe_fingerprint text,
-  applied_material_id uuid,
+  applied_material_id uuid REFERENCES public.directory_materials(id) ON DELETE SET NULL,
   applied_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
@@ -109,17 +110,8 @@ CREATE TABLE IF NOT EXISTS public.directory_material_import_rows (
   CONSTRAINT chk_directory_material_import_rows_warning_messages_array CHECK (jsonb_typeof(warning_messages) = 'array'),
   CONSTRAINT fk_directory_material_import_rows_job_workspace FOREIGN KEY (job_id, workspace_owner_id)
     REFERENCES public.directory_material_import_jobs(id, workspace_owner_id)
-    ON DELETE CASCADE,
-  CONSTRAINT fk_directory_material_import_rows_duplicate_material_workspace FOREIGN KEY (duplicate_material_id, workspace_owner_id)
-    REFERENCES public.directory_materials(id, workspace_owner_id)
-    ON DELETE SET NULL,
-  CONSTRAINT fk_directory_material_import_rows_applied_material_workspace FOREIGN KEY (applied_material_id, workspace_owner_id)
-    REFERENCES public.directory_materials(id, workspace_owner_id)
-    ON DELETE SET NULL
+    ON DELETE CASCADE
 );
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_directory_material_import_jobs_id_workspace
-  ON public.directory_material_import_jobs(id, workspace_owner_id);
 
 CREATE INDEX IF NOT EXISTS idx_directory_material_import_jobs_workspace_status_created
   ON public.directory_material_import_jobs(workspace_owner_id, status, created_at DESC);

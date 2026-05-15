@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { ZodError } from "zod"
 import { DirectoryMaterialsApiError } from "../api/directory-materials-errors"
 import {
+  archiveDirectoryMaterial,
   createDirectoryMaterial,
   getDirectoryMaterial,
   getDirectoryMaterialsCategories,
@@ -105,6 +106,19 @@ export async function handleDirectoryMaterialUpdateRequest(
     return handleDirectoryMaterialsRouteError(
       err,
       "[PATCH /api/directory-materials/[id]]"
+    )
+  }
+}
+
+export async function handleDirectoryMaterialArchiveRequest(id: string) {
+  try {
+    const materialId = parseDirectoryMaterialId(id)
+    const response = await archiveDirectoryMaterial(materialId)
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[DELETE /api/directory-materials/[id]]"
     )
   }
 }

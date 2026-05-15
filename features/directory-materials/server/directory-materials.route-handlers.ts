@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { ZodError } from "zod"
 import { DirectoryMaterialsApiError } from "../api/directory-materials-errors"
 import {
+  applyDirectoryMaterialImportJob,
   archiveDirectoryMaterial,
   createDirectoryMaterial,
+  createDirectoryMaterialImportJob,
   exportDirectoryMaterials,
   getDirectoryMaterial,
+  getDirectoryMaterialImportJob,
   getDirectoryMaterialsCategories,
   listDirectoryMaterials,
   updateDirectoryMaterial,
@@ -13,6 +16,7 @@ import {
 import {
   parseDirectoryMaterialCategoryStatus,
   parseDirectoryMaterialId,
+  parseDirectoryMaterialImportCreateBody,
   parseDirectoryMaterialMutationBody,
   parseDirectoryMaterialsExportParams,
   parseDirectoryMaterialsListParams,
@@ -138,6 +142,48 @@ export async function handleDirectoryMaterialsCategoriesRequest(
     return handleDirectoryMaterialsRouteError(
       err,
       "[GET /api/directory-materials/categories]"
+    )
+  }
+}
+
+export async function handleDirectoryMaterialImportCreateRequest(
+  request: NextRequest
+) {
+  try {
+    const body = await readJsonBody(request)
+    const input = parseDirectoryMaterialImportCreateBody(body)
+    const response = await createDirectoryMaterialImportJob(input)
+    return NextResponse.json(response, { status: 201 })
+  } catch (err) {
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[POST /api/directory-materials/import-jobs]"
+    )
+  }
+}
+
+export async function handleDirectoryMaterialImportDetailRequest(id: string) {
+  try {
+    const jobId = parseDirectoryMaterialId(id)
+    const response = await getDirectoryMaterialImportJob(jobId)
+    return NextResponse.json({ data: response })
+  } catch (err) {
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[GET /api/directory-materials/import-jobs/[id]]"
+    )
+  }
+}
+
+export async function handleDirectoryMaterialImportApplyRequest(id: string) {
+  try {
+    const jobId = parseDirectoryMaterialId(id)
+    const response = await applyDirectoryMaterialImportJob(jobId)
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[POST /api/directory-materials/import-jobs/[id]/apply]"
     )
   }
 }

@@ -1,6 +1,8 @@
 import { Suspense } from "react"
-import { Spinner } from "@/components/ui/spinner"
-import { DirectoryWorksSection } from "@/features/directory-works/directory-works-details/components/directory-works-section"
+import {
+  DirectoryWorksRowsSkeleton,
+  DirectoryWorksSection,
+} from "@/features/directory-works/directory-works-details/components/directory-works-section"
 
 export function DirectoryWorksView() {
   return (
@@ -8,9 +10,10 @@ export function DirectoryWorksView() {
       <div className="min-h-0 flex-1 rounded-xl border border-border p-1">
         <Suspense
           fallback={
-            <div className="flex h-full min-h-32 items-center justify-center gap-2 rounded-lg border border-border p-4 text-xs/relaxed text-muted-foreground">
-              <Spinner className="size-4" />
-              Загрузка работ...
+            <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+              <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto">
+                <DirectoryWorksRowsSkeleton />
+              </div>
             </div>
           }
         >

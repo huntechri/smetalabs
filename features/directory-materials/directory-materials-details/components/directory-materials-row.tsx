@@ -1,39 +1,40 @@
-import type { DirectoryMaterialRow } from "@/types/directory-material"
+import type { DirectoryMaterial } from "@/features/directory-materials/types"
 import { ImageIcon } from "lucide-react"
 import { DirectoryMaterialsName } from "./directory-materials-name"
 import { DirectoryMaterialsValue } from "./directory-materials-value"
 import { DirectoryMaterialsMetricGroup } from "./directory-materials-metric-group"
 
-export function DirectoryMaterialsRow({ row }: { row: DirectoryMaterialRow }) {
+export function DirectoryMaterialsRow({ row }: { row: DirectoryMaterial }) {
+  const priceLabel = `${row.price.toLocaleString("ru-RU")} ${row.currencyCode}`
+
   return (
-    <div className="border-b border-dashed border-green-500 last:border-b-0">
-      <div className="m-3 grid gap-3 rounded-md border border-dashed border-green-500 p-3 transition-colors hover:bg-muted/50 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]">
-        <div className="flex min-w-0 flex-col gap-3 rounded-md border border-dashed border-green-300 p-2">
-          <DirectoryMaterialsName value={row.title} />
+    <div className="last:border-b-0">
+      <div className="m-3 grid gap-3 rounded-md border p-3 transition-colors hover:bg-muted/50 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]">
+        <div className="flex min-w-0 flex-col gap-3 p-2">
+          <DirectoryMaterialsName value={row.name} />
+          {row.code ? (
+            <span className="text-xs text-muted-foreground">Код: {row.code}</span>
+          ) : null}
         </div>
 
-        <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[minmax(120px,1fr)_minmax(120px,1fr)_minmax(140px,1fr)_minmax(120px,1fr)]">
+        <div className="grid min-w-0 gap-1.5 p-1.5 md:grid-cols-[minmax(120px,1fr)_minmax(120px,1fr)_minmax(140px,1fr)_minmax(120px,1fr)]">
           <DirectoryMaterialsMetricGroup title="Ед. изм">
             <DirectoryMaterialsValue label="Ед." value={row.unit} />
           </DirectoryMaterialsMetricGroup>
 
           <DirectoryMaterialsMetricGroup title="Цена">
-            <DirectoryMaterialsValue
-              label="Цена"
-              strong
-              value={`${row.price.toLocaleString("ru-RU")} ₽`}
-            />
+            <DirectoryMaterialsValue label="Цена" strong value={priceLabel} />
           </DirectoryMaterialsMetricGroup>
 
           <DirectoryMaterialsMetricGroup title="Изображение">
             {row.imageUrl ? (
               <img
                 src={row.imageUrl}
-                alt={row.title}
-                className="h-14 w-14 rounded-md border border-dashed border-muted-foreground/30 object-cover"
+                alt={row.name}
+                className="h-14 w-14 rounded-md border object-cover"
               />
             ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-md border border-dashed border-muted-foreground/30 bg-muted">
+              <div className="flex h-14 w-14 items-center justify-center rounded-md border bg-muted">
                 <ImageIcon className="h-5 w-5 text-muted-foreground" />
               </div>
             )}
@@ -41,6 +42,9 @@ export function DirectoryMaterialsRow({ row }: { row: DirectoryMaterialRow }) {
 
           <DirectoryMaterialsMetricGroup title="Категория">
             <DirectoryMaterialsValue label="Кат." value={row.category} />
+            {row.supplierName ? (
+              <DirectoryMaterialsValue label="Пост." value={row.supplierName} />
+            ) : null}
           </DirectoryMaterialsMetricGroup>
         </div>
       </div>

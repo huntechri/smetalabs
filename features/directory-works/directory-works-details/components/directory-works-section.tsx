@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import type { DirectoryWork } from "@/features/directory-works/types"
 import { buildDirectoryWorksExportHref } from "@/features/directory-works/api/directory-works-client"
@@ -17,6 +18,42 @@ import { DirectoryWorkImportDialog } from "./directory-work-import-dialog"
 import { DirectoryWorksRow } from "./directory-works-row"
 
 const DEFAULT_LIMIT = 50
+const SKELETON_ROW_COUNT = 6
+
+function DirectoryWorksRowSkeleton() {
+  return (
+    <div className="mx-3 my-1.5 grid gap-3 rounded-md border border-border p-3 xl:grid-cols-[minmax(520px,1.15fr)_minmax(520px,0.85fr)]">
+      <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(96px,0.18fr)_minmax(0,1fr)]">
+        <div className="min-w-0 rounded-md border border-border p-2">
+          <Skeleton className="mb-2 h-3 w-8" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+        <div className="min-w-0 rounded-md border border-border p-2">
+          <Skeleton className="mb-2 h-3 w-16" />
+          <Skeleton className="h-4 w-full max-w-md" />
+        </div>
+      </div>
+
+      <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(220px,0.75fr)_minmax(280px,1fr)]">
+        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
+          <Skeleton className="h-3 w-28" />
+          <div className="flex min-w-0 flex-wrap gap-1.5">
+            <Skeleton className="h-5 w-16 rounded-md" />
+            <Skeleton className="h-5 w-24 rounded-md" />
+          </div>
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
+          <Skeleton className="h-3 w-16" />
+          <div className="flex min-w-0 items-center gap-1.5">
+            <Skeleton className="h-5 w-36 rounded-md" />
+            <Skeleton className="ml-auto size-6 rounded-md" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function DirectoryWorksSection() {
   const router = useRouter()
@@ -101,8 +138,8 @@ export function DirectoryWorksSection() {
     : String(meta?.total ?? works.length)
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
-  const showListLoader = loading || (isFetching && works.length > 0)
-  const listLoaderLabel = loading ? "Загрузка работ..." : "Обновление списка..."
+  const showInitialSkeleton = loading && works.length === 0
+  const showUpdatingOverlay = isFetching && !loading && works.length > 0
 
   return (
     <>
@@ -114,6 +151,14 @@ export function DirectoryWorksSection() {
         ) : null}
 
         <div className="scrollbar-subtle relative min-h-0 flex-1 overflow-y-auto">
+          {showInitialSkeleton ? (
+            <div aria-label="Загрузка работ" aria-busy="true">
+              {Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
+                <DirectoryWorksRowSkeleton key={index} />
+              ))}
+            </div>
+          ) : null}
+
           {!loading && works.length === 0 ? (
             <div className="p-4 text-xs/relaxed text-muted-foreground">
               Работы не найдены. Добавьте первую работу вручную или измените поиск.
@@ -131,11 +176,11 @@ export function DirectoryWorksSection() {
             />
           ))}
 
-          {showListLoader ? (
+          {showUpdatingOverlay ? (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
               <div className="flex items-center gap-2 rounded-md border border-border bg-card/95 px-3 py-2 text-xs/relaxed text-muted-foreground shadow-sm">
                 <Spinner className="size-4" />
-                {listLoaderLabel}
+                Обновление списка...
               </div>
             </div>
           ) : null}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { ZodError } from "zod"
 import { DirectoryMaterialsApiError } from "../api/directory-materials-errors"
 import {
+  createDirectoryMaterial,
   getDirectoryMaterial,
   getDirectoryMaterialsCategories,
   listDirectoryMaterials,
@@ -9,6 +10,7 @@ import {
 import {
   parseDirectoryMaterialCategoryStatus,
   parseDirectoryMaterialId,
+  parseDirectoryMaterialMutationBody,
   parseDirectoryMaterialsListParams,
 } from "./directory-materials.schemas"
 
@@ -18,6 +20,18 @@ function jsonError(code: string, message: string, status: number) {
 
 function getZodMessage(error: ZodError) {
   return error.issues[0]?.message ?? "Некорректные параметры запроса"
+}
+
+async function readJsonBody(request: NextRequest) {
+  try {
+    return await request.json()
+  } catch {
+    throw new DirectoryMaterialsApiError(
+      "BAD_REQUEST",
+      "Некорректное тело запроса",
+      400
+    )
+  }
 }
 
 export function handleDirectoryMaterialsRouteError(
@@ -45,6 +59,20 @@ export async function handleDirectoryMaterialsListRequest(request: NextRequest) 
     return handleDirectoryMaterialsRouteError(
       err,
       "[GET /api/directory-materials]"
+    )
+  }
+}
+
+export async function handleDirectoryMaterialCreateRequest(request: NextRequest) {
+  try {
+    const body = await readJsonBody(request)
+    const input = parseDirectoryMaterialMutationBody(body)
+    const response = await createDirectoryMaterial(input)
+    return NextResponse.json(response, { status: 201 })
+  } catch (err) {
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[POST /api/directory-materials]"
     )
   }
 }

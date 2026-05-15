@@ -103,35 +103,37 @@ export function DirectoryWorksSection() {
 
   return (
     <>
-      <section className="flex flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+      <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-sm">
         {error ? (
           <div className="m-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs/relaxed text-destructive">
             {error}
           </div>
         ) : null}
 
-        {loading ? (
-          <div className="p-4 text-xs/relaxed text-muted-foreground">
-            Загрузка работ...
-          </div>
-        ) : null}
+        <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="p-4 text-xs/relaxed text-muted-foreground">
+              Загрузка работ...
+            </div>
+          ) : null}
 
-        {!loading && works.length === 0 ? (
-          <div className="p-4 text-xs/relaxed text-muted-foreground">
-            Работы не найдены. Добавьте первую работу вручную или измените поиск.
-          </div>
-        ) : null}
+          {!loading && works.length === 0 ? (
+            <div className="p-4 text-xs/relaxed text-muted-foreground">
+              Работы не найдены. Добавьте первую работу вручную или измените поиск.
+            </div>
+          ) : null}
 
-        {works.map((row) => (
-          <DirectoryWorksRow
-            key={row.id}
-            onArchive={handleArchive}
-            onEdit={handleEdit}
-            onInsertAfter={handleInsertAfter}
-            row={row}
-            saving={saving || isFetching}
-          />
-        ))}
+          {works.map((row) => (
+            <DirectoryWorksRow
+              key={row.id}
+              onArchive={handleArchive}
+              onEdit={handleEdit}
+              onInsertAfter={handleInsertAfter}
+              row={row}
+              saving={saving || isFetching}
+            />
+          ))}
+        </div>
 
         {meta ? (
           <div className="flex flex-col gap-3 border-t border-border p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">

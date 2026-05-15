@@ -55,6 +55,21 @@ const directoryMaterialsExportLimitSchema = z.preprocess((value) => {
   return Number(value)
 }, z.number().int().min(1).max(5000).default(5000))
 
+const directoryMaterialAiLimitSchema = z.preprocess((value) => {
+  if (value === undefined || value === null || value === "") return 20
+  return Number(value)
+}, z.number().int().min(1).max(50).default(20))
+
+const directoryMaterialAiThresholdSchema = z.preprocess((value) => {
+  if (value === undefined || value === null || value === "") return 0.72
+  return Number(value)
+}, z.number().min(0).max(1).default(0.72))
+
+const directoryMaterialEmbeddingLimitSchema = z.preprocess((value) => {
+  if (value === undefined || value === null || value === "") return 20
+  return Number(value)
+}, z.number().int().min(1).max(50).default(20))
+
 export const directoryMaterialsListQuerySchema = z.object({
   q: optionalTrimmedString(240),
   category: optionalTrimmedString(120),
@@ -104,6 +119,23 @@ export const directoryMaterialImportCreateSchema = z
   })
   .strict()
 
+export const directoryMaterialAiSearchSchema = z
+  .object({
+    query: requiredTrimmedString(240, "Поисковый запрос обязателен"),
+    category: nullableTrimmedString(120),
+    subcategory: nullableTrimmedString(120),
+    unit: nullableTrimmedString(80),
+    limit: directoryMaterialAiLimitSchema,
+    threshold: directoryMaterialAiThresholdSchema,
+  })
+  .strict()
+
+export const directoryMaterialEmbeddingProcessSchema = z
+  .object({
+    limit: directoryMaterialEmbeddingLimitSchema,
+  })
+  .strict()
+
 export const directoryMaterialIdSchema = z.string().uuid()
 export const directoryMaterialCategoryStatusSchema = z
   .enum(["active", "archived"])
@@ -149,6 +181,14 @@ export function parseDirectoryMaterialMutationBody(body: unknown) {
 
 export function parseDirectoryMaterialImportCreateBody(body: unknown) {
   return directoryMaterialImportCreateSchema.parse(body)
+}
+
+export function parseDirectoryMaterialAiSearchBody(body: unknown) {
+  return directoryMaterialAiSearchSchema.parse(body)
+}
+
+export function parseDirectoryMaterialEmbeddingProcessBody(body: unknown) {
+  return directoryMaterialEmbeddingProcessSchema.parse(body)
 }
 
 export function parseDirectoryMaterialId(id: string) {

@@ -214,6 +214,7 @@ export type DirectoryMaterialImportApplyResponse = {
     job: DirectoryMaterialImportJob
     appliedRows: number
     skippedRows: number
+    appliedMaterialIds?: string[]
   }
 }
 

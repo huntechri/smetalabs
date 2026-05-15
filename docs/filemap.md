@@ -90,7 +90,7 @@ app/
 │
 └── api/
     ├── access-control/roles/route.ts
-    ├── directory-materials/ # workspace-scoped materials catalog read/search/CRUD/import/export endpoints
+    ├── directory-materials/ # workspace-scoped materials catalog read/search/CRUD/import/export/AI endpoints
     ├── directory-works/     # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
     ├── settings/route.ts    # account settings read boundary
     └── team/
@@ -140,7 +140,7 @@ features/
 │   ├── directory-materials-details/components/ # list rows, form dialog, import dialog
 │   ├── hooks/              # TanStack Query hooks and mutations
 │   ├── lib/                # pure events/helpers
-│   ├── server/             # repository/service/import/export route logic
+│   ├── server/             # repository/service/import/export/AI route logic
 │   └── types.ts            # feature-local materials catalog types
 ├── directory-works/
 │   ├── api/                # client API, errors, mappers, query keys/cache tags
@@ -196,7 +196,8 @@ db/
 │   ├── 014_private_service_role_grants.sql
 │   ├── 015_directory_work_update_rpc.sql
 │   ├── 016_directory_works_large_catalog_read.sql
-│   └── 017_directory_materials_import.sql
+│   ├── 017_directory_materials_import.sql
+│   └── 018_directory_materials_ai_search.sql
 ├── scripts/
 │   └── seed-directory-works-load-test.sql
 └── schema/
@@ -219,13 +220,13 @@ db/
 
 ```txt
 /directories/materials
-  → app/api/directory-materials/** exposes workspace-scoped read/search/CRUD/import/export routes
-  → features/directory-materials/** owns UI hooks, dialogs, repository/service/import/export logic
+  → app/api/directory-materials/** exposes workspace-scoped read/search/CRUD/import/export/AI routes
+  → features/directory-materials/** owns UI hooks, dialogs, repository/service/import/export/AI logic
   → docs/directory-materials-architecture.md fixes the production contract and rollout state
-  → db/schema/directory-materials.ts and db/migrations/017_directory_materials_import.sql provide import storage additions
+  → db/schema/directory-materials.ts and db/migrations/017-018 directory_materials migrations provide import and AI storage/search additions
 ```
 
-The materials catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; import is staged and must not write raw uploaded rows directly into `directory_materials`.
+The materials catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; import is staged and must not write raw uploaded rows directly into `directory_materials`. AI provider calls are server-only and scoped by the current workspace.
 
 ### Directory works backend contract and implementation
 
@@ -263,7 +264,11 @@ The materials catalog must stay workspace-scoped through `workspace_owner_id = w
 
 ## Recent directory/deployment updates
 
-- `docs/directory-materials-architecture.md` — production materials catalog contract, current rollout state and remaining AI/hardening scope.
+- `docs/directory-materials-architecture.md` — production materials catalog contract, current rollout state and AI processing/search foundation.
+- `db/migrations/018_directory_materials_ai_search.sql` — material-only AI search function over prepared embeddings.
+- `features/directory-materials/server/directory-materials-ai.ts` — materials AI data queue, provider-side processing and hybrid AI search logic.
+- `app/api/directory-materials/embeddings/process/route.ts` — material-only AI data processing endpoint.
+- `app/api/directory-materials/ai-search/route.ts` — material-only AI search endpoint.
 - `db/migrations/017_directory_materials_import.sql` — staged import jobs and rows for materials.
 - `features/directory-materials/server/directory-materials-import.repository.ts` — materials CSV preview/apply flow with row validation, duplicate detection and conflict marking.
 - `features/directory-materials/directory-materials-details/components/directory-material-import-dialog.tsx` — materials import dialog and CSV preview UI.

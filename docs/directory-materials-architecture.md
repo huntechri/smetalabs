@@ -2,11 +2,11 @@
 
 > Last updated: 2026-05-15
 >
-> Status: production materials directory slice with read/write/export and staged CSV import.
+> Status: production materials directory slice with read/write/export/import and server-side AI search foundation.
 >
-> Scope: data model, UI behavior, search, CRUD, import/export boundaries and remaining rollout items for `/directories/materials`.
+> Scope: data model, UI behavior, search, CRUD, import/export boundaries, AI search foundation and remaining rollout items for `/directories/materials`.
 
-`/directories/materials` follows the shared directory standard and uses `/directories/works` as the interaction reference. The materials slice keeps material-specific fields, routes, messages, validation, storage and import/export behavior.
+`/directories/materials` follows the shared directory standard and uses `/directories/works` as the interaction reference. The materials slice keeps material-specific fields, routes, messages, validation, storage, import/export behavior and AI processing.
 
 ---
 
@@ -42,14 +42,16 @@ Implemented capabilities:
 - bounded CSV export;
 - staged CSV import with preview/apply flow;
 - row-level import statuses for valid, warning, error, duplicate, conflict and applied rows;
-- list/categories refresh after mutations and import apply.
+- list/categories refresh after mutations and import apply;
+- server-side AI data queue for created, updated and imported materials;
+- server-side AI data processing route;
+- material-only hybrid AI search route over prepared material embeddings.
 ```
 
 Remaining follow-up items:
 
 ```txt
-- AI/hybrid search route;
-- embedding processor;
+- UI entry for AI search if product requires it;
 - deeper performance hardening for very large material catalogs;
 - optional supplier directory linking beyond denormalized supplier display name;
 - XLSX export if product scope requires it.
@@ -73,7 +75,8 @@ Rules:
 - writes require one of the current write roles: `owner`, `admin`, `manager`;
 - regular list/search responses show only active, non-deleted materials by default;
 - archive is soft by default;
-- service-role database access is used only server-side after application-level authorization.
+- service-role database access is used only server-side after application-level authorization;
+- AI provider keys are server-only.
 
 ---
 
@@ -165,6 +168,13 @@ POST /api/directory-materials/import-jobs/:id/apply
 GET  /api/directory-materials/export
 ```
 
+AI routes:
+
+```txt
+POST /api/directory-materials/embeddings/process
+POST /api/directory-materials/ai-search
+```
+
 Supported list query parameters:
 
 ```txt
@@ -212,6 +222,8 @@ Regular ranking intent:
 5. full-text/search_text match
 6. recent update tie-breaker after relevance
 ```
+
+AI search uses the same workspace boundary and active/non-deleted filters. Hybrid ranking combines semantic score with text score, so exact code/name/source matches remain strong and semantic matching does not replace normal search.
 
 Search and filters reset `cursor`. Pagination keeps the same filters/query and only changes `cursor`.
 
@@ -277,6 +289,7 @@ select CSV file
 → only valid/warning create rows are inserted into directory_materials
 → invalid, duplicate and conflict rows stay out of canonical data
 → list/categories/export data refreshes
+→ created material ids are queued for AI data preparation
 ```
 
 Supported import fields:
@@ -410,7 +423,7 @@ list
 one row when affected
 filters/categories
 import job detail when applicable
-AI search index tag when future AI search is enabled
+AI search index tag
 ```
 
 TanStack Query keys:
@@ -435,18 +448,61 @@ directory-materials-ai-index:<workspaceOwnerId>
 
 ---
 
-## 10. AI foundation and remaining scope
+## 10. AI search and data preparation
 
-The database contract includes `directory_material_embeddings`, but AI routes and embedding generation are not part of the current material import/export slice.
+AI search uses `directory_material_embeddings` and the material-only SQL function `public.search_directory_materials_ai(...)`.
 
-Future AI routes:
+Current model strategy:
+
+```txt
+model_name: text-embedding-3-small
+dimensions: 1536
+server env: OPENAI_API_KEY
+```
+
+AI data input includes:
+
+```txt
+name
+code
+category
+subcategory
+unit_label / unit_code
+price_amount + currency_code
+supplier_name
+description
+```
+
+Material changes enqueue AI preparation:
+
+```txt
+create material
+update material
+import apply for newly created material ids
+```
+
+Processing behavior:
+
+```txt
+POST /api/directory-materials/embeddings/process
+→ requires owner/admin/manager write access
+→ prepares pending material rows in bounded batches
+→ calls provider only server-side
+→ stores ready/failed status on directory_material_embeddings
+```
+
+Search behavior:
 
 ```txt
 POST /api/directory-materials/ai-search
-POST /api/directory-materials/embeddings/process
+→ requires read access
+→ creates query embedding server-side
+→ filters by current workspace
+→ excludes archived/deleted materials
+→ returns material fields plus semantic_score, text_score, hybrid_score and match_reason
 ```
 
-AI/hybrid search must not outrank exact code/name matches in normal user flows.
+AI search must not become the only search mechanism. Normal list/search remains the default visible flow unless the product UI explicitly adds an AI entry.
 
 ---
 
@@ -478,8 +534,8 @@ Backend:
 - [x] categories/filter route is implemented;
 - [x] import routes are implemented;
 - [x] export route is implemented;
-- [ ] AI routes are implemented when AI search is enabled;
-- [ ] embedding processor is implemented when AI search is enabled;
+- [x] AI routes are implemented;
+- [x] embedding processor is implemented;
 - [x] all writes check permissions;
 - [x] all reads check workspace access;
 - [x] client cannot set workspace owner directly;
@@ -494,7 +550,7 @@ Data:
 - [x] duplicate rules are implemented for code/source/fingerprint/name+unit;
 - [x] archive is soft by default;
 - [x] export columns match materials;
-- [ ] embedding processor is connected when AI search is enabled.
+- [x] embedding processor is connected.
 
 Quality:
 

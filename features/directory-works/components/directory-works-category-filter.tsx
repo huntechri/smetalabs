@@ -73,8 +73,8 @@ export function DirectoryWorksCategoryFilter({ open }: { open: boolean }) {
     <div className="rounded-lg border border-border bg-card/60 p-2 shadow-sm">
       <div className="flex flex-col gap-2 @3xl/main:flex-row @3xl/main:items-center">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-foreground">Фильтр по разделам</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs/relaxed font-medium text-foreground">Фильтр по разделам</p>
+          <p className="text-xs/relaxed text-muted-foreground">
             Показывает работы только из выбранного раздела или подраздела.
           </p>
         </div>
@@ -128,7 +128,7 @@ export function DirectoryWorksCategoryFilter({ open }: { open: boolean }) {
       </div>
 
       {error ? (
-        <p className="mt-2 text-xs text-destructive">Не удалось загрузить разделы: {error}</p>
+        <p className="mt-2 text-xs/relaxed text-destructive">Не удалось загрузить разделы: {error}</p>
       ) : null}
     </div>
   )

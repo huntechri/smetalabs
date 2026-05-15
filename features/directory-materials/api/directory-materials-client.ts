@@ -1,5 +1,6 @@
 import type {
   DirectoryMaterial,
+  DirectoryMaterialMutationInput,
   DirectoryMaterialsCategoriesResponse,
   DirectoryMaterialsListParams,
   DirectoryMaterialsListResponse,
@@ -73,6 +74,17 @@ export async function fetchDirectoryMaterial(id: string) {
     "материала"
   )
   return json.data
+}
+
+export function createDirectoryMaterial(input: DirectoryMaterialMutationInput) {
+  return fetchJson<{ data: DirectoryMaterial }>(
+    "/api/directory-materials",
+    "создания материала",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    }
+  )
 }
 
 export function fetchDirectoryMaterialsCategories() {

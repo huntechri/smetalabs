@@ -5,10 +5,21 @@
 -- ============================================================================
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
 
 -- 1. ENUM types
 DO $$ BEGIN
   CREATE TYPE public.directory_material_status AS ENUM ('active', 'archived');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE public.directory_material_embedding_status AS ENUM (
+    'pending',
+    'ready',
+    'stale',
+    'failed'
+  );
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -128,7 +139,7 @@ BEGIN
 END;
 $$;
 
--- 3. Canonical table
+-- 3. Canonical and embedding tables
 CREATE TABLE IF NOT EXISTS public.directory_materials (
   id uuid DEFAULT extensions.uuid_generate_v4() PRIMARY KEY,
   workspace_owner_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -168,6 +179,31 @@ CREATE TABLE IF NOT EXISTS public.directory_materials (
   CONSTRAINT chk_directory_materials_currency_uppercase CHECK (currency_code ~ '^[A-Z]{3}$')
 );
 
+CREATE TABLE IF NOT EXISTS public.directory_material_embeddings (
+  id uuid DEFAULT extensions.uuid_generate_v4() PRIMARY KEY,
+  workspace_owner_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  material_id uuid NOT NULL,
+  model_name text NOT NULL,
+  dimensions integer NOT NULL,
+  content_hash text NOT NULL,
+  embedding extensions.vector,
+  status public.directory_material_embedding_status NOT NULL DEFAULT 'pending',
+  embedding_input_text text NOT NULL,
+  generated_at timestamptz,
+  last_error text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT fk_directory_material_embeddings_material_workspace
+    FOREIGN KEY (material_id, workspace_owner_id)
+    REFERENCES public.directory_materials(id, workspace_owner_id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE,
+  CONSTRAINT chk_directory_material_embeddings_model_name_not_empty CHECK (btrim(model_name) <> ''),
+  CONSTRAINT chk_directory_material_embeddings_dimensions_positive CHECK (dimensions > 0),
+  CONSTRAINT chk_directory_material_embeddings_content_hash_not_empty CHECK (btrim(content_hash) <> ''),
+  CONSTRAINT chk_directory_material_embeddings_input_not_empty CHECK (btrim(embedding_input_text) <> '')
+);
+
 -- 4. Triggers
 DROP TRIGGER IF EXISTS trg_directory_materials_search_fields ON public.directory_materials;
 CREATE TRIGGER trg_directory_materials_search_fields
@@ -189,6 +225,12 @@ CREATE TRIGGER trg_directory_materials_search_fields
 DROP TRIGGER IF EXISTS trg_directory_materials_updated_at ON public.directory_materials;
 CREATE TRIGGER trg_directory_materials_updated_at
   BEFORE UPDATE ON public.directory_materials
+  FOR EACH ROW
+  EXECUTE FUNCTION private.set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_directory_material_embeddings_updated_at ON public.directory_material_embeddings;
+CREATE TRIGGER trg_directory_material_embeddings_updated_at
+  BEFORE UPDATE ON public.directory_material_embeddings
   FOR EACH ROW
   EXECUTE FUNCTION private.set_updated_at();
 
@@ -233,8 +275,20 @@ CREATE INDEX IF NOT EXISTS idx_directory_materials_normalized_name_trgm
 CREATE INDEX IF NOT EXISTS idx_directory_materials_search_text_trgm
   ON public.directory_materials USING gin(search_text extensions.gin_trgm_ops);
 
+CREATE UNIQUE INDEX IF NOT EXISTS uq_directory_material_embeddings_material_model_hash
+  ON public.directory_material_embeddings(workspace_owner_id, material_id, model_name, content_hash);
+
+CREATE INDEX IF NOT EXISTS idx_directory_material_embeddings_workspace_status
+  ON public.directory_material_embeddings(workspace_owner_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_directory_material_embeddings_workspace_material
+  ON public.directory_material_embeddings(workspace_owner_id, material_id);
+
+-- Vector indexes are intentionally deferred until the AI phase fixes model and dimensions.
+
 -- 6. RLS
 ALTER TABLE public.directory_materials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.directory_material_embeddings ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "directory_materials_select" ON public.directory_materials;
 CREATE POLICY "directory_materials_select" ON public.directory_materials
@@ -253,8 +307,26 @@ DROP POLICY IF EXISTS "directory_materials_delete" ON public.directory_materials
 CREATE POLICY "directory_materials_delete" ON public.directory_materials
   FOR DELETE USING (private.workspace_can_write_directory(workspace_owner_id));
 
+DROP POLICY IF EXISTS "directory_material_embeddings_select" ON public.directory_material_embeddings;
+CREATE POLICY "directory_material_embeddings_select" ON public.directory_material_embeddings
+  FOR SELECT USING (private.workspace_can_read(workspace_owner_id));
+
+DROP POLICY IF EXISTS "directory_material_embeddings_insert" ON public.directory_material_embeddings;
+CREATE POLICY "directory_material_embeddings_insert" ON public.directory_material_embeddings
+  FOR INSERT WITH CHECK (private.workspace_can_write_directory(workspace_owner_id));
+
+DROP POLICY IF EXISTS "directory_material_embeddings_update" ON public.directory_material_embeddings;
+CREATE POLICY "directory_material_embeddings_update" ON public.directory_material_embeddings
+  FOR UPDATE USING (private.workspace_can_write_directory(workspace_owner_id))
+  WITH CHECK (private.workspace_can_write_directory(workspace_owner_id));
+
+DROP POLICY IF EXISTS "directory_material_embeddings_delete" ON public.directory_material_embeddings;
+CREATE POLICY "directory_material_embeddings_delete" ON public.directory_material_embeddings
+  FOR DELETE USING (private.workspace_can_write_directory(workspace_owner_id));
+
 -- 7. Grants
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.directory_materials TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.directory_material_embeddings TO authenticated;
 
 REVOKE EXECUTE ON FUNCTION private.directory_material_normalize(text) FROM PUBLIC, anon;
 REVOKE EXECUTE ON FUNCTION private.directory_material_build_search_text(text, text, text, text, text, text, text, text, text, text) FROM PUBLIC, anon;

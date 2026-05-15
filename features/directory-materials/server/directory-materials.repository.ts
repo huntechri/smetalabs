@@ -1,7 +1,9 @@
 import { supabase } from "@/db"
+import { DirectoryMaterialsApiError } from "../api/directory-materials-errors"
 import type {
   DirectoryMaterial,
   DirectoryMaterialCategoryOption,
+  DirectoryMaterialMutationInput,
   DirectoryMaterialSupplierOption,
   DirectoryMaterialsCategoriesResponse,
   DirectoryMaterialsListMeta,
@@ -41,8 +43,16 @@ function normalizeSearch(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ")
 }
 
+function normalizeUnitCode(unit: string) {
+  return normalizeSearch(unit).replace(/\s+/g, "_")
+}
+
 function escapeLike(value: string) {
   return value.replace(/[\\%_]/g, (match) => `\\${match}`)
+}
+
+function toNullableString(value: string | null | undefined) {
+  return value && value.trim() ? value.trim() : null
 }
 
 function toNumber(value: string | number) {
@@ -120,6 +130,50 @@ function applyDirectoryMaterialSort<T extends { order: (column: string, options?
   return query.order("updated_at", { ascending: false }).order("id", { ascending: true })
 }
 
+async function assertDirectoryMaterialUniqueFields(
+  workspaceOwnerId: string,
+  input: DirectoryMaterialMutationInput
+) {
+  if (input.code?.trim()) {
+    const { data, error } = await supabase
+      .from("directory_materials")
+      .select("id")
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .eq("code", input.code.trim())
+      .is("deleted_at", null)
+      .limit(1)
+
+    if (error) throw error
+    if ((data ?? []).length > 0) {
+      throw new DirectoryMaterialsApiError(
+        "BAD_REQUEST",
+        "Материал с таким кодом уже существует",
+        400
+      )
+    }
+  }
+
+  if (input.sourceName?.trim() && input.sourceExternalRowKey?.trim()) {
+    const { data, error } = await supabase
+      .from("directory_materials")
+      .select("id")
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .eq("source_name", input.sourceName.trim())
+      .eq("source_external_row_key", input.sourceExternalRowKey.trim())
+      .is("deleted_at", null)
+      .limit(1)
+
+    if (error) throw error
+    if ((data ?? []).length > 0) {
+      throw new DirectoryMaterialsApiError(
+        "BAD_REQUEST",
+        "Материал с таким внешним идентификатором уже существует",
+        400
+      )
+    }
+  }
+}
+
 export async function listDirectoryMaterialsForWorkspace(
   workspaceOwnerId: string,
   params: NormalizedListParams
@@ -181,6 +235,59 @@ export async function getDirectoryMaterialForWorkspace(
   }
 
   return mapDirectoryMaterialRow(data as DirectoryMaterialDbRow)
+}
+
+export async function createDirectoryMaterialForWorkspace(
+  workspaceOwnerId: string,
+  userId: string,
+  input: DirectoryMaterialMutationInput
+): Promise<DirectoryMaterial> {
+  await assertDirectoryMaterialUniqueFields(workspaceOwnerId, input)
+
+  const unit = input.unit.trim().replace(/\s+/g, " ")
+
+  const { data, error } = await supabase
+    .from("directory_materials")
+    .insert({
+      workspace_owner_id: workspaceOwnerId,
+      name: input.name.trim().replace(/\s+/g, " "),
+      normalized_name: "pending",
+      unit_code: normalizeUnitCode(unit),
+      unit_label: unit,
+      price_amount: input.price,
+      currency_code: input.currencyCode ?? "RUB",
+      category: input.category.trim().replace(/\s+/g, " "),
+      subcategory: toNullableString(input.subcategory),
+      code: toNullableString(input.code),
+      supplier_name: toNullableString(input.supplierName),
+      supplier_id: null,
+      image_url: toNullableString(input.imageUrl),
+      description: toNullableString(input.description),
+      source_name: toNullableString(input.sourceName),
+      source_external_row_key: toNullableString(input.sourceExternalRowKey),
+      dedupe_fingerprint: "pending",
+      search_text: "pending",
+      search_fts: "",
+      status: "active",
+      version: 1,
+      created_by: userId,
+      updated_by: userId,
+    })
+    .select("id")
+    .single()
+
+  if (error) throw error
+
+  const material = await getDirectoryMaterialForWorkspace(workspaceOwnerId, data.id)
+  if (!material) {
+    throw new DirectoryMaterialsApiError(
+      "INTERNAL_ERROR",
+      "Созданный материал не найден",
+      500
+    )
+  }
+
+  return material
 }
 
 export async function getDirectoryMaterialCategoriesForWorkspace(

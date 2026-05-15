@@ -12,7 +12,10 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import type { DirectoryMaterialMutationInput } from "@/features/directory-materials/types"
+import type {
+  DirectoryMaterial,
+  DirectoryMaterialMutationInput,
+} from "@/features/directory-materials/types"
 
 type DirectoryMaterialFormState = {
   name: string
@@ -34,30 +37,48 @@ const emptyState: DirectoryMaterialFormState = {
   supplierName: "",
 }
 
+function getInitialState(material: DirectoryMaterial | null): DirectoryMaterialFormState {
+  if (!material) return emptyState
+
+  return {
+    name: material.name,
+    unit: material.unitLabel || material.unit,
+    price: String(material.priceAmount),
+    category: material.category,
+    subcategory: material.subcategory ?? "",
+    code: material.code ?? "",
+    supplierName: material.supplierName ?? "",
+  }
+}
+
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Не удалось сохранить материал"
 }
 
 export function DirectoryMaterialFormDialog({
+  material,
   open,
   onOpenChange,
   saving,
   onSubmit,
 }: {
+  material: DirectoryMaterial | null
   open: boolean
   onOpenChange: (open: boolean) => void
   saving: boolean
   onSubmit: (input: DirectoryMaterialMutationInput) => Promise<void>
 }) {
-  const [form, setForm] = useState<DirectoryMaterialFormState>(emptyState)
+  const [form, setForm] = useState<DirectoryMaterialFormState>(() =>
+    getInitialState(material)
+  )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
-      setForm(emptyState)
+      setForm(getInitialState(material))
       setError(null)
     }
-  }, [open])
+  }, [open, material])
 
   const updateField = (field: keyof DirectoryMaterialFormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -95,7 +116,11 @@ export function DirectoryMaterialFormDialog({
         subcategory: subcategory || null,
         code: code || null,
         supplierName: supplierName || null,
-        currencyCode: "RUB",
+        imageUrl: material?.imageUrl ?? null,
+        description: material?.description ?? null,
+        sourceName: material?.metadata.sourceName ?? null,
+        sourceExternalRowKey: material?.metadata.sourceExternalRowKey ?? null,
+        currencyCode: material?.currencyCode ?? "RUB",
       })
       onOpenChange(false)
     } catch (err) {
@@ -107,7 +132,7 @@ export function DirectoryMaterialFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Новый материал</DialogTitle>
+          <DialogTitle>{material ? "Редактировать материал" : "Новый материал"}</DialogTitle>
           <DialogDescription>
             Заполните обязательные поля. Пустой материал не будет сохранён.
           </DialogDescription>

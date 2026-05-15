@@ -122,18 +122,16 @@ export function DirectoryWorksSection() {
           </div>
         ) : null}
 
-        <div className="flex flex-col">
-          {works.map((row) => (
-            <DirectoryWorksRow
-              key={row.id}
-              onArchive={handleArchive}
-              onEdit={handleEdit}
-              onInsertAfter={handleInsertAfter}
-              row={row}
-              saving={saving || isFetching}
-            />
-          ))}
-        </div>
+        {works.map((row) => (
+          <DirectoryWorksRow
+            key={row.id}
+            onArchive={handleArchive}
+            onEdit={handleEdit}
+            onInsertAfter={handleInsertAfter}
+            row={row}
+            saving={saving || isFetching}
+          />
+        ))}
 
         {meta ? (
           <div className="flex flex-col gap-3 border-t border-border p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">

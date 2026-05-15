@@ -99,4 +99,10 @@ describe("directory works client", () => {
       "/api/directory-works/export?q=%D0%BF%D0%BE%D0%BB&status=active&format=csv"
     )
   })
+
+  it("builds full export href when no view params are passed", () => {
+    expect(buildDirectoryWorksExportHref("xlsx")).toBe(
+      "/api/directory-works/export?status=active&format=xlsx"
+    )
+  })
 })

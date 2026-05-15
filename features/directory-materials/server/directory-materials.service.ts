@@ -1,11 +1,15 @@
 import { createHash } from "node:crypto"
-import { unstable_cache } from "next/cache"
+import { revalidateTag, unstable_cache } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { requireCurrentWorkspace } from "@/lib/auth/team"
+import { getWorkspaceRole, requireCurrentWorkspace } from "@/lib/auth/team"
 import { DirectoryMaterialsApiError } from "../api/directory-materials-errors"
 import { directoryMaterialsCacheTags } from "../api/directory-materials-query-keys"
-import type { DirectoryMaterialsListParams } from "../types"
+import type {
+  DirectoryMaterialMutationInput,
+  DirectoryMaterialsListParams,
+} from "../types"
 import {
+  createDirectoryMaterialForWorkspace,
   getDirectoryMaterialCategoriesForWorkspace,
   getDirectoryMaterialForWorkspace,
   listDirectoryMaterialsForWorkspace,
@@ -23,6 +27,7 @@ type DirectoryMaterialsContext = {
   }
 }
 
+const WRITE_ROLES = new Set(["owner", "admin", "manager"])
 const LIST_CACHE_REVALIDATE_SECONDS = 30
 const DETAIL_CACHE_REVALIDATE_SECONDS = 120
 const CATEGORIES_CACHE_REVALIDATE_SECONDS = 300
@@ -69,6 +74,31 @@ export async function requireDirectoryMaterialsReadContext(): Promise<DirectoryM
   }
 }
 
+export async function requireDirectoryMaterialsWriteContext(): Promise<DirectoryMaterialsContext> {
+  const context = await requireDirectoryMaterialsReadContext()
+  const role = await getWorkspaceRole(context.userId, context.workspaceOwnerId)
+
+  if (!role || !WRITE_ROLES.has(role)) {
+    throw new DirectoryMaterialsApiError(
+      "FORBIDDEN",
+      "Недостаточно прав для изменения справочника материалов",
+      403
+    )
+  }
+
+  return context
+}
+
+function revalidateDirectoryMaterialTags(
+  context: DirectoryMaterialsContext,
+  materialId?: string
+) {
+  revalidateTag(context.cacheTags.list, "max")
+  revalidateTag(context.cacheTags.categories, "max")
+  revalidateTag(context.cacheTags.aiSearchIndex, "max")
+  if (materialId) revalidateTag(context.cacheTags.detail(materialId), "max")
+}
+
 export async function listDirectoryMaterials(params: DirectoryMaterialsListParams) {
   const context = await requireDirectoryMaterialsReadContext()
   const normalizedParams = normalizeDirectoryMaterialsListParams(params)
@@ -105,6 +135,18 @@ export async function getDirectoryMaterial(id: string) {
       cacheTag: context.cacheTags.detail(material.id),
     },
   }
+}
+
+export async function createDirectoryMaterial(input: DirectoryMaterialMutationInput) {
+  const context = await requireDirectoryMaterialsWriteContext()
+  const material = await createDirectoryMaterialForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    input
+  )
+
+  revalidateDirectoryMaterialTags(context, material.id)
+  return { data: material }
 }
 
 export async function getDirectoryMaterialsCategories(

@@ -4,7 +4,10 @@ import { useEffect, useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useDirectoryMaterials } from "@/features/directory-materials/hooks/use-directory-materials"
 import { DIRECTORY_MATERIALS_CREATE_EVENT } from "@/features/directory-materials/lib/directory-materials-events"
-import type { DirectoryMaterialMutationInput } from "@/features/directory-materials/types"
+import type {
+  DirectoryMaterial,
+  DirectoryMaterialMutationInput,
+} from "@/features/directory-materials/types"
 import { DirectoryMaterialFormDialog } from "./directory-material-form-dialog"
 import { DirectoryMaterialsRow } from "./directory-materials-row"
 
@@ -33,27 +36,50 @@ function DirectoryMaterialsRowsSkeleton() {
 }
 
 export function DirectoryMaterialsSection() {
-  const { materials, loading, error, isFetching, saving, createMaterial } =
-    useDirectoryMaterials()
-  const [createOpen, setCreateOpen] = useState(false)
+  const {
+    materials,
+    loading,
+    error,
+    isFetching,
+    saving,
+    createMaterial,
+    updateMaterial,
+  } = useDirectoryMaterials()
+  const [formOpen, setFormOpen] = useState(false)
+  const [selectedMaterial, setSelectedMaterial] =
+    useState<DirectoryMaterial | null>(null)
 
   useEffect(() => {
-    const handleCreate = () => setCreateOpen(true)
+    const handleCreate = () => {
+      setSelectedMaterial(null)
+      setFormOpen(true)
+    }
     window.addEventListener(DIRECTORY_MATERIALS_CREATE_EVENT, handleCreate)
     return () => {
       window.removeEventListener(DIRECTORY_MATERIALS_CREATE_EVENT, handleCreate)
     }
   }, [])
 
-  const handleCreateSubmit = async (input: DirectoryMaterialMutationInput) => {
+  const handleEdit = (material: DirectoryMaterial) => {
+    setSelectedMaterial(material)
+    setFormOpen(true)
+  }
+
+  const handleSubmit = async (input: DirectoryMaterialMutationInput) => {
+    if (selectedMaterial) {
+      await updateMaterial(selectedMaterial.id, input)
+      return
+    }
+
     await createMaterial(input)
   }
 
   const dialog = (
     <DirectoryMaterialFormDialog
-      onOpenChange={setCreateOpen}
-      onSubmit={handleCreateSubmit}
-      open={createOpen}
+      material={selectedMaterial}
+      onOpenChange={setFormOpen}
+      onSubmit={handleSubmit}
+      open={formOpen}
       saving={saving}
     />
   )
@@ -102,7 +128,7 @@ export function DirectoryMaterialsSection() {
         {isFetching ? <div className="h-1 bg-muted" /> : null}
         <div className="flex flex-col divide-y">
           {materials.map((row) => (
-            <DirectoryMaterialsRow key={row.id} row={row} />
+            <DirectoryMaterialsRow key={row.id} onEdit={handleEdit} row={row} />
           ))}
         </div>
       </section>

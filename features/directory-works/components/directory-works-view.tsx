@@ -4,7 +4,7 @@ import { DirectoryWorksSection } from "@/features/directory-works/directory-work
 export function DirectoryWorksView() {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
-      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border border-border p-1">
+      <div className="min-h-0 flex-1 rounded-xl border border-border p-1">
         <Suspense
           fallback={
             <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">

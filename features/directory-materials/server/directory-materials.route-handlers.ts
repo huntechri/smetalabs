@@ -4,6 +4,7 @@ import { DirectoryMaterialsApiError } from "../api/directory-materials-errors"
 import {
   archiveDirectoryMaterial,
   createDirectoryMaterial,
+  exportDirectoryMaterials,
   getDirectoryMaterial,
   getDirectoryMaterialsCategories,
   listDirectoryMaterials,
@@ -13,6 +14,7 @@ import {
   parseDirectoryMaterialCategoryStatus,
   parseDirectoryMaterialId,
   parseDirectoryMaterialMutationBody,
+  parseDirectoryMaterialsExportParams,
   parseDirectoryMaterialsListParams,
 } from "./directory-materials.schemas"
 
@@ -136,6 +138,29 @@ export async function handleDirectoryMaterialsCategoriesRequest(
     return handleDirectoryMaterialsRouteError(
       err,
       "[GET /api/directory-materials/categories]"
+    )
+  }
+}
+
+export async function handleDirectoryMaterialsExportRequest(request: NextRequest) {
+  try {
+    const { format, params } = parseDirectoryMaterialsExportParams(
+      request.nextUrl.searchParams
+    )
+    const file = await exportDirectoryMaterials(format, params)
+    const date = new Date().toISOString().slice(0, 10)
+
+    return new NextResponse(file.body, {
+      headers: {
+        "Cache-Control": "no-store",
+        "Content-Disposition": `attachment; filename="directory-materials-${date}.${file.extension}"`,
+        "Content-Type": file.contentType,
+      },
+    })
+  } catch (err) {
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[GET /api/directory-materials/export]"
     )
   }
 }

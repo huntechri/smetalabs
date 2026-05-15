@@ -1,15 +1,22 @@
+import { Button } from "@/components/ui/button"
 import type { DirectoryMaterial } from "@/features/directory-materials/types"
 import { ImageIcon } from "lucide-react"
 import { DirectoryMaterialsName } from "./directory-materials-name"
 import { DirectoryMaterialsValue } from "./directory-materials-value"
 import { DirectoryMaterialsMetricGroup } from "./directory-materials-metric-group"
 
-export function DirectoryMaterialsRow({ row }: { row: DirectoryMaterial }) {
+export function DirectoryMaterialsRow({
+  onEdit,
+  row,
+}: {
+  onEdit: (row: DirectoryMaterial) => void
+  row: DirectoryMaterial
+}) {
   const priceLabel = `${row.price.toLocaleString("ru-RU")} ${row.currencyCode}`
 
   return (
     <div className="last:border-b-0">
-      <div className="m-3 grid gap-3 rounded-md border p-3 transition-colors hover:bg-muted/50 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]">
+      <div className="m-3 grid gap-3 rounded-md border p-3 transition-colors hover:bg-muted/50 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)_auto]">
         <div className="flex min-w-0 flex-col gap-3 p-2">
           <DirectoryMaterialsName value={row.name} />
           {row.code ? (
@@ -46,6 +53,18 @@ export function DirectoryMaterialsRow({ row }: { row: DirectoryMaterial }) {
               <DirectoryMaterialsValue label="Пост." value={row.supplierName} />
             ) : null}
           </DirectoryMaterialsMetricGroup>
+        </div>
+
+        <div className="flex items-start justify-end p-2">
+          <Button
+            onClick={() => onEdit(row)}
+            size="sm"
+            title="Редактировать материал"
+            type="button"
+            variant="outline"
+          >
+            Редактировать
+          </Button>
         </div>
       </div>
     </div>

@@ -44,6 +44,7 @@ export function DirectoryMaterialsSection() {
     saving,
     createMaterial,
     updateMaterial,
+    archiveMaterial,
   } = useDirectoryMaterials()
   const [formOpen, setFormOpen] = useState(false)
   const [selectedMaterial, setSelectedMaterial] =
@@ -63,6 +64,14 @@ export function DirectoryMaterialsSection() {
   const handleEdit = (material: DirectoryMaterial) => {
     setSelectedMaterial(material)
     setFormOpen(true)
+  }
+
+  const handleArchive = async (material: DirectoryMaterial) => {
+    const confirmed = window.confirm(
+      `Архивировать материал «${material.name}»? Он исчезнет из активного списка.`
+    )
+    if (!confirmed) return
+    await archiveMaterial(material.id)
   }
 
   const handleSubmit = async (input: DirectoryMaterialMutationInput) => {
@@ -128,7 +137,12 @@ export function DirectoryMaterialsSection() {
         {isFetching ? <div className="h-1 bg-muted" /> : null}
         <div className="flex flex-col divide-y">
           {materials.map((row) => (
-            <DirectoryMaterialsRow key={row.id} onEdit={handleEdit} row={row} />
+            <DirectoryMaterialsRow
+              key={row.id}
+              onArchive={handleArchive}
+              onEdit={handleEdit}
+              row={row}
+            />
           ))}
         </div>
       </section>

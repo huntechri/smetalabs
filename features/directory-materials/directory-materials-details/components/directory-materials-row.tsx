@@ -6,9 +6,11 @@ import { DirectoryMaterialsValue } from "./directory-materials-value"
 import { DirectoryMaterialsMetricGroup } from "./directory-materials-metric-group"
 
 export function DirectoryMaterialsRow({
+  onArchive,
   onEdit,
   row,
 }: {
+  onArchive: (row: DirectoryMaterial) => void
   onEdit: (row: DirectoryMaterial) => void
   row: DirectoryMaterial
 }) {
@@ -55,7 +57,7 @@ export function DirectoryMaterialsRow({
           </DirectoryMaterialsMetricGroup>
         </div>
 
-        <div className="flex items-start justify-end p-2">
+        <div className="flex flex-col items-stretch gap-2 p-2">
           <Button
             onClick={() => onEdit(row)}
             size="sm"
@@ -64,6 +66,15 @@ export function DirectoryMaterialsRow({
             variant="outline"
           >
             Редактировать
+          </Button>
+          <Button
+            onClick={() => onArchive(row)}
+            size="sm"
+            title="Архивировать материал"
+            type="button"
+            variant="destructive"
+          >
+            Архивировать
           </Button>
         </div>
       </div>

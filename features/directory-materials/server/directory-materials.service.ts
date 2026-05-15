@@ -9,6 +9,7 @@ import type {
   DirectoryMaterialsListParams,
 } from "../types"
 import {
+  archiveDirectoryMaterialForWorkspace,
   createDirectoryMaterialForWorkspace,
   getDirectoryMaterialCategoriesForWorkspace,
   getDirectoryMaterialForWorkspace,
@@ -160,6 +161,18 @@ export async function updateDirectoryMaterial(
     context.userId,
     id,
     input
+  )
+
+  revalidateDirectoryMaterialTags(context, material.id)
+  return { data: material }
+}
+
+export async function archiveDirectoryMaterial(id: string) {
+  const context = await requireDirectoryMaterialsWriteContext()
+  const material = await archiveDirectoryMaterialForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id
   )
 
   revalidateDirectoryMaterialTags(context, material.id)

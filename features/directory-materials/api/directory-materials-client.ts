@@ -104,6 +104,14 @@ export function updateDirectoryMaterial({
   )
 }
 
+export function archiveDirectoryMaterial(id: string) {
+  return fetchJson<{ data: DirectoryMaterial }>(
+    `/api/directory-materials/${id}`,
+    "архивирования материала",
+    { method: "DELETE" }
+  )
+}
+
 export function fetchDirectoryMaterialsCategories() {
   return fetchJson<DirectoryMaterialsCategoriesResponse>(
     "/api/directory-materials/categories",

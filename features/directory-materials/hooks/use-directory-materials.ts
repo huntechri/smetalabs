@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
+  archiveDirectoryMaterial,
   createDirectoryMaterial,
   fetchDirectoryMaterials,
   updateDirectoryMaterial,
@@ -100,6 +101,16 @@ export function useDirectoryMaterials() {
     },
   })
 
+  const archiveMutation = useMutation({
+    mutationFn: archiveDirectoryMaterial,
+    onSuccess: async (response) => {
+      await invalidateMaterials()
+      await queryClient.invalidateQueries({
+        queryKey: directoryMaterialsQueryKeys.detail(response.data.id),
+      })
+    },
+  })
+
   return {
     materials: materialsQuery.data?.data ?? [],
     meta: materialsQuery.data?.meta ?? null,
@@ -110,8 +121,12 @@ export function useDirectoryMaterials() {
       materialsQuery.error?.message ??
       createMutation.error?.message ??
       updateMutation.error?.message ??
+      archiveMutation.error?.message ??
       null,
-    saving: createMutation.isPending || updateMutation.isPending,
+    saving:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      archiveMutation.isPending,
     refetch: async () => {
       await materialsQuery.refetch()
     },
@@ -121,6 +136,10 @@ export function useDirectoryMaterials() {
     },
     updateMaterial: async (id: string, input: DirectoryMaterialMutationInput) => {
       const response = await updateMutation.mutateAsync({ id, input })
+      return response.data
+    },
+    archiveMaterial: async (id: string) => {
+      const response = await archiveMutation.mutateAsync(id)
       return response.data
     },
   }

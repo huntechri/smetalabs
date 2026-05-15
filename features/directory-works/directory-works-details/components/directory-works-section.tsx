@@ -98,7 +98,7 @@ export function DirectoryWorksSection() {
       setImportDialogOpen(true)
     }
     const handleExport = () => {
-      window.location.assign(buildDirectoryWorksExportHref("xlsx", params))
+      window.location.assign(buildDirectoryWorksExportHref("xlsx"))
     }
 
     window.addEventListener(DIRECTORY_WORKS_CREATE_EVENT, handleCreate)
@@ -109,7 +109,7 @@ export function DirectoryWorksSection() {
       window.removeEventListener(DIRECTORY_WORKS_IMPORT_EVENT, handleImport)
       window.removeEventListener(DIRECTORY_WORKS_EXPORT_EVENT, handleExport)
     }
-  }, [params])
+  }, [])
 
   const handleEdit = (work: DirectoryWork) => {
     setEditingWork(work)

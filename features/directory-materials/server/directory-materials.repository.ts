@@ -6,7 +6,6 @@ import type {
   DirectoryMaterialMutationInput,
   DirectoryMaterialSupplierOption,
   DirectoryMaterialsCategoriesResponse,
-  DirectoryMaterialsListMeta,
   DirectoryMaterialsListParams,
   DirectoryMaterialsListResponse,
   DirectoryMaterialUnitOption,
@@ -335,6 +334,42 @@ export async function updateDirectoryMaterialForWorkspace(
     throw new DirectoryMaterialsApiError(
       "INTERNAL_ERROR",
       "Обновлённый материал не найден",
+      500
+    )
+  }
+
+  return material
+}
+
+export async function archiveDirectoryMaterialForWorkspace(
+  workspaceOwnerId: string,
+  userId: string,
+  id: string
+): Promise<DirectoryMaterial> {
+  const existing = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
+  if (!existing) {
+    throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
+  }
+
+  const { error } = await supabase
+    .from("directory_materials")
+    .update({
+      status: "archived",
+      archived_at: new Date().toISOString(),
+      updated_by: userId,
+      version: existing.version + 1,
+    })
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .eq("id", id)
+    .is("deleted_at", null)
+
+  if (error) throw error
+
+  const material = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
+  if (!material) {
+    throw new DirectoryMaterialsApiError(
+      "INTERNAL_ERROR",
+      "Архивированный материал не найден",
       500
     )
   }

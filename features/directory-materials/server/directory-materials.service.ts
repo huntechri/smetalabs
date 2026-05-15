@@ -5,6 +5,7 @@ import { getWorkspaceRole, requireCurrentWorkspace } from "@/lib/auth/team"
 import { DirectoryMaterialsApiError } from "../api/directory-materials-errors"
 import { directoryMaterialsCacheTags } from "../api/directory-materials-query-keys"
 import type {
+  DirectoryMaterialImportCreateInput,
   DirectoryMaterialMutationInput,
   DirectoryMaterialsExportFormat,
   DirectoryMaterialsListParams,
@@ -17,6 +18,11 @@ import {
   listDirectoryMaterialsForWorkspace,
   updateDirectoryMaterialForWorkspace,
 } from "./directory-materials.repository"
+import {
+  applyDirectoryMaterialImportJobForWorkspace,
+  createDirectoryMaterialImportJobForWorkspace,
+  getDirectoryMaterialImportJobForWorkspace,
+} from "./directory-materials-import.repository"
 import { buildDirectoryMaterialsExportFile } from "./directory-materials.export"
 import { normalizeDirectoryMaterialsListParams } from "./directory-materials.schemas"
 
@@ -27,6 +33,7 @@ type DirectoryMaterialsContext = {
     list: string
     categories: string
     detail: (materialId: string) => string
+    importJob: (jobId: string) => string
     aiSearchIndex: string
   }
 }
@@ -63,6 +70,8 @@ export async function requireDirectoryMaterialsReadContext(): Promise<DirectoryM
         categories: directoryMaterialsCacheTags.categories(workspaceOwnerId),
         detail: (materialId: string) =>
           directoryMaterialsCacheTags.detail(workspaceOwnerId, materialId),
+        importJob: (jobId: string) =>
+          directoryMaterialsCacheTags.importJob(workspaceOwnerId, jobId),
         aiSearchIndex: directoryMaterialsCacheTags.aiSearchIndex(workspaceOwnerId),
       },
     }
@@ -101,6 +110,10 @@ function revalidateDirectoryMaterialTags(
   revalidateTag(context.cacheTags.categories, "max")
   revalidateTag(context.cacheTags.aiSearchIndex, "max")
   if (materialId) revalidateTag(context.cacheTags.detail(materialId), "max")
+}
+
+function revalidateImportTags(context: DirectoryMaterialsContext, jobId: string) {
+  revalidateTag(context.cacheTags.importJob(jobId), "max")
 }
 
 export async function listDirectoryMaterials(params: DirectoryMaterialsListParams) {
@@ -194,6 +207,47 @@ export async function getDirectoryMaterialsCategories(
       tags: [context.cacheTags.categories, context.cacheTags.list],
     }
   )()
+}
+
+export async function createDirectoryMaterialImportJob(
+  input: DirectoryMaterialImportCreateInput
+) {
+  const context = await requireDirectoryMaterialsWriteContext()
+  const response = await createDirectoryMaterialImportJobForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    input
+  )
+
+  revalidateImportTags(context, response.data.job.id)
+  return response
+}
+
+export async function getDirectoryMaterialImportJob(id: string) {
+  const context = await requireDirectoryMaterialsReadContext()
+  const response = await getDirectoryMaterialImportJobForWorkspace(
+    context.workspaceOwnerId,
+    id
+  )
+
+  if (!response) {
+    throw new DirectoryMaterialsApiError("NOT_FOUND", "Import job материалов не найден", 404)
+  }
+
+  return response
+}
+
+export async function applyDirectoryMaterialImportJob(id: string) {
+  const context = await requireDirectoryMaterialsWriteContext()
+  const response = await applyDirectoryMaterialImportJobForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id
+  )
+
+  revalidateDirectoryMaterialTags(context)
+  revalidateImportTags(context, response.data.job.id)
+  return response
 }
 
 export async function exportDirectoryMaterials(

@@ -58,9 +58,9 @@ export function DirectoriesToolbar({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-col gap-3 rounded-lg border border-dashed border-cyan-300 p-2 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
+      <div className="flex flex-col gap-3 rounded-lg border border-border p-2 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
         <form
-          className="min-w-0 flex-1 rounded-md border border-dashed border-sky-400 p-2"
+          className="min-w-0 flex-1 rounded-md border border-border p-2"
           onSubmit={handleSearch}
         >
           <div className="flex min-w-0 items-center gap-2">
@@ -79,7 +79,7 @@ export function DirectoriesToolbar({
           </div>
         </form>
 
-        <div className="flex rounded-md border border-dashed border-teal-400 p-2">
+        <div className="flex rounded-md border border-border p-2">
           <ButtonGroup className="flex-wrap">
             {actions.map((action) => (
               <Button

@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   createDirectoryMaterial,
   fetchDirectoryMaterials,
+  updateDirectoryMaterial,
 } from "../api/directory-materials-client"
 import { directoryMaterialsQueryKeys } from "../api/directory-materials-query-keys"
 import type {
@@ -89,19 +90,37 @@ export function useDirectoryMaterials() {
     },
   })
 
+  const updateMutation = useMutation({
+    mutationFn: updateDirectoryMaterial,
+    onSuccess: async (response) => {
+      await invalidateMaterials()
+      await queryClient.invalidateQueries({
+        queryKey: directoryMaterialsQueryKeys.detail(response.data.id),
+      })
+    },
+  })
+
   return {
     materials: materialsQuery.data?.data ?? [],
     meta: materialsQuery.data?.meta ?? null,
     params,
     loading: materialsQuery.isLoading,
     isFetching: materialsQuery.isFetching,
-    error: materialsQuery.error?.message ?? createMutation.error?.message ?? null,
-    saving: createMutation.isPending,
+    error:
+      materialsQuery.error?.message ??
+      createMutation.error?.message ??
+      updateMutation.error?.message ??
+      null,
+    saving: createMutation.isPending || updateMutation.isPending,
     refetch: async () => {
       await materialsQuery.refetch()
     },
     createMaterial: async (input: DirectoryMaterialMutationInput) => {
       const response = await createMutation.mutateAsync(input)
+      return response.data
+    },
+    updateMaterial: async (id: string, input: DirectoryMaterialMutationInput) => {
+      const response = await updateMutation.mutateAsync({ id, input })
       return response.data
     },
   }

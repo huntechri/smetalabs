@@ -4,13 +4,16 @@ import { useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
+  applyDirectoryMaterialImportJob,
   archiveDirectoryMaterial,
   createDirectoryMaterial,
+  createDirectoryMaterialImportJob,
   fetchDirectoryMaterials,
   updateDirectoryMaterial,
 } from "../api/directory-materials-client"
 import { directoryMaterialsQueryKeys } from "../api/directory-materials-query-keys"
 import type {
+  DirectoryMaterialImportCreateInput,
   DirectoryMaterialMutationInput,
   DirectoryMaterialsListParams,
   DirectoryMaterialsSort,
@@ -111,6 +114,27 @@ export function useDirectoryMaterials() {
     },
   })
 
+  const createImportMutation = useMutation({
+    mutationFn: createDirectoryMaterialImportJob,
+    onSuccess: async (response) => {
+      await queryClient.invalidateQueries({
+        queryKey: directoryMaterialsQueryKeys.importJob(response.data.job.id),
+      })
+    },
+  })
+
+  const applyImportMutation = useMutation({
+    mutationFn: applyDirectoryMaterialImportJob,
+    onSuccess: async (response) => {
+      await Promise.all([
+        invalidateMaterials(),
+        queryClient.invalidateQueries({
+          queryKey: directoryMaterialsQueryKeys.importJob(response.data.job.id),
+        }),
+      ])
+    },
+  })
+
   return {
     materials: materialsQuery.data?.data ?? [],
     meta: materialsQuery.data?.meta ?? null,
@@ -122,11 +146,16 @@ export function useDirectoryMaterials() {
       createMutation.error?.message ??
       updateMutation.error?.message ??
       archiveMutation.error?.message ??
+      createImportMutation.error?.message ??
+      applyImportMutation.error?.message ??
       null,
     saving:
       createMutation.isPending ||
       updateMutation.isPending ||
-      archiveMutation.isPending,
+      archiveMutation.isPending ||
+      createImportMutation.isPending ||
+      applyImportMutation.isPending,
+    importing: createImportMutation.isPending || applyImportMutation.isPending,
     refetch: async () => {
       await materialsQuery.refetch()
     },
@@ -140,6 +169,14 @@ export function useDirectoryMaterials() {
     },
     archiveMaterial: async (id: string) => {
       const response = await archiveMutation.mutateAsync(id)
+      return response.data
+    },
+    createImportJob: async (input: DirectoryMaterialImportCreateInput) => {
+      const response = await createImportMutation.mutateAsync(input)
+      return response.data
+    },
+    applyImportJob: async (id: string) => {
+      const response = await applyImportMutation.mutateAsync(id)
       return response.data
     },
   }

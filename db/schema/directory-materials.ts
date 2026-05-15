@@ -1,10 +1,12 @@
 import { sql } from "drizzle-orm"
 import {
+  bigint,
   check,
   customType,
   foreignKey,
   index,
   integer,
+  jsonb,
   numeric,
   pgEnum,
   pgTable,
@@ -37,6 +39,42 @@ export const directoryMaterialStatusEnum = pgEnum("directory_material_status", [
 export const directoryMaterialEmbeddingStatusEnum = pgEnum(
   "directory_material_embedding_status",
   ["pending", "ready", "stale", "failed"]
+)
+
+export const directoryMaterialImportJobStatusEnum = pgEnum(
+  "directory_material_import_job_status",
+  [
+    "draft",
+    "uploaded",
+    "parsing",
+    "parsed",
+    "validating",
+    "validated",
+    "ready_for_review",
+    "applying",
+    "completed",
+    "failed",
+    "cancelled",
+  ]
+)
+
+export const directoryMaterialImportRowStatusEnum = pgEnum(
+  "directory_material_import_row_status",
+  [
+    "pending",
+    "valid",
+    "warning",
+    "error",
+    "duplicate",
+    "conflict",
+    "applied",
+    "skipped",
+  ]
+)
+
+export const directoryMaterialImportRowActionEnum = pgEnum(
+  "directory_material_import_row_action",
+  ["create", "update", "skip"]
 )
 
 export const directoryMaterials = pgTable(
@@ -193,6 +231,135 @@ export const directoryMaterialEmbeddings = pgTable(
     check(
       "chk_directory_material_embeddings_input_not_empty",
       sql`btrim(${t.embeddingInputText}) <> ''`
+    ),
+  ]
+)
+
+export const directoryMaterialImportJobs = pgTable(
+  "directory_material_import_jobs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceOwnerId: uuid("workspace_owner_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "restrict" }),
+    status: directoryMaterialImportJobStatusEnum("status")
+      .notNull()
+      .default("draft"),
+    sourceName: text("source_name"),
+    fileName: text("file_name"),
+    fileMimeType: text("file_mime_type"),
+    fileSizeBytes: bigint("file_size_bytes", { mode: "number" }),
+    totalRows: integer("total_rows").notNull().default(0),
+    parsedRows: integer("parsed_rows").notNull().default(0),
+    validRows: integer("valid_rows").notNull().default(0),
+    warningRows: integer("warning_rows").notNull().default(0),
+    errorRows: integer("error_rows").notNull().default(0),
+    duplicateRows: integer("duplicate_rows").notNull().default(0),
+    conflictRows: integer("conflict_rows").notNull().default(0),
+    appliedRows: integer("applied_rows").notNull().default(0),
+    skippedRows: integer("skipped_rows").notNull().default(0),
+    options: jsonb("options").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    summary: jsonb("summary").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    lastError: text("last_error"),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("uq_directory_material_import_jobs_id_workspace").on(
+      t.id,
+      t.workspaceOwnerId
+    ),
+    index("idx_directory_material_import_jobs_workspace_status_created").on(
+      t.workspaceOwnerId,
+      t.status,
+      t.createdAt
+    ),
+    check(
+      "chk_directory_material_import_jobs_counts_non_negative",
+      sql`${t.totalRows} >= 0 AND ${t.parsedRows} >= 0 AND ${t.validRows} >= 0 AND ${t.warningRows} >= 0 AND ${t.errorRows} >= 0 AND ${t.duplicateRows} >= 0 AND ${t.conflictRows} >= 0 AND ${t.appliedRows} >= 0 AND ${t.skippedRows} >= 0`
+    ),
+    check(
+      "chk_directory_material_import_jobs_file_size_non_negative",
+      sql`${t.fileSizeBytes} IS NULL OR ${t.fileSizeBytes} >= 0`
+    ),
+  ]
+)
+
+export const directoryMaterialImportRows = pgTable(
+  "directory_material_import_rows",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceOwnerId: uuid("workspace_owner_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    jobId: uuid("job_id").notNull(),
+    rowNumber: integer("row_number").notNull(),
+    rawData: jsonb("raw_data").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    normalizedData: jsonb("normalized_data").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    status: directoryMaterialImportRowStatusEnum("status")
+      .notNull()
+      .default("pending"),
+    action: directoryMaterialImportRowActionEnum("action"),
+    errorMessages: jsonb("error_messages").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    warningMessages: jsonb("warning_messages").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    duplicateMaterialId: uuid("duplicate_material_id").references(() => directoryMaterials.id, {
+      onDelete: "set null",
+    }),
+    conflictMaterialIds: uuid("conflict_material_ids")
+      .array()
+      .notNull()
+      .default(sql`'{}'::uuid[]`),
+    dedupeFingerprint: text("dedupe_fingerprint"),
+    appliedMaterialId: uuid("applied_material_id").references(() => directoryMaterials.id, {
+      onDelete: "set null",
+    }),
+    appliedAt: timestamp("applied_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("uq_directory_material_import_rows_job_row").on(
+      t.workspaceOwnerId,
+      t.jobId,
+      t.rowNumber
+    ),
+    foreignKey({
+      name: "fk_directory_material_import_rows_job_workspace",
+      columns: [t.jobId, t.workspaceOwnerId],
+      foreignColumns: [
+        directoryMaterialImportJobs.id,
+        directoryMaterialImportJobs.workspaceOwnerId,
+      ],
+    }).onDelete("cascade"),
+    index("idx_directory_material_import_rows_workspace_job_status").on(
+      t.workspaceOwnerId,
+      t.jobId,
+      t.status
+    ),
+    index("idx_directory_material_import_rows_workspace_dedupe")
+      .on(t.workspaceOwnerId, t.dedupeFingerprint)
+      .where(sql`${t.dedupeFingerprint} IS NOT NULL`),
+    check("chk_directory_material_import_rows_row_number_positive", sql`${t.rowNumber} > 0`),
+    check(
+      "chk_directory_material_import_rows_error_messages_array",
+      sql`jsonb_typeof(${t.errorMessages}) = 'array'`
+    ),
+    check(
+      "chk_directory_material_import_rows_warning_messages_array",
+      sql`jsonb_typeof(${t.warningMessages}) = 'array'`
     ),
   ]
 )

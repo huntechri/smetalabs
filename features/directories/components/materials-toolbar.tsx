@@ -2,7 +2,10 @@
 
 import { Suspense } from "react"
 import { DirectoriesToolbar } from "@/features/directories/components/directories-toolbar"
-import { dispatchDirectoryMaterialsCreateEvent } from "@/features/directory-materials/lib/directory-materials-events"
+import {
+  dispatchDirectoryMaterialsCreateEvent,
+  dispatchDirectoryMaterialsImportEvent,
+} from "@/features/directory-materials/lib/directory-materials-events"
 import { PlusIcon, FileArrowDownIcon, ExportIcon } from "@phosphor-icons/react"
 
 function exportDirectoryMaterials() {
@@ -21,8 +24,8 @@ const materialsActions = [
   {
     label: "Импорт",
     icon: <FileArrowDownIcon data-icon="inline-start" />,
-    disabled: true,
-    title: "Импорт материалов будет подключён позже",
+    onClick: dispatchDirectoryMaterialsImportEvent,
+    title: "Импорт материалов из CSV",
   },
   {
     label: "Экспорт",

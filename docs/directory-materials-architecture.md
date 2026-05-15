@@ -2,21 +2,15 @@
 
 > Last updated: 2026-05-15
 >
-> Status: planned production backend/UI contract for `/directories/materials`.
+> Status: production materials directory slice with read/write/export and staged CSV import.
 >
-> Scope: data model, UI behavior, search, CRUD, import/export boundaries and rollout order for the materials catalog.
+> Scope: data model, UI behavior, search, CRUD, import/export boundaries and remaining rollout items for `/directories/materials`.
 
-This document fixes the first contract for moving `/directories/materials` from mock-backed UI to a production workspace-scoped directory section.
-
-The current materials page already follows the top-level directory screen shape, but the data flow is still mock-based. This contract defines the target slice before database, API and UI integration work starts.
-
-`/directories/works` remains the reference implementation. Materials must copy the interaction model and safety rules, but keep material-specific fields, route names, messages, database tables, import/export columns and validation.
+`/directories/materials` follows the shared directory standard and uses `/directories/works` as the interaction reference. The materials slice keeps material-specific fields, routes, messages, validation, storage and import/export behavior.
 
 ---
 
-## 1. Current state
-
-Current implemented slice:
+## 1. Current implemented slice
 
 ```txt
 /directories/materials
@@ -25,38 +19,8 @@ Current implemented slice:
   → features/directory-materials/components/directory-materials-view.tsx
   → features/directory-materials/directory-materials-details/components/**
   → features/directory-materials/hooks/use-directory-materials.ts
-  → features/directory-materials/__mocks__/directory-materials.ts
-  → types/directory-material.ts
-```
-
-Known gaps:
-
-```txt
-- no `/api/directory-materials` routes yet;
-- no feature API client/query keys yet;
-- no server repository/service yet;
-- list data comes from `__mocks__`;
-- add/import/export toolbar actions are not wired to material-specific behavior;
-- no loading, empty, error or pagination states;
-- no create/edit/archive flow;
-- no workspace-scoped route handlers;
-- no import/export implementation.
-```
-
----
-
-## 2. Target ownership map
-
-Production materials should own this slice:
-
-```txt
-/directories/materials
-  → app/(main)/directories/materials/page.tsx
-  → features/directories/components/materials-toolbar.tsx
-  → features/directory-materials/components/directory-materials-view.tsx
-  → features/directory-materials/directory-materials-details/components/**
-  → features/directory-materials/hooks/**
   → features/directory-materials/api/**
+  → features/directory-materials/lib/**
   → features/directory-materials/server/**
   → features/directory-materials/types.ts
   → app/api/directory-materials/**
@@ -64,19 +28,36 @@ Production materials should own this slice:
   → db/migrations/*directory_materials*.sql
 ```
 
-Feature responsibilities:
+Implemented capabilities:
 
-- `features/directory-materials/api/**` owns client fetchers, errors, mappers and query keys.
-- `features/directory-materials/hooks/**` owns server-state loading, mutations and refresh behavior.
-- `features/directory-materials/server/**` owns validation, permission checks, repository/service logic, search, import, export and embedding processing.
-- `app/api/directory-materials/**` owns HTTP route boundaries and delegates to the feature server layer.
-- `db/schema/directory-materials.ts` and migrations own the database contract.
+```txt
+- workspace-scoped list/detail routes;
+- regular search through list/search route behavior;
+- categories/filter values route;
+- create material;
+- update material;
+- archive material;
+- loading, empty, error and paginated list states;
+- material-specific toolbar actions;
+- bounded CSV export;
+- staged CSV import with preview/apply flow;
+- row-level import statuses for valid, warning, error, duplicate, conflict and applied rows;
+- list/categories refresh after mutations and import apply.
+```
 
-UI components must not own database logic, permission checks, import apply logic, export builders or embedding generation.
+Remaining follow-up items:
+
+```txt
+- AI/hybrid search route;
+- embedding processor;
+- deeper performance hardening for very large material catalogs;
+- optional supplier directory linking beyond denormalized supplier display name;
+- XLSX export if product scope requires it.
+```
 
 ---
 
-## 3. Tenant boundary and access
+## 2. Tenant boundary and access
 
 The tenant boundary is the current workspace owner id:
 
@@ -86,23 +67,21 @@ workspace_owner_id = workspace_members.owner_id
 
 Rules:
 
-- the client must never send `workspace_owner_id` as an authority source;
+- the client never sends `workspace_owner_id` as an authority source;
 - API routes resolve the current workspace on the server side;
 - reads require an authenticated user with access to the current workspace;
 - writes require one of the current write roles: `owner`, `admin`, `manager`;
 - regular list/search responses show only active, non-deleted materials by default;
 - archive is soft by default;
-- service-role database access, if used, must happen only after application-level authorization.
+- service-role database access is used only server-side after application-level authorization.
 
 ---
 
-## 4. Canonical table: `directory_materials`
+## 3. Canonical table: `directory_materials`
 
-Target canonical row shape:
+`directory_materials` stores the production material catalog.
 
 ```txt
-TABLE public.directory_materials
-──────────────────────────────────────────────────────────────
 Column                    Required  Notes
 ──────────────────────────────────────────────────────────────
 id                        yes       Primary key.
@@ -116,8 +95,8 @@ currency_code             yes       Default RUB unless product config changes.
 category                  yes       Main group for UI/search/filtering.
 subcategory               no        Optional nested group.
 code                      no        Workspace-scoped material code/SKU.
-supplier_name             no        Optional denormalized supplier display name for catalog rows.
-supplier_id               no        Optional link to a supplier directory row when available.
+supplier_name             no        Optional denormalized supplier display name.
+supplier_id               no        Optional future link to supplier directory row.
 image_url                 no        Optional material image URL.
 description               no        Searchable long description.
 source_name               no        External catalog/source name.
@@ -133,7 +112,6 @@ created_at                yes       Default now().
 updated_at                yes       Maintained on write.
 archived_at               no        Archive timestamp.
 deleted_at                no        Soft-delete timestamp.
-──────────────────────────────────────────────────────────────
 ```
 
 Required UI projection:
@@ -144,8 +122,8 @@ name        <- directory_materials.name
 unit        <- directory_materials.unit_label or unit_code
 price       <- directory_materials.price_amount + currency_code
 category    <- directory_materials.category
-supplier    <- directory_materials.supplier_name or linked supplier name, when present
-imageUrl    <- directory_materials.image_url, when present
+supplier    <- directory_materials.supplier_name
+imageUrl    <- directory_materials.image_url
 status      <- directory_materials.status
 version     <- directory_materials.version
 updatedAt   <- directory_materials.updated_at
@@ -154,88 +132,19 @@ updatedAt   <- directory_materials.updated_at
 Canonical write rules:
 
 - `name` is trimmed and non-empty;
-- `normalized_name` is generated by backend/database normalization, not accepted directly from UI;
 - `price_amount >= 0`;
 - `category` is required for production data;
-- `unit_code` is normalized from controlled values or approved free-text mapping;
-- `dedupe_fingerprint` is recalculated on create/update/import apply;
-- `search_text` and `search_fts` are recalculated on create/update/import apply;
+- `unit_code` is normalized from the provided unit text;
+- search and duplicate helper fields are recalculated by database helpers;
 - canonical rows are not created from empty UI draft rows;
 - archive sets `status = archived`, `archived_at`, `updated_by`, `updated_at` and increments `version`;
 - physical delete is not the default because materials can be referenced by estimates, purchases, documents and templates.
 
-Supported canonical `status` values:
-
-```txt
-active
-archived
-```
-
 ---
 
-## 5. Embeddings table: `directory_material_embeddings`
+## 4. API contract
 
-Materials use the same AI model strategy as the works search system.
-
-```txt
-model_name: text-embedding-3-small
-dimensions: 1536
-distance operator: cosine via pgvector <=>
-default semantic threshold: 0.72
-```
-
-Target embedding row shape:
-
-```txt
-TABLE public.directory_material_embeddings
-──────────────────────────────────────────────────────────────
-Column                  Required  Notes
-──────────────────────────────────────────────────────────────
-id                      yes       Primary key.
-workspace_owner_id      yes       Tenant boundary.
-material_id             yes       FK -> directory_materials.id within same workspace.
-model_name              yes       Fixed to text-embedding-3-small for the current system.
-dimensions              yes       Fixed to 1536 for the current system.
-content_hash            yes       Hash of embedding_input_text + model config.
-embedding               no        pgvector vector(1536), nullable until generated.
-status                  yes       pending | ready | stale | failed.
-embedding_input_text    yes       Denormalized semantic input.
-generated_at            no        Last successful generation timestamp.
-last_error              no        Last generation error.
-created_at              yes       Default now().
-updated_at              yes       Maintained on write.
-──────────────────────────────────────────────────────────────
-```
-
-Embedding input must include material meaning, not just the visible name:
-
-```txt
-name
-code
-unit_label
-category
-subcategory
-supplier_name
-description
-source_name
-source_external_row_key
-```
-
-Generation rules:
-
-- create/import does not synchronously call the embedding provider;
-- create/import records pending/stale embedding work;
-- updates to embedding input fields mark existing embeddings as `stale`;
-- failed generation stores `status = failed` and `last_error` for retry/observability;
-- AI search filters by current `workspace_owner_id` and excludes deleted/archived materials by default;
-- provider API keys and source data sent to providers stay server-only;
-- embedding processing is bounded by batch limits and is outside CRUD/import transactions.
-
----
-
-## 6. API contract
-
-Target regular routes:
+Regular routes:
 
 ```txt
 GET    /api/directory-materials
@@ -247,14 +156,7 @@ PATCH  /api/directory-materials/:id
 DELETE /api/directory-materials/:id
 ```
 
-AI routes, when enabled:
-
-```txt
-POST /api/directory-materials/ai-search
-POST /api/directory-materials/embeddings/process
-```
-
-Import/export routes, when enabled:
+Import/export routes:
 
 ```txt
 POST /api/directory-materials/import-jobs
@@ -283,7 +185,7 @@ Defaults:
 status = active
 limit = 50
 cursor = 0
-sort = relevance or updated_desc for browse mode
+sort = relevance
 ```
 
 Default filters:
@@ -294,13 +196,11 @@ status = active
 deleted_at is null
 ```
 
-The API must return UI fields plus metadata needed for editing and stale-write protection.
-
 ---
 
-## 7. Search behavior
+## 5. Search behavior
 
-Search must run across all active materials inside the current workspace, not only the rows currently visible in the browser.
+Search runs across active materials inside the current workspace, not only visible browser rows.
 
 Regular ranking intent:
 
@@ -308,29 +208,18 @@ Regular ranking intent:
 1. exact code or source_external_row_key match
 2. exact normalized_name match
 3. normalized_name prefix match
-4. supplier/category/subcategory exact or prefix match
-5. weighted full-text rank over search_fts
-6. trigram/fuzzy similarity over normalized_name/search_text
-7. recent update/version tie-breakers only after relevance
+4. supplier/category/subcategory match
+5. full-text/search_text match
+6. recent update tie-breaker after relevance
 ```
 
-AI/hybrid ranking intent:
-
-```txt
-1. exact code/name matches remain above weak semantic matches
-2. regular text score contributes to hybrid score
-3. semantic score from directory_material_embeddings contributes to hybrid score
-4. category/subcategory/unit filters apply before returning results
-5. archived/deleted materials are excluded by default
-```
-
-Search and filters must reset `cursor` when changed. Pagination must keep the same filters/query and only move `cursor`.
+Search and filters reset `cursor`. Pagination keeps the same filters/query and only changes `cursor`.
 
 ---
 
-## 8. UI behavior
+## 6. UI behavior
 
-The materials screen must support:
+The materials screen supports:
 
 ```txt
 loading
@@ -338,7 +227,7 @@ empty
 error
 list
 saving
-importing when import is enabled
+importing
 paginated result
 ```
 
@@ -356,213 +245,262 @@ Required empty message:
 Материалы не найдены. Добавьте первый материал вручную или измените поиск.
 ```
 
-Toolbar requirements:
+Toolbar behavior:
 
-- search placeholder: `Поиск материалов`;
-- add action opens a material form;
-- import/export actions are hidden or disabled until material-specific routes are implemented;
-- no toolbar action may call works-specific behavior.
+```txt
+Поиск материалов
+Добавить
+Импорт
+Экспорт
+```
 
-Visual cleanup required before production-ready status:
-
-- remove debug dashed colored borders from materials rows/view;
-- use the same spacing and semantic border tokens as the works reference;
-- use shadcn/ui primitives directly from `@/components/ui/*`.
+No material toolbar action may call works-specific behavior.
 
 ---
 
-## 9. Validation and duplicate rules
+## 7. Staged import
+
+Import is staged and material-specific. Raw uploaded rows are not written directly into `directory_materials`.
+
+Flow:
+
+```txt
+select CSV file
+→ browser parses CSV headers/rows
+→ POST /api/directory-materials/import-jobs
+→ server normalizes rows
+→ server validates rows
+→ server detects duplicate/conflict rows
+→ preview is stored in import tables
+→ user reviews preview
+→ POST /api/directory-materials/import-jobs/:id/apply
+→ only valid/warning create rows are inserted into directory_materials
+→ invalid, duplicate and conflict rows stay out of canonical data
+→ list/categories/export data refreshes
+```
+
+Supported import fields:
+
+```txt
+code
+name
+unit
+price
+category
+subcategory
+supplierName
+imageUrl
+description
+currencyCode
+sourceName
+sourceExternalRowKey
+```
+
+CSV header aliases include both English and Russian variants, for example:
+
+```txt
+name/title/название/наименование
+unit/единица
+price/rate/цена
+category/категория
+supplier/supplier_name/поставщик
+source_name/источник
+```
 
 Minimum validation:
 
-- required text fields are trimmed and non-empty;
-- numeric values are parsed and bounded;
-- price cannot be negative;
-- status values are controlled;
-- client-provided workspace identifiers are ignored;
-- duplicate detection uses normalized name, unit, category, supplier/source and optional code;
-- validation messages must name materials, not works.
+- material name is required;
+- unit is required;
+- category is required;
+- price must be a non-negative number;
+- currency code must use three uppercase letters;
+- import body is limited to 1000 rows per job.
 
-Duplicate handling:
+Duplicate and conflict handling:
 
 ```txt
-exact code duplicate              → reject or show conflict
-same normalized name + unit       → warning/conflict depending on category/supplier
-same source row key               → update/match candidate in import flow
+same file fingerprint               → duplicate, skipped
+existing code match                 → duplicate, skipped
+existing source row key match       → duplicate, skipped
+existing dedupe fingerprint match   → duplicate, skipped
+same normalized name + unit         → conflict, skipped
+valid/warning row                   → create, allowed to apply
+error row                           → skipped
+```
+
+Import storage:
+
+```txt
+directory_material_import_jobs
+directory_material_import_rows
+```
+
+Job statuses:
+
+```txt
+draft
+uploaded
+parsing
+parsed
+validating
+validated
+ready_for_review
+applying
+completed
+failed
+cancelled
+```
+
+Row statuses:
+
+```txt
+pending
+valid
+warning
+error
+duplicate
+conflict
+applied
+skipped
 ```
 
 ---
 
-## 10. Import/export boundary
+## 8. Export
 
-Import is not required for the first materials UI implementation. If enabled, it must be staged.
+Export is material-specific and does not use works export builders.
 
-Required import flow:
+Current format:
 
 ```txt
-upload/select source
-→ create import job
-→ parse rows
-→ normalize rows
-→ validate rows
-→ detect duplicates/conflicts
-→ show preview
-→ user confirms
-→ apply valid selected rows
-→ refresh list/search/export data
-→ enqueue or refresh embedding work
+csv
 ```
 
-Import must not write raw uploaded rows directly into `directory_materials`.
+Export behavior:
 
-Export, when enabled, must:
+- uses current list filters/search when possible;
+- resets cursor;
+- is bounded;
+- uses UTF-8 BOM;
+- emits material columns and labels.
 
-- use the same filters as the current list when possible;
-- support bounded CSV/XLSX output;
-- use material-specific columns and labels;
-- not call works export builders.
+CSV columns:
+
+```txt
+Код
+Название
+Ед. изм.
+Цена
+Валюта
+Категория
+Подкатегория
+Поставщик
+Статус
+Обновлено
+```
 
 ---
 
-## 11. Cache and refresh behavior
+## 9. Cache and refresh behavior
 
 After create, update, archive or import apply, refresh:
 
 ```txt
 list
-one row
+one row when affected
 filters/categories
-search results
-AI search index when embedding input changes
 import job detail when applicable
+AI search index tag when future AI search is enabled
 ```
 
-Recommended TanStack Query keys:
+TanStack Query keys:
 
 ```txt
-['directoryMaterials', params]
-['directoryMaterial', id]
-['directoryMaterialsCategories']
-['directoryMaterialsAiSearch', queryHash]
+['directoryMaterials']
+['directoryMaterials', 'list', params]
+['directoryMaterials', 'detail', id]
+['directoryMaterials', 'categories']
+['directoryMaterials', 'importJob', id]
 ```
 
-Recommended server cache tags when applicable:
+Server cache tags:
 
 ```txt
 directory-materials:<workspaceOwnerId>
 directory-material:<workspaceOwnerId>:<materialId>
 directory-materials-categories:<workspaceOwnerId>
-directory-materials-ai:<workspaceOwnerId>:<queryHash>
+directory-materials-import:<workspaceOwnerId>:<jobId>
 directory-materials-ai-index:<workspaceOwnerId>
 ```
 
-Do not leave stale material rows visible after a successful mutation.
+---
+
+## 10. AI foundation and remaining scope
+
+The database contract includes `directory_material_embeddings`, but AI routes and embedding generation are not part of the current material import/export slice.
+
+Future AI routes:
+
+```txt
+POST /api/directory-materials/ai-search
+POST /api/directory-materials/embeddings/process
+```
+
+AI/hybrid search must not outrank exact code/name matches in normal user flows.
 
 ---
 
-## 12. Rollout order
-
-Use this order:
-
-```txt
-1. Contract document.
-2. Database structure.
-3. Read/list route.
-4. UI connected to real list data.
-5. Create/edit/archive.
-6. Filters/search.
-7. Export.
-8. Import when product scope requires it.
-9. AI/hybrid search and embedding processor.
-10. Performance and refresh hardening.
-11. Final cleanup and checklist.
-```
-
-Minimum first production result:
-
-```txt
-- page opens;
-- data is loaded from database;
-- search works;
-- loading state exists;
-- empty state exists;
-- error state exists;
-- create material works;
-- edit material works;
-- archive material works;
-- mock data is removed from production flow.
-```
-
----
-
-## 13. Non-goals for the first UI implementation
-
-```txt
-mass operations
-supplier directory rebuild
-purchase flow integration
-estimate material picker refactor
-unbounded export
-raw import directly into canonical rows
-```
-
-AI storage foundation is part of the database contract. AI routes and embedding generation are separate follow-up implementation steps.
-
-Import/export may remain hidden or disabled until material-specific routes are implemented.
-
----
-
-## 14. Production readiness checklist
+## 11. Production readiness checklist
 
 Page and UI:
 
-- [ ] page uses the standard directory page wrapper;
-- [ ] toolbar has correct material labels and actions;
-- [ ] list shows loading state;
-- [ ] list shows empty state;
-- [ ] list shows error state;
-- [ ] list supports pagination;
-- [ ] row actions are material-specific;
-- [ ] add dialog works;
-- [ ] edit dialog works;
-- [ ] archive action works;
-- [ ] unfinished actions are hidden or disabled;
-- [ ] debug borders are removed.
+- [x] page uses the standard directory page wrapper;
+- [x] toolbar has correct material labels and actions;
+- [x] list shows loading state;
+- [x] list shows empty state;
+- [x] list shows error state;
+- [x] list supports pagination;
+- [x] row actions are material-specific;
+- [x] add dialog works;
+- [x] edit dialog works;
+- [x] archive action works;
+- [x] import dialog works with staged preview/apply;
+- [x] export action is material-specific;
+- [ ] debug borders are removed if any remain after visual QA.
 
 Backend:
 
-- [ ] list route is implemented;
-- [ ] detail route is implemented;
-- [ ] create route is implemented;
-- [ ] update route is implemented;
-- [ ] archive route is implemented;
-- [ ] categories/filter route is implemented;
-- [ ] import routes are implemented when import is enabled;
-- [ ] export route is implemented when export is enabled;
+- [x] list route is implemented;
+- [x] detail route is implemented;
+- [x] create route is implemented;
+- [x] update route is implemented;
+- [x] archive route is implemented;
+- [x] categories/filter route is implemented;
+- [x] import routes are implemented;
+- [x] export route is implemented;
 - [ ] AI routes are implemented when AI search is enabled;
 - [ ] embedding processor is implemented when AI search is enabled;
-- [ ] all writes check permissions;
-- [ ] all reads check workspace access;
-- [ ] client cannot set workspace owner directly;
-- [ ] normal reads exclude archived/deleted rows by default.
+- [x] all writes check permissions;
+- [x] all reads check workspace access;
+- [x] client cannot set workspace owner directly;
+- [x] normal reads exclude archived/deleted rows by default.
 
 Data:
 
-- [ ] table has workspace boundary;
-- [ ] table has status/lifecycle fields;
-- [ ] embedding table uses text-embedding-3-small / 1536 dimensions;
-- [ ] required fields are validated;
-- [ ] duplicate rules are implemented;
-- [ ] archive is soft by default;
-- [ ] import staging tables exist when import is enabled;
-- [ ] export columns match materials.
+- [x] table has workspace boundary;
+- [x] table has status/lifecycle fields;
+- [x] import staging tables exist;
+- [x] required fields are validated;
+- [x] duplicate rules are implemented for code/source/fingerprint/name+unit;
+- [x] archive is soft by default;
+- [x] export columns match materials;
+- [ ] embedding processor is connected when AI search is enabled.
 
 Quality:
 
-- [ ] no mocks remain in production flow;
-- [ ] no copied works route remains by accident;
-- [ ] no copied works text remains by accident;
-- [ ] list refreshes after create/update/archive/import;
-- [ ] AI search refreshes after embedding input changes;
-- [ ] errors are understandable to the user;
-- [ ] docs/filemap.md is updated.
+- [x] no mocks remain in production flow;
+- [x] no copied works route remains by accident;
+- [x] no copied works text remains in user-facing materials import/export flow;
+- [x] list refreshes after create/update/archive/import;
+- [x] errors are understandable to the user;
+- [x] docs/filemap.md is updated.

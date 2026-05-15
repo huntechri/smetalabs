@@ -5,12 +5,16 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useDirectoryMaterials } from "@/features/directory-materials/hooks/use-directory-materials"
-import { DIRECTORY_MATERIALS_CREATE_EVENT } from "@/features/directory-materials/lib/directory-materials-events"
+import {
+  DIRECTORY_MATERIALS_CREATE_EVENT,
+  DIRECTORY_MATERIALS_IMPORT_EVENT,
+} from "@/features/directory-materials/lib/directory-materials-events"
 import type {
   DirectoryMaterial,
   DirectoryMaterialMutationInput,
 } from "@/features/directory-materials/types"
 import { DirectoryMaterialFormDialog } from "./directory-material-form-dialog"
+import { DirectoryMaterialImportDialog } from "./directory-material-import-dialog"
 import { DirectoryMaterialsRow } from "./directory-materials-row"
 
 function DirectoryMaterialsRowsSkeleton() {
@@ -48,11 +52,15 @@ export function DirectoryMaterialsSection() {
     error,
     isFetching,
     saving,
+    importing,
     createMaterial,
     updateMaterial,
     archiveMaterial,
+    createImportJob,
+    applyImportJob,
   } = useDirectoryMaterials()
   const [formOpen, setFormOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const [selectedMaterial, setSelectedMaterial] =
     useState<DirectoryMaterial | null>(null)
 
@@ -61,9 +69,14 @@ export function DirectoryMaterialsSection() {
       setSelectedMaterial(null)
       setFormOpen(true)
     }
+    const handleImport = () => {
+      setImportOpen(true)
+    }
     window.addEventListener(DIRECTORY_MATERIALS_CREATE_EVENT, handleCreate)
+    window.addEventListener(DIRECTORY_MATERIALS_IMPORT_EVENT, handleImport)
     return () => {
       window.removeEventListener(DIRECTORY_MATERIALS_CREATE_EVENT, handleCreate)
+      window.removeEventListener(DIRECTORY_MATERIALS_IMPORT_EVENT, handleImport)
     }
   }, [])
 
@@ -103,20 +116,31 @@ export function DirectoryMaterialsSection() {
   const previousCursor = meta ? Math.max(0, meta.cursor - meta.limit) : 0
   const currentPage = meta ? Math.floor(meta.cursor / meta.limit) + 1 : 1
 
-  const dialog = (
-    <DirectoryMaterialFormDialog
-      material={selectedMaterial}
-      onOpenChange={setFormOpen}
-      onSubmit={handleSubmit}
-      open={formOpen}
-      saving={saving}
-    />
+  const dialogs = (
+    <>
+      <DirectoryMaterialFormDialog
+        material={selectedMaterial}
+        onOpenChange={setFormOpen}
+        onSubmit={handleSubmit}
+        open={formOpen}
+        saving={saving}
+      />
+      <DirectoryMaterialImportDialog
+        importing={importing}
+        onApplyJob={async (id) => {
+          await applyImportJob(id)
+        }}
+        onCreateJob={createImportJob}
+        onOpenChange={setImportOpen}
+        open={importOpen}
+      />
+    </>
   )
 
   if (loading) {
     return (
       <>
-        {dialog}
+        {dialogs}
         <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
           <DirectoryMaterialsRowsSkeleton />
         </section>
@@ -127,7 +151,7 @@ export function DirectoryMaterialsSection() {
   if (error) {
     return (
       <>
-        {dialog}
+        {dialogs}
         <section className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm">
           <h2 className="text-base font-semibold">Не удалось загрузить материалы</h2>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">{error}</p>
@@ -139,7 +163,7 @@ export function DirectoryMaterialsSection() {
   if (materials.length === 0) {
     return (
       <>
-        {dialog}
+        {dialogs}
         <section className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm">
           <h2 className="text-base font-semibold">Материалы не найдены</h2>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
@@ -152,7 +176,7 @@ export function DirectoryMaterialsSection() {
 
   return (
     <>
-      {dialog}
+      {dialogs}
       <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
         {isFetching ? <div className="h-1 bg-muted" /> : null}
         <div className="flex flex-col divide-y">

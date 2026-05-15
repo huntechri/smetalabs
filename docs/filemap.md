@@ -1,8 +1,8 @@
 # SmetaLabs — Filemap
 
-> Last updated: 2026-05-14
+> Last updated: 2026-05-15
 >
-> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md).
+> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md).
 
 ---
 
@@ -13,7 +13,7 @@ smetalabs/
 ├── app/                    # Next.js App Router routes, layouts, API routes, server actions
 ├── components/             # shared app components and shadcn/ui primitives
 ├── db/                     # Drizzle client, schema, migrations, seed scripts
-├── docs/                   # architecture, filemap, account-settings, directory-works and design-system documentation
+├── docs/                   # architecture, filemap, account-settings, directory contracts and design-system documentation
 ├── features/               # feature-owned UI, hooks and screens
 ├── hooks/                  # global hooks only
 ├── lib/                    # shared infra, auth helpers, Supabase clients, utilities
@@ -90,8 +90,9 @@ app/
 │
 └── api/
     ├── access-control/roles/route.ts
-    ├── directory-works/    # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
-    ├── settings/route.ts   # account settings read boundary
+    ├── directory-materials/ # workspace-scoped materials catalog read/search/CRUD/import/export endpoints
+    ├── directory-works/     # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
+    ├── settings/route.ts    # account settings read boundary
     └── team/
         ├── overview/route.ts
         ├── invitations/
@@ -111,14 +112,6 @@ app/
                 └── reset-password/route.ts
 ```
 
-### App ownership rules
-
-- `app/(auth)/**` owns auth pages only.
-- `app/(main)/**` owns protected product routes only.
-- `app/api/**` owns JSON route handlers.
-- `app/actions/**` owns server actions and compatibility wrappers.
-- Route files should delegate UI to `features/**` whenever the screen grows beyond simple composition.
-
 ---
 
 ## `features/`
@@ -134,13 +127,6 @@ features/
 ├── nav-user.tsx
 │
 ├── auth/
-│   └── components/
-│       ├── auth-illustration.tsx
-│       ├── login-form.tsx
-│       ├── signup-form.tsx
-│       ├── forgot-password-form.tsx
-│       └── set-password-form.tsx
-│
 ├── dashboard/
 ├── projects/
 ├── estimates/
@@ -149,6 +135,13 @@ features/
 ├── global-purchases/
 ├── directories/
 ├── directory-materials/
+│   ├── api/                # client API, errors, query keys/cache tags
+│   ├── components/         # materials directory view shell
+│   ├── directory-materials-details/components/ # list rows, form dialog, import dialog
+│   ├── hooks/              # TanStack Query hooks and mutations
+│   ├── lib/                # pure events/helpers
+│   ├── server/             # repository/service/import/export route logic
+│   └── types.ts            # feature-local materials catalog types
 ├── directory-works/
 │   ├── api/                # client API, errors, mappers, query keys/cache tags
 │   ├── components/         # works directory view shell
@@ -161,15 +154,7 @@ features/
 ├── directory-counterparties/
 ├── access-control/
 ├── account-settings/
-│   ├── api/                # settings client/action adapters and query keys
-│   ├── components/         # profile/workspace/preferences/notifications/security/sensitive cards
-│   ├── hooks/              # TanStack Query hooks and settings mutations
-│   ├── server/             # schemas, repository/service, profile/workspace/preferences/notifications/password/dangerous actions
-│   └── types.ts            # feature-local account settings types
 └── workspace-settings/
-    ├── api/                # team client, mappers, errors and query keys
-    ├── components/         # team/workspace settings UI sections
-    └── hooks/              # workspace/team query and mutation hooks
 ```
 
 Feature folder convention:
@@ -184,84 +169,6 @@ features/<feature>/
 ├── __mocks__/              # temporary/mock data when needed
 ├── types.ts                # private feature types when needed
 └── <subdomain>/components/ # optional deeper decomposition for large features
-```
-
-Rules:
-
-- feature UI imports primitives from `@/components/ui/*`;
-- feature UI may call API routes or server actions through approved boundaries;
-- server-state hooks should use `@tanstack/react-query` via `components/query-provider.tsx` and feature query-key factories;
-- feature folders should not mutate global app shell unless they are shell-specific files like `app-sidebar.tsx`.
-
----
-
-## `components/`
-
-```txt
-components/
-├── ui/                     # shadcn/ui primitives and approved primitive extensions
-├── query-provider.tsx      # TanStack Query app provider
-├── theme-provider.tsx
-└── nav-documents.tsx       # legacy/template navigation component
-```
-
-`components/ui/` is not a feature folder. Do not put business-specific cards, tables, dialogs or screens there.
-
----
-
-## `lib/`
-
-```txt
-lib/
-├── supabase/
-│   ├── client.ts           # browser client
-│   ├── server.ts           # server client
-│   └── proxy.ts            # session refresh, route protection and workspace activity touch
-├── auth/
-│   ├── activity.ts         # throttled workspace_members.last_active_at touch helper
-│   ├── actions.ts
-│   ├── invitations.ts
-│   ├── permissions.ts
-│   └── team.ts
-└── utils.ts                # generic utilities
-```
-
-Rules:
-
-- `lib/supabase/proxy.ts` is the source of truth for middleware route protection.
-- Auth helper logic belongs in `lib/auth/**`.
-- `lib/auth/activity.ts` is a lightweight activity signal for workspace members, not an audit log or online-presence system.
-- `lib/auth/team.ts` must not resolve a synthetic active workspace for users that only have invited/suspended memberships.
-- Do not put React screens/components in `lib/`.
-
----
-
-## `scripts/`
-
-```txt
-scripts/
-└── vercel-ignore-build.mjs # Vercel ignored-build helper; builds primary branches and ignores non-primary branches
-```
-
-Rules:
-
-- deployment helper scripts belong in `scripts/**`, not in feature folders;
-- scripts that affect CI/deployment behavior must be documented in `docs/architecture.md` and this filemap;
-- keep branch/build behavior aligned with `vercel.json`.
-
----
-
-## `docs/`
-
-```txt
-docs/
-├── architecture.md                         # layer/routing/auth/API/UI/deployment rules
-├── account-settings.md                     # /settings/account behavior contract and feature status
-├── backend-architecture.md                 # backend/database/API target model
-├── directory-works-architecture.md         # production works catalog contract for #64/#65-#71
-├── directory-works-performance-hardening.md # #71 cache/indexing/diagnostics notes
-├── design-system.md                        # visual system, tokens and component usage
-└── filemap.md                              # this compact map
 ```
 
 ---
@@ -288,11 +195,13 @@ db/
 │   ├── 013_directory_works_performance_hardening.sql
 │   ├── 014_private_service_role_grants.sql
 │   ├── 015_directory_work_update_rpc.sql
-│   └── 016_directory_works_large_catalog_read.sql
+│   ├── 016_directory_works_large_catalog_read.sql
+│   └── 017_directory_materials_import.sql
 ├── scripts/
 │   └── seed-directory-works-load-test.sql
 └── schema/
     ├── index.ts
+    ├── directory-materials.ts
     ├── directory-works.ts
     ├── profiles.ts
     ├── rbac.ts
@@ -302,107 +211,21 @@ db/
     └── workspace-members.ts
 ```
 
-Rules:
-
-- Drizzle schema changes go to `db/schema/**`.
-- SQL migrations go to `db/migrations/**`.
-- Seed data goes to `db/seed*.ts`.
-
----
-
-## `types/`
-
-```txt
-types/
-├── purchase.ts
-├── execution.ts
-├── global-purchases.ts
-├── estimate.ts
-├── directory-material.ts
-├── directory-work.ts
-├── directory-supplier.ts
-├── directory-counterparty.ts
-├── project.ts
-└── roles.ts
-```
-
-Use `types/` only for shared cross-feature types. Keep feature-private types in `features/<feature>/types.ts`.
-
----
-
-## Root deployment configuration
-
-```txt
-vercel.json
-  → git.deploymentEnabled disables feature/codex/agent/internal branch patterns
-  → ignoreCommand delegates to scripts/vercel-ignore-build.mjs
-```
-
-Current rule: `master` and `main` are primary branches that should build; non-primary branches are ignored by the script unless deployment rules are intentionally changed.
-
 ---
 
 ## Current critical flows
 
-### Login
+### Directory materials production slice
 
 ```txt
-/login
-  → features/auth/components/login-form.tsx
-  → app/lib auth action/client flow
-  → Supabase Auth
-  → /dashboard
+/directories/materials
+  → app/api/directory-materials/** exposes workspace-scoped read/search/CRUD/import/export routes
+  → features/directory-materials/** owns UI hooks, dialogs, repository/service/import/export logic
+  → docs/directory-materials-architecture.md fixes the production contract and rollout state
+  → db/schema/directory-materials.ts and db/migrations/017_directory_materials_import.sql provide import storage additions
 ```
 
-### Invite + password setup
-
-```txt
-/team invite action or /api/team/invitations
-  → supabase.auth.admin.inviteUserByEmail(... redirectTo: /auth/callback)
-  → user opens email link
-  → /auth/callback verifies token_hash/code and creates session
-  → /set-password
-  → features/auth/components/invite-password-form.tsx
-  → supabase.auth.updateUser({ password })
-  → /api/team/invitations/accept
-  → /dashboard
-```
-
-### Account settings
-
-```txt
-/settings/account
-  → features/account-settings/components/account-settings-view.tsx
-  → useSettings() / GET /api/settings
-  → settings cards call app/actions/settings.ts for mutations/security/dangerous actions
-  → features/account-settings/server/**
-```
-
-Current account settings behavior is documented in `docs/account-settings.md`. Do not add active controls to `/settings/account` unless they are real, read-only, or explicitly disabled future functionality.
-
-### Account dangerous actions
-
-```txt
-/settings/account → SensitiveActionsCard
-  → leaveWorkspaceAction / transferWorkspaceOwnershipAction / deactivateAccountAction / deleteWorkspaceAction
-  → features/account-settings/server/dangerous.actions.ts
-  → workspace_members / workspace_invitations / workspace_allowed_domains / owner profile-settings
-```
-
-Ownership transfer uses `public.transfer_workspace_ownership(...)` from migration `009_transfer_workspace_ownership.sql` so the implicit `owner_id` workspace boundary moves atomically.
-
-### Workspace team management
-
-```txt
-/team
-  → features/workspace-settings/components/team-management-view.tsx
-  → team-only blocks: overview, members, manual invite, pending invites, roles summary
-  → app/api/team/** or app/actions/team.ts
-  → lib/auth/team.ts permission helpers
-  → public.workspace_* tables / Supabase Auth admin API
-```
-
-`/team` is not the catch-all workspace settings screen. Workspace/security controls such as invite links and allowed-domain auto-join rules stay out of the primary team flow until a dedicated workspace/security settings route owns them.
+The materials catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; import is staged and must not write raw uploaded rows directly into `directory_materials`.
 
 ### Directory works backend contract and implementation
 
@@ -411,21 +234,8 @@ Ownership transfer uses `public.transfer_workspace_ownership(...)` from migratio
   → app/api/directory-works/** exposes workspace-scoped read/search/CRUD/import/export/AI routes
   → features/directory-works/** owns UI hooks, dialogs, repository/service/search/import/export/embeddings
   → docs/directory-works-architecture.md fixes the production contract and hardening strategy
-  → db/schema/directory-works.ts and db/migrations/010-013 provide DB foundation, read RPCs, AI search and performance hardening
+  → db/schema/directory-works.ts and db/migrations/010-016 provide DB foundation, read RPCs, AI search and performance hardening
 ```
-
-The works catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; do not route around `features/directory-works/server/**` for business logic or permission checks.
-
-### Vercel preview/build guard
-
-```txt
-push branch
-  → vercel.json git.deploymentEnabled filters branch patterns
-  → scripts/vercel-ignore-build.mjs checks VERCEL_GIT_COMMIT_REF
-  → master/main build; non-primary branches are ignored by the script
-```
-
-Do not assume every pushed branch creates a preview deployment.
 
 ---
 
@@ -448,59 +258,15 @@ Do not assume every pushed branch creates a preview deployment.
 | Vercel deployment config               | `vercel.json`                                          |
 | shadcn primitive                       | `components/ui/*.tsx`                                  |
 | Business UI                            | `features/<feature>/components/*.tsx`                  |
-| Account settings behavior docs         | `docs/account-settings.md`                             |
-| Works catalog backend contract         | `docs/directory-works-architecture.md`                 |
-
----
-
-## Recent account/team/settings updates
-
-- `app/api/team/members/route.ts` — workspace-scoped team member reads include email identity from Supabase Auth admin lookup, with display-name fallback to email when profile name is empty.
-- `lib/auth/activity.ts` and `lib/supabase/proxy.ts` — authenticated non-API navigation touches active `workspace_members.last_active_at` with throttling.
-- `features/workspace-settings/components/members/*` — team member rows/mobile lists hide duplicate email display and use `last_active_at` for member activity labels.
-- `app/api/settings/route.ts` — account settings read boundary returns `workspaceAccess` and security data using real Auth-derived fields where available.
-- `features/account-settings/components/preferences-settings-card.tsx` — interface preferences remain visible but disabled as future functionality until runtime personalization is wired.
-- `features/account-settings/components/security-settings-card.tsx` — password reset is active, 2FA is disabled future scope, other sessions can be revoked, and last login is shown from Supabase Auth.
-- `features/account-settings/server/password.actions.ts` — owns self password reset email and revoke-other-sessions actions.
-- `features/account-settings/server/dangerous.actions.ts` — owns leave workspace, transfer ownership, deactivate account and delete workspace actions for `/settings/account`.
 
 ---
 
 ## Recent directory/deployment updates
 
+- `docs/directory-materials-architecture.md` — production materials catalog contract, current rollout state and remaining AI/hardening scope.
+- `db/migrations/017_directory_materials_import.sql` — staged import jobs and rows for materials.
+- `features/directory-materials/server/directory-materials-import.repository.ts` — materials CSV preview/apply flow with row validation, duplicate detection and conflict marking.
+- `features/directory-materials/directory-materials-details/components/directory-material-import-dialog.tsx` — materials import dialog and CSV preview UI.
 - `docs/directory-works-architecture.md` — canonical implemented architecture for #64/#65-#71, including DB foundation, search, CRUD, import/export, AI search, cache/indexing and observability.
 - `docs/directory-works-performance-hardening.md` — focused #71 notes for cache/indexing/performance diagnostics.
-- `db/migrations/010_directory_works_foundation.sql` — canonical/supporting/import/embedding table foundation and RLS.
-- `db/migrations/011_directory_works_read_api.sql` — regular search/detail/categories RPC layer.
-- `db/migrations/012_directory_works_ai_search.sql` — pgvector-backed AI/hybrid search foundation.
-- `db/migrations/013_directory_works_performance_hardening.sql` — partial/composite indexes and service-role diagnostics.
-- `db/migrations/016_directory_works_large_catalog_read.sql` — 100k-catalog read/search indexes and optimized search RPC.
-- `db/scripts/seed-directory-works-load-test.sql` — repeatable non-production 100k-row directory works load-test seed.
-- `features/directory-works/server/directory-works.observability.ts` — lightweight slow-path observability helpers.
 - `scripts/vercel-ignore-build.mjs` and `vercel.json` — guarded Vercel build/deployment behavior for primary vs non-primary branches.
-
----
-
-## Issue #48 auth/team/access hardening updates
-
-- `lib/auth/team.ts` — authoritative workspace helper layer. Resolves current workspace via `workspace_members.owner_id`, exposes `requireCurrentWorkspace`, `requireWorkspaceMember`, `canReadTeamForWorkspace`, `canManageTeamForWorkspace`, role lookup, and scoped member lookup helpers.
-- `lib/auth/invitations.ts` — invitation acceptance helper. Accepts pending invitations from authenticated Supabase user metadata after `/set-password` success; writes only `workspace_members` and deletes the scoped pending invitation.
-- `app/(auth)/set-password/page.tsx` and `features/auth/components/invite-password-form.tsx` — password setup/reset flow for hash-token invite/reset links. Browser client updates password; invitation acceptance is called only after success.
-- `app/auth/callback/route.ts` — kept for OTP/OAuth/server-readable callback flows.
-- `app/api/team/members/**` — workspace-scoped team reads/mutations and password reset.
-- `app/api/team/overview/route.ts` — workspace-scoped overview counts and owner metadata.
-- `app/api/team/invitations/**` — workspace-scoped list/create/revoke/resend/accept routes; no false invite success on email failure.
-- `app/api/team/domains/**` — real `workspace_allowed_domains` storage scoped by workspace; auto-join setting returns explicit 501 until implemented.
-- `app/api/team/invite-link/route.ts` — explicit 501 because no authoritative workspace-scoped invite-link storage exists yet.
-- `app/api/access-control/roles/route.ts` — now requires authenticated workspace read permission.
-- `app/actions/access-control.ts` — workspace role mutations use `workspace_members.role_id`, not global `user_roles`.
-- `app/actions/settings.ts` — compatibility server-action wrapper that delegates account settings updates/password reset/session security/dangerous actions to `features/account-settings/server/*`.
-- `features/account-settings/server/*` — schemas, repository/service helpers and domain actions for profile/workspace/preferences/notifications/password/dangerous settings.
-- `features/account-settings/api/*` and `features/account-settings/hooks/*` — account settings client API/action wrappers and TanStack Query hooks.
-- `app/actions/team.ts` and `app/actions/workspace-settings.ts` — dangerous/skeleton actions return explicit Not implemented errors instead of false success.
-- `features/account-settings/components/sensitive-actions-card.tsx` — dangerous actions are wired with confirmation dialogs and role-based guards.
-- `features/access-control/api/*`, `features/access-control/lib/*`, `features/access-control/hooks/use-permission-matrix-state.ts` — access-control query keys/client, pure matrix builders and draft state for the permissions matrix.
-- `features/access-control/components/permissions-matrix.tsx` — save action is disabled/labelled coming soon until persistence is implemented.
-- `features/workspace-settings/api/*` and `features/workspace-settings/hooks/*` — workspace/team API client, error mappers, query keys and TanStack Query hooks for members, overview, invitations, domains and invite link.
-- `features/workspace-settings/components/members/*` — decomposed team members section, table/mobile views, action/dialog hooks and row/menu/status components.
-- `features/auth/components/login-form.tsx`, `features/auth/components/signup-form.tsx` — unimplemented social auth buttons are hidden and replaced with explanatory copy.

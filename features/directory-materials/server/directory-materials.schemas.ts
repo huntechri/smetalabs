@@ -90,6 +90,20 @@ export const directoryMaterialMutationSchema = z
   })
   .strict()
 
+export const directoryMaterialImportCreateSchema = z
+  .object({
+    rows: z
+      .array(z.record(z.string(), z.unknown()))
+      .min(1, "Файл импорта материалов не содержит строк")
+      .max(1000, "За один импорт можно загрузить не больше 1000 строк"),
+    fileName: nullableTrimmedString(255),
+    fileMimeType: nullableTrimmedString(120),
+    fileSizeBytes: z.number().int().nonnegative().nullable().optional(),
+    sourceName: nullableTrimmedString(120),
+    options: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict()
+
 export const directoryMaterialIdSchema = z.string().uuid()
 export const directoryMaterialCategoryStatusSchema = z
   .enum(["active", "archived"])
@@ -131,6 +145,10 @@ export function parseDirectoryMaterialsExportParams(searchParams: URLSearchParam
 
 export function parseDirectoryMaterialMutationBody(body: unknown) {
   return directoryMaterialMutationSchema.parse(body)
+}
+
+export function parseDirectoryMaterialImportCreateBody(body: unknown) {
+  return directoryMaterialImportCreateSchema.parse(body)
 }
 
 export function parseDirectoryMaterialId(id: string) {

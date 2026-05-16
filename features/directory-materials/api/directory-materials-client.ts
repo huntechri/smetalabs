@@ -6,6 +6,7 @@ import type {
   DirectoryMaterialImportCreateInput,
   DirectoryMaterialImportPreviewResponse,
   DirectoryMaterialMutationInput,
+  DirectoryMaterialsCategoriesParams,
   DirectoryMaterialsCategoriesResponse,
   DirectoryMaterialsListParams,
   DirectoryMaterialsListResponse,
@@ -33,6 +34,17 @@ function buildListUrl(path: string, query: DirectoryMaterialsListParams = {}) {
   appendParam(params, "limit", query.limit)
   appendParam(params, "cursor", query.cursor)
   appendParam(params, "sort", query.sort)
+
+  const search = params.toString()
+  return search ? `${path}?${search}` : path
+}
+
+function buildCategoriesUrl(path: string, query: DirectoryMaterialsCategoriesParams = {}) {
+  const params = new URLSearchParams()
+
+  appendParam(params, "status", query.status)
+  appendParam(params, "category", query.category)
+  appendParam(params, "subcategory", query.subcategory)
 
   const search = params.toString()
   return search ? `${path}?${search}` : path
@@ -147,9 +159,9 @@ export function applyDirectoryMaterialImportJob({
   )
 }
 
-export function fetchDirectoryMaterialsCategories() {
+export function fetchDirectoryMaterialsCategories(params: DirectoryMaterialsCategoriesParams = {}) {
   return fetchJson<DirectoryMaterialsCategoriesResponse>(
-    "/api/directory-materials/categories",
+    buildCategoriesUrl("/api/directory-materials/categories", params),
     "категорий материалов"
   )
 }

@@ -178,6 +178,7 @@ export type DirectoryMaterialImportRow = {
   id: string
   jobId: string
   rowNumber: number
+  batchNumber: number | null
   rawData: Record<string, unknown>
   normalizedData: DirectoryMaterialImportNormalizedRow | Record<string, unknown>
   status: DirectoryMaterialImportRowStatus
@@ -194,12 +195,23 @@ export type DirectoryMaterialImportRow = {
 }
 
 export type DirectoryMaterialImportCreateInput = {
-  rows: Array<Record<string, unknown>>
+  rows?: Array<Record<string, unknown>>
   fileName?: string | null
   fileMimeType?: string | null
   fileSizeBytes?: number | null
   sourceName?: string | null
   options?: Record<string, unknown>
+}
+
+export type DirectoryMaterialImportBatchInput = {
+  batchNumber: number
+  rowOffset: number
+  rows: Array<Record<string, unknown>>
+  isLastBatch?: boolean
+}
+
+export type DirectoryMaterialImportApplyInput = {
+  batchSize?: number
 }
 
 export type DirectoryMaterialImportPreviewResponse = {
@@ -215,6 +227,7 @@ export type DirectoryMaterialImportApplyResponse = {
     appliedRows: number
     skippedRows: number
     appliedMaterialIds?: string[]
+    hasMore?: boolean
   }
 }
 

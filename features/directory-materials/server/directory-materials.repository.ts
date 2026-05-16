@@ -30,6 +30,8 @@ type DirectoryMaterialDbRow = {
   supplier_id: string | null
   image_url: string | null
   description: string | null
+  aliases: string[] | null
+  keywords: string[] | null
   source_name: string | null
   source_external_row_key: string | null
   status: "active" | "archived"
@@ -37,6 +39,8 @@ type DirectoryMaterialDbRow = {
   created_at: string
   updated_at: string
 }
+
+const MATERIAL_SELECT = "id,name,unit_code,unit_label,price_amount,currency_code,category,subcategory,code,supplier_name,supplier_id,image_url,description,aliases,keywords,source_name,source_external_row_key,status,version,created_at,updated_at"
 
 function normalizeSearch(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ")
@@ -52,6 +56,16 @@ function escapeLike(value: string) {
 
 function toNullableString(value: string | null | undefined) {
   return value && value.trim() ? value.trim() : null
+}
+
+function normalizeList(value: string[] | undefined) {
+  return Array.from(
+    new Set(
+      (value ?? [])
+        .map((item) => item.trim().replace(/\s+/g, " "))
+        .filter(Boolean)
+    )
+  )
 }
 
 function toNumber(value: string | number) {
@@ -79,6 +93,8 @@ function mapDirectoryMaterialRow(row: DirectoryMaterialDbRow): DirectoryMaterial
     supplierId: row.supplier_id,
     imageUrl: row.image_url,
     description: row.description,
+    aliases: row.aliases ?? [],
+    keywords: row.keywords ?? [],
     status: row.status,
     version: row.version,
     metadata: {
@@ -148,11 +164,7 @@ async function assertDirectoryMaterialUniqueFields(
     const { data, error } = await query
     if (error) throw error
     if ((data ?? []).length > 0) {
-      throw new DirectoryMaterialsApiError(
-        "BAD_REQUEST",
-        "Материал с таким кодом уже существует",
-        400
-      )
+      throw new DirectoryMaterialsApiError("BAD_REQUEST", "Материал с таким кодом уже существует", 400)
     }
   }
 
@@ -171,11 +183,7 @@ async function assertDirectoryMaterialUniqueFields(
     const { data, error } = await query
     if (error) throw error
     if ((data ?? []).length > 0) {
-      throw new DirectoryMaterialsApiError(
-        "BAD_REQUEST",
-        "Материал с таким внешним идентификатором уже существует",
-        400
-      )
+      throw new DirectoryMaterialsApiError("BAD_REQUEST", "Материал с таким внешним идентификатором уже существует", 400)
     }
   }
 }
@@ -202,6 +210,8 @@ function toMaterialMutationRow(
     supplier_id: null,
     image_url: toNullableString(input.imageUrl),
     description: toNullableString(input.description),
+    aliases: normalizeList(input.aliases),
+    keywords: normalizeList(input.keywords),
     source_name: toNullableString(input.sourceName),
     source_external_row_key: toNullableString(input.sourceExternalRowKey),
     dedupe_fingerprint: "pending",
@@ -220,10 +230,7 @@ export async function listDirectoryMaterialsForWorkspace(
 
   let query = supabase
     .from("directory_materials")
-    .select(
-      "id,name,unit_code,unit_label,price_amount,currency_code,category,subcategory,code,supplier_name,supplier_id,image_url,description,source_name,source_external_row_key,status,version,created_at,updated_at",
-      { count: "exact" }
-    )
+    .select(MATERIAL_SELECT, { count: "exact" })
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("status", params.status)
     .is("deleted_at", null)
@@ -256,9 +263,7 @@ export async function getDirectoryMaterialForWorkspace(
 ): Promise<DirectoryMaterial | null> {
   const { data, error } = await supabase
     .from("directory_materials")
-    .select(
-      "id,name,unit_code,unit_label,price_amount,currency_code,category,subcategory,code,supplier_name,supplier_id,image_url,description,source_name,source_external_row_key,status,version,created_at,updated_at"
-    )
+    .select(MATERIAL_SELECT)
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
     .is("deleted_at", null)
@@ -294,11 +299,7 @@ export async function createDirectoryMaterialForWorkspace(
 
   const material = await getDirectoryMaterialForWorkspace(workspaceOwnerId, data.id)
   if (!material) {
-    throw new DirectoryMaterialsApiError(
-      "INTERNAL_ERROR",
-      "Созданный материал не найден",
-      500
-    )
+    throw new DirectoryMaterialsApiError("INTERNAL_ERROR", "Созданный материал не найден", 500)
   }
 
   return material
@@ -311,18 +312,13 @@ export async function updateDirectoryMaterialForWorkspace(
   input: DirectoryMaterialMutationInput
 ): Promise<DirectoryMaterial> {
   const existing = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
-  if (!existing) {
-    throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
-  }
+  if (!existing) throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
 
   await assertDirectoryMaterialUniqueFields(workspaceOwnerId, input, id)
 
   const { error } = await supabase
     .from("directory_materials")
-    .update({
-      ...toMaterialMutationRow(workspaceOwnerId, userId, input),
-      version: existing.version + 1,
-    })
+    .update({ ...toMaterialMutationRow(workspaceOwnerId, userId, input), version: existing.version + 1 })
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
     .is("deleted_at", null)
@@ -331,11 +327,7 @@ export async function updateDirectoryMaterialForWorkspace(
 
   const material = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
   if (!material) {
-    throw new DirectoryMaterialsApiError(
-      "INTERNAL_ERROR",
-      "Обновлённый материал не найден",
-      500
-    )
+    throw new DirectoryMaterialsApiError("INTERNAL_ERROR", "Обновлённый материал не найден", 500)
   }
 
   return material
@@ -347,9 +339,7 @@ export async function archiveDirectoryMaterialForWorkspace(
   id: string
 ): Promise<DirectoryMaterial> {
   const existing = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
-  if (!existing) {
-    throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
-  }
+  if (!existing) throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
 
   const { error } = await supabase
     .from("directory_materials")
@@ -367,11 +357,7 @@ export async function archiveDirectoryMaterialForWorkspace(
 
   const material = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
   if (!material) {
-    throw new DirectoryMaterialsApiError(
-      "INTERNAL_ERROR",
-      "Архивированный материал не найден",
-      500
-    )
+    throw new DirectoryMaterialsApiError("INTERNAL_ERROR", "Архивированный материал не найден", 500)
   }
 
   return material
@@ -405,26 +391,16 @@ export async function getDirectoryMaterialCategoriesForWorkspace(
     const categoryEntry = categoryMap.get(category) ?? { total: 0, subcategories: new Map<string, number>() }
     categoryEntry.total += 1
     if (row.subcategory) {
-      categoryEntry.subcategories.set(
-        row.subcategory,
-        (categoryEntry.subcategories.get(row.subcategory) ?? 0) + 1
-      )
+      categoryEntry.subcategories.set(row.subcategory, (categoryEntry.subcategories.get(row.subcategory) ?? 0) + 1)
     }
     categoryMap.set(category, categoryEntry)
 
-    const unitEntry = unitMap.get(row.unit_code) ?? {
-      code: row.unit_code,
-      label: row.unit_label,
-      total: 0,
-    }
+    const unitEntry = unitMap.get(row.unit_code) ?? { code: row.unit_code, label: row.unit_label, total: 0 }
     unitEntry.total += 1
     unitMap.set(row.unit_code, unitEntry)
 
     if (row.supplier_name) {
-      const supplierEntry = supplierMap.get(row.supplier_name) ?? {
-        name: row.supplier_name,
-        total: 0,
-      }
+      const supplierEntry = supplierMap.get(row.supplier_name) ?? { name: row.supplier_name, total: 0 }
       supplierEntry.total += 1
       supplierMap.set(row.supplier_name, supplierEntry)
     }
@@ -440,12 +416,8 @@ export async function getDirectoryMaterialCategoriesForWorkspace(
     }))
     .sort((a, b) => a.category.localeCompare(b.category, "ru"))
 
-  const units = Array.from(unitMap.values()).sort((a, b) =>
-    a.label.localeCompare(b.label, "ru")
-  )
-  const suppliers = Array.from(supplierMap.values()).sort((a, b) =>
-    a.name.localeCompare(b.name, "ru")
-  )
+  const units = Array.from(unitMap.values()).sort((a, b) => a.label.localeCompare(b.label, "ru"))
+  const suppliers = Array.from(supplierMap.values()).sort((a, b) => a.name.localeCompare(b.name, "ru"))
 
   return {
     data: { categories, units, suppliers },

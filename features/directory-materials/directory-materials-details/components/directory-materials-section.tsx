@@ -23,14 +23,14 @@ const SKELETON_ROW_COUNT = 6
 function DirectoryMaterialsRowSkeleton() {
   return (
     <div className="mx-3 my-1.5 grid gap-3 rounded-md border border-border p-3 xl:grid-cols-[minmax(520px,1.15fr)_minmax(520px,0.85fr)]">
-      <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(0,1fr)]">
-        <div className="min-w-0 rounded-md border border-border p-2">
-          <Skeleton className="mb-2 h-3 w-16" />
-          <Skeleton className="h-4 w-full max-w-md" />
-        </div>
+      <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(96px,0.18fr)_minmax(0,1fr)]">
         <div className="min-w-0 rounded-md border border-border p-2">
           <Skeleton className="mb-2 h-3 w-8" />
           <Skeleton className="h-4 w-20" />
+        </div>
+        <div className="min-w-0 rounded-md border border-border p-2">
+          <Skeleton className="mb-2 h-3 w-16" />
+          <Skeleton className="h-4 w-full max-w-md" />
         </div>
       </div>
       <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(180px,0.75fr)_minmax(280px,1fr)]">

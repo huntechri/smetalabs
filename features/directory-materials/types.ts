@@ -24,6 +24,8 @@ export type DirectoryMaterialMutationInput = {
   supplierName?: string | null
   imageUrl?: string | null
   description?: string | null
+  aliases?: string[]
+  keywords?: string[]
   sourceName?: string | null
   sourceExternalRowKey?: string | null
   currencyCode?: string
@@ -45,6 +47,8 @@ export type DirectoryMaterial = {
   supplierId: string | null
   imageUrl: string | null
   description: string | null
+  aliases: string[]
+  keywords: string[]
   status: DirectoryMaterialStatus
   version: number
   metadata: {
@@ -130,6 +134,8 @@ export type DirectoryMaterialImportRawRow = Partial<{
   supplierName: string
   supplier_name: string
   description: string
+  aliases: string | string[]
+  keywords: string | string[]
   imageUrl: string
   image_url: string
   currencyCode: string
@@ -140,7 +146,10 @@ export type DirectoryMaterialImportRawRow = Partial<{
   source_external_row_key: string
 }>
 
-export type DirectoryMaterialImportNormalizedRow = DirectoryMaterialMutationInput
+export type DirectoryMaterialImportNormalizedRow = DirectoryMaterialMutationInput & {
+  aliases: string[]
+  keywords: string[]
+}
 
 export type DirectoryMaterialImportJob = {
   id: string

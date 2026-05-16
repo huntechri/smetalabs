@@ -81,10 +81,7 @@ export type DirectoryWorksListResponse = {
 export type DirectoryWorkCategoryOption = {
   category: string
   total: number
-  subcategories: Array<{
-    name: string
-    total: number
-  }>
+  subcategories: Array<{ name: string; total: number }>
 }
 
 export type DirectoryWorkUnitOption = {
@@ -94,14 +91,8 @@ export type DirectoryWorkUnitOption = {
 }
 
 export type DirectoryWorksCategoriesResponse = {
-  data: {
-    categories: DirectoryWorkCategoryOption[]
-    units: DirectoryWorkUnitOption[]
-  }
-  meta: {
-    totalCategories: number
-    totalUnits: number
-  }
+  data: { categories: DirectoryWorkCategoryOption[]; units: DirectoryWorkUnitOption[] }
+  meta: { totalCategories: number; totalUnits: number }
 }
 
 export type DirectoryWorkAiSearchInput = {
@@ -133,13 +124,7 @@ export type DirectoryWorkAiSearchResponse = {
 }
 
 export type DirectoryWorkEmbeddingProcessResponse = {
-  data: {
-    processed: number
-    failed: number
-    pending: number
-    modelName: string
-    dimensions: number
-  }
+  data: { processed: number; failed: number; pending: number; modelName: string; dimensions: number }
 }
 
 export type DirectoryWorkImportJobStatus =
@@ -187,10 +172,7 @@ export type DirectoryWorkImportRawRow = Partial<{
   effective_date: string
 }>
 
-export type DirectoryWorkImportNormalizedRow = Omit<
-  DirectoryWorkMutationInput,
-  "insertAfterWorkId"
-> & {
+export type DirectoryWorkImportNormalizedRow = Omit<DirectoryWorkMutationInput, "insertAfterWorkId"> & {
   aliases: string[]
   keywords: string[]
   vatRate: number | null
@@ -226,7 +208,7 @@ export type DirectoryWorkImportRow = {
   id: string
   jobId: string
   rowNumber: number
-  batchNumber: number | null
+  batchNumber?: number | null
   rawData: Record<string, unknown>
   normalizedData: DirectoryWorkImportNormalizedRow | Record<string, unknown>
   status: DirectoryWorkImportRowStatus
@@ -243,7 +225,7 @@ export type DirectoryWorkImportRow = {
 }
 
 export type DirectoryWorkImportCreateInput = {
-  rows?: Array<Record<string, unknown>>
+  rows: Array<Record<string, unknown>>
   fileName?: string | null
   fileMimeType?: string | null
   fileSizeBytes?: number | null
@@ -258,15 +240,10 @@ export type DirectoryWorkImportBatchInput = {
   isLastBatch?: boolean
 }
 
-export type DirectoryWorkImportApplyInput = {
-  batchSize?: number
-}
+export type DirectoryWorkImportApplyInput = { batchSize?: number }
 
 export type DirectoryWorkImportPreviewResponse = {
-  data: {
-    job: DirectoryWorkImportJob
-    rows: DirectoryWorkImportRow[]
-  }
+  data: { job: DirectoryWorkImportJob; rows: DirectoryWorkImportRow[] }
 }
 
 export type DirectoryWorkImportApplyResponse = {

@@ -15,7 +15,7 @@ import type {
 } from "../types"
 
 const DEFAULT_PREVIEW_LIMIT = 100
-const DEFAULT_APPLY_BATCH_SIZE = 200
+const DEFAULT_APPLY_BATCH_SIZE = 500
 
 type ImportJobDbRow = {
   id: string
@@ -514,7 +514,8 @@ export async function applyDirectoryMaterialImportBatchForWorkspace(
     throw new DirectoryMaterialsApiError("BAD_REQUEST", "Импорт материалов можно применять только после загрузки всех пакетов", 400)
   }
 
-  const batchSize = Math.max(1, Math.min(input.batchSize ?? DEFAULT_APPLY_BATCH_SIZE, 500))
+  const requestedBatchSize = input.batchSize ?? DEFAULT_APPLY_BATCH_SIZE
+  const batchSize = Math.max(1, Math.min(Math.max(requestedBatchSize, DEFAULT_APPLY_BATCH_SIZE), 500))
   await supabase
     .from("directory_material_import_jobs")
     .update({ status: "applying", started_at: jobRow.started_at ?? new Date().toISOString(), last_error: null })
@@ -560,13 +561,15 @@ export async function applyDirectoryMaterialImportBatchForWorkspace(
 
     if (insertError) throw insertError
     const materialIds = ((inserted ?? []) as Array<{ id: string }>).map((material) => material.id)
-
-    await Promise.all(rowsToApply.map((row, index) => supabase
+    const appliedAt = new Date().toISOString()
+    const { error: rowsUpdateError } = await supabase
       .from("directory_material_import_rows")
-      .update({ status: "applied", applied_material_id: materialIds[index], applied_at: new Date().toISOString() })
+      .update({ status: "applied", applied_at: appliedAt })
       .eq("workspace_owner_id", workspaceOwnerId)
-      .eq("id", row.id)
-    ))
+      .eq("job_id", id)
+      .in("id", rowsToApply.map((row) => row.id))
+
+    if (rowsUpdateError) throw rowsUpdateError
 
     const nextAppliedRows = toNumber(jobRow.applied_rows) + rowsToApply.length
     const completed = !hasMore

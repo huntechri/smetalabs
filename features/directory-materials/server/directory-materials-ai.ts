@@ -22,6 +22,8 @@ type MaterialForEmbeddingDbRow = {
   code: string | null
   supplier_name: string | null
   description: string | null
+  aliases: string[] | null
+  keywords: string[] | null
 }
 
 type MaterialAiSearchDbRow = MaterialForEmbeddingDbRow & {
@@ -56,7 +58,14 @@ function normalizeText(value: string | null | undefined) {
   return (value ?? "").trim().replace(/\s+/g, " ")
 }
 
+function normalizeList(value: string[] | null | undefined) {
+  return (value ?? []).map((item) => normalizeText(item)).filter(Boolean)
+}
+
 function buildEmbeddingInputText(row: MaterialForEmbeddingDbRow) {
+  const aliases = normalizeList(row.aliases)
+  const keywords = normalizeList(row.keywords)
+
   return [
     `Материал: ${row.name}`,
     row.code ? `Код: ${row.code}` : null,
@@ -65,6 +74,8 @@ function buildEmbeddingInputText(row: MaterialForEmbeddingDbRow) {
     `Единица: ${row.unit_label || row.unit_code}`,
     `Цена: ${toNumber(row.price_amount)} ${row.currency_code}`,
     row.supplier_name ? `Поставщик: ${row.supplier_name}` : null,
+    aliases.length > 0 ? `Синонимы: ${aliases.join("; ")}` : null,
+    keywords.length > 0 ? `Ключевые слова: ${keywords.join("; ")}` : null,
     row.description ? `Описание: ${row.description}` : null,
   ]
     .filter(Boolean)
@@ -108,6 +119,8 @@ function mapAiSearchRow(row: MaterialAiSearchDbRow): DirectoryMaterial & {
     supplierId: row.supplier_id,
     imageUrl: row.image_url,
     description: row.description,
+    aliases: row.aliases ?? [],
+    keywords: row.keywords ?? [],
     status: row.status,
     version: row.version,
     metadata: {
@@ -176,7 +189,7 @@ export async function enqueueDirectoryMaterialEmbeddingForWorkspace(
 ) {
   const { data, error } = await supabase
     .from("directory_materials")
-    .select("id,name,unit_label,unit_code,price_amount,currency_code,category,subcategory,code,supplier_name,description")
+    .select("id,name,unit_label,unit_code,price_amount,currency_code,category,subcategory,code,supplier_name,description,aliases,keywords")
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", materialId)
     .eq("status", "active")

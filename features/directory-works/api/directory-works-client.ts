@@ -3,7 +3,9 @@ import type {
   DirectoryWorkAiSearchInput,
   DirectoryWorkAiSearchResponse,
   DirectoryWorkEmbeddingProcessResponse,
+  DirectoryWorkImportApplyInput,
   DirectoryWorkImportApplyResponse,
+  DirectoryWorkImportBatchInput,
   DirectoryWorkImportCreateInput,
   DirectoryWorkImportPreviewResponse,
   DirectoryWorkMutationInput,
@@ -138,6 +140,23 @@ export function createDirectoryWorkImportJob(input: DirectoryWorkImportCreateInp
   )
 }
 
+export function appendDirectoryWorkImportBatch({
+  id,
+  input,
+}: {
+  id: string
+  input: DirectoryWorkImportBatchInput
+}) {
+  return fetchJson<DirectoryWorkImportPreviewResponse>(
+    `/api/directory-works/import-jobs/${id}/batches`,
+    "загрузки пакета работ",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    }
+  )
+}
+
 export function fetchDirectoryWorkImportJob(id: string) {
   return fetchJson<DirectoryWorkImportPreviewResponse>(
     `/api/directory-works/import-jobs/${id}`,
@@ -145,12 +164,19 @@ export function fetchDirectoryWorkImportJob(id: string) {
   )
 }
 
-export function applyDirectoryWorkImportJob(id: string) {
+export function applyDirectoryWorkImportJob({
+  id,
+  input,
+}: {
+  id: string
+  input?: DirectoryWorkImportApplyInput
+}) {
   return fetchJson<DirectoryWorkImportApplyResponse>(
     `/api/directory-works/import-jobs/${id}/apply`,
     "применения импорта работ",
     {
       method: "POST",
+      body: JSON.stringify(input ?? {}),
     }
   )
 }

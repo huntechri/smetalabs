@@ -24,6 +24,8 @@ export type DirectoryMaterialMutationInput = {
   supplierName?: string | null
   imageUrl?: string | null
   description?: string | null
+  aliases?: string[]
+  keywords?: string[]
   sourceName?: string | null
   sourceExternalRowKey?: string | null
   currencyCode?: string
@@ -45,6 +47,8 @@ export type DirectoryMaterial = {
   supplierId: string | null
   imageUrl: string | null
   description: string | null
+  aliases: string[]
+  keywords: string[]
   status: DirectoryMaterialStatus
   version: number
   metadata: {
@@ -72,10 +76,7 @@ export type DirectoryMaterialsListResponse = {
 export type DirectoryMaterialCategoryOption = {
   category: string
   total: number
-  subcategories: Array<{
-    name: string
-    total: number
-  }>
+  subcategories: Array<{ name: string; total: number }>
 }
 
 export type DirectoryMaterialUnitOption = {
@@ -95,11 +96,7 @@ export type DirectoryMaterialsCategoriesResponse = {
     units: DirectoryMaterialUnitOption[]
     suppliers: DirectoryMaterialSupplierOption[]
   }
-  meta: {
-    totalCategories: number
-    totalUnits: number
-    totalSuppliers: number
-  }
+  meta: { totalCategories: number; totalUnits: number; totalSuppliers: number }
 }
 
 export type DirectoryMaterialImportJobStatus =
@@ -137,6 +134,8 @@ export type DirectoryMaterialImportRawRow = Partial<{
   supplierName: string
   supplier_name: string
   description: string
+  aliases: string | string[]
+  keywords: string | string[]
   imageUrl: string
   image_url: string
   currencyCode: string
@@ -147,7 +146,10 @@ export type DirectoryMaterialImportRawRow = Partial<{
   source_external_row_key: string
 }>
 
-export type DirectoryMaterialImportNormalizedRow = DirectoryMaterialMutationInput
+export type DirectoryMaterialImportNormalizedRow = DirectoryMaterialMutationInput & {
+  aliases: string[]
+  keywords: string[]
+}
 
 export type DirectoryMaterialImportJob = {
   id: string
@@ -178,6 +180,7 @@ export type DirectoryMaterialImportRow = {
   id: string
   jobId: string
   rowNumber: number
+  batchNumber?: number | null
   rawData: Record<string, unknown>
   normalizedData: DirectoryMaterialImportNormalizedRow | Record<string, unknown>
   status: DirectoryMaterialImportRowStatus
@@ -202,11 +205,17 @@ export type DirectoryMaterialImportCreateInput = {
   options?: Record<string, unknown>
 }
 
+export type DirectoryMaterialImportBatchInput = {
+  batchNumber: number
+  rowOffset: number
+  rows: Array<Record<string, unknown>>
+  isLastBatch?: boolean
+}
+
+export type DirectoryMaterialImportApplyInput = { batchSize?: number }
+
 export type DirectoryMaterialImportPreviewResponse = {
-  data: {
-    job: DirectoryMaterialImportJob
-    rows: DirectoryMaterialImportRow[]
-  }
+  data: { job: DirectoryMaterialImportJob; rows: DirectoryMaterialImportRow[] }
 }
 
 export type DirectoryMaterialImportApplyResponse = {
@@ -215,6 +224,7 @@ export type DirectoryMaterialImportApplyResponse = {
     appliedRows: number
     skippedRows: number
     appliedMaterialIds?: string[]
+    hasMore?: boolean
   }
 }
 

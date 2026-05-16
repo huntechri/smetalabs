@@ -1,6 +1,8 @@
 import type {
   DirectoryMaterial,
+  DirectoryMaterialImportApplyInput,
   DirectoryMaterialImportApplyResponse,
+  DirectoryMaterialImportBatchInput,
   DirectoryMaterialImportCreateInput,
   DirectoryMaterialImportPreviewResponse,
   DirectoryMaterialMutationInput,
@@ -50,23 +52,16 @@ async function fetchJson<T>(url: string, resource: string, init?: RequestInit) {
   return response.json() as Promise<T>
 }
 
-export function fetchDirectoryMaterials(
-  params: DirectoryMaterialsListParams = {}
-) {
+export function fetchDirectoryMaterials(params: DirectoryMaterialsListParams = {}) {
   return fetchJson<DirectoryMaterialsListResponse>(
     buildListUrl("/api/directory-materials", params),
     "справочника материалов"
   )
 }
 
-export function searchDirectoryMaterials(
-  params: DirectoryMaterialsListParams = {}
-) {
+export function searchDirectoryMaterials(params: DirectoryMaterialsListParams = {}) {
   return fetchJson<DirectoryMaterialsListResponse>(
-    buildListUrl("/api/directory-materials/search", {
-      sort: "relevance",
-      ...params,
-    }),
+    buildListUrl("/api/directory-materials/search", { sort: "relevance", ...params }),
     "поиска материалов"
   )
 }
@@ -83,10 +78,7 @@ export function createDirectoryMaterial(input: DirectoryMaterialMutationInput) {
   return fetchJson<{ data: DirectoryMaterial }>(
     "/api/directory-materials",
     "создания материала",
-    {
-      method: "POST",
-      body: JSON.stringify(input),
-    }
+    { method: "POST", body: JSON.stringify(input) }
   )
 }
 
@@ -100,10 +92,7 @@ export function updateDirectoryMaterial({
   return fetchJson<{ data: DirectoryMaterial }>(
     `/api/directory-materials/${id}`,
     "обновления материала",
-    {
-      method: "PATCH",
-      body: JSON.stringify(input),
-    }
+    { method: "PATCH", body: JSON.stringify(input) }
   )
 }
 
@@ -115,16 +104,25 @@ export function archiveDirectoryMaterial(id: string) {
   )
 }
 
-export function createDirectoryMaterialImportJob(
-  input: DirectoryMaterialImportCreateInput
-) {
+export function createDirectoryMaterialImportJob(input: DirectoryMaterialImportCreateInput) {
   return fetchJson<DirectoryMaterialImportPreviewResponse>(
     "/api/directory-materials/import-jobs",
     "импорта материалов",
-    {
-      method: "POST",
-      body: JSON.stringify(input),
-    }
+    { method: "POST", body: JSON.stringify(input) }
+  )
+}
+
+export function appendDirectoryMaterialImportBatch({
+  id,
+  input,
+}: {
+  id: string
+  input: DirectoryMaterialImportBatchInput
+}) {
+  return fetchJson<DirectoryMaterialImportPreviewResponse>(
+    `/api/directory-materials/import-jobs/${id}/batches`,
+    "загрузки пакета материалов",
+    { method: "POST", body: JSON.stringify(input) }
   )
 }
 
@@ -135,11 +133,17 @@ export function fetchDirectoryMaterialImportJob(id: string) {
   )
 }
 
-export function applyDirectoryMaterialImportJob(id: string) {
+export function applyDirectoryMaterialImportJob({
+  id,
+  input,
+}: {
+  id: string
+  input?: DirectoryMaterialImportApplyInput
+}) {
   return fetchJson<DirectoryMaterialImportApplyResponse>(
     `/api/directory-materials/import-jobs/${id}/apply`,
     "применения импорта материалов",
-    { method: "POST" }
+    { method: "POST", body: JSON.stringify(input ?? {}) }
   )
 }
 

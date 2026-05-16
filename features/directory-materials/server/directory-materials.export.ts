@@ -4,17 +4,22 @@ import type {
   DirectoryMaterialsExportFormat,
 } from "../types"
 
-const CSV_HEADERS = [
-  "Код",
-  "Название",
-  "Ед. изм.",
-  "Цена",
-  "Валюта",
-  "Категория",
-  "Подкатегория",
-  "Поставщик",
-  "Статус",
-  "Обновлено",
+const CSV_COLUMNS: Array<{
+  label: string
+  value: (material: DirectoryMaterial) => string | number | null
+}> = [
+  { label: "Код", value: (material) => material.code },
+  { label: "Название", value: (material) => material.name },
+  { label: "Ед. изм.", value: (material) => material.unitLabel || material.unit },
+  { label: "Цена", value: (material) => material.priceAmount },
+  { label: "Валюта", value: (material) => material.currencyCode },
+  { label: "Категория", value: (material) => material.category },
+  { label: "Подкатегория", value: (material) => material.subcategory },
+  { label: "Поставщик", value: (material) => material.supplierName },
+  { label: "Синонимы", value: (material) => material.aliases.join("; ") },
+  { label: "Ключевые слова", value: (material) => material.keywords.join("; ") },
+  { label: "Описание", value: (material) => material.description },
+  { label: "Ссылка на изображение", value: (material) => material.imageUrl },
 ]
 
 function escapeCsvCell(value: string | number | null | undefined) {
@@ -24,21 +29,12 @@ function escapeCsvCell(value: string | number | null | undefined) {
 }
 
 function buildCsv(materials: DirectoryMaterial[]) {
-  const rows = materials.map((material) => [
-    material.code,
-    material.name,
-    material.unit,
-    material.priceAmount,
-    material.currencyCode,
-    material.category,
-    material.subcategory,
-    material.supplierName,
-    material.status,
-    material.metadata.updatedAt,
-  ])
+  const rows = materials.map((material) =>
+    CSV_COLUMNS.map((column) => column.value(material))
+  )
 
-  return [CSV_HEADERS, ...rows]
-    .map((row) => row.map(escapeCsvCell).join(","))
+  return [CSV_COLUMNS.map((column) => column.label), ...rows]
+    .map((row) => row.map(escapeCsvCell).join(";"))
     .join("\n")
 }
 

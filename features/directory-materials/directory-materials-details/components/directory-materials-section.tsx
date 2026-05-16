@@ -21,10 +21,7 @@ function DirectoryMaterialsRowsSkeleton() {
   return (
     <div className="flex flex-col divide-y">
       {Array.from({ length: 8 }).map((_, index) => (
-        <div
-          key={index}
-          className="m-3 grid gap-3 rounded-md border p-3 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]"
-        >
+        <div key={index} className="m-3 grid gap-3 rounded-md border p-3 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]">
           <div className="flex min-w-0 flex-col gap-3 p-2">
             <Skeleton className="h-5 w-2/3" />
             <Skeleton className="h-4 w-1/3" />
@@ -46,32 +43,31 @@ export function DirectoryMaterialsSection() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const {
-    materials,
-    meta,
-    loading,
-    error,
-    isFetching,
-    saving,
-    importing,
-    createMaterial,
-    updateMaterial,
+    appendImportBatch,
+    applyImportJob,
     archiveMaterial,
     createImportJob,
-    applyImportJob,
+    createMaterial,
+    error,
+    importing,
+    isFetching,
+    loading,
+    materials,
+    meta,
+    saving,
+    updateMaterial,
   } = useDirectoryMaterials()
   const [formOpen, setFormOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
-  const [selectedMaterial, setSelectedMaterial] =
-    useState<DirectoryMaterial | null>(null)
+  const [selectedMaterial, setSelectedMaterial] = useState<DirectoryMaterial | null>(null)
 
   useEffect(() => {
     const handleCreate = () => {
       setSelectedMaterial(null)
       setFormOpen(true)
     }
-    const handleImport = () => {
-      setImportOpen(true)
-    }
+    const handleImport = () => setImportOpen(true)
+
     window.addEventListener(DIRECTORY_MATERIALS_CREATE_EVENT, handleCreate)
     window.addEventListener(DIRECTORY_MATERIALS_IMPORT_EVENT, handleImport)
     return () => {
@@ -82,11 +78,8 @@ export function DirectoryMaterialsSection() {
 
   const goToCursor = (cursor: number) => {
     const params = new URLSearchParams(searchParams.toString())
-    if (cursor <= 0) {
-      params.delete("cursor")
-    } else {
-      params.set("cursor", String(cursor))
-    }
+    if (cursor <= 0) params.delete("cursor")
+    else params.set("cursor", String(cursor))
     router.push(params.toString() ? `${pathname}?${params}` : pathname)
   }
 
@@ -96,9 +89,7 @@ export function DirectoryMaterialsSection() {
   }
 
   const handleArchive = async (material: DirectoryMaterial) => {
-    const confirmed = window.confirm(
-      `Архивировать материал «${material.name}»? Он исчезнет из активного списка.`
-    )
+    const confirmed = window.confirm(`Архивировать материал «${material.name}»? Он исчезнет из активного списка.`)
     if (!confirmed) return
     await archiveMaterial(material.id)
   }
@@ -108,7 +99,6 @@ export function DirectoryMaterialsSection() {
       await updateMaterial(selectedMaterial.id, input)
       return
     }
-
     await createMaterial(input)
   }
 
@@ -127,9 +117,8 @@ export function DirectoryMaterialsSection() {
       />
       <DirectoryMaterialImportDialog
         importing={importing}
-        onApplyJob={async (id) => {
-          await applyImportJob(id)
-        }}
+        onAppendBatch={appendImportBatch}
+        onApplyJob={applyImportJob}
         onCreateJob={createImportJob}
         onOpenChange={setImportOpen}
         open={importOpen}
@@ -166,9 +155,7 @@ export function DirectoryMaterialsSection() {
         {dialogs}
         <section className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm">
           <h2 className="text-base font-semibold">Материалы не найдены</h2>
-          <p className="mt-1 max-w-md text-sm text-muted-foreground">
-            Добавьте первый материал вручную или измените поиск.
-          </p>
+          <p className="mt-1 max-w-md text-sm text-muted-foreground">Добавьте первый материал вручную или измените поиск.</p>
         </section>
       </>
     )
@@ -181,36 +168,15 @@ export function DirectoryMaterialsSection() {
         {isFetching ? <div className="h-1 bg-muted" /> : null}
         <div className="flex flex-col divide-y">
           {materials.map((row) => (
-            <DirectoryMaterialsRow
-              key={row.id}
-              onArchive={handleArchive}
-              onEdit={handleEdit}
-              row={row}
-            />
+            <DirectoryMaterialsRow key={row.id} onArchive={handleArchive} onEdit={handleEdit} row={row} />
           ))}
         </div>
         {meta ? (
           <div className="flex items-center justify-between gap-3 border-t px-4 py-3 text-xs text-muted-foreground">
-            <span>
-              Страница {currentPage}. Всего материалов: {meta.total}.
-            </span>
+            <span>Страница {currentPage}. Всего материалов: {meta.total}.</span>
             <div className="flex items-center gap-2">
-              <Button
-                disabled={!hasPreviousPage || isFetching}
-                onClick={() => goToCursor(previousCursor)}
-                type="button"
-                variant="outline"
-              >
-                Назад
-              </Button>
-              <Button
-                disabled={!meta.hasMore || !meta.nextCursor || isFetching}
-                onClick={() => meta.nextCursor !== null && goToCursor(meta.nextCursor)}
-                type="button"
-                variant="outline"
-              >
-                Вперёд
-              </Button>
+              <Button disabled={!hasPreviousPage || isFetching} onClick={() => goToCursor(previousCursor)} type="button" variant="outline">Назад</Button>
+              <Button disabled={!meta.hasMore || !meta.nextCursor || isFetching} onClick={() => meta.nextCursor !== null && goToCursor(meta.nextCursor)} type="button" variant="outline">Вперёд</Button>
             </div>
           </div>
         ) : null}

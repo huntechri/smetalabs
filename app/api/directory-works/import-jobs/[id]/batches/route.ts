@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { handleDirectoryMaterialImportApplyRequest } from "@/features/directory-materials/server/directory-materials.route-handlers"
+import { handleDirectoryWorkImportBatchRequest } from "@/features/directory-works/server/directory-works.route-handlers"
 
 export const dynamic = "force-dynamic"
 
@@ -9,5 +9,5 @@ type RouteContext = {
 
 export async function POST(request: NextRequest, { params }: RouteContext) {
   const { id } = await params
-  return handleDirectoryMaterialImportApplyRequest(request, id)
+  return handleDirectoryWorkImportBatchRequest(request, id)
 }

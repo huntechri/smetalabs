@@ -20,11 +20,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { parseCsvFileInBatches, type CsvImportBatch } from "@/features/directories/lib/csv-import-batches"
 import type {
+  DirectoryWorkImportApplyInput,
+  DirectoryWorkImportApplyResponse,
+  DirectoryWorkImportBatchInput,
   DirectoryWorkImportCreateInput,
   DirectoryWorkImportPreviewResponse,
   DirectoryWorkImportRowStatus,
 } from "@/features/directory-works/types"
+
+const IMPORT_BATCH_SIZE = 1500
+const APPLY_BATCH_SIZE = 200
 
 const HEADER_ALIASES: Record<string, string> = {
   code: "code",
@@ -79,82 +86,6 @@ const STATUS_LABELS: Record<DirectoryWorkImportRowStatus, string> = {
   skipped: "Пропущено",
 }
 
-function normalizeHeader(header: string) {
-  const key = header.trim().toLowerCase().replace(/\s+/g, " ").replace(/-/g, "_")
-  return HEADER_ALIASES[key] ?? key.replace(/\s+/g, "_")
-}
-
-function detectDelimiter(firstLine: string) {
-  return (firstLine.match(/;/g) ?? []).length > (firstLine.match(/,/g) ?? []).length
-    ? ";"
-    : ","
-}
-
-function parseCsvRows(content: string, delimiter: string) {
-  const rows: string[][] = []
-  let row: string[] = []
-  let value = ""
-  let quoted = false
-
-  for (let index = 0; index < content.length; index += 1) {
-    const char = content[index]
-    const next = content[index + 1]
-
-    if (char === '"') {
-      if (quoted && next === '"') {
-        value += '"'
-        index += 1
-      } else {
-        quoted = !quoted
-      }
-      continue
-    }
-
-    if (!quoted && char === delimiter) {
-      row.push(value.trim())
-      value = ""
-      continue
-    }
-
-    if (!quoted && (char === "\n" || char === "\r")) {
-      if (char === "\r" && next === "\n") index += 1
-      row.push(value.trim())
-      if (row.some(Boolean)) rows.push(row)
-      row = []
-      value = ""
-      continue
-    }
-
-    value += char
-  }
-
-  row.push(value.trim())
-  if (row.some(Boolean)) rows.push(row)
-  return rows
-}
-
-function parseCsv(content: string, fallbackSourceName: string) {
-  const trimmed = content.replace(/^\uFEFF/, "").trim()
-  if (!trimmed) return { rows: [], sourceName: fallbackSourceName || null }
-
-  const delimiter = detectDelimiter(trimmed.split(/\r?\n/, 1)[0] ?? "")
-  const [headers = [], ...dataRows] = parseCsvRows(trimmed, delimiter)
-  const normalizedHeaders = headers.map(normalizeHeader)
-
-  const rows = dataRows
-    .map((dataRow) => {
-      const record: Record<string, unknown> = {}
-      normalizedHeaders.forEach((header, index) => {
-        const value = dataRow[index]?.trim()
-        if (header && value) record[header] = value
-      })
-      return record
-    })
-    .filter((row) => Object.keys(row).length > 0)
-
-  return { rows, sourceName: fallbackSourceName || null }
-}
-
 function formatBytes(bytes: number | null | undefined) {
   if (!bytes) return "—"
   if (bytes < 1024) return `${bytes} Б`
@@ -171,20 +102,20 @@ export function DirectoryWorkImportDialog({
   onOpenChange,
   importing,
   onCreateJob,
+  onAppendBatch,
   onApplyJob,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   importing: boolean
-  onCreateJob: (
-    input: DirectoryWorkImportCreateInput
-  ) => Promise<DirectoryWorkImportPreviewResponse["data"]>
-  onApplyJob: (id: string) => Promise<void>
+  onCreateJob: (input: DirectoryWorkImportCreateInput) => Promise<DirectoryWorkImportPreviewResponse["data"]>
+  onAppendBatch: (id: string, input: DirectoryWorkImportBatchInput) => Promise<DirectoryWorkImportPreviewResponse["data"]>
+  onApplyJob: (id: string, input?: DirectoryWorkImportApplyInput) => Promise<DirectoryWorkImportApplyResponse["data"]>
 }) {
   const [file, setFile] = useState<File | null>(null)
   const [sourceName, setSourceName] = useState("")
-  const [preview, setPreview] =
-    useState<DirectoryWorkImportPreviewResponse["data"] | null>(null)
+  const [preview, setPreview] = useState<DirectoryWorkImportPreviewResponse["data"] | null>(null)
+  const [progress, setProgress] = useState("")
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -192,6 +123,7 @@ export function DirectoryWorkImportDialog({
       setFile(null)
       setSourceName("")
       setPreview(null)
+      setProgress("")
       setError(null)
     }
   }, [open])
@@ -199,7 +131,15 @@ export function DirectoryWorkImportDialog({
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFile(event.target.files?.[0] ?? null)
     setPreview(null)
+    setProgress("")
     setError(null)
+  }
+
+  const sendBatch = async (jobId: string, batch: CsvImportBatch, isLastBatch: boolean) => {
+    const nextPreview = await onAppendBatch(jobId, { ...batch, isLastBatch })
+    setPreview(nextPreview)
+    setProgress(`Загружено строк: ${nextPreview.job.totalRows}. Пакет ${batch.batchNumber}.`)
+    return nextPreview
   }
 
   const handleCreatePreview = async () => {
@@ -210,21 +150,37 @@ export function DirectoryWorkImportDialog({
 
     try {
       setError(null)
-      const parsed = parseCsv(await file.text(), sourceName.trim())
-      if (parsed.rows.length === 0) {
+      setProgress("Создаём импорт...")
+      const jobData = await onCreateJob({
+        rows: [],
+        fileName: file.name,
+        fileMimeType: file.type || "text/csv",
+        fileSizeBytes: file.size,
+        sourceName: sourceName.trim() || null,
+        options: { batchSize: IMPORT_BATCH_SIZE },
+      })
+
+      let latestPreview = jobData
+      let pendingBatch: CsvImportBatch | null = null
+      for await (const batch of parseCsvFileInBatches({
+        file,
+        headerAliases: HEADER_ALIASES,
+        batchSize: IMPORT_BATCH_SIZE,
+        onProgress: ({ rowsRead, batchesRead }) => setProgress(`Прочитано строк: ${rowsRead}. Подготовлено пакетов: ${batchesRead}.`),
+      })) {
+        if (pendingBatch) latestPreview = await sendBatch(jobData.job.id, pendingBatch, false)
+        pendingBatch = batch
+      }
+
+      if (!pendingBatch) {
+        setProgress("")
         setError("Файл не содержит строк для импорта")
         return
       }
 
-      setPreview(
-        await onCreateJob({
-          rows: parsed.rows,
-          fileName: file.name,
-          fileMimeType: file.type || "text/csv",
-          fileSizeBytes: file.size,
-          sourceName: parsed.sourceName,
-        })
-      )
+      latestPreview = await sendBatch(jobData.job.id, pendingBatch, true)
+      setPreview(latestPreview)
+      setProgress(`Загрузка завершена. Всего строк: ${latestPreview.job.totalRows}.`)
     } catch (err) {
       setError(getErrorMessage(err))
     }
@@ -235,7 +191,14 @@ export function DirectoryWorkImportDialog({
 
     try {
       setError(null)
-      await onApplyJob(preview.job.id)
+      let hasMore = true
+      let appliedTotal = preview.job.appliedRows
+      while (hasMore) {
+        const response = await onApplyJob(preview.job.id, { batchSize: APPLY_BATCH_SIZE })
+        hasMore = Boolean(response.hasMore)
+        appliedTotal = response.job.appliedRows
+        setProgress(`Применено строк: ${appliedTotal}.`)
+      }
       onOpenChange(false)
     } catch (err) {
       setError(getErrorMessage(err))
@@ -243,8 +206,7 @@ export function DirectoryWorkImportDialog({
   }
 
   const rows = preview?.rows ?? []
-  const hasApplyableRows =
-    preview !== null && preview.job.validRows + preview.job.warningRows > 0
+  const hasApplyableRows = preview !== null && preview.job.validRows + preview.job.warningRows > 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -252,9 +214,7 @@ export function DirectoryWorkImportDialog({
         <DialogHeader>
           <DialogTitle>Импорт работ</DialogTitle>
           <DialogDescription>
-            Загрузите CSV с колонками title, unit, rate, category и
-            дополнительными полями. Данные сначала попадут в staging preview,
-            а в справочник будут записаны только после подтверждения.
+            Загрузите CSV с колонками title, unit, rate, category и дополнительными полями. Большие файлы отправляются частями.
           </DialogDescription>
         </DialogHeader>
 
@@ -262,30 +222,16 @@ export function DirectoryWorkImportDialog({
           <div className="grid gap-3 sm:grid-cols-[1fr_240px]">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="directory-work-import-file">CSV-файл</Label>
-              <Input
-                accept=".csv,text/csv"
-                id="directory-work-import-file"
-                onChange={handleFileChange}
-                type="file"
-              />
+              <Input accept=".csv,text/csv" id="directory-work-import-file" onChange={handleFileChange} type="file" />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="directory-work-import-source">Источник</Label>
-              <Input
-                id="directory-work-import-source"
-                maxLength={120}
-                onChange={(event) => setSourceName(event.target.value)}
-                placeholder="Например: internal-catalog"
-                value={sourceName}
-              />
+              <Input id="directory-work-import-source" maxLength={120} onChange={(event) => setSourceName(event.target.value)} placeholder="Например: internal-catalog" value={sourceName} />
             </div>
           </div>
 
-          {file ? (
-            <p className="text-xs/relaxed text-muted-foreground">
-              Выбран файл: {file.name}, {formatBytes(file.size)}
-            </p>
-          ) : null}
+          {file ? <p className="text-xs/relaxed text-muted-foreground">Выбран файл: {file.name}, {formatBytes(file.size)}</p> : null}
+          {progress ? <p className="text-xs/relaxed text-muted-foreground">{progress}</p> : null}
 
           {preview ? (
             <div className="grid gap-3 rounded-md border border-border p-3">
@@ -296,7 +242,6 @@ export function DirectoryWorkImportDialog({
                 <span>Ошибки: {preview.job.errorRows}</span>
                 <span>Дубли: {preview.job.duplicateRows}</span>
               </div>
-
               <div className="max-h-80 overflow-auto rounded-md border">
                 <Table className="min-w-[720px]">
                   <TableHeader className="bg-muted text-muted-foreground">
@@ -320,20 +265,14 @@ export function DirectoryWorkImportDialog({
                           <TableCell>{String(normalized.title ?? "—")}</TableCell>
                           <TableCell>{String(normalized.unit ?? "—")}</TableCell>
                           <TableCell>{String(normalized.rate ?? "—")}</TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {messages.length > 0 ? messages.join("; ") : "—"}
-                          </TableCell>
+                          <TableCell className="text-muted-foreground">{messages.length > 0 ? messages.join("; ") : "—"}</TableCell>
                         </TableRow>
                       )
                     })}
                   </TableBody>
                 </Table>
               </div>
-              {rows.length > 50 ? (
-                <p className="text-xs/relaxed text-muted-foreground">
-                  В preview показаны первые 50 строк из {rows.length}.
-                </p>
-              ) : null}
+              {preview.job.totalRows > rows.length ? <p className="text-xs/relaxed text-muted-foreground">В preview показаны первые {rows.length} строк из {preview.job.totalRows}.</p> : null}
             </div>
           ) : null}
 
@@ -341,29 +280,9 @@ export function DirectoryWorkImportDialog({
         </div>
 
         <DialogFooter showCloseButton={false}>
-          <Button
-            disabled={importing}
-            onClick={() => onOpenChange(false)}
-            type="button"
-            variant="outline"
-          >
-            Отмена
-          </Button>
-          <Button
-            disabled={importing || !file}
-            onClick={handleCreatePreview}
-            type="button"
-            variant="outline"
-          >
-            {importing ? "Обработка..." : "Создать preview"}
-          </Button>
-          <Button
-            disabled={importing || !hasApplyableRows}
-            onClick={handleApply}
-            type="button"
-          >
-            {importing ? "Применение..." : "Применить импорт"}
-          </Button>
+          <Button disabled={importing} onClick={() => onOpenChange(false)} type="button" variant="outline">Отмена</Button>
+          <Button disabled={importing || !file} onClick={handleCreatePreview} type="button" variant="outline">{importing ? "Обработка..." : "Создать preview"}</Button>
+          <Button disabled={importing || !hasApplyableRows} onClick={handleApply} type="button">{importing ? "Применение..." : "Применить импорт"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

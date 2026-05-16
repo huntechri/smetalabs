@@ -127,6 +127,24 @@ function toNullableString(value: unknown) {
   return trimmed.length > 0 ? trimmed : null
 }
 
+function splitList(value: unknown) {
+  if (Array.isArray(value)) {
+    return Array.from(new Set(value.map((item) => toNullableString(item)).filter(Boolean))) as string[]
+  }
+
+  const stringValue = toNullableString(value)
+  if (!stringValue) return []
+
+  return Array.from(
+    new Set(
+      stringValue
+        .split(/[;,|]/g)
+        .map((item) => item.trim().replace(/\s+/g, " "))
+        .filter(Boolean)
+    )
+  )
+}
+
 function getRawValue(row: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
     const value = row[key]
@@ -176,7 +194,7 @@ function normalizeImportRow(
 ): DirectoryMaterialImportNormalizedRow & { errors: string[]; warnings: string[] } {
   const name = toNullableString(getRawValue(rawData, ["name", "title", "наименование", "название"])) ?? ""
   const unit =
-    toNullableString(getRawValue(rawData, ["unit", "unit_label", "unit_code", "единица"])) ?? ""
+    toNullableString(getRawValue(rawData, ["unit", "unit_label", "unit_code", "единица", "ед. изм."])) ?? ""
   const category = toNullableString(getRawValue(rawData, ["category", "категория"])) ?? ""
   const rawPrice = getRawValue(rawData, ["price", "price_amount", "rate", "цена"])
   const price = normalizeNumber(rawPrice)
@@ -207,8 +225,10 @@ function normalizeImportRow(
     supplierName: toNullableString(
       getRawValue(rawData, ["supplierName", "supplier_name", "supplier", "поставщик"])
     ),
-    imageUrl: toNullableString(getRawValue(rawData, ["imageUrl", "image_url"])),
+    imageUrl: toNullableString(getRawValue(rawData, ["imageUrl", "image_url", "ссылка на изображение"])),
     description: toNullableString(getRawValue(rawData, ["description", "описание"])),
+    aliases: splitList(getRawValue(rawData, ["aliases", "alias", "синонимы"])),
+    keywords: splitList(getRawValue(rawData, ["keywords", "keyword", "ключевые слова"])),
     sourceName:
       toNullableString(getRawValue(rawData, ["sourceName", "source_name", "источник"])) ??
       fallbackSourceName,
@@ -502,6 +522,8 @@ function toInsertRow(
     supplier_id: null,
     image_url: toNullableString(row.imageUrl),
     description: toNullableString(row.description),
+    aliases: row.aliases ?? [],
+    keywords: row.keywords ?? [],
     source_name: toNullableString(row.sourceName),
     source_external_row_key: toNullableString(row.sourceExternalRowKey),
     dedupe_fingerprint: "pending",

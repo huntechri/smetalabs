@@ -1,8 +1,8 @@
 # SmetaLabs — Filemap
 
-> Last updated: 2026-05-15
+> Last updated: 2026-05-16
 >
-> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md).
+> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For cross-module search architecture, see [`docs/search-architecture.md`](./search-architecture.md). For directory module conventions, see [`docs/directory-module-standard.md`](./directory-module-standard.md).
 
 ---
 
@@ -13,7 +13,7 @@ smetalabs/
 ├── app/                    # Next.js App Router routes, layouts, API routes, server actions
 ├── components/             # shared app components and shadcn/ui primitives
 ├── db/                     # Drizzle client, schema, migrations, seed scripts
-├── docs/                   # architecture, filemap, account-settings, directory contracts and design-system documentation
+├── docs/                   # architecture, filemap, account-settings, directory contracts, design-system, search and module standards
 ├── features/               # feature-owned UI, hooks and screens
 ├── hooks/                  # global hooks only
 ├── lib/                    # shared infra, auth helpers, Supabase clients, utilities
@@ -140,7 +140,7 @@ features/
 │   ├── directory-materials-details/components/ # list rows, form dialog, import dialog
 │   ├── hooks/              # TanStack Query hooks and mutations
 │   ├── lib/                # pure events/helpers
-│   ├── server/             # repository/service/import/export/AI route logic
+│   ├── server/             # repository/service/import/export/AI/embeddings
 │   └── types.ts            # feature-local materials catalog types
 ├── directory-works/
 │   ├── api/                # client API, errors, mappers, query keys/cache tags
@@ -155,6 +155,12 @@ features/
 ├── access-control/
 ├── account-settings/
 └── workspace-settings/
+    ├── api/                # team client, errors, mappers, query keys
+    ├── components/         # team management, workspace settings views
+    │   └── members/        # member table, row, actions, dialogs, mobile list
+    ├── hooks/              # TanStack Query hooks for members, domains, invitations
+    ├── __mocks__/          # workspace settings mock data
+    └── types.ts            # feature-local workspace settings types
 ```
 
 Feature folder convention:
@@ -197,7 +203,13 @@ db/
 │   ├── 015_directory_work_update_rpc.sql
 │   ├── 016_directory_works_large_catalog_read.sql
 │   ├── 017_directory_materials_import.sql
-│   └── 018_directory_materials_ai_search.sql
+│   ├── 017_fix_directory_works_search_ambiguous_id.sql
+│   ├── 018_directory_materials_ai_search.sql
+│   ├── 018_directory_works_staged_search.sql
+│   ├── 019_directory_materials_foundation.sql
+│   ├── 019_directory_works_manual_order.sql
+│   ├── 020_large_directory_import_batches.sql
+│   └── 021_material_search_terms.sql
 ├── scripts/
 │   └── seed-directory-works-load-test.sql
 └── schema/
@@ -223,7 +235,7 @@ db/
   → app/api/directory-materials/** exposes workspace-scoped read/search/CRUD/import/export/AI routes
   → features/directory-materials/** owns UI hooks, dialogs, repository/service/import/export/AI logic
   → docs/directory-materials-architecture.md fixes the production contract and rollout state
-  → db/schema/directory-materials.ts and db/migrations/017-018 directory_materials migrations provide import and AI storage/search additions
+  → db/schema/directory-materials.ts and db/migrations/017-021 directory_materials migrations provide foundation, import, AI storage/search and batch infrastructure
 ```
 
 The materials catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; import is staged and must not write raw uploaded rows directly into `directory_materials`. AI provider calls are server-only and scoped by the current workspace.
@@ -235,7 +247,7 @@ The materials catalog must stay workspace-scoped through `workspace_owner_id = w
   → app/api/directory-works/** exposes workspace-scoped read/search/CRUD/import/export/AI routes
   → features/directory-works/** owns UI hooks, dialogs, repository/service/search/import/export/embeddings
   → docs/directory-works-architecture.md fixes the production contract and hardening strategy
-  → db/schema/directory-works.ts and db/migrations/010-016 provide DB foundation, read RPCs, AI search and performance hardening
+  → db/schema/directory-works.ts and db/migrations/010-019 provide DB foundation, read RPCs, AI search, staged search, manual ordering and performance hardening
 ```
 
 ---
@@ -264,14 +276,32 @@ The materials catalog must stay workspace-scoped through `workspace_owner_id = w
 
 ## Recent directory/deployment updates
 
-- `docs/directory-materials-architecture.md` — production materials catalog contract, current rollout state and AI processing/search foundation.
+### Materials catalog (#105–#119, 2026-05-12 — 2026-05-16)
+- `docs/directory-materials-architecture.md` — production materials catalog contract, rollout state, AI processing/search, staged import and CSV export.
+- `docs/directory-module-standard.md` — standardised directory module conventions (applies to works, materials and future directories).
+- `db/migrations/017_directory_materials_import.sql` — staged import jobs and rows.
 - `db/migrations/018_directory_materials_ai_search.sql` — material-only AI search function over prepared embeddings.
-- `features/directory-materials/server/directory-materials-ai.ts` — materials AI data queue, provider-side processing and hybrid AI search logic.
-- `app/api/directory-materials/embeddings/process/route.ts` — material-only AI data processing endpoint.
-- `app/api/directory-materials/ai-search/route.ts` — material-only AI search endpoint.
-- `db/migrations/017_directory_materials_import.sql` — staged import jobs and rows for materials.
+- `db/migrations/019_directory_materials_foundation.sql` — materials table, categories, RLS and CRUD RPCs.
+- `db/migrations/020_large_directory_import_batches.sql` — batch-processing infrastructure for large CSV imports (>10k rows).
+- `db/migrations/021_material_search_terms.sql` — material-specific full-text and term-based search infrastructure.
+- `features/directory-materials/server/directory-materials.repository.ts` — materials CRUD repository.
+- `features/directory-materials/server/directory-materials.service.ts` — materials business logic layer.
 - `features/directory-materials/server/directory-materials-import.repository.ts` — materials CSV preview/apply flow with row validation, duplicate detection and conflict marking.
+- `features/directory-materials/server/directory-materials-large-import.repository.ts` — batch-based large import processing.
+- `features/directory-materials/server/directory-materials-fast-import.repository.ts` — accelerated import path for pre-validated data.
+- `features/directory-materials/server/directory-materials-ai.ts` — materials AI data queue, provider-side processing and hybrid AI search.
+- `features/directory-materials/server/directory-materials.export.ts` — materials CSV export logic.
 - `features/directory-materials/directory-materials-details/components/directory-material-import-dialog.tsx` — materials import dialog and CSV preview UI.
+- `app/api/directory-materials/import-jobs/[id]/apply-fast/route.ts` — fast-apply endpoint for pre-validated imports.
+
+### Works catalog (#103 + earlier, 2026-05-12 — 2026-05-16)
 - `docs/directory-works-architecture.md` — canonical implemented architecture for #64/#65-#71, including DB foundation, search, CRUD, import/export, AI search, cache/indexing and observability.
 - `docs/directory-works-performance-hardening.md` — focused #71 notes for cache/indexing/performance diagnostics.
+- `docs/directory-works-search-system.md` — works search architecture: staged, materialised, and AI-powered paths.
+- `docs/search-architecture.md` — cross-module search architecture overview.
+- `db/migrations/017_fix_directory_works_search_ambiguous_id.sql` — disambiguate id column in search functions.
+- `db/migrations/018_directory_works_staged_search.sql` — staged/materialised search path for works.
+- `db/migrations/019_directory_works_manual_order.sql` — manual ordering support for works catalog.
+
+### Deployment
 - `scripts/vercel-ignore-build.mjs` and `vercel.json` — guarded Vercel build/deployment behavior for primary vs non-primary branches.

@@ -3,6 +3,7 @@ import { ZodError } from "zod"
 import { DirectoryWorksApiError } from "../api/directory-works-errors"
 import {
   aiSearchDirectoryWorks,
+  appendDirectoryWorkImportBatch,
   applyDirectoryWorkImportJob,
   archiveDirectoryWork,
   createDirectoryWork,
@@ -20,6 +21,8 @@ import {
   parseDirectoryWorkCategoryStatus,
   parseDirectoryWorkEmbeddingProcessBody,
   parseDirectoryWorkId,
+  parseDirectoryWorkImportApplyBody,
+  parseDirectoryWorkImportBatchBody,
   parseDirectoryWorkImportCreateBody,
   parseDirectoryWorkMutationBody,
   parseDirectoryWorksExportParams,
@@ -38,11 +41,18 @@ async function readJsonBody(request: NextRequest) {
   try {
     return await request.json()
   } catch {
-    throw new DirectoryWorksApiError(
-      "BAD_REQUEST",
-      "Некорректное тело запроса",
-      400
-    )
+    throw new DirectoryWorksApiError("BAD_REQUEST", "Некорректное тело запроса", 400)
+  }
+}
+
+async function readOptionalJsonBody(request: NextRequest) {
+  const text = await request.text()
+  if (!text.trim()) return {}
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    throw new DirectoryWorksApiError("BAD_REQUEST", "Некорректное тело запроса", 400)
   }
 }
 
@@ -54,17 +64,9 @@ function toResponseBody(body: string | Buffer): BodyInit {
   return new Blob([bytes.buffer])
 }
 
-export function handleDirectoryWorksRouteError(
-  err: unknown,
-  routeLabel: string
-) {
-  if (err instanceof DirectoryWorksApiError) {
-    return jsonError(err.code, err.message, err.status)
-  }
-
-  if (err instanceof ZodError) {
-    return jsonError("BAD_REQUEST", getZodMessage(err), 400)
-  }
+export function handleDirectoryWorksRouteError(err: unknown, routeLabel: string) {
+  if (err instanceof DirectoryWorksApiError) return jsonError(err.code, err.message, err.status)
+  if (err instanceof ZodError) return jsonError("BAD_REQUEST", getZodMessage(err), 400)
 
   console.error(routeLabel, err)
   return jsonError("INTERNAL_ERROR", "Ошибка справочника работ", 500)
@@ -97,17 +99,11 @@ export async function handleDirectoryWorkDetailRequest(id: string) {
     const response = await getDirectoryWork(workId)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryWorksRouteError(
-      err,
-      "[GET /api/directory-works/[id]]"
-    )
+    return handleDirectoryWorksRouteError(err, "[GET /api/directory-works/[id]]")
   }
 }
 
-export async function handleDirectoryWorkUpdateRequest(
-  request: NextRequest,
-  id: string
-) {
+export async function handleDirectoryWorkUpdateRequest(request: NextRequest, id: string) {
   try {
     const workId = parseDirectoryWorkId(id)
     const body = await readJsonBody(request)
@@ -115,10 +111,7 @@ export async function handleDirectoryWorkUpdateRequest(
     const response = await updateDirectoryWork(workId, input)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryWorksRouteError(
-      err,
-      "[PATCH /api/directory-works/[id]]"
-    )
+    return handleDirectoryWorksRouteError(err, "[PATCH /api/directory-works/[id]]")
   }
 }
 
@@ -128,25 +121,17 @@ export async function handleDirectoryWorkArchiveRequest(id: string) {
     const response = await archiveDirectoryWork(workId)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryWorksRouteError(
-      err,
-      "[DELETE /api/directory-works/[id]]"
-    )
+    return handleDirectoryWorksRouteError(err, "[DELETE /api/directory-works/[id]]")
   }
 }
 
 export async function handleDirectoryWorksCategoriesRequest(request: NextRequest) {
   try {
-    const status = parseDirectoryWorkCategoryStatus(
-      request.nextUrl.searchParams.get("status")
-    )
+    const status = parseDirectoryWorkCategoryStatus(request.nextUrl.searchParams.get("status"))
     const response = await getDirectoryWorksCategories(status)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryWorksRouteError(
-      err,
-      "[GET /api/directory-works/categories]"
-    )
+    return handleDirectoryWorksRouteError(err, "[GET /api/directory-works/categories]")
   }
 }
 
@@ -157,10 +142,7 @@ export async function handleDirectoryWorkImportCreateRequest(request: NextReques
     const response = await createDirectoryWorkImportJob(input)
     return NextResponse.json(response, { status: 201 })
   } catch (err) {
-    return handleDirectoryWorksRouteError(
-      err,
-      "[POST /api/directory-works/import-jobs]"
-    )
+    return handleDirectoryWorksRouteError(err, "[POST /api/directory-works/import-jobs]")
   }
 }
 
@@ -170,31 +152,37 @@ export async function handleDirectoryWorkImportDetailRequest(id: string) {
     const response = await getDirectoryWorkImportJob(jobId)
     return NextResponse.json({ data: response })
   } catch (err) {
-    return handleDirectoryWorksRouteError(
-      err,
-      "[GET /api/directory-works/import-jobs/[id]]"
-    )
+    return handleDirectoryWorksRouteError(err, "[GET /api/directory-works/import-jobs/[id]]")
   }
 }
 
-export async function handleDirectoryWorkImportApplyRequest(id: string) {
+export async function handleDirectoryWorkImportBatchRequest(request: NextRequest, id: string) {
   try {
     const jobId = parseDirectoryWorkId(id)
-    const response = await applyDirectoryWorkImportJob(jobId)
+    const body = await readJsonBody(request)
+    const input = parseDirectoryWorkImportBatchBody(body)
+    const response = await appendDirectoryWorkImportBatch(jobId, input)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryWorksRouteError(
-      err,
-      "[POST /api/directory-works/import-jobs/[id]/apply]"
-    )
+    return handleDirectoryWorksRouteError(err, "[POST /api/directory-works/import-jobs/[id]/batches]")
+  }
+}
+
+export async function handleDirectoryWorkImportApplyRequest(request: NextRequest, id: string) {
+  try {
+    const jobId = parseDirectoryWorkId(id)
+    const body = await readOptionalJsonBody(request)
+    const input = parseDirectoryWorkImportApplyBody(body)
+    const response = await applyDirectoryWorkImportJob(jobId, input)
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleDirectoryWorksRouteError(err, "[POST /api/directory-works/import-jobs/[id]/apply]")
   }
 }
 
 export async function handleDirectoryWorksExportRequest(request: NextRequest) {
   try {
-    const { format, params } = parseDirectoryWorksExportParams(
-      request.nextUrl.searchParams
-    )
+    const { format, params } = parseDirectoryWorksExportParams(request.nextUrl.searchParams)
     const file = await exportDirectoryWorks(format, params)
     const date = new Date().toISOString().slice(0, 10)
 
@@ -206,10 +194,7 @@ export async function handleDirectoryWorksExportRequest(request: NextRequest) {
       },
     })
   } catch (err) {
-    return handleDirectoryWorksRouteError(
-      err,
-      "[GET /api/directory-works/export]"
-    )
+    return handleDirectoryWorksRouteError(err, "[GET /api/directory-works/export]")
   }
 }
 
@@ -220,25 +205,17 @@ export async function handleDirectoryWorksAiSearchRequest(request: NextRequest) 
     const response = await aiSearchDirectoryWorks(input)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryWorksRouteError(
-      err,
-      "[POST /api/directory-works/ai-search]"
-    )
+    return handleDirectoryWorksRouteError(err, "[POST /api/directory-works/ai-search]")
   }
 }
 
-export async function handleDirectoryWorkEmbeddingsProcessRequest(
-  request: NextRequest
-) {
+export async function handleDirectoryWorkEmbeddingsProcessRequest(request: NextRequest) {
   try {
     const body = await readJsonBody(request)
     const input = parseDirectoryWorkEmbeddingProcessBody(body)
     const response = await processDirectoryWorkEmbeddings(input.limit)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryWorksRouteError(
-      err,
-      "[POST /api/directory-works/embeddings/process]"
-    )
+    return handleDirectoryWorksRouteError(err, "[POST /api/directory-works/embeddings/process]")
   }
 }

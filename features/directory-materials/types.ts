@@ -72,10 +72,7 @@ export type DirectoryMaterialsListResponse = {
 export type DirectoryMaterialCategoryOption = {
   category: string
   total: number
-  subcategories: Array<{
-    name: string
-    total: number
-  }>
+  subcategories: Array<{ name: string; total: number }>
 }
 
 export type DirectoryMaterialUnitOption = {
@@ -95,11 +92,7 @@ export type DirectoryMaterialsCategoriesResponse = {
     units: DirectoryMaterialUnitOption[]
     suppliers: DirectoryMaterialSupplierOption[]
   }
-  meta: {
-    totalCategories: number
-    totalUnits: number
-    totalSuppliers: number
-  }
+  meta: { totalCategories: number; totalUnits: number; totalSuppliers: number }
 }
 
 export type DirectoryMaterialImportJobStatus =
@@ -178,7 +171,7 @@ export type DirectoryMaterialImportRow = {
   id: string
   jobId: string
   rowNumber: number
-  batchNumber: number | null
+  batchNumber?: number | null
   rawData: Record<string, unknown>
   normalizedData: DirectoryMaterialImportNormalizedRow | Record<string, unknown>
   status: DirectoryMaterialImportRowStatus
@@ -195,7 +188,7 @@ export type DirectoryMaterialImportRow = {
 }
 
 export type DirectoryMaterialImportCreateInput = {
-  rows?: Array<Record<string, unknown>>
+  rows: Array<Record<string, unknown>>
   fileName?: string | null
   fileMimeType?: string | null
   fileSizeBytes?: number | null
@@ -210,15 +203,10 @@ export type DirectoryMaterialImportBatchInput = {
   isLastBatch?: boolean
 }
 
-export type DirectoryMaterialImportApplyInput = {
-  batchSize?: number
-}
+export type DirectoryMaterialImportApplyInput = { batchSize?: number }
 
 export type DirectoryMaterialImportPreviewResponse = {
-  data: {
-    job: DirectoryMaterialImportJob
-    rows: DirectoryMaterialImportRow[]
-  }
+  data: { job: DirectoryMaterialImportJob; rows: DirectoryMaterialImportRow[] }
 }
 
 export type DirectoryMaterialImportApplyResponse = {

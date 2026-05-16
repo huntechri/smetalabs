@@ -10,10 +10,10 @@ import type {
   DirectoryMaterialImportRowStatus,
 } from "../types"
 
-const DEFAULT_FAST_APPLY_BATCH_SIZE = 5000
-const MAX_FAST_APPLY_BATCH_SIZE = 5000
+const DEFAULT_FAST_APPLY_BATCH_SIZE = 1000
+const MAX_FAST_APPLY_BATCH_SIZE = 1000
 const UPDATE_PRICE_CONCURRENCY = 25
-const MARK_ROWS_CHUNK_SIZE = 500
+const MARK_ROWS_CHUNK_SIZE = 250
 
 type ImportJobDbRow = {
   id: string
@@ -180,6 +180,20 @@ async function markImportJobFailed(workspaceOwnerId: string, id: string, error: 
     .eq("id", id)
 }
 
+async function countPendingApplyRows(workspaceOwnerId: string, jobId: string) {
+  const { count, error } = await supabase
+    .from("directory_material_import_rows")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .eq("job_id", jobId)
+    .in("action", ["create", "update"])
+    .in("status", ["valid", "warning"])
+    .is("applied_at", null)
+
+  if (error) throw error
+  return count ?? 0
+}
+
 async function updateMaterialPrices(workspaceOwnerId: string, userId: string, rows: ApplyRow[]) {
   const appliedIds: string[] = []
 
@@ -233,7 +247,7 @@ export async function applyFastDirectoryMaterialImportBatchForWorkspace(
   }
 
   const requestedBatchSize = input.batchSize ?? DEFAULT_FAST_APPLY_BATCH_SIZE
-  const batchSize = Math.max(1, Math.min(Math.max(requestedBatchSize, DEFAULT_FAST_APPLY_BATCH_SIZE), MAX_FAST_APPLY_BATCH_SIZE))
+  const batchSize = Math.max(1, Math.min(requestedBatchSize, MAX_FAST_APPLY_BATCH_SIZE))
   await supabase
     .from("directory_material_import_jobs")
     .update({ status: "applying", started_at: jobRow.started_at ?? new Date().toISOString(), last_error: null })
@@ -249,12 +263,10 @@ export async function applyFastDirectoryMaterialImportBatchForWorkspace(
     .in("status", ["valid", "warning"])
     .is("applied_at", null)
     .order("row_number", { ascending: true })
-    .limit(batchSize + 1)
+    .limit(batchSize)
 
   if (error) throw error
-  const fetchedRows = ((data ?? []) as ImportRowDbRow[]).map(toApplyRow)
-  const rowsToApply = fetchedRows.slice(0, batchSize)
-  const hasMore = fetchedRows.length > batchSize
+  const rowsToApply = ((data ?? []) as ImportRowDbRow[]).map(toApplyRow)
 
   if (rowsToApply.length === 0) {
     const skippedRows = Math.max(0, toNumber(jobRow.total_rows) - toNumber(jobRow.applied_rows))
@@ -286,6 +298,8 @@ export async function applyFastDirectoryMaterialImportBatchForWorkspace(
     const appliedAt = new Date().toISOString()
     await markImportRowsApplied(workspaceOwnerId, id, rowsToApply, appliedAt)
 
+    const remainingRows = await countPendingApplyRows(workspaceOwnerId, id)
+    const hasMore = remainingRows > 0
     const nextAppliedRows = toNumber(jobRow.applied_rows) + rowsToApply.length
     const completed = !hasMore
     const skippedRows = completed ? Math.max(0, toNumber(jobRow.total_rows) - nextAppliedRows) : toNumber(jobRow.skipped_rows)

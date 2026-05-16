@@ -153,8 +153,7 @@ function normalizeImportRow(rawData: Record<string, unknown>, fallbackSourceName
   const title = toNullableString(getRawValue(rawData, ["title", "name"])) ?? ""
   const unit = toNullableString(getRawValue(rawData, ["unit", "unit_label", "unit_code"])) ?? ""
   const category = toNullableString(getRawValue(rawData, ["category"])) ?? ""
-  const rawRate = getRawValue(rawData, ["rate", "rate_amount", "price"])
-  const rate = normalizeNumber(rawRate)
+  const rate = normalizeNumber(getRawValue(rawData, ["rate", "rate_amount", "price"]))
   const rawCurrency = toNullableString(getRawValue(rawData, ["currency_code", "currency"]))
   const rawPriceKind = toNullableString(getRawValue(rawData, ["price_kind", "priceKind"])) as DirectoryWorkPriceKind | null
   const priceKind = rawPriceKind && VALID_PRICE_KINDS.has(rawPriceKind) ? rawPriceKind : "base"
@@ -174,23 +173,25 @@ function normalizeImportRow(rawData: Record<string, unknown>, fallbackSourceName
   if (vatRate !== null && (!Number.isFinite(vatRate) || vatRate < 0)) warnings.push("Некорректный НДС проигнорирован")
 
   return {
-    title,
-    unit,
-    rate: Number.isFinite(rate) ? rate : 0,
-    category,
-    subcategory: toNullableString(getRawValue(rawData, ["subcategory"])),
-    code: toNullableString(getRawValue(rawData, ["code"])),
-    description: toNullableString(getRawValue(rawData, ["description"])),
-    includedOperations: toNullableString(getRawValue(rawData, ["included_operations", "includedOperations"])),
-    excludedOperations: toNullableString(getRawValue(rawData, ["excluded_operations", "excludedOperations"])),
-    sourceName: toNullableString(getRawValue(rawData, ["source_name", "sourceName"])) ?? fallbackSourceName,
-    sourceExternalRowKey: toNullableString(getRawValue(rawData, ["source_external_row_key", "sourceExternalRowKey"])),
-    currencyCode,
-    priceKind,
-    aliases: splitList(getRawValue(rawData, ["aliases", "alias"])),
-    keywords: splitList(getRawValue(rawData, ["keywords", "keyword"])),
-    vatRate: vatRate !== null && Number.isFinite(vatRate) ? vatRate : null,
-    effectiveDate: toNullableString(getRawValue(rawData, ["effective_date", "effectiveDate"])),
+    data: {
+      title,
+      unit,
+      rate: Number.isFinite(rate) ? rate : 0,
+      category,
+      subcategory: toNullableString(getRawValue(rawData, ["subcategory"])),
+      code: toNullableString(getRawValue(rawData, ["code"])),
+      description: toNullableString(getRawValue(rawData, ["description"])),
+      includedOperations: toNullableString(getRawValue(rawData, ["included_operations", "includedOperations"])),
+      excludedOperations: toNullableString(getRawValue(rawData, ["excluded_operations", "excludedOperations"])),
+      sourceName: toNullableString(getRawValue(rawData, ["source_name", "sourceName"])) ?? fallbackSourceName,
+      sourceExternalRowKey: toNullableString(getRawValue(rawData, ["source_external_row_key", "sourceExternalRowKey"])),
+      currencyCode,
+      priceKind,
+      aliases: splitList(getRawValue(rawData, ["aliases", "alias"])),
+      keywords: splitList(getRawValue(rawData, ["keywords", "keyword"])),
+      vatRate: vatRate !== null && Number.isFinite(vatRate) ? vatRate : null,
+      effectiveDate: toNullableString(getRawValue(rawData, ["effective_date", "effectiveDate"])),
+    } satisfies DirectoryWorkImportNormalizedRow,
     errors,
     warnings,
   }
@@ -286,6 +287,12 @@ async function getJobRow(workspaceOwnerId: string, id: string) {
   return data as ImportJobDbRow | null
 }
 
+async function requirePreview(workspaceOwnerId: string, id: string) {
+  const preview = await getChunkedDirectoryWorkImportJobForWorkspace(workspaceOwnerId, id)
+  if (!preview) throw new DirectoryWorksApiError("NOT_FOUND", "Import job не найден", 404)
+  return { data: preview }
+}
+
 async function getPriorFingerprints(workspaceOwnerId: string, jobId: string) {
   const { data, error } = await supabase
     .from("directory_work_import_rows")
@@ -303,28 +310,28 @@ function prepareRows(input: DirectoryWorkImportBatchInput, fallbackSourceName: s
 
   return input.rows.map((rawData, index) => {
     const normalized = normalizeImportRow(rawData, fallbackSourceName)
-    const { errors, warnings, ...normalizedData } = normalized
-    const dedupeFingerprint = buildDedupeFingerprint(normalizedData)
-    let status: DirectoryWorkImportRowStatus = errors.length > 0 ? "error" : "valid"
+    const dedupeFingerprint = buildDedupeFingerprint(normalized.data)
+    let status: DirectoryWorkImportRowStatus = normalized.errors.length > 0 ? "error" : "valid"
+    const warningMessages = [...normalized.warnings]
 
     if (status !== "error" && (priorFingerprints.has(dedupeFingerprint) || seen.has(dedupeFingerprint))) {
       status = "duplicate"
-      warnings.push(seen.has(dedupeFingerprint) ? `Дубль строки ${seen.get(dedupeFingerprint)}` : "Дубль уже загруженной строки")
+      warningMessages.push(seen.has(dedupeFingerprint) ? `Дубль строки ${seen.get(dedupeFingerprint)}` : "Дубль уже загруженной строки")
     } else if (status !== "error") {
       seen.set(dedupeFingerprint, input.rowOffset + index + 1)
     }
 
-    if (status === "valid" && warnings.length > 0) status = "warning"
+    if (status === "valid" && warningMessages.length > 0) status = "warning"
 
     return {
       rowNumber: input.rowOffset + index + 1,
       batchNumber: input.batchNumber,
       rawData,
-      normalizedData,
+      normalizedData: normalized.data,
       status,
       action: status === "valid" || status === "warning" ? "create" : "skip",
-      errorMessages: errors,
-      warningMessages: warnings,
+      errorMessages: normalized.errors,
+      warningMessages,
       dedupeFingerprint,
     } satisfies PreparedImportRow
   })
@@ -389,7 +396,6 @@ export async function createChunkedDirectoryWorkImportJobForWorkspace(
     .single()
 
   if (error) throw error
-
   return { data: { job: mapJob(jobRow as ImportJobDbRow), rows: [] } }
 }
 
@@ -412,12 +418,21 @@ export async function appendDirectoryWorkImportBatchForWorkspace(
     .eq("batch_number", input.batchNumber)
 
   if (countError) throw countError
-  if ((count ?? 0) > 0) {
-    return getChunkedDirectoryWorkImportJobForWorkspace(workspaceOwnerId, id)
+  if ((count ?? 0) > 0) return requirePreview(workspaceOwnerId, id)
+
+  if (input.rows.length === 0) {
+    if (input.isLastBatch) {
+      const { error } = await supabase
+        .from("directory_work_import_jobs")
+        .update({ status: "ready_for_review", last_error: null })
+        .eq("workspace_owner_id", workspaceOwnerId)
+        .eq("id", id)
+      if (error) throw error
+    }
+    return requirePreview(workspaceOwnerId, id)
   }
 
-  const prior = await getPriorFingerprints(workspaceOwnerId, id)
-  const rows = prepareRows(input, jobRow.source_name, prior)
+  const rows = prepareRows(input, jobRow.source_name, await getPriorFingerprints(workspaceOwnerId, id))
   const counts = getCounts(rows)
 
   const { error: rowsError } = await supabase.from("directory_work_import_rows").insert(rows.map((row) => ({
@@ -453,7 +468,7 @@ export async function appendDirectoryWorkImportBatchForWorkspace(
     .eq("id", id)
 
   if (updateError) throw updateError
-  return getChunkedDirectoryWorkImportJobForWorkspace(workspaceOwnerId, id)
+  return requirePreview(workspaceOwnerId, id)
 }
 
 export async function getChunkedDirectoryWorkImportJobForWorkspace(

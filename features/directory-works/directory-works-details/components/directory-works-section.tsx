@@ -32,7 +32,6 @@ function DirectoryWorksRowSkeleton() {
           <Skeleton className="h-4 w-full max-w-md" />
         </div>
       </div>
-
       <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(220px,0.75fr)_minmax(280px,1fr)]">
         <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
           <Skeleton className="h-3 w-28" />
@@ -41,7 +40,6 @@ function DirectoryWorksRowSkeleton() {
             <Skeleton className="h-5 w-24 rounded-md" />
           </div>
         </div>
-
         <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
           <Skeleton className="h-3 w-16" />
           <div className="flex min-w-0 items-center gap-1.5">
@@ -69,6 +67,7 @@ export function DirectoryWorksSection() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const {
+    appendImportBatch,
     applyImportJob,
     archiveWork,
     createImportJob,
@@ -94,12 +93,8 @@ export function DirectoryWorksSection() {
       setInsertAfterWork(null)
       setDialogOpen(true)
     }
-    const handleImport = () => {
-      setImportDialogOpen(true)
-    }
-    const handleExport = () => {
-      window.location.assign(buildDirectoryWorksExportHref("xlsx"))
-    }
+    const handleImport = () => setImportDialogOpen(true)
+    const handleExport = () => window.location.assign(buildDirectoryWorksExportHref("xlsx"))
 
     window.addEventListener(DIRECTORY_WORKS_CREATE_EVENT, handleCreate)
     window.addEventListener(DIRECTORY_WORKS_IMPORT_EVENT, handleImport)
@@ -129,11 +124,8 @@ export function DirectoryWorksSection() {
 
   const setCursor = (cursor: number) => {
     const nextParams = new URLSearchParams(searchParams.toString())
-    if (cursor > 0) {
-      nextParams.set("cursor", String(cursor))
-    } else {
-      nextParams.delete("cursor")
-    }
+    if (cursor > 0) nextParams.set("cursor", String(cursor))
+    else nextParams.delete("cursor")
     const query = nextParams.toString()
     router.push(query ? `${pathname}?${query}` : pathname)
   }
@@ -142,9 +134,7 @@ export function DirectoryWorksSection() {
   const currentLimit = params.limit ?? meta?.limit ?? DEFAULT_LIMIT
   const pageStart = works.length > 0 ? currentCursor + 1 : 0
   const pageEnd = currentCursor + works.length
-  const totalLabel = meta?.hasMore
-    ? `минимум ${meta.total}`
-    : String(meta?.total ?? works.length)
+  const totalLabel = meta?.hasMore ? `минимум ${meta.total}` : String(meta?.total ?? works.length)
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
   const showSkeletonRows = loading || isFetching
@@ -157,16 +147,13 @@ export function DirectoryWorksSection() {
             {error}
           </div>
         ) : null}
-
         <div className="scrollbar-subtle relative min-h-0 flex-1 overflow-y-auto">
           {showSkeletonRows ? <DirectoryWorksRowsSkeleton /> : null}
-
           {!showSkeletonRows && works.length === 0 ? (
             <div className="p-4 text-xs/relaxed text-muted-foreground">
               Работы не найдены. Добавьте первую работу вручную или измените поиск.
             </div>
           ) : null}
-
           {!showSkeletonRows
             ? works.map((row) => (
                 <DirectoryWorksRow
@@ -180,31 +167,12 @@ export function DirectoryWorksSection() {
               ))
             : null}
         </div>
-
         {meta ? (
           <div className="flex flex-col gap-3 border-t border-border p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              Показано {pageStart}–{pageEnd}. Всего: {totalLabel}
-            </div>
+            <div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div>
             <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={currentCursor === 0 || loading || isFetching}
-                onClick={() => setCursor(previousCursor)}
-              >
-                Назад
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={!meta.hasMore || loading || isFetching}
-                onClick={() => setCursor(nextCursor)}
-              >
-                Вперёд
-              </Button>
+              <Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button>
+              <Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button>
             </div>
           </div>
         ) : null}
@@ -220,25 +188,17 @@ export function DirectoryWorksSection() {
         saving={saving}
         work={editingWork}
         onSubmit={async (input) => {
-          if (editingWork) {
-            await updateWork(editingWork.id, input)
-          } else {
-            await createWork({
-              ...input,
-              insertAfterWorkId: insertAfterWork?.id ?? null,
-            })
-          }
+          if (editingWork) await updateWork(editingWork.id, input)
+          else await createWork({ ...input, insertAfterWorkId: insertAfterWork?.id ?? null })
           setDialogOpen(false)
           setEditingWork(null)
           setInsertAfterWork(null)
         }}
       />
-
       <DirectoryWorkImportDialog
         importing={importing}
-        onApplyJob={async (id) => {
-          await applyImportJob(id)
-        }}
+        onAppendBatch={appendImportBatch}
+        onApplyJob={applyImportJob}
         onCreateJob={createImportJob}
         onOpenChange={setImportDialogOpen}
         open={importDialogOpen}

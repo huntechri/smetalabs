@@ -8,25 +8,19 @@ const EXPORT_COLUMNS: Array<{
   label: string
   value: (work: DirectoryWork) => string | number | null
 }> = [
-  { label: "code", value: (work) => work.code },
-  { label: "title", value: (work) => work.title },
-  { label: "unit", value: (work) => work.unitLabel || work.unit },
-  { label: "rate", value: (work) => work.rateAmount },
-  { label: "category", value: (work) => work.category },
-  { label: "subcategory", value: (work) => work.subcategory },
-  { label: "aliases", value: (work) => work.aliases.join("; ") },
-  { label: "keywords", value: (work) => work.keywords.join("; ") },
-  { label: "description", value: (work) => work.description },
-  { label: "included_operations", value: (work) => work.includedOperations },
-  { label: "excluded_operations", value: (work) => work.excludedOperations },
-  { label: "price_kind", value: (work) => work.priceKind },
-  { label: "currency_code", value: (work) => work.currencyCode },
-  { label: "source_name", value: (work) => work.metadata.sourceName },
-  {
-    label: "source_external_row_key",
-    value: (work) => work.metadata.sourceExternalRowKey,
-  },
-  { label: "updated_at", value: (work) => work.metadata.updatedAt },
+  { label: "Код", value: (work) => work.code },
+  { label: "Название", value: (work) => work.title },
+  { label: "Ед. изм.", value: (work) => work.unitLabel || work.unit },
+  { label: "Расценка", value: (work) => work.rateAmount },
+  { label: "Валюта", value: (work) => work.currencyCode },
+  { label: "Категория", value: (work) => work.category },
+  { label: "Подкатегория", value: (work) => work.subcategory },
+  { label: "Синонимы", value: (work) => work.aliases.join("; ") },
+  { label: "Ключевые слова", value: (work) => work.keywords.join("; ") },
+  { label: "Описание", value: (work) => work.description },
+  { label: "Включенные операции", value: (work) => work.includedOperations },
+  { label: "Исключенные операции", value: (work) => work.excludedOperations },
+  { label: "Тип цены", value: (work) => work.priceKind },
 ]
 
 type ExportFile = {

@@ -97,6 +97,8 @@ export const directoryMaterials = pgTable(
     supplierId: uuid("supplier_id"),
     imageUrl: text("image_url"),
     description: text("description"),
+    aliases: text("aliases").array().notNull().default(sql`'{}'::text[]`),
+    keywords: text("keywords").array().notNull().default(sql`'{}'::text[]`),
     sourceName: text("source_name"),
     sourceExternalRowKey: text("source_external_row_key"),
     dedupeFingerprint: text("dedupe_fingerprint").notNull(),

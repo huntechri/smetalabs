@@ -569,7 +569,6 @@ async function applyMaterialPriceUpdates(workspaceOwnerId: string, userId: strin
         price_amount: normalized.price,
         currency_code: normalized.currencyCode ?? "RUB",
         updated_by: userId,
-        version: undefined,
       })
       .eq("workspace_owner_id", workspaceOwnerId)
       .eq("id", row.duplicateMaterialId)

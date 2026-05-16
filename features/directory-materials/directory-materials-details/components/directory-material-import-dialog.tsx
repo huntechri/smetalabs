@@ -30,8 +30,8 @@ import type {
   DirectoryMaterialImportRowStatus,
 } from "@/features/directory-materials/types"
 
-const IMPORT_BATCH_SIZE = 1500
-const APPLY_BATCH_SIZE = 200
+const IMPORT_BATCH_SIZE = 300
+const APPLY_BATCH_SIZE = 500
 
 const HEADER_ALIASES: Record<string, string> = {
   code: "code",

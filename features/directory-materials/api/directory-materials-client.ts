@@ -141,8 +141,8 @@ export function applyDirectoryMaterialImportJob({
   input?: DirectoryMaterialImportApplyInput
 }) {
   return fetchJson<DirectoryMaterialImportApplyResponse>(
-    `/api/directory-materials/import-jobs/${id}/apply`,
-    "применения импорта материалов",
+    `/api/directory-materials/import-jobs/${id}/apply-fast`,
+    "быстрого применения импорта материалов",
     { method: "POST", body: JSON.stringify(input ?? {}) }
   )
 }

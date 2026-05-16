@@ -94,7 +94,7 @@ export function DirectoryWorksSection() {
       setDialogOpen(true)
     }
     const handleImport = () => setImportDialogOpen(true)
-    const handleExport = () => window.location.assign(buildDirectoryWorksExportHref("xlsx"))
+    const handleExport = () => window.location.assign(buildDirectoryWorksExportHref("csv"))
 
     window.addEventListener(DIRECTORY_WORKS_CREATE_EVENT, handleCreate)
     window.addEventListener(DIRECTORY_WORKS_IMPORT_EVENT, handleImport)

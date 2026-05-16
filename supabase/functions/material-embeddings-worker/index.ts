@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
   }
 
   if (!Deno.env.get("OPENAI_API_KEY")) {
-    return json({ data: { enabled: false, processed: 0, failed: 0, skipped: 0 } })
+    return json({ data: { enabled: false, enqueued: 0, processed: 0, failed: 0, skipped: 0 } })
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")
@@ -80,6 +80,13 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
+
+  const { data: enqueued, error: enqueueError } = await supabase.rpc(
+    "enqueue_missing_directory_material_embeddings",
+    { p_limit: limit }
+  )
+
+  if (enqueueError) return json({ error: enqueueError.message }, 500)
 
   const { data: rows, error: readError } = await supabase
     .from("directory_material_embeddings")
@@ -129,6 +136,7 @@ Deno.serve(async (req) => {
   return json({
     data: {
       enabled: true,
+      enqueued: typeof enqueued === "number" ? enqueued : 0,
       processed,
       failed,
       skipped: Math.max(0, limit - processed - failed),

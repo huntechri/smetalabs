@@ -60,12 +60,14 @@ export function DirectoryMaterialFormDialog({
   open,
   onOpenChange,
   saving,
+  title,
   onSubmit,
 }: {
   material: DirectoryMaterial | null
   open: boolean
   onOpenChange: (open: boolean) => void
   saving: boolean
+  title?: string
   onSubmit: (input: DirectoryMaterialMutationInput) => Promise<void>
 }) {
   const [form, setForm] = useState<DirectoryMaterialFormState>(() =>
@@ -132,7 +134,7 @@ export function DirectoryMaterialFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{material ? "Редактировать материал" : "Новый материал"}</DialogTitle>
+          <DialogTitle>{title ?? (material ? "Редактировать материал" : "Новый материал")}</DialogTitle>
           <DialogDescription>
             Заполните обязательные поля. Пустой материал не будет сохранён.
           </DialogDescription>

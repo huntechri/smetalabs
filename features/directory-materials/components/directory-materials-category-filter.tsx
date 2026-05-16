@@ -39,10 +39,22 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { categories, suppliers, loading, error } = useDirectoryMaterialCategories()
   const selectedCategory = searchParams.get("category") ?? ""
   const selectedSubcategory = searchParams.get("subcategory") ?? ""
   const selectedSupplier = searchParams.get("supplier") ?? ""
+  const {
+    categories,
+    loading: categoriesLoading,
+    error: categoriesError,
+  } = useDirectoryMaterialCategories()
+  const {
+    suppliers,
+    loading: scopedLoading,
+    error: scopedError,
+  } = useDirectoryMaterialCategories({
+    category: selectedCategory || undefined,
+    subcategory: selectedSubcategory || undefined,
+  })
 
   const selectedCategoryOption = useMemo(
     () => categories.find((item) => item.category === selectedCategory) ?? null,
@@ -50,6 +62,8 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
   )
   const subcategories = selectedCategoryOption?.subcategories ?? []
   const hasActiveFilter = Boolean(selectedCategory || selectedSubcategory || selectedSupplier)
+  const loading = categoriesLoading || scopedLoading
+  const error = categoriesError ?? scopedError
 
   const pushParams = (params: URLSearchParams) => {
     const query = params.toString()
@@ -61,6 +75,7 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
     const nextCategory = value === ALL_CATEGORIES_VALUE ? null : value
     setOptionalParam(params, "category", nextCategory)
     params.delete("subcategory")
+    params.delete("supplier")
     pushParams(params)
   }
 
@@ -68,6 +83,7 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
     const params = new URLSearchParams(searchParams.toString())
     const nextSubcategory = value === ALL_SUBCATEGORIES_VALUE ? null : value
     setOptionalParam(params, "subcategory", nextSubcategory)
+    params.delete("supplier")
     pushParams(params)
   }
 
@@ -99,7 +115,7 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
       </CardHeader>
       <CardContent className="grid gap-2 px-2 sm:grid-cols-[minmax(160px,220px)_minmax(160px,220px)_minmax(160px,220px)_auto]">
         <Select
-          disabled={loading || categories.length === 0}
+          disabled={categoriesLoading || categories.length === 0}
           onValueChange={handleCategoryChange}
           value={selectedCategory || ALL_CATEGORIES_VALUE}
         >
@@ -139,7 +155,7 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
         </Select>
 
         <Select
-          disabled={loading || suppliers.length === 0}
+          disabled={scopedLoading || suppliers.length === 0}
           onValueChange={handleSupplierChange}
           value={selectedSupplier || ALL_SUPPLIERS_VALUE}
         >
@@ -159,7 +175,7 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
         </Select>
 
         <Button
-          disabled={!hasActiveFilter}
+          disabled={!hasActiveFilter || loading}
           onClick={handleReset}
           type="button"
           variant="outline"

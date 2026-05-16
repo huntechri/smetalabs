@@ -25,9 +25,13 @@ function normalizeHeader(header: string, aliases: CsvImportHeaderAliases) {
 
 function detectDelimiter(sample: string) {
   const firstLine = sample.split(/\r?\n/, 1)[0] ?? ""
-  return (firstLine.match(/;/g) ?? []).length > (firstLine.match(/,/g) ?? []).length
-    ? ";"
-    : ","
+  const candidates = [
+    { delimiter: "\t", count: (firstLine.match(/\t/g) ?? []).length },
+    { delimiter: ";", count: (firstLine.match(/;/g) ?? []).length },
+    { delimiter: ",", count: (firstLine.match(/,/g) ?? []).length },
+  ]
+
+  return candidates.sort((a, b) => b.count - a.count)[0]?.delimiter ?? ","
 }
 
 function toRecord(headers: string[], row: string[]) {

@@ -25,6 +25,14 @@ const requiredTrimmedString = (maxLength: number, message: string) =>
     return value.trim().replace(/\s+/g, " ")
   }, z.string().min(1, message).max(maxLength))
 
+const stringListSchema = z.preprocess((value) => {
+  if (Array.isArray(value)) return value
+  if (typeof value === "string") {
+    return value.split(/[;,|]/g).map((item) => item.trim()).filter(Boolean)
+  }
+  return []
+}, z.array(z.string().trim().min(1).max(120)).max(50)).default([])
+
 const priceAmountSchema = z.preprocess((value) => {
   if (typeof value === "string" && value.trim() !== "") return Number(value)
   return value
@@ -95,6 +103,8 @@ export const directoryMaterialMutationSchema = z.object({
   supplierName: nullableTrimmedString(160),
   imageUrl: nullableTrimmedString(1000),
   description: nullableTrimmedString(2000),
+  aliases: stringListSchema,
+  keywords: stringListSchema,
   sourceName: nullableTrimmedString(120),
   sourceExternalRowKey: nullableTrimmedString(160),
   currencyCode: currencyCodeSchema,

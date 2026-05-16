@@ -3,6 +3,18 @@
 import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty"
+import { FieldError } from "@/components/ui/field"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useDirectoryMaterials } from "@/features/directory-materials/hooks/use-directory-materials"
 import {
@@ -22,26 +34,26 @@ const SKELETON_ROW_COUNT = 6
 
 function DirectoryMaterialsRowSkeleton() {
   return (
-    <div className="mx-3 my-1.5 grid gap-3 rounded-md border border-border p-3 xl:grid-cols-[minmax(520px,1.15fr)_minmax(520px,0.85fr)]">
-      <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(96px,0.18fr)_minmax(0,1fr)]">
-        <div className="min-w-0 rounded-md border border-border p-2">
-          <Skeleton className="mb-2 h-3 w-8" />
+    <Card size="sm" className="mx-3 my-1.5 gap-0 rounded-md bg-transparent py-0">
+      <CardContent className="grid min-w-0 gap-3 p-2 sm:grid-cols-[minmax(96px,0.18fr)_minmax(0,1fr)]">
+        <div className="min-w-0 space-y-2">
+          <Skeleton className="h-3 w-8" />
           <Skeleton className="h-4 w-20" />
         </div>
-        <div className="min-w-0 rounded-md border border-border p-2">
-          <Skeleton className="mb-2 h-3 w-16" />
+        <div className="min-w-0 space-y-2">
+          <Skeleton className="h-3 w-16" />
           <Skeleton className="h-4 w-full max-w-md" />
         </div>
-      </div>
-      <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(180px,0.75fr)_minmax(280px,1fr)]">
-        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
+      </CardContent>
+      <CardContent className="grid min-w-0 gap-2 p-2 pt-0 md:grid-cols-[minmax(180px,0.75fr)_minmax(280px,1fr)]">
+        <div className="min-w-0 space-y-1.5">
           <Skeleton className="h-3 w-24" />
           <div className="flex min-w-0 flex-wrap gap-1.5">
             <Skeleton className="h-5 w-16 rounded-md" />
             <Skeleton className="h-5 w-24 rounded-md" />
           </div>
         </div>
-        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
+        <div className="min-w-0 space-y-1.5">
           <Skeleton className="h-3 w-32" />
           <div className="flex min-w-0 items-center gap-1.5">
             <Skeleton className="h-5 w-36 rounded-md" />
@@ -49,8 +61,8 @@ function DirectoryMaterialsRowSkeleton() {
             <Skeleton className="ml-auto size-6 rounded-md" />
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -150,18 +162,21 @@ export function DirectoryMaterialsSection() {
 
   return (
     <>
-      <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-sm">
-        {error ? (
-          <div className="m-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs/relaxed text-destructive">
-            {error}
-          </div>
-        ) : null}
-        <div className="scrollbar-subtle relative min-h-0 flex-1 overflow-y-auto">
+      <Card className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg py-0 shadow-sm">
+        <FieldError className="m-3 mb-0 rounded-md border border-destructive/30 bg-destructive/10 p-3">
+          {error}
+        </FieldError>
+        <CardContent className="scrollbar-subtle relative min-h-0 flex-1 overflow-y-auto px-0 py-0">
           {showSkeletonRows ? <DirectoryMaterialsRowsSkeleton /> : null}
           {!showSkeletonRows && materials.length === 0 ? (
-            <div className="p-4 text-xs/relaxed text-muted-foreground">
-              Материалы не найдены. Добавьте первый материал вручную или измените поиск.
-            </div>
+            <Empty className="h-full border-0">
+              <EmptyHeader>
+                <EmptyTitle>Материалы не найдены</EmptyTitle>
+                <EmptyDescription>
+                  Добавьте первый материал вручную или измените поиск.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : null}
           {!showSkeletonRows
             ? materials.map((row) => (
@@ -175,17 +190,17 @@ export function DirectoryMaterialsSection() {
                 />
               ))
             : null}
-        </div>
+        </CardContent>
         {meta ? (
-          <div className="flex flex-col gap-3 border-t border-border p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <CardFooter className="flex flex-col gap-3 border-t p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div>
             <div className="flex gap-2">
               <Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button>
               <Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button>
             </div>
-          </div>
+          </CardFooter>
         ) : null}
-      </section>
+      </Card>
 
       <DirectoryMaterialFormDialog
         material={selectedMaterial}

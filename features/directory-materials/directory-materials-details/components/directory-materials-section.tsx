@@ -17,22 +17,48 @@ import { DirectoryMaterialFormDialog } from "./directory-material-form-dialog"
 import { DirectoryMaterialImportDialog } from "./directory-material-import-dialog"
 import { DirectoryMaterialsRow } from "./directory-materials-row"
 
-function DirectoryMaterialsRowsSkeleton() {
+const DEFAULT_LIMIT = 50
+const SKELETON_ROW_COUNT = 6
+
+function DirectoryMaterialsRowSkeleton() {
   return (
-    <div className="flex flex-col divide-y">
-      {Array.from({ length: 8 }).map((_, index) => (
-        <div key={index} className="m-3 grid gap-3 rounded-md border p-3 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]">
-          <div className="flex min-w-0 flex-col gap-3 p-2">
-            <Skeleton className="h-5 w-2/3" />
-            <Skeleton className="h-4 w-1/3" />
-          </div>
-          <div className="grid min-w-0 gap-1.5 p-1.5 md:grid-cols-4">
-            <Skeleton className="h-16" />
-            <Skeleton className="h-16" />
-            <Skeleton className="h-16" />
-            <Skeleton className="h-16" />
+    <div className="mx-3 my-1.5 grid gap-3 rounded-md border border-border p-3 xl:grid-cols-[minmax(520px,1.15fr)_minmax(520px,0.85fr)]">
+      <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(0,1fr)]">
+        <div className="min-w-0 rounded-md border border-border p-2">
+          <Skeleton className="mb-2 h-3 w-16" />
+          <Skeleton className="h-4 w-full max-w-md" />
+        </div>
+        <div className="min-w-0 rounded-md border border-border p-2">
+          <Skeleton className="mb-2 h-3 w-8" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+      </div>
+      <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(180px,0.75fr)_minmax(280px,1fr)]">
+        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
+          <Skeleton className="h-3 w-24" />
+          <div className="flex min-w-0 flex-wrap gap-1.5">
+            <Skeleton className="h-5 w-16 rounded-md" />
+            <Skeleton className="h-5 w-24 rounded-md" />
           </div>
         </div>
+        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
+          <Skeleton className="h-3 w-32" />
+          <div className="flex min-w-0 items-center gap-1.5">
+            <Skeleton className="h-5 w-36 rounded-md" />
+            <Skeleton className="h-5 w-28 rounded-md" />
+            <Skeleton className="ml-auto size-6 rounded-md" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function DirectoryMaterialsRowsSkeleton() {
+  return (
+    <div aria-label="Загрузка материалов" aria-busy="true">
+      {Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
+        <DirectoryMaterialsRowSkeleton key={index} />
       ))}
     </div>
   )
@@ -54,16 +80,19 @@ export function DirectoryMaterialsSection() {
     loading,
     materials,
     meta,
+    params,
     saving,
     updateMaterial,
   } = useDirectoryMaterials()
   const [formOpen, setFormOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [selectedMaterial, setSelectedMaterial] = useState<DirectoryMaterial | null>(null)
+  const [insertAfterMaterial, setInsertAfterMaterial] = useState<DirectoryMaterial | null>(null)
 
   useEffect(() => {
     const handleCreate = () => {
       setSelectedMaterial(null)
+      setInsertAfterMaterial(null)
       setFormOpen(true)
     }
     const handleImport = () => setImportOpen(true)
@@ -76,15 +105,23 @@ export function DirectoryMaterialsSection() {
     }
   }, [])
 
-  const goToCursor = (cursor: number) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (cursor <= 0) params.delete("cursor")
-    else params.set("cursor", String(cursor))
-    router.push(params.toString() ? `${pathname}?${params}` : pathname)
+  const setCursor = (cursor: number) => {
+    const nextParams = new URLSearchParams(searchParams.toString())
+    if (cursor > 0) nextParams.set("cursor", String(cursor))
+    else nextParams.delete("cursor")
+    const query = nextParams.toString()
+    router.push(query ? `${pathname}?${query}` : pathname)
   }
 
   const handleEdit = (material: DirectoryMaterial) => {
     setSelectedMaterial(material)
+    setInsertAfterMaterial(null)
+    setFormOpen(true)
+  }
+
+  const handleInsertAfter = (material: DirectoryMaterial) => {
+    setSelectedMaterial(null)
+    setInsertAfterMaterial(material)
     setFormOpen(true)
   }
 
@@ -102,18 +139,69 @@ export function DirectoryMaterialsSection() {
     await createMaterial(input)
   }
 
-  const hasPreviousPage = Boolean(meta && meta.cursor > 0)
-  const previousCursor = meta ? Math.max(0, meta.cursor - meta.limit) : 0
-  const currentPage = meta ? Math.floor(meta.cursor / meta.limit) + 1 : 1
+  const currentCursor = params.cursor ?? 0
+  const currentLimit = params.limit ?? meta?.limit ?? DEFAULT_LIMIT
+  const pageStart = materials.length > 0 ? currentCursor + 1 : 0
+  const pageEnd = currentCursor + materials.length
+  const totalLabel = meta?.hasMore ? `минимум ${meta.total}` : String(meta?.total ?? materials.length)
+  const previousCursor = Math.max(currentCursor - currentLimit, 0)
+  const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
+  const showSkeletonRows = loading || isFetching
 
-  const dialogs = (
+  return (
     <>
+      <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+        {error ? (
+          <div className="m-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs/relaxed text-destructive">
+            {error}
+          </div>
+        ) : null}
+        <div className="scrollbar-subtle relative min-h-0 flex-1 overflow-y-auto">
+          {showSkeletonRows ? <DirectoryMaterialsRowsSkeleton /> : null}
+          {!showSkeletonRows && materials.length === 0 ? (
+            <div className="p-4 text-xs/relaxed text-muted-foreground">
+              Материалы не найдены. Добавьте первый материал вручную или измените поиск.
+            </div>
+          ) : null}
+          {!showSkeletonRows
+            ? materials.map((row) => (
+                <DirectoryMaterialsRow
+                  key={row.id}
+                  onArchive={handleArchive}
+                  onEdit={handleEdit}
+                  onInsertAfter={handleInsertAfter}
+                  row={row}
+                  saving={saving || isFetching}
+                />
+              ))
+            : null}
+        </div>
+        {meta ? (
+          <div className="flex flex-col gap-3 border-t border-border p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div>
+            <div className="flex gap-2">
+              <Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button>
+              <Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button>
+            </div>
+          </div>
+        ) : null}
+      </section>
+
       <DirectoryMaterialFormDialog
         material={selectedMaterial}
-        onOpenChange={setFormOpen}
-        onSubmit={handleSubmit}
+        onOpenChange={(open) => {
+          setFormOpen(open)
+          if (!open) setInsertAfterMaterial(null)
+        }}
+        onSubmit={async (input) => {
+          await handleSubmit(input)
+          setFormOpen(false)
+          setSelectedMaterial(null)
+          setInsertAfterMaterial(null)
+        }}
         open={formOpen}
         saving={saving}
+        title={insertAfterMaterial ? "Новый материал ниже" : undefined}
       />
       <DirectoryMaterialImportDialog
         importing={importing}
@@ -123,64 +211,6 @@ export function DirectoryMaterialsSection() {
         onOpenChange={setImportOpen}
         open={importOpen}
       />
-    </>
-  )
-
-  if (loading) {
-    return (
-      <>
-        {dialogs}
-        <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
-          <DirectoryMaterialsRowsSkeleton />
-        </section>
-      </>
-    )
-  }
-
-  if (error) {
-    return (
-      <>
-        {dialogs}
-        <section className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm">
-          <h2 className="text-base font-semibold">Не удалось загрузить материалы</h2>
-          <p className="mt-1 max-w-md text-sm text-muted-foreground">{error}</p>
-        </section>
-      </>
-    )
-  }
-
-  if (materials.length === 0) {
-    return (
-      <>
-        {dialogs}
-        <section className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border bg-card p-8 text-center text-card-foreground shadow-sm">
-          <h2 className="text-base font-semibold">Материалы не найдены</h2>
-          <p className="mt-1 max-w-md text-sm text-muted-foreground">Добавьте первый материал вручную или измените поиск.</p>
-        </section>
-      </>
-    )
-  }
-
-  return (
-    <>
-      {dialogs}
-      <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
-        {isFetching ? <div className="h-1 bg-muted" /> : null}
-        <div className="flex flex-col divide-y">
-          {materials.map((row) => (
-            <DirectoryMaterialsRow key={row.id} onArchive={handleArchive} onEdit={handleEdit} row={row} />
-          ))}
-        </div>
-        {meta ? (
-          <div className="flex items-center justify-between gap-3 border-t px-4 py-3 text-xs text-muted-foreground">
-            <span>Страница {currentPage}. Всего материалов: {meta.total}.</span>
-            <div className="flex items-center gap-2">
-              <Button disabled={!hasPreviousPage || isFetching} onClick={() => goToCursor(previousCursor)} type="button" variant="outline">Назад</Button>
-              <Button disabled={!meta.hasMore || !meta.nextCursor || isFetching} onClick={() => meta.nextCursor !== null && goToCursor(meta.nextCursor)} type="button" variant="outline">Вперёд</Button>
-            </div>
-          </div>
-        ) : null}
-      </section>
     </>
   )
 }

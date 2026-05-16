@@ -14,6 +14,12 @@ export type DirectoryMaterialsListParams = {
   sort?: DirectoryMaterialsSort
 }
 
+export type DirectoryMaterialsCategoriesParams = {
+  status?: DirectoryMaterialStatus
+  category?: string
+  subcategory?: string
+}
+
 export type DirectoryMaterialMutationInput = {
   name: string
   unit: string
@@ -222,14 +228,11 @@ export type DirectoryMaterialImportApplyResponse = {
   data: {
     job: DirectoryMaterialImportJob
     appliedRows: number
+    createdRows: number
+    updatedRows: number
     skippedRows: number
-    appliedMaterialIds?: string[]
+    conflictRows: number
     hasMore?: boolean
+    nextBatchSize?: number
   }
-}
-
-export type DirectoryMaterialsExportFile = {
-  body: string
-  contentType: string
-  extension: DirectoryMaterialsExportFormat
 }

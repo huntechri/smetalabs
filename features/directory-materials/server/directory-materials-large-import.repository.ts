@@ -78,9 +78,12 @@ type PreparedRow = {
 
 type ExistingMaterial = {
   id: string
+  name: string | null
   code: string | null
   normalized_name: string | null
   unit_code: string | null
+  price_amount: string | number | null
+  currency_code: string | null
   source_name: string | null
   source_external_row_key: string | null
   dedupe_fingerprint: string | null
@@ -89,6 +92,10 @@ type ExistingMaterial = {
 function toNumber(value: unknown) {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : 0
+}
+
+function sameMoney(left: unknown, right: unknown) {
+  return Math.abs(toNumber(left) - toNumber(right)) < 0.005
 }
 
 function cleanString(value: unknown) {
@@ -295,7 +302,7 @@ async function getPriorFingerprints(workspaceOwnerId: string, jobId: string) {
 async function loadExistingMaterials(workspaceOwnerId: string) {
   const { data, error } = await supabase
     .from("directory_materials")
-    .select("id,code,normalized_name,unit_code,source_name,source_external_row_key,dedupe_fingerprint")
+    .select("id,name,code,normalized_name,unit_code,price_amount,currency_code,source_name,source_external_row_key,dedupe_fingerprint")
     .eq("workspace_owner_id", workspaceOwnerId)
     .is("deleted_at", null)
 
@@ -303,35 +310,81 @@ async function loadExistingMaterials(workspaceOwnerId: string) {
   return (data ?? []) as ExistingMaterial[]
 }
 
+function classifyByExistingCode(row: {
+  normalizedData: DirectoryMaterialImportNormalizedRow
+  warningMessages: string[]
+  status: DirectoryMaterialImportRowStatus
+  action: DirectoryMaterialImportRowAction
+  duplicateMaterialId: string | null
+  conflictMaterialIds: string[]
+}, existing: ExistingMaterial) {
+  const sameName = normalizeSearch(existing.normalized_name ?? existing.name) === normalizeSearch(row.normalizedData.name)
+  if (!sameName) {
+    row.status = "conflict"
+    row.action = "skip"
+    row.conflictMaterialIds = [existing.id]
+    row.warningMessages.push("Код совпадает, но название отличается")
+    return
+  }
+
+  if (sameMoney(existing.price_amount, row.normalizedData.price) && (existing.currency_code ?? "RUB") === (row.normalizedData.currencyCode ?? "RUB")) {
+    row.status = "duplicate"
+    row.action = "skip"
+    row.duplicateMaterialId = existing.id
+    row.warningMessages.push("Материал с таким кодом, названием и ценой уже есть")
+    return
+  }
+
+  row.status = "warning"
+  row.action = "update"
+  row.duplicateMaterialId = existing.id
+  row.warningMessages.push(`Цена будет обновлена: ${toNumber(existing.price_amount)} → ${row.normalizedData.price}`)
+}
+
 function prepareRows(input: DirectoryMaterialImportBatchInput, fallbackSourceName: string | null, prior: Set<string>, existing: ExistingMaterial[]) {
   const seen = new Map<string, number>()
+  const existingByCode = new Map(existing.filter((item) => item.code).map((item) => [item.code as string, item]))
 
   return input.rows.map((rawData, index) => {
     const normalized = normalizeImportRow(rawData, fallbackSourceName)
     const dedupeFingerprint = buildDedupeFingerprint(normalized.data)
     const warningMessages = [...normalized.warnings]
     let status: DirectoryMaterialImportRowStatus = normalized.errors.length > 0 ? "error" : "valid"
+    let action: DirectoryMaterialImportRowAction = status === "error" ? "skip" : "create"
     let duplicateMaterialId: string | null = null
     let conflictMaterialIds: string[] = []
 
-    if (status !== "error" && (prior.has(dedupeFingerprint) || seen.has(dedupeFingerprint))) {
+    if (status !== "error" && normalized.data.code) {
+      const existingCodeMatch = existingByCode.get(normalized.data.code)
+      if (existingCodeMatch) {
+        const classified = { normalizedData: normalized.data, warningMessages, status, action, duplicateMaterialId, conflictMaterialIds }
+        classifyByExistingCode(classified, existingCodeMatch)
+        status = classified.status
+        action = classified.action
+        duplicateMaterialId = classified.duplicateMaterialId
+        conflictMaterialIds = classified.conflictMaterialIds
+      }
+    }
+
+    if (status !== "error" && action === "create" && (prior.has(dedupeFingerprint) || seen.has(dedupeFingerprint))) {
       status = "duplicate"
+      action = "skip"
       warningMessages.push(seen.has(dedupeFingerprint) ? `Дубль строки ${seen.get(dedupeFingerprint)}` : "Дубль уже загруженной строки")
-    } else if (status !== "error") {
+    } else if (status !== "error" && action === "create") {
       seen.set(dedupeFingerprint, input.rowOffset + index + 1)
     }
 
-    if (status !== "error" && status !== "duplicate") {
+    if (status !== "error" && action === "create") {
       const name = normalizeSearch(normalized.data.name)
       const unitCode = normalizeUnitCode(normalized.data.unit)
       const exact = existing.find((item) => {
-        if (normalized.data.code && item.code === normalized.data.code) return true
         if (normalized.data.sourceName && normalized.data.sourceExternalRowKey && item.source_name === normalized.data.sourceName && item.source_external_row_key === normalized.data.sourceExternalRowKey) return true
         return item.dedupe_fingerprint === dedupeFingerprint
       })
 
       if (exact) {
         status = "duplicate"
+        action = "skip"
         duplicateMaterialId = exact.id
         warningMessages.push("Такой материал уже есть в справочнике")
       } else {
@@ -340,6 +393,7 @@ function prepareRows(input: DirectoryMaterialImportBatchInput, fallbackSourceNam
           .map((item) => item.id)
         if (conflictMaterialIds.length > 0) {
           status = "conflict"
+          action = "skip"
           warningMessages.push("Найден материал с таким названием и единицей измерения")
         }
       }
@@ -353,7 +407,7 @@ function prepareRows(input: DirectoryMaterialImportBatchInput, fallbackSourceNam
       rawData,
       normalizedData: normalized.data,
       status,
-      action: status === "valid" || status === "warning" ? "create" : "skip",
+      action,
       errorMessages: normalized.errors,
       warningMessages,
       duplicateMaterialId,
@@ -502,6 +556,41 @@ export async function getChunkedDirectoryMaterialImportJobForWorkspace(
   return { job: mapJob(jobRow), rows: await getPreviewRows(workspaceOwnerId, id) }
 }
 
+async function applyMaterialPriceUpdates(workspaceOwnerId: string, userId: string, rows: DirectoryMaterialImportRow[]) {
+  const appliedIds: string[] = []
+  const appliedAt = new Date().toISOString()
+
+  await Promise.all(rows.map(async (row) => {
+    if (!row.duplicateMaterialId) return
+    const normalized = row.normalizedData as DirectoryMaterialImportNormalizedRow
+    const { error } = await supabase
+      .from("directory_materials")
+      .update({
+        price_amount: normalized.price,
+        currency_code: normalized.currencyCode ?? "RUB",
+        updated_by: userId,
+        version: undefined,
+      })
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .eq("id", row.duplicateMaterialId)
+      .is("deleted_at", null)
+
+    if (error) throw error
+    appliedIds.push(row.duplicateMaterialId)
+  }))
+
+  if (rows.length > 0) {
+    const { error } = await supabase
+      .from("directory_material_import_rows")
+      .update({ status: "applied", applied_at: appliedAt })
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .in("id", rows.map((row) => row.id))
+    if (error) throw error
+  }
+
+  return appliedIds
+}
+
 export async function applyDirectoryMaterialImportBatchForWorkspace(
   workspaceOwnerId: string,
   userId: string,
@@ -527,7 +616,7 @@ export async function applyDirectoryMaterialImportBatchForWorkspace(
     .select("*")
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("job_id", id)
-    .eq("action", "create")
+    .in("action", ["create", "update"])
     .in("status", ["valid", "warning"])
     .is("applied_at", null)
     .order("row_number", { ascending: true })
@@ -553,24 +642,33 @@ export async function applyDirectoryMaterialImportBatchForWorkspace(
   }
 
   try {
-    const normalizedRows = rowsToApply.map((row) => row.normalizedData as DirectoryMaterialImportNormalizedRow)
-    const { data: inserted, error: insertError } = await supabase
-      .from("directory_materials")
-      .insert(normalizedRows.map((row) => toInsertRow(workspaceOwnerId, userId, row)))
-      .select("id")
+    const createRows = rowsToApply.filter((row) => row.action === "create")
+    const updateRows = rowsToApply.filter((row) => row.action === "update")
+    const normalizedRows = createRows.map((row) => row.normalizedData as DirectoryMaterialImportNormalizedRow)
+    const { data: inserted, error: insertError } = normalizedRows.length > 0
+      ? await supabase
+          .from("directory_materials")
+          .insert(normalizedRows.map((row) => toInsertRow(workspaceOwnerId, userId, row)))
+          .select("id")
+      : { data: [], error: null }
 
     if (insertError) throw insertError
-    const materialIds = ((inserted ?? []) as Array<{ id: string }>).map((material) => material.id)
+    const createdIds = ((inserted ?? []) as Array<{ id: string }>).map((material) => material.id)
+    const updatedIds = await applyMaterialPriceUpdates(workspaceOwnerId, userId, updateRows)
     const appliedAt = new Date().toISOString()
-    const { error: rowsUpdateError } = await supabase
-      .from("directory_material_import_rows")
-      .update({ status: "applied", applied_at: appliedAt })
-      .eq("workspace_owner_id", workspaceOwnerId)
-      .eq("job_id", id)
-      .in("id", rowsToApply.map((row) => row.id))
 
-    if (rowsUpdateError) throw rowsUpdateError
+    if (createRows.length > 0) {
+      const { error: rowsUpdateError } = await supabase
+        .from("directory_material_import_rows")
+        .update({ status: "applied", applied_at: appliedAt })
+        .eq("workspace_owner_id", workspaceOwnerId)
+        .eq("job_id", id)
+        .in("id", createRows.map((row) => row.id))
 
+      if (rowsUpdateError) throw rowsUpdateError
+    }
+
+    const appliedIds = [...createdIds, ...updatedIds]
     const nextAppliedRows = toNumber(jobRow.applied_rows) + rowsToApply.length
     const completed = !hasMore
     const skippedRows = completed ? Math.max(0, toNumber(jobRow.total_rows) - nextAppliedRows) : toNumber(jobRow.skipped_rows)
@@ -588,7 +686,7 @@ export async function applyDirectoryMaterialImportBatchForWorkspace(
       .single()
 
     if (updateError) throw updateError
-    return { data: { job: mapJob(updatedJob as ImportJobDbRow), appliedRows: rowsToApply.length, skippedRows, appliedMaterialIds: materialIds, hasMore } }
+    return { data: { job: mapJob(updatedJob as ImportJobDbRow), appliedRows: rowsToApply.length, skippedRows, appliedMaterialIds: appliedIds, hasMore } }
   } catch (err) {
     await supabase
       .from("directory_material_import_jobs")

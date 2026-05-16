@@ -34,12 +34,20 @@ function detectDelimiter(sample: string) {
   return candidates.sort((a, b) => b.count - a.count)[0]?.delimiter ?? ","
 }
 
+function normalizeCellValue(header: string, value: string) {
+  if (header !== "currencyCode" && header !== "currency_code") return value
+
+  const normalized = value.trim().toLowerCase().replace(/\s+/g, "")
+  if (["руб", "руб.", "р", "р.", "₽", "rur", "rub"].includes(normalized)) return "RUB"
+  return value
+}
+
 function toRecord(headers: string[], row: string[]) {
   const record: Record<string, unknown> = {}
 
   headers.forEach((header, index) => {
     const value = row[index]?.trim()
-    if (header && value) record[header] = value
+    if (header && value) record[header] = normalizeCellValue(header, value)
   })
 
   return record

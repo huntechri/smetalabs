@@ -14,7 +14,6 @@ import { useDirectoryMaterialCategories } from "../hooks/use-directory-material-
 
 const ALL_CATEGORIES_VALUE = "__all_categories__"
 const ALL_SUBCATEGORIES_VALUE = "__all_subcategories__"
-const ALL_UNITS_VALUE = "__all_units__"
 const ALL_SUPPLIERS_VALUE = "__all_suppliers__"
 
 function setOptionalParam(params: URLSearchParams, key: string, value: string | null) {
@@ -30,10 +29,9 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { categories, units, suppliers, loading, error } = useDirectoryMaterialCategories()
+  const { categories, suppliers, loading, error } = useDirectoryMaterialCategories()
   const selectedCategory = searchParams.get("category") ?? ""
   const selectedSubcategory = searchParams.get("subcategory") ?? ""
-  const selectedUnit = searchParams.get("unit") ?? ""
   const selectedSupplier = searchParams.get("supplier") ?? ""
 
   const selectedCategoryOption = useMemo(
@@ -41,7 +39,7 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
     [categories, selectedCategory]
   )
   const subcategories = selectedCategoryOption?.subcategories ?? []
-  const hasActiveFilter = Boolean(selectedCategory || selectedSubcategory || selectedUnit || selectedSupplier)
+  const hasActiveFilter = Boolean(selectedCategory || selectedSubcategory || selectedSupplier)
 
   const pushParams = (params: URLSearchParams) => {
     const query = params.toString()
@@ -63,13 +61,6 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
     pushParams(params)
   }
 
-  const handleUnitChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    const nextUnit = value === ALL_UNITS_VALUE ? null : value
-    setOptionalParam(params, "unit", nextUnit)
-    pushParams(params)
-  }
-
   const handleSupplierChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     const nextSupplier = value === ALL_SUPPLIERS_VALUE ? null : value
@@ -81,7 +72,6 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
     const params = new URLSearchParams(searchParams.toString())
     params.delete("category")
     params.delete("subcategory")
-    params.delete("unit")
     params.delete("supplier")
     params.delete("cursor")
     pushParams(params)
@@ -95,11 +85,11 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
         <div className="min-w-0 flex-1">
           <p className="text-xs/relaxed font-medium text-foreground">Фильтр по материалам</p>
           <p className="text-xs/relaxed text-muted-foreground">
-            Показывает материалы по выбранной категории, единице измерения или поставщику.
+            Показывает материалы по выбранной категории или поставщику.
           </p>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-[minmax(160px,220px)_minmax(160px,220px)_minmax(140px,180px)_minmax(160px,220px)_auto]">
+        <div className="grid gap-2 sm:grid-cols-[minmax(160px,220px)_minmax(160px,220px)_minmax(160px,220px)_auto]">
           <Select
             disabled={loading || categories.length === 0}
             onValueChange={handleCategoryChange}
@@ -131,24 +121,6 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
               {subcategories.map((item) => (
                 <SelectItem key={item.name} value={item.name}>
                   {item.name} · {item.total}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            disabled={loading || units.length === 0}
-            onValueChange={handleUnitChange}
-            value={selectedUnit || ALL_UNITS_VALUE}
-          >
-            <SelectTrigger className="w-full justify-between" size="default">
-              <SelectValue placeholder="Все ед. изм." />
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value={ALL_UNITS_VALUE}>Все ед. изм.</SelectItem>
-              {units.map((item) => (
-                <SelectItem key={item.code} value={item.code}>
-                  {item.label} · {item.total}
                 </SelectItem>
               ))}
             </SelectContent>

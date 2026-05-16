@@ -226,6 +226,7 @@ export type DirectoryWorkImportRow = {
   id: string
   jobId: string
   rowNumber: number
+  batchNumber: number | null
   rawData: Record<string, unknown>
   normalizedData: DirectoryWorkImportNormalizedRow | Record<string, unknown>
   status: DirectoryWorkImportRowStatus
@@ -242,12 +243,23 @@ export type DirectoryWorkImportRow = {
 }
 
 export type DirectoryWorkImportCreateInput = {
-  rows: Array<Record<string, unknown>>
+  rows?: Array<Record<string, unknown>>
   fileName?: string | null
   fileMimeType?: string | null
   fileSizeBytes?: number | null
   sourceName?: string | null
   options?: Record<string, unknown>
+}
+
+export type DirectoryWorkImportBatchInput = {
+  batchNumber: number
+  rowOffset: number
+  rows: Array<Record<string, unknown>>
+  isLastBatch?: boolean
+}
+
+export type DirectoryWorkImportApplyInput = {
+  batchSize?: number
 }
 
 export type DirectoryWorkImportPreviewResponse = {
@@ -262,6 +274,8 @@ export type DirectoryWorkImportApplyResponse = {
     job: DirectoryWorkImportJob
     appliedRows: number
     skippedRows: number
+    appliedWorkIds?: string[]
+    hasMore?: boolean
   }
 }
 

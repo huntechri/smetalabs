@@ -91,9 +91,11 @@ export async function* parseCsvFileInBatches({
   }
 
   while (true) {
-    const { value: chunk, done } = await reader.read()
-    const decoded = decoder.decode(chunk, { stream: !done })
-    let text = bomHandled ? decoded : decoded.replace(/^\uFEFF/, "")
+    const result = await reader.read()
+    const decoded = result.done
+      ? decoder.decode()
+      : decoder.decode(result.value, { stream: true })
+    const text = bomHandled ? decoded : decoded.replace(/^\uFEFF/, "")
     bomHandled = true
 
     if (!delimiter && text.length > 0) delimiter = detectDelimiter(text)
@@ -134,7 +136,7 @@ export async function* parseCsvFileInBatches({
       value += char
     }
 
-    if (done) break
+    if (result.done) break
   }
 
   if (value.length > 0 || row.length > 0) {

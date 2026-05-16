@@ -60,6 +60,7 @@ const HEADER_ALIASES: Record<string, string> = {
   описание: "description",
   image_url: "imageUrl",
   imageurl: "imageUrl",
+  "ссылка на изображение": "imageUrl",
   currency_code: "currencyCode",
   currencycode: "currencyCode",
   currency: "currencyCode",

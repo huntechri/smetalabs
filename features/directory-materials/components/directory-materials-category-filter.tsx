@@ -4,6 +4,14 @@ import { useMemo } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { FieldError } from "@/components/ui/field"
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -82,84 +90,87 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
   if (!open) return null
 
   return (
-    <div className="rounded-lg border border-border bg-card/60 p-2 shadow-sm">
-      <div className="flex flex-col gap-2 @3xl/main:flex-row @3xl/main:items-center">
-        <div className="min-w-0 flex-1">
-          <p className="text-xs/relaxed font-medium text-foreground">Фильтр по материалам</p>
-          <p className="text-xs/relaxed text-muted-foreground">
-            Показывает материалы по выбранной категории или поставщику.
-          </p>
-        </div>
+    <Card size="sm" className="bg-card/60 shadow-sm">
+      <CardHeader className="gap-0 px-2">
+        <CardTitle>Фильтр по материалам</CardTitle>
+        <CardDescription>
+          Показывает материалы по выбранной категории или поставщику.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-2 px-2 sm:grid-cols-[minmax(160px,220px)_minmax(160px,220px)_minmax(160px,220px)_auto]">
+        <Select
+          disabled={loading || categories.length === 0}
+          onValueChange={handleCategoryChange}
+          value={selectedCategory || ALL_CATEGORIES_VALUE}
+        >
+          <SelectTrigger className="w-full justify-between" size="default">
+            <SelectValue placeholder="Все категории" />
+          </SelectTrigger>
+          <SelectContent align="end" className={FILTER_CONTENT_CLASS}>
+            <SelectItem className={FILTER_ITEM_CLASS} value={ALL_CATEGORIES_VALUE}>
+              Все категории
+            </SelectItem>
+            {categories.map((item) => (
+              <SelectItem className={FILTER_ITEM_CLASS} key={item.category} value={item.category}>
+                {item.category} · {item.total}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div className="grid gap-2 sm:grid-cols-[minmax(160px,220px)_minmax(160px,220px)_minmax(160px,220px)_auto]">
-          <Select
-            disabled={loading || categories.length === 0}
-            onValueChange={handleCategoryChange}
-            value={selectedCategory || ALL_CATEGORIES_VALUE}
-          >
-            <SelectTrigger className="w-full justify-between" size="default">
-              <SelectValue placeholder="Все категории" />
-            </SelectTrigger>
-            <SelectContent align="end" className={FILTER_CONTENT_CLASS}>
-              <SelectItem className={FILTER_ITEM_CLASS} value={ALL_CATEGORIES_VALUE}>Все категории</SelectItem>
-              {categories.map((item) => (
-                <SelectItem className={FILTER_ITEM_CLASS} key={item.category} value={item.category}>
-                  {item.category} · {item.total}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <Select
+          disabled={!selectedCategory || subcategories.length === 0}
+          onValueChange={handleSubcategoryChange}
+          value={selectedSubcategory || ALL_SUBCATEGORIES_VALUE}
+        >
+          <SelectTrigger className="w-full justify-between" size="default">
+            <SelectValue placeholder="Все подкатегории" />
+          </SelectTrigger>
+          <SelectContent align="end" className={FILTER_CONTENT_CLASS}>
+            <SelectItem className={FILTER_ITEM_CLASS} value={ALL_SUBCATEGORIES_VALUE}>
+              Все подкатегории
+            </SelectItem>
+            {subcategories.map((item) => (
+              <SelectItem className={FILTER_ITEM_CLASS} key={item.name} value={item.name}>
+                {item.name} · {item.total}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-          <Select
-            disabled={!selectedCategory || subcategories.length === 0}
-            onValueChange={handleSubcategoryChange}
-            value={selectedSubcategory || ALL_SUBCATEGORIES_VALUE}
-          >
-            <SelectTrigger className="w-full justify-between" size="default">
-              <SelectValue placeholder="Все подкатегории" />
-            </SelectTrigger>
-            <SelectContent align="end" className={FILTER_CONTENT_CLASS}>
-              <SelectItem className={FILTER_ITEM_CLASS} value={ALL_SUBCATEGORIES_VALUE}>Все подкатегории</SelectItem>
-              {subcategories.map((item) => (
-                <SelectItem className={FILTER_ITEM_CLASS} key={item.name} value={item.name}>
-                  {item.name} · {item.total}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <Select
+          disabled={loading || suppliers.length === 0}
+          onValueChange={handleSupplierChange}
+          value={selectedSupplier || ALL_SUPPLIERS_VALUE}
+        >
+          <SelectTrigger className="w-full justify-between" size="default">
+            <SelectValue placeholder="Все поставщики" />
+          </SelectTrigger>
+          <SelectContent align="end" className={FILTER_CONTENT_CLASS}>
+            <SelectItem className={FILTER_ITEM_CLASS} value={ALL_SUPPLIERS_VALUE}>
+              Все поставщики
+            </SelectItem>
+            {suppliers.map((item) => (
+              <SelectItem className={FILTER_ITEM_CLASS} key={item.name} value={item.name}>
+                {item.name} · {item.total}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-          <Select
-            disabled={loading || suppliers.length === 0}
-            onValueChange={handleSupplierChange}
-            value={selectedSupplier || ALL_SUPPLIERS_VALUE}
-          >
-            <SelectTrigger className="w-full justify-between" size="default">
-              <SelectValue placeholder="Все поставщики" />
-            </SelectTrigger>
-            <SelectContent align="end" className={FILTER_CONTENT_CLASS}>
-              <SelectItem className={FILTER_ITEM_CLASS} value={ALL_SUPPLIERS_VALUE}>Все поставщики</SelectItem>
-              {suppliers.map((item) => (
-                <SelectItem className={FILTER_ITEM_CLASS} key={item.name} value={item.name}>
-                  {item.name} · {item.total}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <Button
+          disabled={!hasActiveFilter}
+          onClick={handleReset}
+          type="button"
+          variant="outline"
+        >
+          Сбросить
+        </Button>
+      </CardContent>
 
-          <Button
-            disabled={!hasActiveFilter}
-            onClick={handleReset}
-            type="button"
-            variant="outline"
-          >
-            Сбросить
-          </Button>
-        </div>
-      </div>
-
-      {error ? (
-        <p className="mt-2 text-xs/relaxed text-destructive">Не удалось загрузить фильтры: {error}</p>
-      ) : null}
-    </div>
+      <FieldError className="px-2 pb-2">
+        {error ? `Не удалось загрузить фильтры: ${error}` : null}
+      </FieldError>
+    </Card>
   )
 }

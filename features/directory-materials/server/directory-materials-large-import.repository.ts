@@ -97,6 +97,17 @@ function cleanString(value: unknown) {
   return next.length > 0 ? next : null
 }
 
+function splitList(value: unknown) {
+  if (Array.isArray(value)) {
+    return Array.from(new Set(value.map((item) => cleanString(item)).filter(Boolean))) as string[]
+  }
+  const text = cleanString(value)
+  if (!text) return []
+  return Array.from(
+    new Set(text.split(/[;,|]/g).map((item) => item.trim().replace(/\s+/g, " ")).filter(Boolean))
+  )
+}
+
 function getRawValue(row: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
     const value = row[key]
@@ -138,7 +149,7 @@ function buildDedupeFingerprint(input: DirectoryMaterialImportNormalizedRow) {
 
 function normalizeImportRow(rawData: Record<string, unknown>, fallbackSourceName: string | null) {
   const name = cleanString(getRawValue(rawData, ["name", "title", "наименование", "название"])) ?? ""
-  const unit = cleanString(getRawValue(rawData, ["unit", "unit_label", "unit_code", "единица"])) ?? ""
+  const unit = cleanString(getRawValue(rawData, ["unit", "unit_label", "unit_code", "единица", "ед. изм."])) ?? ""
   const category = cleanString(getRawValue(rawData, ["category", "категория"])) ?? ""
   const price = normalizeNumber(getRawValue(rawData, ["price", "price_amount", "rate", "цена"]))
   const rawCurrency = cleanString(getRawValue(rawData, ["currency_code", "currencyCode", "currency", "валюта"]))
@@ -160,8 +171,10 @@ function normalizeImportRow(rawData: Record<string, unknown>, fallbackSourceName
       subcategory: cleanString(getRawValue(rawData, ["subcategory", "подкатегория"])),
       code: cleanString(getRawValue(rawData, ["code", "код"])),
       supplierName: cleanString(getRawValue(rawData, ["supplierName", "supplier_name", "supplier", "поставщик"])),
-      imageUrl: cleanString(getRawValue(rawData, ["imageUrl", "image_url"])),
+      imageUrl: cleanString(getRawValue(rawData, ["imageUrl", "image_url", "ссылка на изображение"])),
       description: cleanString(getRawValue(rawData, ["description", "описание"])),
+      aliases: splitList(getRawValue(rawData, ["aliases", "alias", "синонимы"])),
+      keywords: splitList(getRawValue(rawData, ["keywords", "keyword", "ключевые слова"])),
       sourceName: cleanString(getRawValue(rawData, ["sourceName", "source_name", "источник"])) ?? fallbackSourceName,
       sourceExternalRowKey: cleanString(getRawValue(rawData, ["sourceExternalRowKey", "source_external_row_key", "external_id"])),
       currencyCode,
@@ -367,6 +380,8 @@ function toInsertRow(workspaceOwnerId: string, userId: string, row: DirectoryMat
     supplier_id: null,
     image_url: cleanString(row.imageUrl),
     description: cleanString(row.description),
+    aliases: row.aliases ?? [],
+    keywords: row.keywords ?? [],
     source_name: cleanString(row.sourceName),
     source_external_row_key: cleanString(row.sourceExternalRowKey),
     dedupe_fingerprint: "pending",

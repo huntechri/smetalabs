@@ -13,6 +13,7 @@ import type {
 const DEFAULT_FAST_APPLY_BATCH_SIZE = 5000
 const MAX_FAST_APPLY_BATCH_SIZE = 5000
 const UPDATE_PRICE_CONCURRENCY = 25
+const MARK_ROWS_CHUNK_SIZE = 500
 
 type ImportJobDbRow = {
   id: string
@@ -205,6 +206,20 @@ async function updateMaterialPrices(workspaceOwnerId: string, userId: string, ro
   return appliedIds
 }
 
+async function markImportRowsApplied(workspaceOwnerId: string, jobId: string, rows: ApplyRow[], appliedAt: string) {
+  for (let index = 0; index < rows.length; index += MARK_ROWS_CHUNK_SIZE) {
+    const group = rows.slice(index, index + MARK_ROWS_CHUNK_SIZE)
+    const { error } = await supabase
+      .from("directory_material_import_rows")
+      .update({ status: "applied", applied_at: appliedAt })
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .eq("job_id", jobId)
+      .in("id", group.map((row) => row.id))
+
+    if (error) throw error
+  }
+}
+
 export async function applyFastDirectoryMaterialImportBatchForWorkspace(
   workspaceOwnerId: string,
   userId: string,
@@ -269,15 +284,7 @@ export async function applyFastDirectoryMaterialImportBatchForWorkspace(
 
     const updatedIds = await updateMaterialPrices(workspaceOwnerId, userId, updateRows)
     const appliedAt = new Date().toISOString()
-
-    const { error: rowsUpdateError } = await supabase
-      .from("directory_material_import_rows")
-      .update({ status: "applied", applied_at: appliedAt })
-      .eq("workspace_owner_id", workspaceOwnerId)
-      .eq("job_id", id)
-      .in("id", rowsToApply.map((row) => row.id))
-
-    if (rowsUpdateError) throw rowsUpdateError
+    await markImportRowsApplied(workspaceOwnerId, id, rowsToApply, appliedAt)
 
     const nextAppliedRows = toNumber(jobRow.applied_rows) + rowsToApply.length
     const completed = !hasMore

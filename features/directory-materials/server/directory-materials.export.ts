@@ -16,6 +16,8 @@ const CSV_COLUMNS: Array<{
   { label: "Категория", value: (material) => material.category },
   { label: "Подкатегория", value: (material) => material.subcategory },
   { label: "Поставщик", value: (material) => material.supplierName },
+  { label: "Синонимы", value: (material) => material.aliases.join("; ") },
+  { label: "Ключевые слова", value: (material) => material.keywords.join("; ") },
   { label: "Описание", value: (material) => material.description },
   { label: "Ссылка на изображение", value: (material) => material.imageUrl },
 ]

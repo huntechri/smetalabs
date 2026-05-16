@@ -1,6 +1,9 @@
 import { z } from "zod"
 import type { DirectoryMaterialsListParams } from "../types"
 
+const MAX_IMPORT_BATCH_ROWS = 2000
+const MAX_IMPORT_APPLY_BATCH_ROWS = 500
+
 const optionalTrimmedString = (maxLength: number) =>
   z.preprocess((value) => {
     if (typeof value !== "string") return undefined
@@ -70,6 +73,16 @@ const directoryMaterialEmbeddingLimitSchema = z.preprocess((value) => {
   return Number(value)
 }, z.number().int().min(1).max(50).default(20))
 
+const importRowsSchema = z
+  .array(z.record(z.string(), z.unknown()))
+  .max(MAX_IMPORT_BATCH_ROWS, `За один пакет можно загрузить не больше ${MAX_IMPORT_BATCH_ROWS} строк`)
+  .default([])
+
+const importRequiredRowsSchema = z
+  .array(z.record(z.string(), z.unknown()))
+  .min(1, "Пакет импорта материалов не содержит строк")
+  .max(MAX_IMPORT_BATCH_ROWS, `За один пакет можно загрузить не больше ${MAX_IMPORT_BATCH_ROWS} строк`)
+
 export const directoryMaterialsListQuerySchema = z.object({
   q: optionalTrimmedString(240),
   category: optionalTrimmedString(120),
@@ -107,15 +120,32 @@ export const directoryMaterialMutationSchema = z
 
 export const directoryMaterialImportCreateSchema = z
   .object({
-    rows: z
-      .array(z.record(z.string(), z.unknown()))
-      .min(1, "Файл импорта материалов не содержит строк")
-      .max(1000, "За один импорт можно загрузить не больше 1000 строк"),
+    rows: importRowsSchema,
     fileName: nullableTrimmedString(255),
     fileMimeType: nullableTrimmedString(120),
     fileSizeBytes: z.number().int().nonnegative().nullable().optional(),
     sourceName: nullableTrimmedString(120),
     options: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict()
+
+export const directoryMaterialImportBatchSchema = z
+  .object({
+    batchNumber: z.number().int().positive(),
+    rowOffset: z.number().int().nonnegative(),
+    rows: importRequiredRowsSchema,
+    isLastBatch: z.boolean().optional(),
+  })
+  .strict()
+
+export const directoryMaterialImportApplySchema = z
+  .object({
+    batchSize: z
+      .preprocess((value) => {
+        if (value === undefined || value === null || value === "") return 200
+        return Number(value)
+      }, z.number().int().min(1).max(MAX_IMPORT_APPLY_BATCH_ROWS))
+      .default(200),
   })
   .strict()
 
@@ -181,6 +211,15 @@ export function parseDirectoryMaterialMutationBody(body: unknown) {
 
 export function parseDirectoryMaterialImportCreateBody(body: unknown) {
   return directoryMaterialImportCreateSchema.parse(body)
+}
+
+export function parseDirectoryMaterialImportBatchBody(body: unknown) {
+  return directoryMaterialImportBatchSchema.parse(body)
+}
+
+export function parseDirectoryMaterialImportApplyBody(body: unknown) {
+  if (body === undefined || body === null) return directoryMaterialImportApplySchema.parse({})
+  return directoryMaterialImportApplySchema.parse(body)
 }
 
 export function parseDirectoryMaterialAiSearchBody(body: unknown) {

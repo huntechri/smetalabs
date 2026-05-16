@@ -7,6 +7,8 @@ import type {
 import { normalizeDirectoryWorksListParams } from "./directory-works.search"
 
 const MAX_IMPORT_FILE_SIZE_BYTES = 50 * 1024 * 1024
+const MAX_IMPORT_BATCH_ROWS = 2000
+const MAX_IMPORT_APPLY_BATCH_ROWS = 500
 
 const optionalTrimmedString = (maxLength: number) =>
   z.preprocess((value) => {
@@ -63,8 +65,13 @@ const directoryWorksExportFormatSchema = z.enum(["csv", "xlsx"]).default("csv")
 
 const importRowsSchema = z
   .array(z.record(z.string(), z.unknown()))
-  .min(1, "Файл не содержит строк для импорта")
-  .max(1000, "За один импорт можно загрузить не более 1000 строк")
+  .max(MAX_IMPORT_BATCH_ROWS, `За один пакет можно загрузить не более ${MAX_IMPORT_BATCH_ROWS} строк`)
+  .default([])
+
+const importRequiredRowsSchema = z
+  .array(z.record(z.string(), z.unknown()))
+  .min(1, "Пакет импорта не содержит строк")
+  .max(MAX_IMPORT_BATCH_ROWS, `За один пакет можно загрузить не более ${MAX_IMPORT_BATCH_ROWS} строк`)
 
 const importFileSizeBytesSchema = z
   .preprocess((value) => {
@@ -118,6 +125,26 @@ export const directoryWorkImportCreateSchema = z
     fileSizeBytes: importFileSizeBytesSchema,
     sourceName: nullableTrimmedString(120),
     options: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict()
+
+export const directoryWorkImportBatchSchema = z
+  .object({
+    batchNumber: z.number().int().positive(),
+    rowOffset: z.number().int().nonnegative(),
+    rows: importRequiredRowsSchema,
+    isLastBatch: z.boolean().optional(),
+  })
+  .strict()
+
+export const directoryWorkImportApplySchema = z
+  .object({
+    batchSize: z
+      .preprocess((value) => {
+        if (value === undefined || value === null || value === "") return 200
+        return Number(value)
+      }, z.number().int().min(1).max(MAX_IMPORT_APPLY_BATCH_ROWS))
+      .default(200),
   })
   .strict()
 
@@ -186,6 +213,15 @@ export function parseDirectoryWorkMutationBody(body: unknown) {
 
 export function parseDirectoryWorkImportCreateBody(body: unknown) {
   return directoryWorkImportCreateSchema.parse(body)
+}
+
+export function parseDirectoryWorkImportBatchBody(body: unknown) {
+  return directoryWorkImportBatchSchema.parse(body)
+}
+
+export function parseDirectoryWorkImportApplyBody(body: unknown) {
+  if (body === undefined || body === null) return directoryWorkImportApplySchema.parse({})
+  return directoryWorkImportApplySchema.parse(body)
 }
 
 export function parseDirectoryWorkAiSearchBody(

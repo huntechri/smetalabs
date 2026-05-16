@@ -1,6 +1,12 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,31 +39,28 @@ export function DirectoryMaterialsRow({
   const priceLabel = `${row.price.toLocaleString("ru-RU")} ${row.currencyCode}`
 
   return (
-    <div className="mx-3 my-1.5 grid gap-3 rounded-md border border-border p-3 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(520px,1.15fr)_minmax(520px,0.85fr)]">
-      <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(96px,0.18fr)_minmax(0,1fr)]">
-        <Card size="sm" className="min-w-0 gap-1 rounded-md bg-transparent p-2 py-2 ring-border">
-          <span className="text-xs text-muted-foreground uppercase">
-            Код
-          </span>
-          <div className="break-words text-sm font-medium leading-snug">
+    <Card
+      size="sm"
+      className="mx-3 my-1.5 gap-0 rounded-md bg-transparent py-0 transition-colors hover:bg-muted/50"
+    >
+      <CardHeader className="grid min-w-0 gap-3 p-2 sm:grid-cols-[minmax(96px,0.18fr)_minmax(0,1fr)]">
+        <div className="min-w-0">
+          <CardDescription>Код</CardDescription>
+          <CardTitle className="break-words text-sm leading-snug">
             {row.code || "—"}
-          </div>
-        </Card>
-        <Card size="sm" className="min-w-0 gap-1 rounded-md bg-transparent p-2 py-2 ring-border">
-          <span className="text-xs text-muted-foreground uppercase">
-            Название
-          </span>
-          <div className="break-words text-sm font-medium leading-snug">
+          </CardTitle>
+        </div>
+        <div className="min-w-0">
+          <CardDescription>Название</CardDescription>
+          <CardTitle className="break-words text-sm leading-snug">
             {row.name}
-          </div>
-        </Card>
-      </div>
+          </CardTitle>
+        </div>
+      </CardHeader>
 
-      <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(180px,0.75fr)_minmax(280px,1fr)]">
-        <Card size="sm" className="min-w-0 gap-1.5 rounded-md bg-transparent p-1.5 py-1.5 ring-border">
-          <div className="text-xs text-muted-foreground uppercase">
-            Ед. изм / Цена
-          </div>
+      <CardContent className="grid min-w-0 gap-2 p-2 pt-0 md:grid-cols-[minmax(180px,0.75fr)_minmax(280px,1fr)]">
+        <div className="min-w-0 space-y-1.5">
+          <CardDescription>Ед. изм / Цена</CardDescription>
           <div className="flex min-w-0 flex-wrap gap-1.5">
             <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
               <span className="text-muted-foreground">Ед.:</span>
@@ -68,13 +71,11 @@ export function DirectoryMaterialsRow({
               <span>{priceLabel}</span>
             </Badge>
           </div>
-        </Card>
+        </div>
 
-        <Card size="sm" className="min-w-0 gap-1.5 rounded-md bg-transparent p-1.5 py-1.5 ring-border">
-          <div className="text-xs text-muted-foreground uppercase">
-            Категория / Поставщик
-          </div>
-          <div className="flex min-w-0 flex-wrap gap-1.5">
+        <div className="min-w-0 space-y-1.5">
+          <CardDescription>Категория / Поставщик</CardDescription>
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
               <span className="text-muted-foreground">Кат.:</span>
               <span>{row.category}</span>
@@ -129,8 +130,8 @@ export function DirectoryMaterialsRow({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </Card>
-      </div>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

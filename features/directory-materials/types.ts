@@ -2,6 +2,12 @@ export type DirectoryMaterialStatus = "active" | "archived"
 export type DirectoryMaterialsSort = "relevance" | "updated_desc" | "name_asc"
 export type DirectoryMaterialsExportFormat = "csv"
 
+export type DirectoryMaterialsExportFile = {
+  body: string
+  contentType: string
+  extension: DirectoryMaterialsExportFormat
+}
+
 export type DirectoryMaterialsListParams = {
   q?: string
   category?: string

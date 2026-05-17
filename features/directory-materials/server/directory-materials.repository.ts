@@ -5,6 +5,7 @@ import type {
   DirectoryMaterialCategoryOption,
   DirectoryMaterialMutationInput,
   DirectoryMaterialSupplierOption,
+  DirectoryMaterialsCategoriesParams,
   DirectoryMaterialsCategoriesResponse,
   DirectoryMaterialsListParams,
   DirectoryMaterialsListResponse,
@@ -15,6 +16,9 @@ type NormalizedListParams = Required<
   Pick<DirectoryMaterialsListParams, "status" | "limit" | "cursor" | "sort">
 > &
   Omit<DirectoryMaterialsListParams, "status" | "limit" | "cursor" | "sort">
+
+type NormalizedCategoriesParams = Required<Pick<DirectoryMaterialsCategoriesParams, "status">> &
+  Omit<DirectoryMaterialsCategoriesParams, "status">
 
 type DirectoryMaterialDbRow = {
   id: string
@@ -365,14 +369,19 @@ export async function archiveDirectoryMaterialForWorkspace(
 
 export async function getDirectoryMaterialCategoriesForWorkspace(
   workspaceOwnerId: string,
-  status: "active" | "archived" = "active"
+  params: NormalizedCategoriesParams
 ): Promise<DirectoryMaterialsCategoriesResponse> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("directory_materials")
     .select("category,subcategory,unit_code,unit_label,supplier_name")
     .eq("workspace_owner_id", workspaceOwnerId)
-    .eq("status", status)
+    .eq("status", params.status)
     .is("deleted_at", null)
+
+  if (params.category) query = query.eq("category", params.category)
+  if (params.subcategory) query = query.eq("subcategory", params.subcategory)
+
+  const { data, error } = await query
 
   if (error) throw error
 

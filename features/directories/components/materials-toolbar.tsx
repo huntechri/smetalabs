@@ -1,12 +1,16 @@
 "use client"
 
-import { Suspense } from "react"
-import { DirectoriesToolbar } from "@/features/directories/components/directories-toolbar"
+import { Suspense, useState } from "react"
+import {
+  DirectoriesToolbar,
+  type DirectoryAction,
+} from "@/features/directories/components/directories-toolbar"
+import { DirectoryMaterialsCategoryFilter } from "@/features/directory-materials/components/directory-materials-category-filter"
 import {
   dispatchDirectoryMaterialsCreateEvent,
   dispatchDirectoryMaterialsImportEvent,
 } from "@/features/directory-materials/lib/directory-materials-events"
-import { PlusIcon, FileArrowDownIcon, ExportIcon } from "@phosphor-icons/react"
+import { PlusIcon, FileArrowDownIcon, ExportIcon, FunnelIcon } from "@phosphor-icons/react"
 
 function exportDirectoryMaterials() {
   const searchParams = new URLSearchParams(window.location.search)
@@ -15,34 +19,51 @@ function exportDirectoryMaterials() {
   window.location.href = `/api/directory-materials/export?${searchParams.toString()}`
 }
 
-const materialsActions = [
-  {
-    label: "Добавить",
-    icon: <PlusIcon data-icon="inline-start" />,
-    onClick: dispatchDirectoryMaterialsCreateEvent,
-  },
-  {
-    label: "Импорт",
-    icon: <FileArrowDownIcon data-icon="inline-start" />,
-    onClick: dispatchDirectoryMaterialsImportEvent,
-    title: "Импорт материалов из CSV",
-  },
-  {
-    label: "Экспорт",
-    icon: <ExportIcon data-icon="inline-start" />,
-    onClick: exportDirectoryMaterials,
-    title: "Экспорт материалов в CSV",
-  },
-]
+function MaterialsToolbarContent() {
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
+  const materialsActions: DirectoryAction[] = [
+    {
+      label: "Фильтр",
+      icon: <FunnelIcon data-icon="inline-start" />,
+      variant: filtersOpen ? "default" : "outline",
+      hideLabel: true,
+      onClick: () => setFiltersOpen((current) => !current),
+    },
+    {
+      label: "Добавить",
+      icon: <PlusIcon data-icon="inline-start" />,
+      onClick: dispatchDirectoryMaterialsCreateEvent,
+    },
+    {
+      label: "Импорт",
+      icon: <FileArrowDownIcon data-icon="inline-start" />,
+      onClick: dispatchDirectoryMaterialsImportEvent,
+      title: "Импорт материалов из CSV",
+    },
+    {
+      label: "Экспорт",
+      icon: <ExportIcon data-icon="inline-start" />,
+      onClick: exportDirectoryMaterials,
+      title: "Экспорт материалов в CSV",
+    },
+  ]
+
+  return (
+    <DirectoriesToolbar
+      searchPlaceholder="Поиск материалов"
+      searchAriaLabel="Поиск материалов"
+      actions={materialsActions}
+    >
+      <DirectoryMaterialsCategoryFilter open={filtersOpen} />
+    </DirectoriesToolbar>
+  )
+}
 
 export function MaterialsToolbar() {
   return (
     <Suspense fallback={null}>
-      <DirectoriesToolbar
-        searchPlaceholder="Поиск материалов"
-        searchAriaLabel="Поиск материалов"
-        actions={materialsActions}
-      />
+      <MaterialsToolbarContent />
     </Suspense>
   )
 }

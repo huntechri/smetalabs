@@ -10,8 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import type {
   DirectoryMaterial,
   DirectoryMaterialMutationInput,
@@ -60,12 +65,14 @@ export function DirectoryMaterialFormDialog({
   open,
   onOpenChange,
   saving,
+  title,
   onSubmit,
 }: {
   material: DirectoryMaterial | null
   open: boolean
   onOpenChange: (open: boolean) => void
   saving: boolean
+  title?: string
   onSubmit: (input: DirectoryMaterialMutationInput) => Promise<void>
 }) {
   const [form, setForm] = useState<DirectoryMaterialFormState>(() =>
@@ -132,16 +139,16 @@ export function DirectoryMaterialFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{material ? "Редактировать материал" : "Новый материал"}</DialogTitle>
+          <DialogTitle>{title ?? (material ? "Редактировать материал" : "Новый материал")}</DialogTitle>
           <DialogDescription>
             Заполните обязательные поля. Пустой материал не будет сохранён.
           </DialogDescription>
         </DialogHeader>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <Label htmlFor="directory-material-name">Название</Label>
+          <FieldGroup className="grid gap-3 sm:grid-cols-2">
+            <Field className="sm:col-span-2">
+              <FieldLabel htmlFor="directory-material-name">Название</FieldLabel>
               <Input
                 id="directory-material-name"
                 maxLength={240}
@@ -149,10 +156,10 @@ export function DirectoryMaterialFormDialog({
                 placeholder="Например: Цемент М500"
                 value={form.name}
               />
-            </div>
+            </Field>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="directory-material-unit">Ед. изм.</Label>
+            <Field>
+              <FieldLabel htmlFor="directory-material-unit">Ед. изм.</FieldLabel>
               <Input
                 id="directory-material-unit"
                 maxLength={80}
@@ -160,10 +167,10 @@ export function DirectoryMaterialFormDialog({
                 placeholder="кг"
                 value={form.unit}
               />
-            </div>
+            </Field>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="directory-material-price">Цена</Label>
+            <Field>
+              <FieldLabel htmlFor="directory-material-price">Цена</FieldLabel>
               <Input
                 id="directory-material-price"
                 min="0"
@@ -173,10 +180,10 @@ export function DirectoryMaterialFormDialog({
                 type="number"
                 value={form.price}
               />
-            </div>
+            </Field>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="directory-material-category">Категория</Label>
+            <Field>
+              <FieldLabel htmlFor="directory-material-category">Категория</FieldLabel>
               <Input
                 id="directory-material-category"
                 maxLength={120}
@@ -184,10 +191,10 @@ export function DirectoryMaterialFormDialog({
                 placeholder="Сухие смеси"
                 value={form.category}
               />
-            </div>
+            </Field>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="directory-material-subcategory">Подкатегория</Label>
+            <Field>
+              <FieldLabel htmlFor="directory-material-subcategory">Подкатегория</FieldLabel>
               <Input
                 id="directory-material-subcategory"
                 maxLength={120}
@@ -195,10 +202,10 @@ export function DirectoryMaterialFormDialog({
                 placeholder="Цемент"
                 value={form.subcategory}
               />
-            </div>
+            </Field>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="directory-material-code">Код</Label>
+            <Field>
+              <FieldLabel htmlFor="directory-material-code">Код</FieldLabel>
               <Input
                 id="directory-material-code"
                 maxLength={80}
@@ -206,10 +213,10 @@ export function DirectoryMaterialFormDialog({
                 placeholder="MAT-001"
                 value={form.code}
               />
-            </div>
+            </Field>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="directory-material-supplier">Поставщик</Label>
+            <Field>
+              <FieldLabel htmlFor="directory-material-supplier">Поставщик</FieldLabel>
               <Input
                 id="directory-material-supplier"
                 maxLength={160}
@@ -217,10 +224,10 @@ export function DirectoryMaterialFormDialog({
                 placeholder="Название поставщика"
                 value={form.supplierName}
               />
-            </div>
-          </div>
+            </Field>
+          </FieldGroup>
 
-          {error ? <p className="text-xs/relaxed text-destructive">{error}</p> : null}
+          <FieldError>{error}</FieldError>
 
           <DialogFooter showCloseButton={false}>
             <Button

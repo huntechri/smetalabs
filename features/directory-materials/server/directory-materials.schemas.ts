@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { DirectoryMaterialsListParams } from "../types"
+import type { DirectoryMaterialsCategoriesParams, DirectoryMaterialsListParams } from "../types"
 
 const MAX_IMPORT_BATCH_ROWS = 2000
 const MAX_IMPORT_APPLY_BATCH_ROWS = 500
@@ -87,6 +87,12 @@ export const directoryMaterialsListQuerySchema = z.object({
   sort: directoryMaterialsSortSchema,
 })
 
+export const directoryMaterialsCategoriesQuerySchema = z.object({
+  status: directoryMaterialStatusSchema,
+  category: optionalTrimmedString(120),
+  subcategory: optionalTrimmedString(120),
+})
+
 export const directoryMaterialsExportQuerySchema = directoryMaterialsListQuerySchema.extend({
   format: z.enum(["csv"]).default("csv"),
   limit: directoryMaterialsExportLimitSchema,
@@ -152,8 +158,14 @@ export const directoryMaterialCategoryStatusSchema = z.enum(["active", "archived
 export function normalizeDirectoryMaterialsListParams(params: DirectoryMaterialsListParams): Required<Pick<DirectoryMaterialsListParams, "status" | "limit" | "cursor" | "sort">> & Omit<DirectoryMaterialsListParams, "status" | "limit" | "cursor" | "sort"> {
   return { ...params, status: params.status ?? "active", limit: params.limit ?? 50, cursor: params.cursor ?? 0, sort: params.sort ?? "relevance" }
 }
+export function normalizeDirectoryMaterialsCategoriesParams(params: DirectoryMaterialsCategoriesParams = {}): Required<Pick<DirectoryMaterialsCategoriesParams, "status">> & Omit<DirectoryMaterialsCategoriesParams, "status"> {
+  return { ...params, status: params.status ?? "active" }
+}
 export function parseDirectoryMaterialsListParams(searchParams: URLSearchParams): Required<Pick<DirectoryMaterialsListParams, "status" | "limit" | "cursor" | "sort">> & Omit<DirectoryMaterialsListParams, "status" | "limit" | "cursor" | "sort"> {
   return normalizeDirectoryMaterialsListParams(directoryMaterialsListQuerySchema.parse(Object.fromEntries(searchParams)))
+}
+export function parseDirectoryMaterialsCategoriesParams(searchParams: URLSearchParams): Required<Pick<DirectoryMaterialsCategoriesParams, "status">> & Omit<DirectoryMaterialsCategoriesParams, "status"> {
+  return normalizeDirectoryMaterialsCategoriesParams(directoryMaterialsCategoriesQuerySchema.parse(Object.fromEntries(searchParams)))
 }
 export function parseDirectoryMaterialsExportParams(searchParams: URLSearchParams) {
   const parsed = directoryMaterialsExportQuerySchema.parse(Object.fromEntries(searchParams))

@@ -15,12 +15,12 @@ import {
   updateDirectoryMaterial,
 } from "./directory-materials.service"
 import {
-  parseDirectoryMaterialCategoryStatus,
   parseDirectoryMaterialId,
   parseDirectoryMaterialImportApplyBody,
   parseDirectoryMaterialImportBatchBody,
   parseDirectoryMaterialImportCreateBody,
   parseDirectoryMaterialMutationBody,
+  parseDirectoryMaterialsCategoriesParams,
   parseDirectoryMaterialsExportParams,
   parseDirectoryMaterialsListParams,
 } from "./directory-materials.schemas"
@@ -115,8 +115,8 @@ export async function handleDirectoryMaterialArchiveRequest(id: string) {
 
 export async function handleDirectoryMaterialsCategoriesRequest(request: NextRequest) {
   try {
-    const status = parseDirectoryMaterialCategoryStatus(request.nextUrl.searchParams.get("status"))
-    const response = await getDirectoryMaterialsCategories(status)
+    const params = parseDirectoryMaterialsCategoriesParams(request.nextUrl.searchParams)
+    const response = await getDirectoryMaterialsCategories(params)
     return NextResponse.json(response)
   } catch (err) {
     return handleDirectoryMaterialsRouteError(err, "[GET /api/directory-materials/categories]")

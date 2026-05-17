@@ -1,4 +1,7 @@
-import type { DirectoryMaterialsListParams } from "../types"
+import type {
+  DirectoryMaterialsCategoriesParams,
+  DirectoryMaterialsListParams,
+} from "../types"
 
 export const directoryMaterialsQueryKeys = {
   all: ["directoryMaterials"] as const,
@@ -7,7 +10,8 @@ export const directoryMaterialsQueryKeys = {
     [...directoryMaterialsQueryKeys.lists(), params] as const,
   details: () => [...directoryMaterialsQueryKeys.all, "detail"] as const,
   detail: (id: string) => [...directoryMaterialsQueryKeys.details(), id] as const,
-  categories: () => [...directoryMaterialsQueryKeys.all, "categories"] as const,
+  categories: (params: DirectoryMaterialsCategoriesParams = {}) =>
+    [...directoryMaterialsQueryKeys.all, "categories", params] as const,
   importJobs: () => [...directoryMaterialsQueryKeys.all, "importJob"] as const,
   importJob: (id: string) =>
     [...directoryMaterialsQueryKeys.importJobs(), id] as const,

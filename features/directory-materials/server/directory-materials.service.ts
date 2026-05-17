@@ -9,6 +9,7 @@ import type {
   DirectoryMaterialImportBatchInput,
   DirectoryMaterialImportCreateInput,
   DirectoryMaterialMutationInput,
+  DirectoryMaterialsCategoriesParams,
   DirectoryMaterialsExportFormat,
   DirectoryMaterialsListParams,
 } from "../types"
@@ -37,7 +38,10 @@ import {
   searchDirectoryMaterialsAiForWorkspace,
 } from "./directory-materials-ai"
 import { buildDirectoryMaterialsExportFile } from "./directory-materials.export"
-import { normalizeDirectoryMaterialsListParams } from "./directory-materials.schemas"
+import {
+  normalizeDirectoryMaterialsCategoriesParams,
+  normalizeDirectoryMaterialsListParams,
+} from "./directory-materials.schemas"
 
 type DirectoryMaterialsContext = {
   userId: string
@@ -167,12 +171,14 @@ export async function archiveDirectoryMaterial(id: string) {
   return { data: material }
 }
 
-export async function getDirectoryMaterialsCategories(status: "active" | "archived") {
+export async function getDirectoryMaterialsCategories(params: DirectoryMaterialsCategoriesParams = {}) {
   const context = await requireDirectoryMaterialsReadContext()
+  const normalizedParams = normalizeDirectoryMaterialsCategoriesParams(params)
+  const cacheKey = stableHash({ workspaceOwnerId: context.workspaceOwnerId, normalizedParams })
 
   return unstable_cache(
-    () => getDirectoryMaterialCategoriesForWorkspace(context.workspaceOwnerId, status),
-    ["directory-materials:categories", context.workspaceOwnerId, status],
+    () => getDirectoryMaterialCategoriesForWorkspace(context.workspaceOwnerId, normalizedParams),
+    ["directory-materials:categories", cacheKey],
     { revalidate: CATEGORIES_CACHE_REVALIDATE_SECONDS, tags: [context.cacheTags.categories, context.cacheTags.list] }
   )()
 }

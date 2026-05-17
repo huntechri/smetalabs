@@ -2,6 +2,12 @@ export type DirectoryMaterialStatus = "active" | "archived"
 export type DirectoryMaterialsSort = "relevance" | "updated_desc" | "name_asc"
 export type DirectoryMaterialsExportFormat = "csv"
 
+export type DirectoryMaterialsExportFile = {
+  body: string
+  contentType: string
+  extension: DirectoryMaterialsExportFormat
+}
+
 export type DirectoryMaterialsListParams = {
   q?: string
   category?: string
@@ -12,6 +18,12 @@ export type DirectoryMaterialsListParams = {
   limit?: number
   cursor?: number
   sort?: DirectoryMaterialsSort
+}
+
+export type DirectoryMaterialsCategoriesParams = {
+  status?: DirectoryMaterialStatus
+  category?: string
+  subcategory?: string
 }
 
 export type DirectoryMaterialMutationInput = {
@@ -222,14 +234,12 @@ export type DirectoryMaterialImportApplyResponse = {
   data: {
     job: DirectoryMaterialImportJob
     appliedRows: number
+    createdRows?: number
+    updatedRows?: number
     skippedRows: number
+    conflictRows?: number
     appliedMaterialIds?: string[]
     hasMore?: boolean
+    nextBatchSize?: number
   }
-}
-
-export type DirectoryMaterialsExportFile = {
-  body: string
-  contentType: string
-  extension: DirectoryMaterialsExportFormat
 }

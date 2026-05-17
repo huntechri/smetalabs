@@ -124,7 +124,7 @@ Write rules:
 - empty optional text fields are stored as null;
 - `email` is stored lowercased when present;
 - `color` must be a valid HEX value;
-- duplicate non-empty INN inside the same workspace is rejected;
+- duplicate non-empty INН inside the same workspace is rejected;
 - archive sets `status = archived`, `archived_at`, `updated_by`, `updated_at` and increments `version`;
 - physical delete is not the default because suppliers can later be referenced by purchases, materials and documents.
 
@@ -242,4 +242,4 @@ No supplier toolbar action may call works or materials behavior.
 - [x] loading, empty and error states are present;
 - [x] temporary mock data is removed from the production flow;
 - [x] supplier-specific document exists;
-- [ ] runtime migration must be applied before production usage.
+- [x] runtime migration has been applied before production usage.

@@ -51,7 +51,11 @@ export function ProjectsView() {
     const confirmed = window.confirm(`Архивировать проект «${project.title}»?`)
     if (!confirmed) return
 
-    await archiveProject(project.id)
+    try {
+      await archiveProject(project.id)
+    } catch {
+      // Ошибка уже попадает в общее сообщение экрана через useProjects.
+    }
   }
 
   const handlePreviousPage = () => {

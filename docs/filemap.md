@@ -169,7 +169,8 @@ db/
 │   ├── 019_directory_materials_foundation.sql
 │   ├── 021_material_search_terms.sql
 │   ├── 023_material_embedding_backfill.sql
-│   └── 024_directory_counterparties_foundation.sql
+│   ├── 024_directory_counterparties_foundation.sql
+│   └── 025_directory_counterparties_function_grants.sql
 └── schema/
     ├── index.ts
     ├── directory-counterparties.ts
@@ -194,7 +195,7 @@ db/
   → app/api/directory-counterparties/** exposes workspace-scoped read/search/CRUD routes
   → features/directory-counterparties/** owns UI hooks, form dialog, repository and service logic
   → docs/directory-counterparties-architecture.md fixes the first-version contract
-  → db/schema/directory-counterparties.ts and db/migrations/024_directory_counterparties_foundation.sql provide storage
+  → db/schema/directory-counterparties.ts and db/migrations/024-025 directory_counterparties migrations provide storage and save grants
 ```
 
 The counterparties catalog stays workspace-scoped through `workspace_owner_id`. Import, export, AI search and complex filters are intentionally outside the first version.
@@ -249,8 +250,9 @@ Works export uses the active screen filters/search for category and subcategory 
 
 ## Recent directory/deployment updates
 
-- `docs/directory-counterparties-architecture.md` — first-version contract for the counterparties catalog.
+- `docs/directory-counterparties-architecture.md` — first-version contract for the counterparties catalog, including save helper grants.
 - `db/migrations/024_directory_counterparties_foundation.sql` — workspace-scoped counterparties storage with soft archive and search fields.
+- `db/migrations/025_directory_counterparties_function_grants.sql` — grants for search helper functions used during counterparty save.
 - `features/directory-counterparties/**` and `app/api/directory-counterparties/**` — counterparties list, create, update, archive and regular search flow.
 - `features/directory-works/directory-works-details/components/directory-works-section.tsx` — works export now keeps the current screen filters/search, including category and subcategory, while dropping pagination.
 - `features/directory-materials/server/directory-materials.service.ts` — materials export now collects matching rows in bounded batches instead of exporting only the first page.

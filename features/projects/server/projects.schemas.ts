@@ -21,6 +21,12 @@ const projectMutationSchema = z.object({
     .trim()
     .min(1, "Название проекта обязательно")
     .max(200, "Название проекта слишком длинное"),
+  customerCounterpartyId: z
+    .preprocess((value) => {
+      if (value === "" || value === null || value === undefined) return null
+      return value
+    }, z.string().uuid("Выберите заказчика из списка").nullable())
+    .optional(),
   customerName: nullableText(200),
   address: nullableText(400),
   budgetAmount: z

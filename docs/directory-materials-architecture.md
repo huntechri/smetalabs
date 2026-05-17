@@ -212,14 +212,16 @@ deleted_at is null
 
 Search runs across active materials inside the current workspace, not only visible browser rows.
 
+A multi-word query is treated as separate words that must all be present somewhere in searchable material fields. For example, `штукатурка ротбанд` matches `Штукатурка гипсовая Knauf Ротбанд 5 кг`, even though the words are not adjacent.
+
 Regular ranking intent:
 
 ```txt
 1. exact code or source_external_row_key match
 2. exact normalized_name match
 3. normalized_name prefix match
-4. supplier/category/subcategory match
-5. full-text/search_text match
+4. all query words present across name/search text/code/supplier/source key
+5. supplier/category/subcategory match
 6. recent update tie-breaker after relevance
 ```
 

@@ -66,8 +66,8 @@ const WRITE_ROLES = new Set(["owner", "admin", "manager"])
 const LIST_CACHE_REVALIDATE_SECONDS = 30
 const DETAIL_CACHE_REVALIDATE_SECONDS = 120
 const CATEGORIES_CACHE_REVALIDATE_SECONDS = 300
-const EXPORT_BATCH_LIMIT = 100
-const MAX_EXPORT_ROWS = 10000
+const EXPORT_BATCH_LIMIT = 500
+const MAX_EXPORT_ROWS = 100000
 
 function stableHash(value: unknown) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex")

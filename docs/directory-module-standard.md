@@ -1,6 +1,6 @@
 # Directory module standard
 
-> Last updated: 2026-05-15
+> Last updated: 2026-05-17
 >
 > Status: project standard for building new `/directories/*` sections.
 >
@@ -333,6 +333,17 @@ A malformed row should not break the entire import unless the file itself cannot
 ## 13. Required export behavior
 
 Export must use the same filters as the current list when possible.
+
+Expected behavior:
+
+```txt
+no selected category/subcategory  → export the active directory within the export cap
+selected category                 → export only that category
+selected category + subcategory   → export only that subcategory inside that category
+other active filters/search       → apply the same filters/search to export
+```
+
+The export action should drop browser pagination values such as `cursor` and page-size `limit`. The server should collect matching rows in bounded batches until the export cap is reached or no more rows remain.
 
 Required export formats should be chosen per directory, but default expected formats are:
 

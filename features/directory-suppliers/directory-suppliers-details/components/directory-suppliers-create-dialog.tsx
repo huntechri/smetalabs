@@ -1,7 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import type { SupplierStatus } from "@/types/directory-supplier"
+import { useEffect, useState } from "react"
+import type {
+  DirectorySupplier,
+  DirectorySupplierLegalStatus,
+  DirectorySupplierMutationInput,
+} from "@/features/directory-suppliers/types"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -13,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -31,115 +36,185 @@ const colorPresets = [
   { value: "#EC4899", label: "Розовый" },
   { value: "#EAB308", label: "Жёлтый" },
   { value: "#6366F1", label: "Индиго" },
-  { value: "#059669", label: "Изумрудный" },
+  { value: "#64748B", label: "Серый" },
 ]
 
-export function DirectorySuppliersCreateDialog({
-  open,
-  onOpenChange,
-}: {
+type DirectorySuppliersFormDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-}) {
+  onSubmit: (input: DirectorySupplierMutationInput) => Promise<void>
+  saving: boolean
+  supplier?: DirectorySupplier | null
+}
+
+export function DirectorySuppliersFormDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  saving,
+  supplier,
+}: DirectorySuppliersFormDialogProps) {
   const [name, setName] = useState("")
-  const [color, setColor] = useState("")
-  const [status, setStatus] = useState<SupplierStatus | "">("")
+  const [color, setColor] = useState("#64748B")
+  const [legalStatus, setLegalStatus] = useState<DirectorySupplierLegalStatus>("juridical")
   const [inn, setInn] = useState("")
   const [phone, setPhone] = useState("")
+  const [email, setEmail] = useState("")
+  const [address, setAddress] = useState("")
+  const [notes, setNotes] = useState("")
 
-  const handleCreate = () => {
-    // TODO: implement save logic
-    onOpenChange(false)
+  useEffect(() => {
+    if (!open) return
+
+    setName(supplier?.name ?? "")
+    setColor(supplier?.color ?? "#64748B")
+    setLegalStatus(supplier?.legalStatus ?? "juridical")
+    setInn(supplier?.inn ?? "")
+    setPhone(supplier?.phone ?? "")
+    setEmail(supplier?.email ?? "")
+    setAddress(supplier?.address ?? "")
+    setNotes(supplier?.notes ?? "")
+  }, [open, supplier])
+
+  const handleSubmit = async () => {
+    await onSubmit({
+      name,
+      legalStatus,
+      color,
+      inn,
+      phone,
+      email,
+      address,
+      notes,
+    })
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Новый поставщик</DialogTitle>
+          <DialogTitle>{supplier ? "Редактировать поставщика" : "Новый поставщик"}</DialogTitle>
           <DialogDescription>
-            Заполните данные для добавления нового поставщика.
+            Заполните основные данные поставщика.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="supplier-name">Наименование</Label>
+            <Label htmlFor="supplier-name">Название или ФИО</Label>
             <Input
               id="supplier-name"
               placeholder="Введите название"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="supplier-status">Тип</Label>
+              <Select
+                value={legalStatus}
+                onValueChange={(value) => setLegalStatus(value as DirectorySupplierLegalStatus)}
+              >
+                <SelectTrigger id="supplier-status" className="w-full">
+                  <SelectValue placeholder="Выберите тип" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="juridical">Юр. лицо</SelectItem>
+                  <SelectItem value="individual">Физ. лицо</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="supplier-color">Цвет</Label>
+              <Select value={color} onValueChange={setColor}>
+                <SelectTrigger id="supplier-color" className="w-full">
+                  <SelectValue placeholder="Выберите цвет" />
+                </SelectTrigger>
+                <SelectContent>
+                  {colorPresets.map((preset) => (
+                    <SelectItem key={preset.value} value={preset.value}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-3.5 w-3.5 rounded-full border border-muted-foreground/30"
+                          style={{ backgroundColor: preset.value }}
+                        />
+                        <span>{preset.label}</span>
+                        <span className="text-muted-foreground">{preset.value}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="supplier-inn">ИНН</Label>
+              <Input
+                id="supplier-inn"
+                placeholder="Введите ИНН"
+                value={inn}
+                onChange={(event) => setInn(event.target.value)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="supplier-phone">Телефон</Label>
+              <Input
+                id="supplier-phone"
+                placeholder="+7 (XXX) XXX-XX-XX"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="supplier-email">Email</Label>
+            <Input
+              id="supplier-email"
+              placeholder="mail@example.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="supplier-color">Цвет</Label>
-            <Select value={color} onValueChange={setColor}>
-              <SelectTrigger id="supplier-color" className="w-full">
-                <SelectValue placeholder="Выберите цвет" />
-              </SelectTrigger>
-              <SelectContent>
-                {colorPresets.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-3.5 w-3.5 rounded-full border border-dashed border-muted-foreground/30"
-                        style={{ backgroundColor: c.value }}
-                      />
-                      <span>{c.label}</span>
-                      <span className="text-muted-foreground">{c.value}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="supplier-status">Статус</Label>
-            <Select
-              value={status}
-              onValueChange={(v) => setStatus(v as SupplierStatus)}
-            >
-              <SelectTrigger id="supplier-status" className="w-full">
-                <SelectValue placeholder="Выберите статус" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="juridical">Юр. лицо</SelectItem>
-                <SelectItem value="individual">Физ. лицо</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="supplier-inn">ИНН</Label>
+            <Label htmlFor="supplier-address">Адрес</Label>
             <Input
-              id="supplier-inn"
-              placeholder="Введите ИНН"
-              value={inn}
-              onChange={(e) => setInn(e.target.value)}
+              id="supplier-address"
+              placeholder="Введите адрес"
+              value={address}
+              onChange={(event) => setAddress(event.target.value)}
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="supplier-phone">Телефон</Label>
-            <Input
-              id="supplier-phone"
-              placeholder="+7 (XXX) XXX-XX-XX"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+            <Label htmlFor="supplier-notes">Примечание</Label>
+            <Textarea
+              id="supplier-notes"
+              placeholder="Дополнительная информация"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
             />
           </div>
         </div>
 
         <DialogFooter showCloseButton={false}>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Отмена
           </Button>
-          <Button onClick={handleCreate}>Создать</Button>
+          <Button onClick={handleSubmit} disabled={saving || !name.trim()}>
+            {supplier ? "Сохранить" : "Создать"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
+
+export const DirectorySuppliersCreateDialog = DirectorySuppliersFormDialog

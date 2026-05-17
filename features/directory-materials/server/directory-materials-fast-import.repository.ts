@@ -279,7 +279,18 @@ export async function applyFastDirectoryMaterialImportBatchForWorkspace(
       .single()
 
     if (updateError) throw updateError
-    return { data: { job: mapJob(completedJob as ImportJobDbRow), appliedRows: 0, skippedRows, appliedMaterialIds: [], hasMore: false } }
+    return {
+      data: {
+        job: mapJob(completedJob as ImportJobDbRow),
+        appliedRows: 0,
+        createdRows: 0,
+        updatedRows: 0,
+        skippedRows,
+        conflictRows: 0,
+        appliedMaterialIds: [],
+        hasMore: false,
+      },
+    }
   }
 
   try {
@@ -321,7 +332,10 @@ export async function applyFastDirectoryMaterialImportBatchForWorkspace(
       data: {
         job: mapJob(updatedJob as ImportJobDbRow),
         appliedRows: rowsToApply.length,
+        createdRows: createRows.length,
+        updatedRows: updateRows.length,
         skippedRows,
+        conflictRows: 0,
         appliedMaterialIds: [...createdIds, ...updatedIds],
         hasMore,
       },

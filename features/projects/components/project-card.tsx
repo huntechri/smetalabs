@@ -7,7 +7,7 @@ import {
   CurrencyRub,
   MapPin,
   NotePencil,
-  Archive,
+  Trash,
 } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -154,7 +154,7 @@ export function ProjectCard({ project, disabled, onEdit, onArchive }: ProjectCar
             Ред.
           </Button>
           <Button disabled={disabled} variant="destructive" size="xs" onClick={() => onArchive(project)}>
-            <Archive data-icon="inline-start" />
+            <Trash data-icon="inline-start" />
             Архивировать
           </Button>
         </div>

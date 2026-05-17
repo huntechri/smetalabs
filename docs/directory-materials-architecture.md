@@ -1,6 +1,6 @@
 # Directory materials architecture
 
-> Last updated: 2026-05-15
+> Last updated: 2026-05-17
 >
 > Status: production materials directory slice with read/write/export/import and server-side AI search foundation.
 >
@@ -392,8 +392,12 @@ csv
 Export behavior:
 
 - uses current list filters/search when possible;
-- resets cursor;
-- is bounded;
+- no selected category/subcategory exports the active material directory up to the export cap;
+- selected category exports only that category;
+- selected category and subcategory exports only that subcategory inside that category;
+- resets cursor and ignores browser page size;
+- collects rows in server-side batches of 500;
+- is bounded by `MAX_EXPORT_ROWS = 100000`;
 - uses UTF-8 BOM;
 - emits material columns and labels.
 

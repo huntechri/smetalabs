@@ -1,18 +1,16 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense } from "react"
 import { DirectoriesToolbar } from "@/features/directories/components/directories-toolbar"
-import { DirectorySuppliersCreateDialog } from "@/features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-create-dialog"
+import { DIRECTORY_SUPPLIERS_CREATE_EVENT } from "@/features/directory-suppliers/lib/directory-suppliers-events"
 import { PlusIcon } from "@phosphor-icons/react"
 
 export function SuppliersToolbar() {
-  const [dialogOpen, setDialogOpen] = useState(false)
-
   const suppliersActions = [
     {
       label: "Добавить",
       icon: <PlusIcon data-icon="inline-start" />,
-      onClick: () => setDialogOpen(true),
+      onClick: () => window.dispatchEvent(new Event(DIRECTORY_SUPPLIERS_CREATE_EVENT)),
     },
   ]
 
@@ -22,10 +20,6 @@ export function SuppliersToolbar() {
         searchPlaceholder="Поиск поставщиков"
         searchAriaLabel="Поиск поставщиков"
         actions={suppliersActions}
-      />
-      <DirectorySuppliersCreateDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
       />
     </Suspense>
   )

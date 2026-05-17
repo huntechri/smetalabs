@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -19,6 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { fetchDirectoryCounterparties } from "@/features/directory-counterparties/api/directory-counterparties-client"
+import { directoryCounterpartiesQueryKeys } from "@/features/directory-counterparties/api/directory-counterparties-query-keys"
 import type { ProjectMutationInput, ProjectRow, ProjectStatus } from "@/types/project"
 
 const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [
@@ -27,9 +30,12 @@ const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [
   { label: "Завершён", value: "completed" },
 ]
 
+const NO_CUSTOMER_VALUE = "__no_customer__"
+const CUSTOMER_LIST_PARAMS = { status: "active" as const, limit: 100, cursor: 0, sort: "name_asc" as const }
+
 type FormState = {
   title: string
-  customerName: string
+  customerCounterpartyId: string
   address: string
   budgetAmount: string
   startDate: string
@@ -40,7 +46,7 @@ type FormState = {
 
 const EMPTY_FORM: FormState = {
   title: "",
-  customerName: "",
+  customerCounterpartyId: "",
   address: "",
   budgetAmount: "",
   startDate: "",
@@ -54,7 +60,7 @@ function getInitialForm(project?: ProjectRow | null): FormState {
 
   return {
     title: project.title,
-    customerName: project.customerName ?? "",
+    customerCounterpartyId: project.customerCounterpartyId ?? "",
     address: project.address ?? "",
     budgetAmount: project.budgetAmount === null ? "" : String(project.budgetAmount),
     startDate: project.startDate ?? "",
@@ -70,7 +76,7 @@ function toMutationInput(form: FormState): ProjectMutationInput {
 
   return {
     title: form.title,
-    customerName: form.customerName,
+    customerCounterpartyId: form.customerCounterpartyId || null,
     address: form.address,
     budgetAmount: budget ? Number(budget.replace(",", ".")) : null,
     startDate: form.startDate,
@@ -96,6 +102,18 @@ export function CreateProjectDialog({
   const [form, setForm] = useState<FormState>(getInitialForm(project))
   const [error, setError] = useState<string | null>(null)
   const isEdit = Boolean(project)
+
+  const counterpartiesQuery = useQuery({
+    queryKey: directoryCounterpartiesQueryKeys.list(CUSTOMER_LIST_PARAMS),
+    queryFn: () => fetchDirectoryCounterparties(CUSTOMER_LIST_PARAMS),
+    enabled: open,
+    staleTime: 30_000,
+  })
+
+  const customers = useMemo(
+    () => (counterpartiesQuery.data?.data ?? []).filter((counterparty) => counterparty.type === "customer"),
+    [counterpartiesQuery.data?.data]
+  )
 
   useEffect(() => {
     if (open) {
@@ -135,6 +153,9 @@ export function CreateProjectDialog({
     }
   }
 
+  const customerSelectValue = form.customerCounterpartyId || NO_CUSTOMER_VALUE
+  const customerSelectDisabled = saving || counterpartiesQuery.isLoading
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
@@ -160,14 +181,33 @@ export function CreateProjectDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="project-customer">Заказчик</Label>
-            <Input
-              id="project-customer"
-              disabled={saving}
-              placeholder="Название заказчика"
-              value={form.customerName}
-              onChange={(e) => updateField("customerName", e.target.value)}
-            />
+            <Label>Заказчик</Label>
+            <Select
+              disabled={customerSelectDisabled}
+              value={customerSelectValue}
+              onValueChange={(value) =>
+                updateField("customerCounterpartyId", value === NO_CUSTOMER_VALUE ? "" : value)
+              }
+            >
+              <SelectTrigger className="h-9 w-full">
+                <SelectValue placeholder="Выберите заказчика" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_CUSTOMER_VALUE}>Без заказчика</SelectItem>
+                {customers.map((customer) => (
+                  <SelectItem key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {counterpartiesQuery.isLoading ? (
+              <p className="text-xs text-muted-foreground">Загружаем заказчиков...</p>
+            ) : customers.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                В справочнике контрагентов нет активных заказчиков.
+              </p>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -248,6 +288,9 @@ export function CreateProjectDialog({
           </div>
         </div>
 
+        {counterpartiesQuery.error ? (
+          <p className="text-sm text-destructive">Не удалось загрузить список заказчиков</p>
+        ) : null}
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
         <DialogFooter showCloseButton={false}>

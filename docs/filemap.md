@@ -2,7 +2,7 @@
 
 > Last updated: 2026-05-17
 >
-> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md).
+> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/suppliers`, see [`docs/directory-suppliers-architecture.md`](./directory-suppliers-architecture.md).
 
 ---
 
@@ -91,6 +91,7 @@ app/
 └── api/
     ├── access-control/roles/route.ts
     ├── directory-materials/ # workspace-scoped materials catalog read/search/CRUD/import/export/AI endpoints
+    ├── directory-suppliers/ # workspace-scoped suppliers catalog read/search/CRUD endpoints
     ├── directory-works/     # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
     ├── settings/route.ts    # account settings read boundary
     └── team/
@@ -142,6 +143,14 @@ features/
 │   ├── lib/                # pure events/helpers
 │   ├── server/             # repository/service/import/export/AI route logic
 │   └── types.ts            # feature-local materials catalog types
+├── directory-suppliers/
+│   ├── api/                # client API, errors, query keys/cache tags
+│   ├── components/         # suppliers directory view shell
+│   ├── directory-suppliers-details/components/ # list rows and form dialog
+│   ├── hooks/              # TanStack Query hooks and mutations
+│   ├── lib/                # pure events/helpers
+│   ├── server/             # repository/service/route logic
+│   └── types.ts            # feature-local suppliers catalog types
 ├── directory-works/
 │   ├── api/                # client API, errors, mappers, query keys/cache tags
 │   ├── components/         # works directory view shell
@@ -150,7 +159,6 @@ features/
 │   ├── lib/                # pure events/helpers
 │   ├── server/             # repository/service/search/import/export/embeddings/observability
 │   └── types.ts            # feature-local works catalog types
-├── directory-suppliers/
 ├── directory-counterparties/
 ├── access-control/
 ├── account-settings/
@@ -166,7 +174,7 @@ features/<feature>/
 ├── hooks/                  # feature-local client state/data hooks (TanStack Query for server state)
 ├── lib/                    # pure feature helpers/builders
 ├── server/                 # server-only feature actions/repositories/services when app/actions delegates
-├── __mocks__/              # temporary/mock data when needed
+├── __mocks__/              # temporary/mock data only while backend integration is explicitly incomplete
 ├── types.ts                # private feature types when needed
 └── <subdomain>/components/ # optional deeper decomposition for large features
 ```
@@ -197,12 +205,14 @@ db/
 │   ├── 015_directory_work_update_rpc.sql
 │   ├── 016_directory_works_large_catalog_read.sql
 │   ├── 017_directory_materials_import.sql
-│   └── 018_directory_materials_ai_search.sql
+│   ├── 018_directory_materials_ai_search.sql
+│   └── 019_directory_suppliers_foundation.sql
 ├── scripts/
 │   └── seed-directory-works-load-test.sql
 └── schema/
     ├── index.ts
     ├── directory-materials.ts
+    ├── directory-suppliers.ts
     ├── directory-works.ts
     ├── profiles.ts
     ├── rbac.ts
@@ -215,6 +225,18 @@ db/
 ---
 
 ## Current critical flows
+
+### Directory suppliers first production slice
+
+```txt
+/directories/suppliers
+  → app/api/directory-suppliers/** exposes workspace-scoped read/search/CRUD routes
+  → features/directory-suppliers/** owns UI hooks, dialogs, repository/service logic
+  → docs/directory-suppliers-architecture.md fixes the first-version contract and exclusions
+  → db/schema/directory-suppliers.ts and db/migrations/019_directory_suppliers_foundation.sql provide storage
+```
+
+The suppliers catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`. Import, export, AI search, complex filters and material linking are intentionally outside the first version.
 
 ### Directory materials production slice
 
@@ -257,26 +279,4 @@ Works export uses the active screen filters/search for category and subcategory 
 | Supabase client/session infrastructure | `lib/supabase/*.ts`                                    |
 | DB schema                              | `db/schema/*.ts`                                       |
 | SQL migration                          | `db/migrations/*.sql`                                  |
-| Deployment helper script               | `scripts/*.mjs`                                        |
-| Vercel deployment config               | `vercel.json`                                          |
-| shadcn primitive                       | `components/ui/*.tsx`                                  |
-| Business UI                            | `features/<feature>/components/*.tsx`                  |
-
----
-
-## Recent directory/deployment updates
-
-- `features/directory-works/directory-works-details/components/directory-works-section.tsx` — works export now keeps the current screen filters/search, including category and subcategory, while dropping pagination.
-- `features/directory-materials/server/directory-materials.service.ts` — materials export now collects matching rows in bounded batches instead of exporting only the first page.
-- `docs/directory-module-standard.md` — shared export rule now explicitly covers full directory, selected category and selected subcategory behavior.
-- `docs/directory-materials-architecture.md` — production materials catalog contract, current rollout state and AI processing/search foundation.
-- `db/migrations/018_directory_materials_ai_search.sql` — material-only AI search function over prepared embeddings.
-- `features/directory-materials/server/directory-materials-ai.ts` — materials AI data queue, provider-side processing and hybrid AI search logic.
-- `app/api/directory-materials/embeddings/process/route.ts` — material-only AI data processing endpoint.
-- `app/api/directory-materials/ai-search/route.ts` — material-only AI search endpoint.
-- `db/migrations/017_directory_materials_import.sql` — staged import jobs and rows for materials.
-- `features/directory-materials/server/directory-materials-import.repository.ts` — materials CSV preview/apply flow with row validation, duplicate detection and conflict marking.
-- `features/directory-materials/directory-materials-details/components/directory-material-import-dialog.tsx` — materials import dialog and CSV preview UI.
-- `docs/directory-works-architecture.md` — canonical implemented architecture for #64/#65-#71, including DB foundation, search, CRUD, import/export, AI search, cache/indexing and observability.
-- `docs/directory-works-performance-hardening.md` — focused #71 notes for cache/indexing/performance diagnostics.
-- `scripts/vercel-ignore-build.mjs` and `vercel.json` — guarded Vercel build/deployment behavior for primary vs non-primary branches.
+| Deployment helper script               | `scripts/*.mjs`                                       |

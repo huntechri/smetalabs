@@ -227,15 +227,19 @@ export async function listProjectsForWorkspace(
 
 export async function getProjectForWorkspace(
   workspaceOwnerId: string,
-  id: string
+  id: string,
+  includeArchived = false
 ): Promise<ProjectRow | null> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("projects")
     .select(PROJECT_SELECT)
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
     .is("deleted_at", null)
-    .single()
+
+  if (!includeArchived) query = query.is("archived_at", null)
+
+  const { data, error } = await query.single()
 
   if (error) {
     if (error.code === "PGRST116") return null
@@ -286,6 +290,7 @@ export async function updateProjectForWorkspace(
     .update(toProjectMutationRow(workspaceOwnerId, userId, input))
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
+    .is("archived_at", null)
     .is("deleted_at", null)
 
   if (error) throw error
@@ -312,6 +317,7 @@ export async function archiveProjectForWorkspace(
     })
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
+    .is("archived_at", null)
     .is("deleted_at", null)
 
   if (error) throw error

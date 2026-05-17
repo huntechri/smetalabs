@@ -1,18 +1,16 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense } from "react"
 import { DirectoriesToolbar } from "@/features/directories/components/directories-toolbar"
-import { DirectoryCounterpartiesCreateDialog } from "@/features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-create-dialog"
+import { DIRECTORY_COUNTERPARTIES_CREATE_EVENT } from "@/features/directory-counterparties/lib/directory-counterparties-events"
 import { PlusIcon } from "@phosphor-icons/react"
 
 export function CounterpartiesToolbar() {
-  const [dialogOpen, setDialogOpen] = useState(false)
-
   const counterpartiesActions = [
     {
       label: "Добавить",
       icon: <PlusIcon data-icon="inline-start" />,
-      onClick: () => setDialogOpen(true),
+      onClick: () => window.dispatchEvent(new Event(DIRECTORY_COUNTERPARTIES_CREATE_EVENT)),
     },
   ]
 
@@ -22,10 +20,6 @@ export function CounterpartiesToolbar() {
         searchPlaceholder="Поиск контрагентов"
         searchAriaLabel="Поиск контрагентов"
         actions={counterpartiesActions}
-      />
-      <DirectoryCounterpartiesCreateDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
       />
     </Suspense>
   )

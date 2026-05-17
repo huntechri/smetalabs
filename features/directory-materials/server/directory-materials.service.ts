@@ -5,6 +5,7 @@ import { getWorkspaceRole, requireCurrentWorkspace } from "@/lib/auth/team"
 import { DirectoryMaterialsApiError } from "../api/directory-materials-errors"
 import { directoryMaterialsCacheTags } from "../api/directory-materials-query-keys"
 import type {
+  DirectoryMaterial,
   DirectoryMaterialImportApplyInput,
   DirectoryMaterialImportBatchInput,
   DirectoryMaterialImportCreateInput,
@@ -65,6 +66,8 @@ const WRITE_ROLES = new Set(["owner", "admin", "manager"])
 const LIST_CACHE_REVALIDATE_SECONDS = 30
 const DETAIL_CACHE_REVALIDATE_SECONDS = 120
 const CATEGORIES_CACHE_REVALIDATE_SECONDS = 300
+const EXPORT_BATCH_LIMIT = 100
+const MAX_EXPORT_ROWS = 10000
 
 function stableHash(value: unknown) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex")
@@ -262,14 +265,34 @@ export async function searchDirectoryMaterialsAi(input: {
   return searchDirectoryMaterialsAiForWorkspace(context.workspaceOwnerId, input)
 }
 
+async function getDirectoryMaterialsForExport(
+  workspaceOwnerId: string,
+  params: DirectoryMaterialsListParams
+) {
+  const materials: DirectoryMaterial[] = []
+  let cursor = 0
+  let hasMore = true
+
+  while (hasMore && materials.length < MAX_EXPORT_ROWS) {
+    const response = await listDirectoryMaterialsForWorkspace(workspaceOwnerId, {
+      ...params,
+      status: params.status ?? "active",
+      sort: params.sort ?? "updated_desc",
+      limit: EXPORT_BATCH_LIMIT,
+      cursor,
+    })
+
+    materials.push(...response.data)
+    hasMore = response.meta.hasMore
+    cursor = response.meta.nextCursor ?? cursor + EXPORT_BATCH_LIMIT
+  }
+
+  return materials.slice(0, MAX_EXPORT_ROWS)
+}
+
 export async function exportDirectoryMaterials(format: DirectoryMaterialsExportFormat, params: DirectoryMaterialsListParams) {
   const context = await requireDirectoryMaterialsReadContext()
-  const normalizedParams = normalizeDirectoryMaterialsListParams({
-    ...params,
-    cursor: 0,
-    limit: params.limit ?? 5000,
-  })
-  const response = await listDirectoryMaterialsForWorkspace(context.workspaceOwnerId, normalizedParams)
+  const materials = await getDirectoryMaterialsForExport(context.workspaceOwnerId, params)
 
-  return buildDirectoryMaterialsExportFile(response.data, format)
+  return buildDirectoryMaterialsExportFile(materials, format)
 }

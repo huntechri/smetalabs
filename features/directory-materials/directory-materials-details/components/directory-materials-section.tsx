@@ -34,31 +34,33 @@ const SKELETON_ROW_COUNT = 6
 
 function DirectoryMaterialsRowSkeleton() {
   return (
-    <Card size="sm" className="mx-3 my-1.5 gap-0 rounded-md bg-transparent py-0">
-      <CardContent className="grid min-w-0 gap-3 p-2 sm:grid-cols-[minmax(96px,0.18fr)_minmax(0,1fr)]">
-        <div className="min-w-0 space-y-2">
-          <Skeleton className="h-3 w-8" />
-          <Skeleton className="h-4 w-20" />
-        </div>
-        <div className="min-w-0 space-y-2">
-          <Skeleton className="h-3 w-16" />
-          <Skeleton className="h-4 w-full max-w-md" />
-        </div>
-      </CardContent>
-      <CardContent className="grid min-w-0 gap-2 p-2 pt-0 md:grid-cols-[minmax(180px,0.75fr)_minmax(280px,1fr)]">
-        <div className="min-w-0 space-y-1.5">
-          <Skeleton className="h-3 w-24" />
-          <div className="flex min-w-0 flex-wrap gap-1.5">
-            <Skeleton className="h-5 w-16 rounded-md" />
-            <Skeleton className="h-5 w-24 rounded-md" />
+    <Card size="sm" className="mx-3 my-1.5 rounded-md bg-transparent p-0">
+      <CardContent className="grid min-w-0 gap-3 p-3 xl:grid-cols-[minmax(520px,1.15fr)_minmax(520px,0.85fr)]">
+        <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(96px,0.18fr)_minmax(0,1fr)]">
+          <div className="min-w-0 space-y-2">
+            <Skeleton className="h-3 w-8" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <div className="min-w-0 space-y-2">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-4 w-full max-w-md" />
           </div>
         </div>
-        <div className="min-w-0 space-y-1.5">
-          <Skeleton className="h-3 w-32" />
-          <div className="flex min-w-0 items-center gap-1.5">
-            <Skeleton className="h-5 w-36 rounded-md" />
-            <Skeleton className="h-5 w-28 rounded-md" />
-            <Skeleton className="ml-auto size-6 rounded-md" />
+        <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(220px,0.75fr)_minmax(280px,1fr)]">
+          <div className="min-w-0 space-y-1.5 rounded-md border border-border p-1.5">
+            <Skeleton className="h-3 w-24" />
+            <div className="flex min-w-0 flex-wrap gap-1.5">
+              <Skeleton className="h-5 w-16 rounded-md" />
+              <Skeleton className="h-5 w-24 rounded-md" />
+            </div>
+          </div>
+          <div className="min-w-0 space-y-1.5 rounded-md border border-border p-1.5">
+            <Skeleton className="h-3 w-32" />
+            <div className="flex min-w-0 items-center gap-1.5">
+              <Skeleton className="h-5 w-36 rounded-md" />
+              <Skeleton className="h-5 w-28 rounded-md" />
+              <Skeleton className="ml-auto size-6 rounded-md" />
+            </div>
           </div>
         </div>
       </CardContent>

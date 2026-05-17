@@ -4,7 +4,10 @@ import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { DirectoryWork } from "@/features/directory-works/types"
+import type {
+  DirectoryWork,
+  DirectoryWorksListParams,
+} from "@/features/directory-works/types"
 import { buildDirectoryWorksExportHref } from "@/features/directory-works/api/directory-works-client"
 import { useDirectoryWorks } from "@/features/directory-works/hooks/use-directory-works"
 import {
@@ -94,7 +97,12 @@ export function DirectoryWorksSection() {
       setDialogOpen(true)
     }
     const handleImport = () => setImportDialogOpen(true)
-    const handleExport = () => window.location.assign(buildDirectoryWorksExportHref("csv"))
+    const handleExport = () => {
+      const currentParams = Object.fromEntries(
+        new URLSearchParams(window.location.search)
+      ) as DirectoryWorksListParams
+      window.location.assign(buildDirectoryWorksExportHref("csv", currentParams))
+    }
 
     window.addEventListener(DIRECTORY_WORKS_CREATE_EVENT, handleCreate)
     window.addEventListener(DIRECTORY_WORKS_IMPORT_EVENT, handleImport)

@@ -1,11 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,29 +39,35 @@ export function DirectoryMaterialsRow({
     >
       <CardContent className="grid min-w-0 gap-3 p-3 xl:grid-cols-[minmax(520px,1.15fr)_minmax(520px,0.85fr)]">
         <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(96px,0.18fr)_minmax(0,1fr)]">
-          <div className="min-w-0">
-            <CardDescription>Код</CardDescription>
-            <CardTitle className="break-words text-sm leading-snug">
+          <div className="min-w-0 rounded-md border border-border p-2">
+            <span className="mb-1 block text-xs text-muted-foreground uppercase">
+              Код
+            </span>
+            <div className="break-words font-mono text-xs font-medium leading-snug">
               {row.code || "—"}
-            </CardTitle>
+            </div>
           </div>
-          <div className="min-w-0">
-            <CardDescription>Название</CardDescription>
-            <CardTitle className="break-words text-sm leading-snug">
+          <div className="min-w-0 rounded-md border border-border p-2">
+            <span className="mb-1 block text-xs text-muted-foreground uppercase">
+              Название
+            </span>
+            <div className="break-words text-sm font-medium leading-snug">
               {row.name}
-            </CardTitle>
+            </div>
           </div>
         </div>
 
         <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(220px,0.75fr)_minmax(280px,1fr)]">
           <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
-            <CardDescription>Ед. изм / Цена</CardDescription>
+            <div className="text-xs text-muted-foreground uppercase">
+              Ед. изм / Цена
+            </div>
             <div className="flex min-w-0 flex-wrap gap-1.5">
               <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
                 <span className="text-muted-foreground">Ед.:</span>
                 <span>{row.unit}</span>
               </Badge>
-              <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums">
+              <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-medium tabular-nums">
                 <span className="text-muted-foreground">Цена:</span>
                 <span>{priceLabel}</span>
               </Badge>
@@ -74,7 +75,9 @@ export function DirectoryMaterialsRow({
           </div>
 
           <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
-            <CardDescription>Категория / Поставщик</CardDescription>
+            <div className="text-xs text-muted-foreground uppercase">
+              Категория / Поставщик
+            </div>
             <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
                 <span className="text-muted-foreground">Кат.:</span>

@@ -1,6 +1,6 @@
 # SmetaLabs — Filemap
 
-> Last updated: 2026-05-15
+> Last updated: 2026-05-17
 >
 > Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md).
 
@@ -226,7 +226,7 @@ db/
   → db/schema/directory-materials.ts and db/migrations/017-018 directory_materials migrations provide import and AI storage/search additions
 ```
 
-The materials catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; import is staged and must not write raw uploaded rows directly into `directory_materials`. AI provider calls are server-only and scoped by the current workspace.
+The materials catalog must stay workspace-scoped through `workspace_owner_id = workspace_members.owner_id`; import is staged and must not write raw uploaded rows directly into `directory_materials`. Export uses the current list filters/search, resets browser pagination and collects rows in bounded batches before writing the file. AI provider calls are server-only and scoped by the current workspace.
 
 ### Directory works backend contract and implementation
 
@@ -237,6 +237,8 @@ The materials catalog must stay workspace-scoped through `workspace_owner_id = w
   → docs/directory-works-architecture.md fixes the production contract and hardening strategy
   → db/schema/directory-works.ts and db/migrations/010-016 provide DB foundation, read RPCs, AI search and performance hardening
 ```
+
+Works export uses the active screen filters/search for category and subcategory scoped downloads, resets browser pagination and remains bounded by the export cap.
 
 ---
 
@@ -264,6 +266,9 @@ The materials catalog must stay workspace-scoped through `workspace_owner_id = w
 
 ## Recent directory/deployment updates
 
+- `features/directory-works/directory-works-details/components/directory-works-section.tsx` — works export now keeps the current screen filters/search, including category and subcategory, while dropping pagination.
+- `features/directory-materials/server/directory-materials.service.ts` — materials export now collects matching rows in bounded batches instead of exporting only the first page.
+- `docs/directory-module-standard.md` — shared export rule now explicitly covers full directory, selected category and selected subcategory behavior.
 - `docs/directory-materials-architecture.md` — production materials catalog contract, current rollout state and AI processing/search foundation.
 - `db/migrations/018_directory_materials_ai_search.sql` — material-only AI search function over prepared embeddings.
 - `features/directory-materials/server/directory-materials-ai.ts` — materials AI data queue, provider-side processing and hybrid AI search logic.

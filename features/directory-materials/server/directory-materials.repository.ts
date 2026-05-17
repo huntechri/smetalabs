@@ -45,6 +45,7 @@ type DirectoryMaterialDbRow = {
 }
 
 const MATERIAL_SELECT = "id,name,unit_code,unit_label,price_amount,currency_code,category,subcategory,code,supplier_name,supplier_id,image_url,description,aliases,keywords,source_name,source_external_row_key,status,version,created_at,updated_at"
+const MAX_SEARCH_TOKENS = 8
 
 function normalizeSearch(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ")
@@ -56,6 +57,13 @@ function normalizeUnitCode(unit: string) {
 
 function escapeLike(value: string) {
   return value.replace(/[\\%_]/g, (match) => `\\${match}`)
+}
+
+function getSearchTokens(value: string) {
+  const normalized = normalizeSearch(value)
+  const tokens = normalized.match(/[\p{L}\p{N}]+/gu) ?? []
+
+  return Array.from(new Set(tokens)).slice(0, MAX_SEARCH_TOKENS)
 }
 
 function toNullableString(value: string | null | undefined) {
@@ -123,16 +131,20 @@ function applyDirectoryMaterialFilters<T extends { or: (filters: string) => T; e
   if (params.supplier) scoped = scoped.eq("supplier_name", params.supplier)
 
   if (params.q) {
-    const q = escapeLike(normalizeSearch(params.q))
-    scoped = scoped.or(
-      [
-        `normalized_name.ilike.%${q}%`,
-        `search_text.ilike.%${q}%`,
-        `code.ilike.%${q}%`,
-        `supplier_name.ilike.%${q}%`,
-        `source_external_row_key.ilike.%${q}%`,
-      ].join(",")
-    )
+    const tokens = getSearchTokens(params.q)
+
+    for (const token of tokens) {
+      const q = escapeLike(token)
+      scoped = scoped.or(
+        [
+          `normalized_name.ilike.%${q}%`,
+          `search_text.ilike.%${q}%`,
+          `code.ilike.%${q}%`,
+          `supplier_name.ilike.%${q}%`,
+          `source_external_row_key.ilike.%${q}%`,
+        ].join(",")
+      )
+    }
   }
 
   return scoped
@@ -371,62 +383,68 @@ export async function getDirectoryMaterialCategoriesForWorkspace(
   workspaceOwnerId: string,
   params: NormalizedCategoriesParams
 ): Promise<DirectoryMaterialsCategoriesResponse> {
-  let query = supabase
+  let materialQuery = supabase
     .from("directory_materials")
     .select("category,subcategory,unit_code,unit_label,supplier_name")
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("status", params.status)
     .is("deleted_at", null)
 
-  if (params.category) query = query.eq("category", params.category)
-  if (params.subcategory) query = query.eq("subcategory", params.subcategory)
+  if (params.category) materialQuery = materialQuery.eq("category", params.category)
+  if (params.subcategory) materialQuery = materialQuery.eq("subcategory", params.subcategory)
 
-  const { data, error } = await query
-
+  const { data, error } = await materialQuery
   if (error) throw error
 
-  const categoryMap = new Map<string, { total: number; subcategories: Map<string, number> }>()
+  const categoryMap = new Map<string, DirectoryMaterialCategoryOption>()
   const unitMap = new Map<string, DirectoryMaterialUnitOption>()
   const supplierMap = new Map<string, DirectoryMaterialSupplierOption>()
 
   for (const row of (data ?? []) as Array<{
-    category: string
+    category: string | null
     subcategory: string | null
-    unit_code: string
-    unit_label: string
+    unit_code: string | null
+    unit_label: string | null
     supplier_name: string | null
   }>) {
-    const category = row.category
-    const categoryEntry = categoryMap.get(category) ?? { total: 0, subcategories: new Map<string, number>() }
-    categoryEntry.total += 1
-    if (row.subcategory) {
-      categoryEntry.subcategories.set(row.subcategory, (categoryEntry.subcategories.get(row.subcategory) ?? 0) + 1)
+    if (row.category) {
+      const current = categoryMap.get(row.category) ?? { category: row.category, total: 0, subcategories: [] }
+      current.total += 1
+      if (row.subcategory) {
+        const existing = current.subcategories.find((item) => item.name === row.subcategory)
+        if (existing) existing.total += 1
+        else current.subcategories.push({ name: row.subcategory, total: 1 })
+      }
+      categoryMap.set(row.category, current)
     }
-    categoryMap.set(category, categoryEntry)
 
-    const unitEntry = unitMap.get(row.unit_code) ?? { code: row.unit_code, label: row.unit_label, total: 0 }
-    unitEntry.total += 1
-    unitMap.set(row.unit_code, unitEntry)
+    if (row.unit_code || row.unit_label) {
+      const code = row.unit_code || row.unit_label || ""
+      const label = row.unit_label || row.unit_code || code
+      const current = unitMap.get(code) ?? { code, label, total: 0 }
+      current.total += 1
+      unitMap.set(code, current)
+    }
 
     if (row.supplier_name) {
-      const supplierEntry = supplierMap.get(row.supplier_name) ?? { name: row.supplier_name, total: 0 }
-      supplierEntry.total += 1
-      supplierMap.set(row.supplier_name, supplierEntry)
+      const current = supplierMap.get(row.supplier_name) ?? { name: row.supplier_name, total: 0 }
+      current.total += 1
+      supplierMap.set(row.supplier_name, current)
     }
   }
 
-  const categories: DirectoryMaterialCategoryOption[] = Array.from(categoryMap.entries())
-    .map(([category, entry]) => ({
-      category,
-      total: entry.total,
-      subcategories: Array.from(entry.subcategories.entries())
-        .map(([name, total]) => ({ name, total }))
-        .sort((a, b) => a.name.localeCompare(b.name, "ru")),
-    }))
-    .sort((a, b) => a.category.localeCompare(b.category, "ru"))
+  const sortByTotalAndName = <T extends { total: number }>(getName: (item: T) => string) =>
+    (a: T, b: T) => b.total - a.total || getName(a).localeCompare(getName(b), "ru")
 
-  const units = Array.from(unitMap.values()).sort((a, b) => a.label.localeCompare(b.label, "ru"))
-  const suppliers = Array.from(supplierMap.values()).sort((a, b) => a.name.localeCompare(b.name, "ru"))
+  const categories = Array.from(categoryMap.values())
+    .map((item) => ({
+      ...item,
+      subcategories: item.subcategories.sort(sortByTotalAndName((subcategory) => subcategory.name)),
+    }))
+    .sort(sortByTotalAndName((category) => category.category))
+
+  const units = Array.from(unitMap.values()).sort(sortByTotalAndName((unit) => unit.label))
+  const suppliers = Array.from(supplierMap.values()).sort(sortByTotalAndName((supplier) => supplier.name))
 
   return {
     data: { categories, units, suppliers },

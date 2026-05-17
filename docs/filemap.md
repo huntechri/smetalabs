@@ -2,7 +2,7 @@
 
 > Last updated: 2026-05-17
 >
-> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md).
+> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/projects`, see [`docs/projects-architecture.md`](./projects-architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md).
 
 ---
 
@@ -13,7 +13,7 @@ smetalabs/
 ├── app/                    # Next.js App Router routes, layouts, API routes, server actions
 ├── components/             # shared app components and shadcn/ui primitives
 ├── db/                     # Drizzle client, schema, migrations, seed scripts
-├── docs/                   # architecture, filemap, account-settings, directory contracts and design-system documentation
+├── docs/                   # architecture, filemap, feature contracts and design-system documentation
 ├── features/               # feature-owned UI, hooks and screens
 ├── hooks/                  # global hooks only
 ├── lib/                    # shared infra, auth helpers, Supabase clients, utilities
@@ -67,9 +67,10 @@ app/
 │   └── workspace-settings.ts
 └── api/
     ├── access-control/roles/route.ts
-    ├── directory-counterparties/ # workspace-scoped counterparties catalog read/search/CRUD endpoints
-    ├── directory-materials/      # workspace-scoped materials catalog read/search/CRUD/import/export/AI endpoints
-    ├── directory-works/          # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
+    ├── projects/                 # workspace-scoped projects list/read/create/update/archive endpoints
+    ├── directory-counterparties/  # workspace-scoped counterparties catalog read/search/CRUD endpoints
+    ├── directory-materials/       # workspace-scoped materials catalog read/search/CRUD/import/export/AI endpoints
+    ├── directory-works/           # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
     ├── settings/route.ts
     └── team/**
 ```
@@ -90,6 +91,10 @@ features/
 ├── auth/
 ├── dashboard/
 ├── projects/
+│   ├── api/                # client API, errors, query keys/cache tags
+│   ├── components/         # projects screen, toolbar, cards and form dialog
+│   ├── hooks/              # TanStack Query hook and mutations
+│   └── server/             # repository/service/route logic
 ├── estimates/
 ├── purchases/
 ├── execution/
@@ -170,9 +175,11 @@ db/
 │   ├── 021_material_search_terms.sql
 │   ├── 023_material_embedding_backfill.sql
 │   ├── 024_directory_counterparties_foundation.sql
-│   └── 025_directory_counterparties_function_grants.sql
+│   ├── 025_directory_counterparties_function_grants.sql
+│   └── 026_projects_foundation.sql
 └── schema/
     ├── index.ts
+    ├── projects.ts
     ├── directory-counterparties.ts
     ├── directory-materials.ts
     ├── directory-works.ts
@@ -187,6 +194,18 @@ db/
 ---
 
 ## Current critical flows
+
+### Projects first production slice
+
+```txt
+/projects
+  → app/api/projects/** exposes workspace-scoped list/read/create/update/archive routes
+  → features/projects/** owns UI hooks, form dialog, cards, repository and service logic
+  → docs/projects-architecture.md fixes the first-version contract
+  → db/schema/projects.ts and db/migrations/026_projects_foundation.sql provide storage and search fields
+```
+
+Projects stay workspace-scoped through `workspace_owner_id`. The first version supports real list data, search, status filtering, create, update and soft archive. Project estimates, participants, files, payments, detailed project page, import/export and AI behavior remain outside this slice.
 
 ### Directory counterparties production slice
 
@@ -250,6 +269,9 @@ Works export uses the active screen filters/search for category and subcategory 
 
 ## Recent directory/deployment updates
 
+- `docs/projects-architecture.md` — first-version contract for `/projects`.
+- `db/migrations/026_projects_foundation.sql` — workspace-scoped projects storage with soft archive and search fields.
+- `features/projects/**` and `app/api/projects/**` — projects list, create, update, archive, search and status filter flow.
 - `docs/directory-counterparties-architecture.md` — first-version contract for the counterparties catalog, including save helper grants.
 - `db/migrations/024_directory_counterparties_foundation.sql` — workspace-scoped counterparties storage with soft archive and search fields.
 - `db/migrations/025_directory_counterparties_function_grants.sql` — grants for search helper functions used during counterparty save.

@@ -12,6 +12,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core"
 
+import { directoryCounterparties } from "./directory-counterparties"
 import { profiles } from "./profiles"
 
 export const projectStatusEnum = pgEnum("project_status", [
@@ -29,6 +30,10 @@ export const projects = pgTable(
       .references(() => profiles.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     normalizedTitle: text("normalized_title").notNull(),
+    customerCounterpartyId: uuid("customer_counterparty_id").references(
+      () => directoryCounterparties.id,
+      { onDelete: "set null" }
+    ),
     customerName: text("customer_name"),
     address: text("address"),
     budgetAmount: numeric("budget_amount", { precision: 14, scale: 2 }),
@@ -60,6 +65,9 @@ export const projects = pgTable(
       t.archivedAt,
       t.deletedAt
     ),
+    index("idx_projects_workspace_customer_counterparty")
+      .on(t.workspaceOwnerId, t.customerCounterpartyId)
+      .where(sql`${t.customerCounterpartyId} IS NOT NULL AND ${t.deletedAt} IS NULL`),
     index("idx_projects_workspace_normalized_title").on(
       t.workspaceOwnerId,
       t.normalizedTitle

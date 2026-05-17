@@ -232,6 +232,7 @@ export type DirectoryMaterialImportApplyResponse = {
     updatedRows: number
     skippedRows: number
     conflictRows: number
+    appliedMaterialIds?: string[]
     hasMore?: boolean
     nextBatchSize?: number
   }

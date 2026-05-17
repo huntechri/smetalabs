@@ -228,10 +228,10 @@ export type DirectoryMaterialImportApplyResponse = {
   data: {
     job: DirectoryMaterialImportJob
     appliedRows: number
-    createdRows: number
-    updatedRows: number
+    createdRows?: number
+    updatedRows?: number
     skippedRows: number
-    conflictRows: number
+    conflictRows?: number
     appliedMaterialIds?: string[]
     hasMore?: boolean
     nextBatchSize?: number

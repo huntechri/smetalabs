@@ -5,6 +5,7 @@ export type ProjectRow = {
   title: string
   status: ProjectStatus
   progress: number
+  customerCounterpartyId: string | null
   customerName: string | null
   address: string | null
   budgetAmount: number | null
@@ -41,6 +42,7 @@ export type ProjectsListResponse = {
 
 export type ProjectMutationInput = {
   title: string
+  customerCounterpartyId?: string | null
   customerName?: string | null
   address?: string | null
   budgetAmount?: number | null

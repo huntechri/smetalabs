@@ -36,7 +36,7 @@ export function DirectoryMaterialsRow({
       <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(96px,0.18fr)_minmax(0,1fr)]">
         <div className="min-w-0 rounded-md border border-border p-2">
           <span className="mb-1 block text-xs text-muted-foreground uppercase">
-            Код
+            КОД
           </span>
           <div className="break-words font-mono text-xs font-medium leading-snug">
             {row.code || "—"}
@@ -44,7 +44,7 @@ export function DirectoryMaterialsRow({
         </div>
         <div className="min-w-0 rounded-md border border-border p-2">
           <span className="mb-1 block text-xs text-muted-foreground uppercase">
-            Название
+            НАЗВАНИЕ
           </span>
           <div className="break-words text-sm font-medium leading-snug">
             {row.name}
@@ -55,7 +55,7 @@ export function DirectoryMaterialsRow({
       <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(220px,0.75fr)_minmax(280px,1fr)]">
         <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
           <div className="text-xs text-muted-foreground uppercase">
-            Ед. изм / Цена
+            ЕД. ИЗМ / ЦЕНА
           </div>
           <div className="flex min-w-0 flex-wrap gap-1.5">
             <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
@@ -71,7 +71,7 @@ export function DirectoryMaterialsRow({
 
         <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
           <div className="text-xs text-muted-foreground uppercase">
-            Категория / Поставщик
+            КАТЕГОРИЯ / ПОСТАВЩИК
           </div>
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">

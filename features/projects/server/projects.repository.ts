@@ -15,6 +15,7 @@ type NormalizedListParams = Required<
 type ProjectDbRow = {
   id: string
   title: string
+  customer_counterparty_id: string | null
   customer_name: string | null
   address: string | null
   budget_amount: string | number | null
@@ -29,10 +30,12 @@ type ProjectDbRow = {
 }
 
 type ProjectIdRow = { id: string }
+type CustomerCounterpartyRow = { id: string; name: string }
 
 const PROJECT_SELECT = [
   "id",
   "title",
+  "customer_counterparty_id",
   "customer_name",
   "address",
   "budget_amount",
@@ -89,6 +92,7 @@ function mapProjectRow(row: ProjectDbRow): ProjectRow {
   return {
     id: row.id,
     title: row.title,
+    customerCounterpartyId: row.customer_counterparty_id,
     customerName: row.customer_name,
     address: row.address,
     budgetAmount: toNullableNumber(row.budget_amount),
@@ -168,16 +172,44 @@ async function assertProjectTitleUnique(
   }
 }
 
-function toProjectMutationRow(
+async function getCustomerCounterpartyForWorkspace(
+  workspaceOwnerId: string,
+  customerCounterpartyId?: string | null
+): Promise<CustomerCounterpartyRow | null> {
+  if (!customerCounterpartyId) return null
+
+  const { data, error } = await supabase
+    .from("directory_counterparties")
+    .select("id,name")
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .eq("id", customerCounterpartyId)
+    .eq("type", "customer")
+    .eq("status", "active")
+    .is("deleted_at", null)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) throw new ProjectsApiError("BAD_REQUEST", "Выбранный заказчик не найден", 400)
+
+  return data as CustomerCounterpartyRow
+}
+
+async function toProjectMutationRow(
   workspaceOwnerId: string,
   userId: string,
   input: ProjectMutationInput
 ) {
+  const customer = await getCustomerCounterpartyForWorkspace(
+    workspaceOwnerId,
+    input.customerCounterpartyId
+  )
+
   return {
     workspace_owner_id: workspaceOwnerId,
     title: input.title.trim().replace(/\s+/g, " "),
     normalized_title: "pending",
-    customer_name: toNullableString(input.customerName),
+    customer_counterparty_id: customer?.id ?? null,
+    customer_name: customer?.name ?? null,
     address: toNullableString(input.address),
     budget_amount: input.budgetAmount ?? null,
     start_date: toNullableString(input.startDate),
@@ -259,7 +291,7 @@ export async function createProjectForWorkspace(
   const { data, error } = await supabase
     .from("projects")
     .insert({
-      ...toProjectMutationRow(workspaceOwnerId, userId, input),
+      ...(await toProjectMutationRow(workspaceOwnerId, userId, input)),
       created_by: userId,
     })
     .select("id")
@@ -287,7 +319,7 @@ export async function updateProjectForWorkspace(
 
   const { error } = await supabase
     .from("projects")
-    .update(toProjectMutationRow(workspaceOwnerId, userId, input))
+    .update(await toProjectMutationRow(workspaceOwnerId, userId, input))
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
     .is("archived_at", null)

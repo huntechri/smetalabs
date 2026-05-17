@@ -38,6 +38,8 @@ type DirectoryCounterpartyDbRow = {
   updated_at: string
 }
 
+type DirectoryCounterpartyIdRow = { id: string }
+
 const COUNTERPARTY_SELECT = [
   "id",
   "name",
@@ -83,6 +85,18 @@ function getSearchTokens(value: string) {
 
 function toNullableString(value: string | null | undefined) {
   return value && value.trim() ? value.trim().replace(/\s+/g, " ") : null
+}
+
+function toCounterpartyRows(data: unknown) {
+  return ((data ?? []) as DirectoryCounterpartyDbRow[]).filter(Boolean)
+}
+
+function toCounterpartyRow(data: unknown) {
+  return data as DirectoryCounterpartyDbRow
+}
+
+function toIdRow(data: unknown) {
+  return data as DirectoryCounterpartyIdRow
 }
 
 function mapDirectoryCounterpartyRow(row: DirectoryCounterpartyDbRow): DirectoryCounterparty {
@@ -235,7 +249,7 @@ export async function listDirectoryCounterpartiesForWorkspace(
   const { data, error, count } = await query.range(from, to)
   if (error) throw error
 
-  const rows = ((data ?? []) as DirectoryCounterpartyDbRow[]).filter(Boolean)
+  const rows = toCounterpartyRows(data)
   const visibleRows = rows.slice(0, params.limit)
   const hasMore = rows.length > params.limit
 
@@ -268,7 +282,7 @@ export async function getDirectoryCounterpartyForWorkspace(
     throw error
   }
 
-  return mapDirectoryCounterpartyRow(data as DirectoryCounterpartyDbRow)
+  return mapDirectoryCounterpartyRow(toCounterpartyRow(data))
 }
 
 export async function createDirectoryCounterpartyForWorkspace(
@@ -291,7 +305,8 @@ export async function createDirectoryCounterpartyForWorkspace(
 
   if (error) throw error
 
-  const counterparty = await getDirectoryCounterpartyForWorkspace(workspaceOwnerId, data.id)
+  const created = toIdRow(data)
+  const counterparty = await getDirectoryCounterpartyForWorkspace(workspaceOwnerId, created.id)
   if (!counterparty) {
     throw new DirectoryCounterpartiesApiError("INTERNAL_ERROR", "Созданный контрагент не найден", 500)
   }

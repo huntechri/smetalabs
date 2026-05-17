@@ -1,10 +1,12 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { DirectorySupplier } from "@/features/directory-suppliers/types"
 import { useDirectorySuppliers } from "@/features/directory-suppliers/hooks/use-directory-suppliers"
+import { DIRECTORY_SUPPLIERS_CREATE_EVENT } from "@/features/directory-suppliers/lib/directory-suppliers-events"
 import { DirectorySuppliersFormDialog } from "./directory-suppliers-create-dialog"
 import { DirectorySuppliersRow } from "./directory-suppliers-row"
 
@@ -56,8 +58,18 @@ export function DirectorySuppliersSection() {
     suppliers,
     updateSupplier,
   } = useDirectorySuppliers()
-  const [dialogOpen, setDialogOpen] = React.useState(false)
-  const [editingSupplier, setEditingSupplier] = React.useState<DirectorySupplier | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingSupplier, setEditingSupplier] = useState<DirectorySupplier | null>(null)
+
+  useEffect(() => {
+    const handleCreate = () => {
+      setEditingSupplier(null)
+      setDialogOpen(true)
+    }
+
+    window.addEventListener(DIRECTORY_SUPPLIERS_CREATE_EVENT, handleCreate)
+    return () => window.removeEventListener(DIRECTORY_SUPPLIERS_CREATE_EVENT, handleCreate)
+  }, [])
 
   const handleEdit = (supplier: DirectorySupplier) => {
     setEditingSupplier(supplier)

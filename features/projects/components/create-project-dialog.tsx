@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { directoryCounterpartyRows } from "@/features/directory-counterparties/__mocks__/directory-counterparties"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -13,17 +12,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
-const customers = directoryCounterpartyRows.filter(
-  (item) => item.type === "customer"
-)
 
 export function CreateProjectDialog({
   open,
@@ -33,11 +21,10 @@ export function CreateProjectDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const [name, setName] = useState("")
-  const [customerId, setCustomerId] = useState("")
 
   const handleCreate = () => {
     // TODO: implement save logic
-    console.log({ name, customerId })
+    console.log({ name })
     onOpenChange(false)
   }
 
@@ -60,25 +47,6 @@ export function CreateProjectDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="project-customer">Заказчик</Label>
-            <Select
-              value={customerId}
-              onValueChange={setCustomerId}
-            >
-              <SelectTrigger id="project-customer" className="w-full">
-                <SelectValue placeholder="Выберите заказчика" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         </div>
 

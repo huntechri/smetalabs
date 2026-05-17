@@ -2,7 +2,7 @@
 
 > Last updated: 2026-05-17
 >
-> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md).
+> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md).
 
 ---
 
@@ -36,33 +36,17 @@ smetalabs/
 
 ```txt
 app/
-├── layout.tsx              # root layout, fonts/providers/global shell
-├── globals.css             # Tailwind v4, shadcn tokens, CSS variables
-├── page.tsx                # root/developer navigation page
-├── favicon.ico
-│
-├── (auth)/                 # auth screens without main app sidebar
-│   ├── layout.tsx
+├── layout.tsx
+├── globals.css
+├── page.tsx
+├── (auth)/
 │   ├── login/page.tsx
 │   ├── signup/page.tsx
 │   ├── forgot-password/page.tsx
 │   └── set-password/page.tsx
-│
-├── (main)/                 # authenticated app shell
-│   ├── layout.tsx          # SidebarProvider + AppSidebar + SiteHeader
-│   ├── page.tsx            # redirects/entry to dashboard
+├── (main)/
 │   ├── dashboard/page.tsx
-│   ├── projects/
-│   │   ├── page.tsx
-│   │   └── [projectId]/
-│   │       ├── page.tsx
-│   │       └── estimates/[estimateId]/
-│   │           ├── layout.tsx
-│   │           ├── page.tsx
-│   │           ├── documents/page.tsx
-│   │           ├── execution/page.tsx
-│   │           ├── finances/page.tsx
-│   │           └── purchases/page.tsx
+│   ├── projects/**
 │   ├── directories/
 │   │   ├── counterparties/page.tsx
 │   │   ├── materials/page.tsx
@@ -70,46 +54,24 @@ app/
 │   │   └── works/page.tsx
 │   ├── procurements/page.tsx
 │   ├── team/page.tsx
-│   ├── templates/
-│   │   ├── page.tsx
-│   │   └── [templateId]/page.tsx
+│   ├── templates/**
 │   └── settings/
 │       ├── account/page.tsx
 │       └── access/page.tsx
-│
 ├── admin/page.tsx
-│
-├── auth/
-│   └── callback/route.ts   # Supabase email/OAuth callback handler
-│
+├── auth/callback/route.ts
 ├── actions/
 │   ├── access-control.ts
-│   ├── settings.ts         # delegates account settings mutations/security/dangerous actions to features/account-settings/server
+│   ├── settings.ts
 │   ├── team.ts
 │   └── workspace-settings.ts
-│
 └── api/
     ├── access-control/roles/route.ts
-    ├── directory-materials/ # workspace-scoped materials catalog read/search/CRUD/import/export/AI endpoints
-    ├── directory-works/     # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
-    ├── settings/route.ts    # account settings read boundary
-    └── team/
-        ├── overview/route.ts
-        ├── invitations/
-        │   ├── route.ts
-        │   ├── accept/route.ts
-        │   └── [id]/
-        │       ├── route.ts
-        │       └── resend/route.ts
-        ├── domains/
-        │   ├── route.ts
-        │   └── [id]/route.ts
-        ├── invite-link/route.ts
-        └── members/
-            ├── route.ts
-            └── [userId]/
-                ├── route.ts
-                └── reset-password/route.ts
+    ├── directory-counterparties/ # workspace-scoped counterparties catalog read/search/CRUD endpoints
+    ├── directory-materials/      # workspace-scoped materials catalog read/search/CRUD/import/export/AI endpoints
+    ├── directory-works/          # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
+    ├── settings/route.ts
+    └── team/**
 ```
 
 ---
@@ -125,7 +87,6 @@ features/
 ├── nav-projects.tsx
 ├── nav-secondary.tsx
 ├── nav-user.tsx
-│
 ├── auth/
 ├── dashboard/
 ├── projects/
@@ -134,24 +95,31 @@ features/
 ├── execution/
 ├── global-purchases/
 ├── directories/
-├── directory-materials/
-│   ├── api/                # client API, errors, query keys/cache tags
-│   ├── components/         # materials directory view shell
-│   ├── directory-materials-details/components/ # list rows, form dialog, import dialog
-│   ├── hooks/              # TanStack Query hooks and mutations
-│   ├── lib/                # pure events/helpers
-│   ├── server/             # repository/service/import/export/AI route logic
-│   └── types.ts            # feature-local materials catalog types
-├── directory-works/
-│   ├── api/                # client API, errors, mappers, query keys/cache tags
-│   ├── components/         # works directory view shell
-│   ├── directory-works-details/components/ # list rows, form dialog, import dialog
-│   ├── hooks/              # TanStack Query hooks and mutations
-│   ├── lib/                # pure events/helpers
-│   ├── server/             # repository/service/search/import/export/embeddings/observability
-│   └── types.ts            # feature-local works catalog types
-├── directory-suppliers/
 ├── directory-counterparties/
+│   ├── api/                # client API, errors, query keys/cache tags
+│   ├── components/         # counterparties directory view shell
+│   ├── directory-counterparties-details/components/ # list rows and form dialog
+│   ├── hooks/              # TanStack Query hook and mutations
+│   ├── lib/                # pure events/helpers
+│   ├── server/             # repository/service/route logic
+│   └── types.ts            # feature-local counterparties catalog types
+├── directory-materials/
+│   ├── api/
+│   ├── components/
+│   ├── directory-materials-details/components/
+│   ├── hooks/
+│   ├── lib/
+│   ├── server/
+│   └── types.ts
+├── directory-works/
+│   ├── api/
+│   ├── components/
+│   ├── directory-works-details/components/
+│   ├── hooks/
+│   ├── lib/
+│   ├── server/
+│   └── types.ts
+├── directory-suppliers/
 ├── access-control/
 ├── account-settings/
 └── workspace-settings/
@@ -161,14 +129,14 @@ Feature folder convention:
 
 ```txt
 features/<feature>/
-├── api/                    # feature-local clients/query keys for API routes or action wrappers
-├── components/             # feature UI
-├── hooks/                  # feature-local client state/data hooks (TanStack Query for server state)
-├── lib/                    # pure feature helpers/builders
-├── server/                 # server-only feature actions/repositories/services when app/actions delegates
-├── __mocks__/              # temporary/mock data when needed
-├── types.ts                # private feature types when needed
-└── <subdomain>/components/ # optional deeper decomposition for large features
+├── api/
+├── components/
+├── hooks/
+├── lib/
+├── server/
+├── __mocks__/
+├── types.ts
+└── <subdomain>/components/
 ```
 
 ---
@@ -177,9 +145,9 @@ features/<feature>/
 
 ```txt
 db/
-├── index.ts                # Drizzle client / Supabase service-role client wrapper
-├── seed.ts                 # RBAC seed
-├── seed-settings.ts        # user settings seed
+├── index.ts                # Supabase service-role client wrapper for checked server code
+├── seed.ts
+├── seed-settings.ts
 ├── migrations/
 │   ├── 002_rls_policies.sql
 │   ├── 003_workspace_tables.sql
@@ -197,11 +165,14 @@ db/
 │   ├── 015_directory_work_update_rpc.sql
 │   ├── 016_directory_works_large_catalog_read.sql
 │   ├── 017_directory_materials_import.sql
-│   └── 018_directory_materials_ai_search.sql
-├── scripts/
-│   └── seed-directory-works-load-test.sql
+│   ├── 018_directory_materials_ai_search.sql
+│   ├── 019_directory_materials_foundation.sql
+│   ├── 021_material_search_terms.sql
+│   ├── 023_material_embedding_backfill.sql
+│   └── 024_directory_counterparties_foundation.sql
 └── schema/
     ├── index.ts
+    ├── directory-counterparties.ts
     ├── directory-materials.ts
     ├── directory-works.ts
     ├── profiles.ts
@@ -215,6 +186,18 @@ db/
 ---
 
 ## Current critical flows
+
+### Directory counterparties production slice
+
+```txt
+/directories/counterparties
+  → app/api/directory-counterparties/** exposes workspace-scoped read/search/CRUD routes
+  → features/directory-counterparties/** owns UI hooks, form dialog, repository and service logic
+  → docs/directory-counterparties-architecture.md fixes the first-version contract
+  → db/schema/directory-counterparties.ts and db/migrations/024_directory_counterparties_foundation.sql provide storage
+```
+
+The counterparties catalog stays workspace-scoped through `workspace_owner_id`. Import, export, AI search and complex filters are intentionally outside the first version.
 
 ### Directory materials production slice
 
@@ -266,6 +249,9 @@ Works export uses the active screen filters/search for category and subcategory 
 
 ## Recent directory/deployment updates
 
+- `docs/directory-counterparties-architecture.md` — first-version contract for the counterparties catalog.
+- `db/migrations/024_directory_counterparties_foundation.sql` — workspace-scoped counterparties storage with soft archive and search fields.
+- `features/directory-counterparties/**` and `app/api/directory-counterparties/**` — counterparties list, create, update, archive and regular search flow.
 - `features/directory-works/directory-works-details/components/directory-works-section.tsx` — works export now keeps the current screen filters/search, including category and subcategory, while dropping pagination.
 - `features/directory-materials/server/directory-materials.service.ts` — materials export now collects matching rows in bounded batches instead of exporting only the first page.
 - `docs/directory-module-standard.md` — shared export rule now explicitly covers full directory, selected category and selected subcategory behavior.

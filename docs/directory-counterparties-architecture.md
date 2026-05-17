@@ -124,6 +124,8 @@ public.directory_counterparties
 
 Таблица привязана к текущей рабочей области через `workspace_owner_id`. Клиент не передаёт рабочую область как источник истины. Сервер определяет текущую рабочую область по пользователю и проверяет доступ перед чтением или изменением.
 
+При сохранении таблица сама заполняет поля для обычного поиска. Для этого используются служебные функции в схеме `private`. Права на эти функции закреплены отдельной миграцией, чтобы добавление и изменение контрагентов работали под ролями приложения.
+
 ## Доступ
 
 Чтение доступно пользователю с доступом к текущей рабочей области.
@@ -137,6 +139,16 @@ manager
 ```
 
 Обычный список исключает архивные и удалённые записи.
+
+## Применённые изменения базы
+
+```txt
+db/migrations/024_directory_counterparties_foundation.sql
+  создаёт таблицу, статусы, индексы, правила доступа и поисковые поля
+
+db/migrations/025_directory_counterparties_function_grants.sql
+  выдаёт права на служебные функции, которые нужны для сохранения записей
+```
 
 ## Карта файлов
 
@@ -159,4 +171,5 @@ app/api/directory-counterparties/route.ts
 app/api/directory-counterparties/[id]/route.ts
 db/schema/directory-counterparties.ts
 db/migrations/024_directory_counterparties_foundation.sql
+db/migrations/025_directory_counterparties_function_grants.sql
 ```

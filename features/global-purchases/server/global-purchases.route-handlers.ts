@@ -6,6 +6,7 @@ import {
   createGlobalPurchase,
   getGlobalPurchase,
   listGlobalPurchases,
+  searchGlobalPurchaseMaterialOptions,
   updateGlobalPurchase,
 } from "./global-purchases.service"
 import {
@@ -45,6 +46,15 @@ export async function handleGlobalPurchasesListRequest(request: NextRequest) {
     return NextResponse.json(response)
   } catch (err) {
     return handleGlobalPurchasesRouteError(err, "[GET /api/global-purchases]")
+  }
+}
+
+export async function handleGlobalPurchaseMaterialOptionsRequest(request: NextRequest) {
+  try {
+    const response = await searchGlobalPurchaseMaterialOptions(request.nextUrl.searchParams.get("q") ?? "")
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleGlobalPurchasesRouteError(err, "[GET /api/global-purchases/material-options]")
   }
 }
 

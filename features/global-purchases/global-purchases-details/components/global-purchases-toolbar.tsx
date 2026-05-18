@@ -14,9 +14,18 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { dispatchGlobalPurchasesCreateEvent } from "@/features/global-purchases/lib/global-purchases-events"
+import {
+  dispatchGlobalPurchasesCreateEvent,
+  dispatchGlobalPurchasesImportEvent,
+} from "@/features/global-purchases/lib/global-purchases-events"
 import type { ProjectRow } from "@/types/project"
-import { CalendarDots, MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
+import {
+  CalendarDots,
+  ExportIcon,
+  FileArrowDownIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+} from "@phosphor-icons/react"
 
 function getTodayIsoDate() {
   const date = new Date()
@@ -51,6 +60,14 @@ function getDateButtonLabel(dateFrom: string, dateTo: string) {
   if (dateFrom) return `с ${formatShortDate(dateFrom)}`
   if (dateTo) return `до ${formatShortDate(dateTo)}`
   return "Сегодня"
+}
+
+function exportGlobalPurchases() {
+  const params = new URLSearchParams(window.location.search)
+  params.set("format", "xls")
+  params.delete("cursor")
+  params.delete("limit")
+  window.location.href = `/api/global-purchases/export?${params.toString()}`
 }
 
 export function GlobalPurchasesToolbar({ projects }: { projects: ProjectRow[] }) {
@@ -109,6 +126,8 @@ export function GlobalPurchasesToolbar({ projects }: { projects: ProjectRow[] })
       <div className="flex rounded-md border border-border p-2">
         <ButtonGroup className="flex-wrap">
           <Button size="sm" type="button" variant="outline" onClick={dispatchGlobalPurchasesCreateEvent}><PlusIcon data-icon="inline-start" />Закупка</Button>
+          <Button size="sm" type="button" variant="outline" onClick={dispatchGlobalPurchasesImportEvent} title="Импорт закупок из CSV"><FileArrowDownIcon data-icon="inline-start" />Импорт</Button>
+          <Button size="sm" type="button" variant="outline" onClick={exportGlobalPurchases} title="Экспорт закупок в Excel"><ExportIcon data-icon="inline-start" />Экспорт</Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button size="sm" type="button" variant="outline">{currentProjectTitle}</Button></DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="max-h-72 w-72 overflow-y-auto">

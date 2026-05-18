@@ -8,11 +8,11 @@
 
 CSV не подходит как основной формат для передачи закупок в логистику, потому что CSV хранит только значения и не хранит нормальное оформление таблицы.
 
-Основной экспорт закупок делается как Excel-совместимый файл:
+Основной экспорт закупок делается как настоящий Excel-файл:
 
 ```txt
-format = xls
-content type = application/vnd.ms-excel
+format = xlsx
+content type = application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
 ```
 
 Файл содержит оформленную таблицу:
@@ -26,6 +26,8 @@ content type = application/vnd.ms-excel
 итоговую строку
 границы ячеек
 числовое выравнивание
+закреплённую шапку
+фильтр по колонкам
 ```
 
 ## Что попадает в экспорт
@@ -71,7 +73,7 @@ limit
 ## Адрес экспорта
 
 ```txt
-GET /api/global-purchases/export?format=xls
+GET /api/global-purchases/export?format=xlsx
 ```
 
 Кнопка `Экспорт` в верхней панели добавляет текущие фильтры из адреса страницы и скачивает файл.

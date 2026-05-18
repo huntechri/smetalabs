@@ -1,5 +1,9 @@
+"use client"
+
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,85 +11,176 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { GlobalPurchaseRow, GlobalPurchaseStatus } from "@/types/global-purchases"
-import { ArchiveIcon, GearSixIcon, PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react"
-
-const statusLabels: Record<GlobalPurchaseStatus, string> = {
-  planned: "План",
-  ordered: "Заказано",
-  partially_received: "Частично получено",
-  received: "Получено",
-  cancelled: "Отменено",
-}
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import type { GlobalPurchaseMutationInput, GlobalPurchaseRow } from "@/types/global-purchases"
+import type { ProjectRow } from "@/types/project"
+import { ArchiveIcon, CalendarDots, CaretDown, GearSixIcon } from "@phosphor-icons/react"
 
 function formatMoney(value: number | null) {
   if (value === null) return "—"
-  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`
+  return value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })
 }
 
 function formatNumber(value: number | null) {
-  if (value === null) return "—"
-  return value.toLocaleString("ru-RU", { maximumFractionDigits: 3 })
+  if (value === null) return ""
+  return String(value)
 }
 
 function formatDate(value: string | null) {
-  if (!value) return "—"
+  if (!value) return "Дата"
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleDateString("ru-RU")
 }
 
+function toDateValue(value: string | null) {
+  if (!value) return undefined
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? undefined : date
+}
+
+function toIsoDate(value: Date) {
+  const year = value.getFullYear()
+  const month = String(value.getMonth() + 1).padStart(2, "0")
+  const day = String(value.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+function parseNullableNumber(value: string) {
+  const trimmed = value.trim().replace(",", ".")
+  if (!trimmed) return null
+  const parsed = Number(trimmed)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+}
+
+function buildInput(
+  row: GlobalPurchaseRow,
+  updates: Partial<GlobalPurchaseMutationInput>
+): GlobalPurchaseMutationInput {
+  return {
+    title: row.title,
+    unit: row.unit,
+    planQuantity: row.planQuantity,
+    planPrice: row.planPrice,
+    factQuantity: row.factQuantity,
+    factPrice: row.factPrice,
+    supplierId: row.supplierId,
+    projectId: row.projectId,
+    purchaseDate: row.purchaseDate,
+    status: row.status,
+    notes: row.notes,
+    ...updates,
+  }
+}
+
 export function GlobalPurchasesRow({
   onArchive,
-  onEdit,
-  onInsertAfter,
+  onUpdate,
+  projects,
   row,
   saving,
 }: {
   onArchive: (row: GlobalPurchaseRow) => void
-  onEdit: (row: GlobalPurchaseRow) => void
-  onInsertAfter: (row: GlobalPurchaseRow) => void
+  onUpdate: (row: GlobalPurchaseRow, input: GlobalPurchaseMutationInput) => Promise<void>
+  projects: ProjectRow[]
   row: GlobalPurchaseRow
   saving: boolean
 }) {
+  const [planQuantity, setPlanQuantity] = useState(formatNumber(row.planQuantity))
+  const [factQuantity, setFactQuantity] = useState(formatNumber(row.factQuantity))
+  const [planPrice, setPlanPrice] = useState(formatNumber(row.planPrice))
+  const [factPrice, setFactPrice] = useState(formatNumber(row.factPrice))
+
+  const updateQuantity = async () => {
+    const nextPlanQuantity = parseNullableNumber(planQuantity) ?? 0
+    const nextFactQuantity = parseNullableNumber(factQuantity)
+    await onUpdate(row, buildInput(row, { planQuantity: nextPlanQuantity, factQuantity: nextFactQuantity }))
+  }
+
+  const updatePrice = async () => {
+    const nextPlanPrice = parseNullableNumber(planPrice) ?? 0
+    const nextFactPrice = parseNullableNumber(factPrice)
+    await onUpdate(row, buildInput(row, { planPrice: nextPlanPrice, factPrice: nextFactPrice }))
+  }
+
+  const updateProject = async (projectId: string | null) => {
+    await onUpdate(row, buildInput(row, { projectId }))
+  }
+
+  const updateDate = async (date: Date | undefined) => {
+    await onUpdate(row, buildInput(row, { purchaseDate: date ? toIsoDate(date) : null }))
+  }
+
   return (
-    <div className="mx-3 my-1.5 grid gap-3 rounded-md border border-border p-3 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(420px,1fr)_minmax(620px,1fr)]">
-      <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(0,1fr)_minmax(160px,0.35fr)]">
-        <div className="min-w-0 rounded-md border border-border p-2">
-          <span className="mb-1 block text-xs text-muted-foreground uppercase">ЗАКУПКА</span>
-          <div className="break-words text-sm font-medium leading-snug">{row.title}</div>
-          <div className="mt-1 flex min-w-0 flex-wrap gap-1.5">
-            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal"><span className="text-muted-foreground">Ед.:</span><span>{row.unit}</span></Badge>
-            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal"><span>{statusLabels[row.status]}</span></Badge>
-          </div>
-        </div>
-        <div className="min-w-0 rounded-md border border-border p-2">
-          <span className="mb-1 block text-xs text-muted-foreground uppercase">ДАТА</span>
-          <div className="text-xs font-medium leading-snug">{formatDate(row.purchaseDate)}</div>
+    <div className="mx-3 my-1.5 grid gap-2 rounded-md border border-border p-2 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(220px,1.2fr)_96px_minmax(180px,0.7fr)_minmax(180px,0.7fr)_minmax(260px,1fr)]">
+      <div className="min-w-0 rounded-md border border-border p-2">
+        <span className="mb-1 block text-xs text-muted-foreground uppercase">Наименование</span>
+        <div className="break-words text-sm font-medium leading-snug">{row.title}</div>
+      </div>
+
+      <div className="min-w-0 rounded-md border border-border p-2">
+        <span className="mb-1 block text-xs text-muted-foreground uppercase">Ед. изм</span>
+        <div className="text-sm font-medium">{row.unit}</div>
+      </div>
+
+      <div className="min-w-0 rounded-md border border-border p-2">
+        <span className="mb-1 block text-xs text-muted-foreground uppercase">Кол-во План/Факт</span>
+        <div className="grid grid-cols-2 gap-1.5">
+          <Input aria-label="Плановое количество" className="h-7" disabled={saving} min="0" onBlur={updateQuantity} onChange={(event) => setPlanQuantity(event.target.value)} type="number" value={planQuantity} />
+          <Input aria-label="Фактическое количество" className="h-7" disabled={saving} min="0" onBlur={updateQuantity} onChange={(event) => setFactQuantity(event.target.value)} placeholder="Факт" type="number" value={factQuantity} />
         </div>
       </div>
-      <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(240px,0.85fr)_minmax(260px,0.9fr)_minmax(160px,0.35fr)]">
-        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
-          <div className="text-xs text-muted-foreground uppercase">ПЛАН</div>
-          <div className="flex min-w-0 flex-wrap gap-1.5">
-            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"><span className="text-muted-foreground">Кол-во:</span><span>{formatNumber(row.planQuantity)}</span></Badge>
-            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-medium tabular-nums"><span>{formatMoney(row.planTotal)}</span></Badge>
-          </div>
+
+      <div className="min-w-0 rounded-md border border-border p-2">
+        <span className="mb-1 block text-xs text-muted-foreground uppercase">Цена План/Факт</span>
+        <div className="grid grid-cols-2 gap-1.5">
+          <Input aria-label="Плановая цена" className="h-7" disabled={saving} min="0" onBlur={updatePrice} onChange={(event) => setPlanPrice(event.target.value)} type="number" value={planPrice} />
+          <Input aria-label="Фактическая цена" className="h-7" disabled={saving} min="0" onBlur={updatePrice} onChange={(event) => setFactPrice(event.target.value)} placeholder="Факт" type="number" value={factPrice} />
         </div>
-        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
-          <div className="text-xs text-muted-foreground uppercase">ФАКТ / ОБЪЕКТ</div>
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"><span className="text-muted-foreground">Факт:</span><span>{formatMoney(row.factTotal)}</span></Badge>
-            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"><span className="text-muted-foreground">Откл.:</span><span>{formatMoney(row.deviationTotal)}</span></Badge>
-            {row.projectTitle ? <Badge variant="outline" className="max-w-full gap-1 rounded-md px-1.5 py-0.5 font-normal"><span className="text-muted-foreground">Объект:</span><span className="truncate">{row.projectTitle}</span></Badge> : null}
-          </div>
-        </div>
-        <div className="flex min-w-0 items-start justify-end rounded-md border border-border p-1.5">
+        <div className="mt-1 text-xs text-muted-foreground">План: {formatMoney(row.planTotal)} ₽</div>
+      </div>
+
+      <div className="min-w-0 rounded-md border border-border p-2">
+        <span className="mb-1 block text-xs text-muted-foreground uppercase">Объект, дата, действие</span>
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button aria-label={`Действия для ${row.title}`} disabled={saving} size="icon-sm" type="button" variant="ghost"><GearSixIcon /></Button></DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>
+              <Badge variant="outline" className="max-w-44 cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted">
+                <span className="truncate">{row.projectTitle ?? "Объект"}</span>
+                <CaretDown className="size-2.5" />
+              </Badge>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="max-h-72 w-72 overflow-y-auto">
+              <DropdownMenuItem onClick={() => updateProject(null)}>Без объекта</DropdownMenuItem>
+              {projects.map((project) => (
+                <DropdownMenuItem key={project.id} onClick={() => updateProject(project.id)}>
+                  {project.title}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Badge variant="outline" className="cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted">
+                <CalendarDots className="size-3" />
+                {formatDate(row.purchaseDate)}
+              </Badge>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-auto p-0">
+              <Calendar mode="single" selected={toDateValue(row.purchaseDate)} onSelect={updateDate} />
+            </PopoverContent>
+          </Popover>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button aria-label={`Действия для ${row.title}`} className="ml-auto" disabled={saving} size="icon-sm" type="button" variant="ghost">
+                <GearSixIcon />
+              </Button>
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onClick={() => onInsertAfter(row)}><PlusIcon />Добавить ниже</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(row)}><PencilSimpleIcon />Редактировать</DropdownMenuItem>
+              <DropdownMenuItem disabled>Редактирование через строку</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onArchive(row)} variant="destructive"><ArchiveIcon />Архивировать</DropdownMenuItem>
             </DropdownMenuContent>

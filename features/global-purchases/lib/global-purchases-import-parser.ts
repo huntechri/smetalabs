@@ -12,6 +12,19 @@ export type GlobalPurchasesImportPreviewRow = {
 export const GLOBAL_PURCHASES_IMPORT_REQUIRED_COLUMNS =
   "Наименование;Ед. изм.;Кол-во факт;Цена факт;Объект;Дата;Примечание"
 
+export const GLOBAL_PURCHASES_IMPORT_TEMPLATE_FILENAME = "global-purchases-import-template.csv"
+
+export const GLOBAL_PURCHASES_IMPORT_TEMPLATE = [
+  ["Наименование", "Ед. изм.", "Кол-во факт", "Цена факт", "Объект", "Дата", "Примечание", "Кол-во план", "Цена план"],
+  ["Цемент М500", "меш", "10", "450", "", "2026-05-18", "пример строки, объект можно оставить пустым", "0", "450"],
+]
+  .map((row) => row.map(formatTemplateCell).join(";"))
+  .join("\n")
+
+function formatTemplateCell(value: string) {
+  return /[";\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
+}
+
 function normalizeKey(value: string) {
   return value.trim().toLowerCase().replace(/ё/g, "е").replace(/\s+/g, " ")
 }

@@ -1,4 +1,5 @@
 import type {
+  GlobalPurchaseMaterialOptionsResponse,
   GlobalPurchaseMutationInput,
   GlobalPurchaseRow,
   GlobalPurchasesListParams,
@@ -45,6 +46,16 @@ export function fetchGlobalPurchases(params: GlobalPurchasesListParams = {}) {
   return fetchJson<GlobalPurchasesListResponse>(
     buildListUrl("/api/global-purchases", params),
     "список закупок"
+  )
+}
+
+export function fetchGlobalPurchaseMaterialOptions(q: string) {
+  const params = new URLSearchParams()
+  appendParam(params, "q", q)
+
+  return fetchJson<GlobalPurchaseMaterialOptionsResponse>(
+    `/api/global-purchases/material-options?${params.toString()}`,
+    "поиск материалов"
   )
 }
 

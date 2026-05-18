@@ -5,7 +5,6 @@ import {
   archiveGlobalPurchase,
   createGlobalPurchase,
   getGlobalPurchase,
-  listGlobalPurchaseSupplierOptions,
   listGlobalPurchases,
   searchGlobalPurchaseMaterialOptions,
   updateGlobalPurchase,
@@ -56,15 +55,6 @@ export async function handleGlobalPurchaseMaterialOptionsRequest(request: NextRe
     return NextResponse.json(response)
   } catch (err) {
     return handleGlobalPurchasesRouteError(err, "[GET /api/global-purchases/material-options]")
-  }
-}
-
-export async function handleGlobalPurchaseSupplierOptionsRequest() {
-  try {
-    const response = await listGlobalPurchaseSupplierOptions()
-    return NextResponse.json(response)
-  } catch (err) {
-    return handleGlobalPurchasesRouteError(err, "[GET /api/global-purchases/supplier-options]")
   }
 }
 

@@ -17,6 +17,8 @@ function buildListUrl(path: string, query: GlobalPurchasesListParams = {}) {
   appendParam(params, "q", query.q)
   appendParam(params, "status", query.status)
   appendParam(params, "projectId", query.projectId)
+  appendParam(params, "dateFrom", query.dateFrom)
+  appendParam(params, "dateTo", query.dateTo)
   appendParam(params, "limit", query.limit)
   appendParam(params, "cursor", query.cursor)
   appendParam(params, "sort", query.sort)

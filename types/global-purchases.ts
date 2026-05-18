@@ -7,6 +7,7 @@ export type GlobalPurchaseStatus =
 
 export type GlobalPurchasesStatusFilter = GlobalPurchaseStatus | "all"
 export type GlobalPurchasesSort = "relevance" | "updated_desc" | "title_asc" | "project_asc"
+export type GlobalPurchasesExportFormat = "xlsx"
 
 export type GlobalPurchasesListParams = {
   q?: string
@@ -68,6 +69,12 @@ export type GlobalPurchasesListResponse = {
     hasMore: boolean
     total: number
   }
+}
+
+export type GlobalPurchasesExportFile = {
+  body: Blob
+  contentType: string
+  extension: string
 }
 
 export type GlobalPurchaseMaterialOption = {

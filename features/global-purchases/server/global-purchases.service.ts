@@ -4,7 +4,12 @@ import { createClient } from "@/lib/supabase/server"
 import { getWorkspaceRole, requireCurrentWorkspace } from "@/lib/auth/team"
 import { GlobalPurchasesApiError } from "../api/global-purchases-errors"
 import { globalPurchasesCacheTags } from "../api/global-purchases-query-keys"
-import type { GlobalPurchaseMutationInput, GlobalPurchasesListParams } from "@/types/global-purchases"
+import type {
+  GlobalPurchaseMutationInput,
+  GlobalPurchaseRow,
+  GlobalPurchasesExportFormat,
+  GlobalPurchasesListParams,
+} from "@/types/global-purchases"
 import {
   archiveGlobalPurchaseForWorkspace,
   createGlobalPurchaseForWorkspace,
@@ -13,6 +18,7 @@ import {
   updateGlobalPurchaseForWorkspace,
 } from "./global-purchases.repository"
 import { searchGlobalPurchaseMaterialOptionsForWorkspace } from "./global-purchases-material-options.repository"
+import { buildGlobalPurchasesExportFile } from "./global-purchases.export"
 import { normalizeGlobalPurchasesListParams } from "./global-purchases.schemas"
 
 type GlobalPurchasesContext = {
@@ -27,6 +33,8 @@ type GlobalPurchasesContext = {
 const WRITE_ROLES = new Set(["owner", "admin", "manager"])
 const LIST_CACHE_REVALIDATE_SECONDS = 30
 const DETAIL_CACHE_REVALIDATE_SECONDS = 120
+const EXPORT_BATCH_LIMIT = 500
+const MAX_EXPORT_ROWS = 10000
 
 function stableHash(value: unknown) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex")
@@ -143,4 +151,39 @@ export async function archiveGlobalPurchase(id: string) {
 
   revalidateGlobalPurchaseTags(context, purchase.id)
   return { data: purchase }
+}
+
+async function getGlobalPurchasesForExport(
+  workspaceOwnerId: string,
+  params: GlobalPurchasesListParams
+) {
+  const purchases: GlobalPurchaseRow[] = []
+  let cursor = 0
+  let hasMore = true
+
+  while (hasMore && purchases.length < MAX_EXPORT_ROWS) {
+    const response = await listGlobalPurchasesForWorkspace(workspaceOwnerId, {
+      ...params,
+      status: params.status ?? "all",
+      sort: params.sort ?? "project_asc",
+      limit: EXPORT_BATCH_LIMIT,
+      cursor,
+    })
+
+    purchases.push(...response.data)
+    hasMore = response.meta.hasMore
+    cursor = response.meta.nextCursor ?? cursor + EXPORT_BATCH_LIMIT
+  }
+
+  return purchases.slice(0, MAX_EXPORT_ROWS)
+}
+
+export async function exportGlobalPurchases(
+  format: GlobalPurchasesExportFormat,
+  params: GlobalPurchasesListParams
+) {
+  const context = await requireGlobalPurchasesReadContext()
+  const purchases = await getGlobalPurchasesForExport(context.workspaceOwnerId, params)
+
+  return buildGlobalPurchasesExportFile(purchases, format)
 }

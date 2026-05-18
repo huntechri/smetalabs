@@ -81,13 +81,3 @@ export type GlobalPurchaseMaterialOption = {
 export type GlobalPurchaseMaterialOptionsResponse = {
   data: GlobalPurchaseMaterialOption[]
 }
-
-export type GlobalPurchaseSupplierOption = {
-  id: string
-  name: string
-  color: string
-}
-
-export type GlobalPurchaseSupplierOptionsResponse = {
-  data: GlobalPurchaseSupplierOption[]
-}

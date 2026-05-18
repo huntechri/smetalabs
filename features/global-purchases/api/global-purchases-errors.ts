@@ -13,7 +13,9 @@ export async function throwGlobalPurchasesApiError(response: Response, resource:
     const body = (await response.json()) as { error?: { code?: string; message?: string } }
     message = body.error?.message || message
     code = body.error?.code || code
-  } catch {}
+  } catch {
+    // Keep default message when response body is not JSON.
+  }
 
   throw new GlobalPurchasesApiError(code, message, response.status)
 }

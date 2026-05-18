@@ -1,20 +1,8 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
+import { useEffect, useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import { FieldError } from "@/components/ui/field"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useGlobalPurchases } from "@/features/global-purchases/hooks/use-global-purchases"
 import {
   GLOBAL_PURCHASES_CREATE_EVENT,
@@ -22,31 +10,13 @@ import {
 } from "@/features/global-purchases/lib/global-purchases-events"
 import type { GlobalPurchaseMutationInput, GlobalPurchaseRow } from "@/types/global-purchases"
 import type { ProjectRow } from "@/types/project"
+import { GlobalPurchaseArchiveDialog } from "./global-purchase-archive-dialog"
 import { GlobalPurchaseMaterialDialog } from "./global-purchase-material-dialog"
 import { GlobalPurchasesImportDialog } from "./global-purchases-import-dialog"
-import { GlobalPurchasesRow } from "./global-purchases-row"
+import { GlobalPurchasesList } from "./global-purchases-list"
+import { GlobalPurchasesPagination } from "./global-purchases-pagination"
 
 const DEFAULT_LIMIT = 50
-const SKELETON_ROW_COUNT = 6
-
-function GlobalPurchasesRowSkeleton() {
-  return (
-    <Card size="sm" className="mx-3 my-1.5 rounded-md bg-transparent p-0">
-      <CardContent className="grid gap-2 p-2 xl:grid-cols-[minmax(460px,2fr)_76px_minmax(150px,0.55fr)_minmax(230px,0.85fr)_minmax(240px,0.85fr)]">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <div key={index} className="space-y-2 rounded-md border border-border p-2">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-7 w-full" />
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  )
-}
-
-export function GlobalPurchasesRowsSkeleton() {
-  return <div aria-label="Загрузка закупок" aria-busy="true">{Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => <GlobalPurchasesRowSkeleton key={index} />)}</div>
-}
 
 function buildReplaceInput(row: GlobalPurchaseRow, selected: GlobalPurchaseMutationInput): GlobalPurchaseMutationInput {
   return {
@@ -64,27 +34,6 @@ function buildReplaceInput(row: GlobalPurchaseRow, selected: GlobalPurchaseMutat
   }
 }
 
-type PurchaseGroup = {
-  key: string
-  title: string
-  rows: GlobalPurchaseRow[]
-}
-
-function groupPurchasesByProject(rows: GlobalPurchaseRow[]): PurchaseGroup[] {
-  const groups = new Map<string, PurchaseGroup>()
-
-  for (const row of rows) {
-    const key = row.projectId ?? "without-project"
-    const title = row.projectTitle ?? "Без объекта"
-    const group = groups.get(key)
-
-    if (group) group.rows.push(row)
-    else groups.set(key, { key, title, rows: [row] })
-  }
-
-  return Array.from(groups.values())
-}
-
 export function GlobalPurchasesSection({
   projects,
   projectsLoading,
@@ -98,7 +47,6 @@ export function GlobalPurchasesSection({
   const [replacementRow, setReplacementRow] = useState<GlobalPurchaseRow | null>(null)
   const [rowPendingArchive, setRowPendingArchive] = useState<GlobalPurchaseRow | null>(null)
   const [savingRowId, setSavingRowId] = useState<string | null>(null)
-  const purchaseGroups = useMemo(() => groupPurchasesByProject(purchases), [purchases])
 
   useEffect(() => {
     const handleCreate = () => {
@@ -129,6 +77,10 @@ export function GlobalPurchasesSection({
     } finally {
       setSavingRowId(null)
     }
+  }
+
+  const handleArchiveDialogOpenChange = (open: boolean) => {
+    if (!open) setRowPendingArchive(null)
   }
 
   const handleReplace = (purchase: GlobalPurchaseRow) => {
@@ -174,9 +126,7 @@ export function GlobalPurchasesSection({
   const pageStart = purchases.length > 0 ? currentCursor + 1 : 0
   const pageEnd = currentCursor + purchases.length
   const totalLabel = meta?.hasMore ? `минимум ${meta.total}` : String(meta?.total ?? purchases.length)
-  const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
-  const showSkeletonRows = loading && purchases.length === 0
   const isReplacing = Boolean(replacementRow)
   const archiveInProgress = rowPendingArchive ? savingRowId === rowPendingArchive.id || saving : false
 
@@ -185,50 +135,38 @@ export function GlobalPurchasesSection({
       <Card className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg py-0 shadow-sm">
         {error ? <FieldError className="m-3 mb-0 rounded-md border border-destructive/30 bg-destructive/10 p-3">{error}</FieldError> : null}
         <CardContent className="scrollbar-subtle relative min-h-0 flex-1 overflow-y-auto px-0 py-0">
-          {showSkeletonRows ? <GlobalPurchasesRowsSkeleton /> : null}
-          {!showSkeletonRows && purchases.length === 0 ? <Empty className="h-full border-0"><EmptyHeader><EmptyTitle>Закупки не найдены</EmptyTitle><EmptyDescription>Добавьте закупку из справочника материалов или измените поиск.</EmptyDescription></EmptyHeader></Empty> : null}
-          {!showSkeletonRows ? purchaseGroups.map((group) => (
-            <section key={group.key} className="py-1">
-              <div className="sticky top-0 z-10 mx-3 mb-1 flex items-center gap-2 rounded-md border border-border bg-background/95 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur">
-                <span className="truncate">{group.title}</span>
-                <Badge variant="secondary" className="rounded-md px-1.5 py-0 text-[10px] font-normal">{group.rows.length}</Badge>
-              </div>
-              {group.rows.map((row) => <GlobalPurchasesRow key={row.id} onDelete={handleDelete} onReplace={handleReplace} onUpdate={handleUpdate} projects={projects} row={row} saving={savingRowId === row.id || projectsLoading} />)}
-            </section>
-          )) : null}
+          <GlobalPurchasesList
+            loading={loading}
+            onDelete={handleDelete}
+            onReplace={handleReplace}
+            onUpdate={handleUpdate}
+            projects={projects}
+            projectsLoading={projectsLoading}
+            purchases={purchases}
+            savingRowId={savingRowId}
+          />
         </CardContent>
-        {meta ? <CardFooter className="flex flex-col gap-3 border-t p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div><div className="flex gap-2"><Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button><Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button></div></CardFooter> : null}
+        {meta ? (
+          <GlobalPurchasesPagination
+            currentCursor={currentCursor}
+            currentLimit={currentLimit}
+            disabled={loading || isFetching}
+            hasMore={meta.hasMore}
+            nextCursor={nextCursor}
+            onCursorChange={setCursor}
+            pageEnd={pageEnd}
+            pageStart={pageStart}
+            totalLabel={totalLabel}
+          />
+        ) : null}
       </Card>
-      <Dialog open={Boolean(rowPendingArchive)} onOpenChange={(open) => !open && setRowPendingArchive(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Удалить закупку?</DialogTitle>
-            <DialogDescription>
-              {rowPendingArchive
-                ? `Закупка «${rowPendingArchive.title}» исчезнет из обычного списка. Данные останутся в архиве.`
-                : "Закупка исчезнет из обычного списка. Данные останутся в архиве."}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={archiveInProgress}
-              onClick={() => setRowPendingArchive(null)}
-            >
-              Отмена
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={archiveInProgress}
-              onClick={handleConfirmArchive}
-            >
-              Удалить
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <GlobalPurchaseArchiveDialog
+        onConfirm={handleConfirmArchive}
+        onOpenChange={handleArchiveDialogOpenChange}
+        open={Boolean(rowPendingArchive)}
+        purchase={rowPendingArchive}
+        saving={archiveInProgress}
+      />
       <GlobalPurchaseMaterialDialog
         actionLabel={isReplacing ? "Заменить" : "Добавить"}
         closeOnSelect={isReplacing}

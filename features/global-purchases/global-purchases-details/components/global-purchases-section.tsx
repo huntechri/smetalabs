@@ -37,9 +37,26 @@ export function GlobalPurchasesRowsSkeleton() {
   return <div aria-label="Загрузка закупок" aria-busy="true">{Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => <GlobalPurchasesRowSkeleton key={index} />)}</div>
 }
 
+function buildReplaceInput(row: GlobalPurchaseRow, selected: GlobalPurchaseMutationInput): GlobalPurchaseMutationInput {
+  return {
+    title: selected.title,
+    unit: selected.unit,
+    planQuantity: row.planQuantity,
+    planPrice: selected.planPrice,
+    factQuantity: row.factQuantity,
+    factPrice: row.factPrice,
+    supplierId: row.supplierId,
+    projectId: row.projectId,
+    purchaseDate: row.purchaseDate,
+    status: row.status,
+    notes: row.notes,
+  }
+}
+
 export function GlobalPurchasesSection() {
   const { archivePurchase, createPurchase, error, isFetching, loading, meta, params, purchases, saving, setCursor, updatePurchase } = useGlobalPurchases()
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false)
+  const [replacementRow, setReplacementRow] = useState<GlobalPurchaseRow | null>(null)
   const [savingRowId, setSavingRowId] = useState<string | null>(null)
   const projectsQuery = useQuery({
     queryKey: projectsQueryKeys.list({ status: "all", limit: 100, sort: "title_asc" }),
@@ -48,13 +65,16 @@ export function GlobalPurchasesSection() {
   })
 
   useEffect(() => {
-    const handleCreate = () => setMaterialDialogOpen(true)
+    const handleCreate = () => {
+      setReplacementRow(null)
+      setMaterialDialogOpen(true)
+    }
     window.addEventListener(GLOBAL_PURCHASES_CREATE_EVENT, handleCreate)
     return () => window.removeEventListener(GLOBAL_PURCHASES_CREATE_EVENT, handleCreate)
   }, [])
 
-  const handleArchive = async (purchase: GlobalPurchaseRow) => {
-    const confirmed = window.confirm(`Архивировать закупку «${purchase.title}»? Она исчезнет из обычного списка.`)
+  const handleDelete = async (purchase: GlobalPurchaseRow) => {
+    const confirmed = window.confirm(`Удалить закупку «${purchase.title}»? Она исчезнет из обычного списка.`)
     if (!confirmed) return
 
     setSavingRowId(purchase.id)
@@ -63,6 +83,11 @@ export function GlobalPurchasesSection() {
     } finally {
       setSavingRowId(null)
     }
+  }
+
+  const handleReplace = (purchase: GlobalPurchaseRow) => {
+    setReplacementRow(purchase)
+    setMaterialDialogOpen(true)
   }
 
   const handleUpdate = async (purchase: GlobalPurchaseRow, input: GlobalPurchaseMutationInput) => {
@@ -74,8 +99,24 @@ export function GlobalPurchasesSection() {
     }
   }
 
-  const handleCreateFromMaterial = async (input: GlobalPurchaseMutationInput) => {
-    await createPurchase(input)
+  const handleSelectMaterial = async (input: GlobalPurchaseMutationInput) => {
+    if (!replacementRow) {
+      await createPurchase(input)
+      return
+    }
+
+    setSavingRowId(replacementRow.id)
+    try {
+      await updatePurchase(replacementRow.id, buildReplaceInput(replacementRow, input))
+      setReplacementRow(null)
+    } finally {
+      setSavingRowId(null)
+    }
+  }
+
+  const handleMaterialDialogOpenChange = (open: boolean) => {
+    setMaterialDialogOpen(open)
+    if (!open) setReplacementRow(null)
   }
 
   const currentCursor = params.cursor ?? 0
@@ -97,11 +138,19 @@ export function GlobalPurchasesSection() {
           {listBusy ? <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-background/90 px-2 py-1 text-xs text-muted-foreground shadow-sm">Обновление...</div> : null}
           {showSkeletonRows ? <GlobalPurchasesRowsSkeleton /> : null}
           {!showSkeletonRows && purchases.length === 0 ? <Empty className="h-full border-0"><EmptyHeader><EmptyTitle>Закупки не найдены</EmptyTitle><EmptyDescription>Добавьте закупку из справочника материалов или измените поиск.</EmptyDescription></EmptyHeader></Empty> : null}
-          {!showSkeletonRows ? purchases.map((row) => <GlobalPurchasesRow key={row.id} onArchive={handleArchive} onUpdate={handleUpdate} projects={projects} row={row} saving={savingRowId === row.id} />) : null}
+          {!showSkeletonRows ? purchases.map((row) => <GlobalPurchasesRow key={row.id} onDelete={handleDelete} onReplace={handleReplace} onUpdate={handleUpdate} projects={projects} row={row} saving={savingRowId === row.id} />) : null}
         </CardContent>
         {meta ? <CardFooter className="flex flex-col gap-3 border-t p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div><div className="flex gap-2"><Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button><Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button></div></CardFooter> : null}
       </Card>
-      <GlobalPurchaseMaterialDialog onOpenChange={setMaterialDialogOpen} onSelect={handleCreateFromMaterial} open={materialDialogOpen} saving={saving} />
+      <GlobalPurchaseMaterialDialog
+        actionLabel={replacementRow ? "Заменить" : "Добавить"}
+        description={replacementRow ? "Выберите новый материал. Объект, дата и фактические значения сохранятся." : undefined}
+        onOpenChange={handleMaterialDialogOpenChange}
+        onSelect={handleSelectMaterial}
+        open={materialDialogOpen}
+        saving={saving || savingRowId !== null}
+        title={replacementRow ? "Заменить материал в закупке" : undefined}
+      />
     </>
   )
 }

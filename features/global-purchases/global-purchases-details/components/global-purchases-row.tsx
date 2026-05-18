@@ -166,7 +166,6 @@ export function GlobalPurchasesRow({
             value={row.factPrice ?? ""}
           />
         </div>
-        <div className="mt-1 text-xs text-muted-foreground">Сумма план: {formatMoney(row.planTotal)} ₽</div>
       </div>
 
       <div className="min-w-0 rounded-md border border-border p-2">

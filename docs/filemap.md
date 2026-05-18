@@ -2,7 +2,7 @@
 
 > Last updated: 2026-05-18
 >
-> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/projects`, see [`docs/projects-architecture.md`](./projects-architecture.md). For `/procurements`, see [`docs/global-purchases-architecture.md`](./global-purchases-architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md).
+> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/projects`, see [`docs/projects-architecture.md`](./projects-architecture.md). For `/procurements`, see [`docs/global-purchases-architecture.md`](./global-purchases-architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md). For `/directories/suppliers`, see [`docs/directory-suppliers-architecture.md`](./directory-suppliers-architecture.md).
 
 ---
 
@@ -70,6 +70,7 @@ app/
     ├── projects/                 # workspace-scoped projects list/read/create/update/archive endpoints
     ├── global-purchases/         # workspace-scoped procurements list/read/create/update/archive/material-picker endpoints
     ├── directory-counterparties/  # workspace-scoped counterparties catalog read/search/CRUD endpoints
+    ├── directory-suppliers/       # workspace-scoped suppliers catalog read/search/CRUD endpoints
     ├── directory-materials/       # workspace-scoped materials catalog read/search/CRUD/import/export/AI endpoints
     ├── directory-works/           # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
     ├── settings/route.ts
@@ -114,6 +115,14 @@ features/
 │   ├── lib/                # pure events/helpers
 │   ├── server/             # repository/service/route logic
 │   └── types.ts            # feature-local counterparties catalog types
+├── directory-suppliers/
+│   ├── api/                # client API, errors, query keys/cache tags
+│   ├── components/         # suppliers directory view shell
+│   ├── directory-suppliers-details/components/ # list rows and form dialog
+│   ├── hooks/              # TanStack Query hook and mutations
+│   ├── lib/                # UI events
+│   ├── server/             # repository/service/route logic
+│   └── types.ts            # feature-local suppliers catalog types
 ├── directory-materials/
 │   ├── api/
 │   ├── components/
@@ -130,7 +139,6 @@ features/
 │   ├── lib/
 │   ├── server/
 │   └── types.ts
-├── directory-suppliers/
 ├── access-control/
 ├── account-settings/
 └── workspace-settings/
@@ -187,12 +195,14 @@ db/
 │   ├── 028_projects_customer_counterparty.sql
 │   ├── 029_global_purchases_foundation.sql
 │   ├── 030_global_purchases_project_sort_index.sql
-│   └── 031_global_purchases_link_indexes.sql
+│   ├── 031_global_purchases_link_indexes.sql
+│   └── 032_directory_suppliers_foundation.sql
 └── schema/
     ├── index.ts
     ├── projects.ts
     ├── global-purchases.ts
     ├── directory-counterparties.ts
+    ├── directory-suppliers.ts
     ├── directory-materials.ts
     ├── directory-works.ts
     ├── profiles.ts
@@ -231,6 +241,18 @@ Projects stay workspace-scoped through `workspace_owner_id`. The first version s
 ```
 
 Global purchases stay workspace-scoped through `workspace_owner_id`. The first version opens on today's date by default, supports real list data, text search, project filtering, date filtering, grouped rows by object, material-based create, material replacement, fact quantity/price edits, row date/object edits and soft archive. Project selection is linked to active non-archived projects. Material adding uses the materials catalog as source but queries only a lightweight material-picker endpoint. Supplier selection, import, export, AI behavior, warehouse logic, payments and manual plan editing remain outside this slice.
+
+### Directory suppliers first production slice
+
+```txt
+/directories/suppliers
+  → app/api/directory-suppliers/** exposes workspace-scoped read/search/CRUD routes
+  → features/directory-suppliers/** owns UI hooks, form dialog, repository and service logic
+  → docs/directory-suppliers-architecture.md fixes the first-version contract
+  → db/schema/directory-suppliers.ts and db/migrations/032_directory_suppliers_foundation.sql provide storage
+```
+
+The suppliers catalog stays workspace-scoped through `workspace_owner_id`. Import, export, AI search, complex filters, mass actions and material linking are intentionally outside the first version.
 
 ### Directory counterparties production slice
 

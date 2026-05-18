@@ -278,7 +278,7 @@ export function GlobalPurchasesImportDialog({
                   <div className="text-xs text-muted-foreground">Строка {row.index}</div>
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium">
-                      {row.input?.title ?? sourceTitle || "—"}
+                      {(row.input?.title ?? sourceTitle) || "—"}
                     </div>
                     <div className="truncate text-xs text-muted-foreground">
                       {row.input ? `${row.input.factQuantity ?? ""} ${row.input.unit} × ${row.input.factPrice ?? ""}` : row.errors.join("; ")}

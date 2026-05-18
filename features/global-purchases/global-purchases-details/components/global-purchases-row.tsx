@@ -90,15 +90,6 @@ function buildInput(
   }
 }
 
-function ReadonlyMetricBadge({ label, value, suffix }: { label: string; value: string; suffix?: string }) {
-  return (
-    <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
-      <span className="text-muted-foreground">{label}:</span>
-      <span>{value}{suffix ? ` ${suffix}` : ""}</span>
-    </Badge>
-  )
-}
-
 const FACT_SAVE_DELAY_MS = 450
 
 export function GlobalPurchasesRow({
@@ -212,7 +203,10 @@ export function GlobalPurchasesRow({
       <div className="min-w-0 rounded-md border border-border p-2">
         <span className="mb-1 block text-xs text-muted-foreground uppercase">Кол-во План/Факт</span>
         <div className="flex min-w-0 flex-wrap gap-1.5">
-          <ReadonlyMetricBadge label="План" value={formatNumber(row.planQuantity)} />
+          <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
+            <span className="text-muted-foreground">План:</span>
+            <span>{formatNumber(row.planQuantity)}</span>
+          </Badge>
           <EditableBadge
             className="max-w-full"
             formatDisplay={formatEditableNumber}
@@ -226,7 +220,10 @@ export function GlobalPurchasesRow({
       <div className="min-w-0 rounded-md border border-border p-2">
         <span className="mb-1 block text-xs text-muted-foreground uppercase">Цена План/Факт</span>
         <div className="flex min-w-0 flex-wrap gap-1.5">
-          <ReadonlyMetricBadge label="План" suffix="₽" value={formatMoney(row.planPrice)} />
+          <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
+            <span className="text-muted-foreground">План:</span>
+            <span>{formatMoney(row.planPrice)} ₽</span>
+          </Badge>
           <EditableBadge
             className="max-w-full"
             formatDisplay={formatEditableMoney}

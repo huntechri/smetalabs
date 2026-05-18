@@ -6,7 +6,7 @@ export type GlobalPurchaseStatus =
   | "cancelled"
 
 export type GlobalPurchasesStatusFilter = GlobalPurchaseStatus | "all"
-export type GlobalPurchasesSort = "relevance" | "updated_desc" | "title_asc"
+export type GlobalPurchasesSort = "relevance" | "updated_desc" | "title_asc" | "project_asc"
 
 export type GlobalPurchasesListParams = {
   q?: string

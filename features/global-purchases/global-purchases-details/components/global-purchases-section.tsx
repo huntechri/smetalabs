@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
@@ -53,11 +54,33 @@ function buildReplaceInput(row: GlobalPurchaseRow, selected: GlobalPurchaseMutat
   }
 }
 
+type PurchaseGroup = {
+  key: string
+  title: string
+  rows: GlobalPurchaseRow[]
+}
+
+function groupPurchasesByProject(rows: GlobalPurchaseRow[]): PurchaseGroup[] {
+  const groups = new Map<string, PurchaseGroup>()
+
+  for (const row of rows) {
+    const key = row.projectId ?? "without-project"
+    const title = row.projectTitle ?? "Без объекта"
+    const group = groups.get(key)
+
+    if (group) group.rows.push(row)
+    else groups.set(key, { key, title, rows: [row] })
+  }
+
+  return Array.from(groups.values())
+}
+
 export function GlobalPurchasesSection() {
   const { archivePurchase, createPurchase, error, isFetching, loading, meta, params, purchases, saving, setCursor, updatePurchase } = useGlobalPurchases()
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false)
   const [replacementRow, setReplacementRow] = useState<GlobalPurchaseRow | null>(null)
   const [savingRowId, setSavingRowId] = useState<string | null>(null)
+  const purchaseGroups = useMemo(() => groupPurchasesByProject(purchases), [purchases])
   const projectsQuery = useQuery({
     queryKey: projectsQueryKeys.list({ status: "all", limit: 100, sort: "title_asc" }),
     queryFn: () => fetchProjects({ status: "all", limit: 100, sort: "title_asc" }),
@@ -136,7 +159,15 @@ export function GlobalPurchasesSection() {
         <CardContent className="scrollbar-subtle relative min-h-0 flex-1 overflow-y-auto px-0 py-0">
           {showSkeletonRows ? <GlobalPurchasesRowsSkeleton /> : null}
           {!showSkeletonRows && purchases.length === 0 ? <Empty className="h-full border-0"><EmptyHeader><EmptyTitle>Закупки не найдены</EmptyTitle><EmptyDescription>Добавьте закупку из справочника материалов или измените поиск.</EmptyDescription></EmptyHeader></Empty> : null}
-          {!showSkeletonRows ? purchases.map((row) => <GlobalPurchasesRow key={row.id} onDelete={handleDelete} onReplace={handleReplace} onUpdate={handleUpdate} projects={projects} row={row} saving={savingRowId === row.id} />) : null}
+          {!showSkeletonRows ? purchaseGroups.map((group) => (
+            <section key={group.key} className="py-1">
+              <div className="sticky top-0 z-10 mx-3 mb-1 flex items-center gap-2 rounded-md border border-border bg-background/95 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur">
+                <span className="truncate">{group.title}</span>
+                <Badge variant="secondary" className="rounded-md px-1.5 py-0 text-[10px] font-normal">{group.rows.length}</Badge>
+              </div>
+              {group.rows.map((row) => <GlobalPurchasesRow key={row.id} onDelete={handleDelete} onReplace={handleReplace} onUpdate={handleUpdate} projects={projects} row={row} saving={savingRowId === row.id} />)}
+            </section>
+          )) : null}
         </CardContent>
         {meta ? <CardFooter className="flex flex-col gap-3 border-t p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div><div className="flex gap-2"><Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button><Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button></div></CardFooter> : null}
       </Card>

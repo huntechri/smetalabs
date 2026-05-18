@@ -2,7 +2,13 @@
 
 import { useMemo } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+  type QueryKey,
+} from "@tanstack/react-query"
 import {
   archiveGlobalPurchase,
   createGlobalPurchase,
@@ -12,7 +18,9 @@ import {
 import { globalPurchasesQueryKeys } from "@/features/global-purchases/api/global-purchases-query-keys"
 import type {
   GlobalPurchaseMutationInput,
+  GlobalPurchaseRow,
   GlobalPurchasesListParams,
+  GlobalPurchasesListResponse,
   GlobalPurchasesSort,
   GlobalPurchasesStatusFilter,
 } from "@/types/global-purchases"
@@ -70,6 +78,131 @@ function getListParams(searchParams: ReadonlySearchParams): GlobalPurchasesListP
   }
 }
 
+function compareText(a: string | null | undefined, b: string | null | undefined) {
+  return (a || "~~~").localeCompare(b || "~~~", "ru")
+}
+
+function compareDate(a: string | null | undefined, b: string | null | undefined) {
+  return (a || "9999-12-31").localeCompare(b || "9999-12-31")
+}
+
+function sortRows(rows: GlobalPurchaseRow[], sort: GlobalPurchasesSort | undefined) {
+  return [...rows].sort((a, b) => {
+    if (sort === "title_asc") return compareText(a.title, b.title) || a.id.localeCompare(b.id)
+    if (sort === "updated_desc") return b.metadata.updatedAt.localeCompare(a.metadata.updatedAt) || a.id.localeCompare(b.id)
+
+    return (
+      compareText(a.projectTitle, b.projectTitle) ||
+      compareDate(a.purchaseDate, b.purchaseDate) ||
+      compareText(a.title, b.title) ||
+      a.id.localeCompare(b.id)
+    )
+  })
+}
+
+function getSearchText(row: GlobalPurchaseRow) {
+  return [row.title, row.unit, row.supplierName, row.projectTitle, row.notes]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+}
+
+function matchesParams(row: GlobalPurchaseRow, params: GlobalPurchasesListParams) {
+  if (params.status && params.status !== "all" && row.status !== params.status) return false
+  if (params.projectId && row.projectId !== params.projectId) return false
+  if (params.dateFrom && (!row.purchaseDate || row.purchaseDate < params.dateFrom)) return false
+  if (params.dateTo && (!row.purchaseDate || row.purchaseDate > params.dateTo)) return false
+
+  const q = params.q?.trim().toLowerCase()
+  if (!q) return true
+
+  return q
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((token) => getSearchText(row).includes(token))
+}
+
+function updateCachedLists(
+  queryClient: QueryClient,
+  updater: (
+    current: GlobalPurchasesListResponse,
+    params: GlobalPurchasesListParams
+  ) => GlobalPurchasesListResponse
+) {
+  const queries = queryClient.getQueryCache().findAll({ queryKey: globalPurchasesQueryKeys.all })
+
+  for (const query of queries) {
+    const queryKey = query.queryKey as QueryKey
+    if (queryKey[1] !== "list") continue
+
+    const listParams = (queryKey[2] ?? {}) as GlobalPurchasesListParams
+    queryClient.setQueryData<GlobalPurchasesListResponse>(queryKey, (current) =>
+      current ? updater(current, listParams) : current
+    )
+  }
+}
+
+function replaceRowInCachedLists(queryClient: QueryClient, row: GlobalPurchaseRow) {
+  queryClient.setQueryData(globalPurchasesQueryKeys.detail(row.id), row)
+  updateCachedLists(queryClient, (current, listParams) => {
+    const existed = current.data.some((item) => item.id === row.id)
+    if (!existed) return current
+
+    const nextRows = current.data.filter((item) => item.id !== row.id)
+    const matches = matchesParams(row, listParams)
+    const nextData = matches ? sortRows([...nextRows, row], listParams.sort).slice(0, current.meta.limit) : nextRows
+
+    return {
+      ...current,
+      data: nextData,
+      meta: {
+        ...current.meta,
+        total: current.meta.total - (matches ? 0 : 1),
+      },
+    }
+  })
+}
+
+function insertRowIntoCurrentList(
+  queryClient: QueryClient,
+  params: GlobalPurchasesListParams,
+  row: GlobalPurchaseRow
+) {
+  queryClient.setQueryData(globalPurchasesQueryKeys.detail(row.id), row)
+  queryClient.setQueryData<GlobalPurchasesListResponse>(globalPurchasesQueryKeys.list(params), (current) => {
+    if (!current || !matchesParams(row, params)) return current
+
+    const rowsWithoutDuplicate = current.data.filter((item) => item.id !== row.id)
+    const nextData = sortRows([...rowsWithoutDuplicate, row], params.sort).slice(0, current.meta.limit)
+
+    return {
+      ...current,
+      data: nextData,
+      meta: {
+        ...current.meta,
+        total: current.meta.total + (current.data.some((item) => item.id === row.id) ? 0 : 1),
+      },
+    }
+  })
+}
+
+function removeRowFromCachedLists(queryClient: QueryClient, row: GlobalPurchaseRow) {
+  queryClient.removeQueries({ queryKey: globalPurchasesQueryKeys.detail(row.id), exact: true })
+  updateCachedLists(queryClient, (current) => {
+    const existed = current.data.some((item) => item.id === row.id)
+    if (!existed) return current
+
+    return {
+      ...current,
+      data: current.data.filter((item) => item.id !== row.id),
+      meta: {
+        ...current.meta,
+        total: Math.max(current.meta.total - 1, 0),
+      },
+    }
+  })
+}
+
 export function useGlobalPurchases() {
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -82,7 +215,7 @@ export function useGlobalPurchases() {
     queryFn: () => fetchGlobalPurchases(params),
     staleTime: GLOBAL_PURCHASES_STALE_TIME_MS,
     gcTime: GLOBAL_PURCHASES_GC_TIME_MS,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     placeholderData: (previousData) => previousData,
   })
 
@@ -112,31 +245,24 @@ export function useGlobalPurchases() {
     router.replace(query ? `${pathname}?${query}` : pathname)
   }
 
-  const invalidatePurchases = async () => {
-    await queryClient.invalidateQueries({ queryKey: globalPurchasesQueryKeys.all })
-  }
-
   const createMutation = useMutation({
     mutationFn: createGlobalPurchase,
-    onSuccess: async (response) => {
-      await invalidatePurchases()
-      await queryClient.invalidateQueries({ queryKey: globalPurchasesQueryKeys.detail(response.data.id) })
+    onSuccess: (response) => {
+      insertRowIntoCurrentList(queryClient, params, response.data)
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: updateGlobalPurchase,
-    onSuccess: async (response) => {
-      await invalidatePurchases()
-      await queryClient.invalidateQueries({ queryKey: globalPurchasesQueryKeys.detail(response.data.id) })
+    onSuccess: (response) => {
+      replaceRowInCachedLists(queryClient, response.data)
     },
   })
 
   const archiveMutation = useMutation({
     mutationFn: archiveGlobalPurchase,
-    onSuccess: async (response) => {
-      await invalidatePurchases()
-      await queryClient.invalidateQueries({ queryKey: globalPurchasesQueryKeys.detail(response.data.id) })
+    onSuccess: (response) => {
+      removeRowFromCachedLists(queryClient, response.data)
     },
   })
 

@@ -14,6 +14,14 @@ const GLOBAL_PURCHASE_STATUSES = [
 ] as const
 const GLOBAL_PURCHASE_SORTS = ["relevance", "updated_desc", "title_asc", "project_asc"] as const
 
+function getTodayIsoDate() {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
 function nullableText(maxLength: number) {
   return z
     .preprocess((value) => {
@@ -76,6 +84,10 @@ function getStringParam(params: URLSearchParams, key: string) {
   return value || undefined
 }
 
+function getDateParam(params: URLSearchParams, key: string) {
+  return getStringParam(params, key) ?? getTodayIsoDate()
+}
+
 function getNumberParam(params: URLSearchParams, key: string) {
   const value = params.get(key)
   if (!value) return undefined
@@ -95,8 +107,8 @@ export function parseGlobalPurchasesListParams(params: URLSearchParams): GlobalP
         ? (status as GlobalPurchaseStatus | "all")
         : "all",
     projectId: getStringParam(params, "projectId"),
-    dateFrom: getStringParam(params, "dateFrom"),
-    dateTo: getStringParam(params, "dateTo"),
+    dateFrom: getDateParam(params, "dateFrom"),
+    dateTo: getDateParam(params, "dateTo"),
     limit: getNumberParam(params, "limit"),
     cursor: getNumberParam(params, "cursor"),
     sort: GLOBAL_PURCHASE_SORTS.includes(sort as GlobalPurchasesSort)
@@ -113,8 +125,8 @@ export function normalizeGlobalPurchasesListParams(params: GlobalPurchasesListPa
     q: params.q?.trim() || undefined,
     status: params.status ?? "all",
     projectId: params.projectId?.trim() || undefined,
-    dateFrom: params.dateFrom?.trim() || undefined,
-    dateTo: params.dateTo?.trim() || undefined,
+    dateFrom: params.dateFrom?.trim() || getTodayIsoDate(),
+    dateTo: params.dateTo?.trim() || getTodayIsoDate(),
     limit,
     cursor,
     sort: params.sort ?? "project_asc",

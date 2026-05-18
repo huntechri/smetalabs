@@ -160,6 +160,10 @@ export function GlobalPurchasesSection({
     }
   }
 
+  const handleImportPurchase = async (input: GlobalPurchaseMutationInput) => {
+    await createPurchase(input)
+  }
+
   const handleMaterialDialogOpenChange = (open: boolean) => {
     setMaterialDialogOpen(open)
     if (!open) setReplacementRow(null)
@@ -237,7 +241,7 @@ export function GlobalPurchasesSection({
         title={isReplacing ? "Заменить материал в закупке" : undefined}
       />
       <GlobalPurchasesImportDialog
-        onImport={createPurchase}
+        onImport={handleImportPurchase}
         onOpenChange={setImportDialogOpen}
         open={importDialogOpen}
         projects={projects}

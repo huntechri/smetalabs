@@ -17,10 +17,26 @@ import { Input } from "@/components/ui/input"
 import {
   buildGlobalPurchasesImportPreviewRows,
   GLOBAL_PURCHASES_IMPORT_REQUIRED_COLUMNS,
+  GLOBAL_PURCHASES_IMPORT_TEMPLATE,
+  GLOBAL_PURCHASES_IMPORT_TEMPLATE_FILENAME,
   pickGlobalPurchasesImportValue,
 } from "@/features/global-purchases/lib/global-purchases-import-parser"
 import type { GlobalPurchaseMutationInput } from "@/types/global-purchases"
 import type { ProjectRow } from "@/types/project"
+
+function downloadImportTemplate() {
+  const blob = new Blob([`\ufeff${GLOBAL_PURCHASES_IMPORT_TEMPLATE}`], {
+    type: "text/csv;charset=utf-8",
+  })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = GLOBAL_PURCHASES_IMPORT_TEMPLATE_FILENAME
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
 
 export function GlobalPurchasesImportDialog({
   onImport,
@@ -103,14 +119,19 @@ export function GlobalPurchasesImportDialog({
         <DialogHeader className="shrink-0">
           <DialogTitle>Импорт закупок</DialogTitle>
           <DialogDescription>
-            Загрузите CSV с колонками: {GLOBAL_PURCHASES_IMPORT_REQUIRED_COLUMNS}. Строки с ошибками не будут импортированы.
+            Скачайте шаблон, заполните CSV и загрузите файл обратно. Строки с ошибками не будут импортированы.
           </DialogDescription>
         </DialogHeader>
 
         <div className="shrink-0 space-y-2">
-          <Input accept=".csv,text/csv" type="file" onChange={handleFileChange} />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input accept=".csv,text/csv" type="file" onChange={handleFileChange} />
+            <Button type="button" variant="outline" onClick={downloadImportTemplate}>
+              Скачать шаблон
+            </Button>
+          </div>
           <div className="text-xs text-muted-foreground">
-            {fileName ? `Файл: ${fileName}` : "Файл ещё не выбран"}
+            Колонки: {GLOBAL_PURCHASES_IMPORT_REQUIRED_COLUMNS}. {fileName ? `Файл: ${fileName}` : "Файл ещё не выбран"}
           </div>
           <FieldError>{error}</FieldError>
           {result ? <div className="rounded-md border border-border bg-muted p-2 text-xs">{result}</div> : null}
@@ -121,7 +142,7 @@ export function GlobalPurchasesImportDialog({
             <Empty className="h-full min-h-80 border-0">
               <EmptyHeader>
                 <EmptyTitle>Нет строк для предпросмотра</EmptyTitle>
-                <EmptyDescription>Выберите CSV-файл с закупками.</EmptyDescription>
+                <EmptyDescription>Скачайте шаблон, заполните его и выберите CSV-файл с закупками.</EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : null}

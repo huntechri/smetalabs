@@ -145,6 +145,8 @@ function applyGlobalPurchaseFilters<
   T extends {
     or: (filters: string) => T
     eq: (column: string, value: string) => T
+    gte: (column: string, value: string) => T
+    lte: (column: string, value: string) => T
   },
 >(query: T, params: NormalizedListParams) {
   let scoped = query
@@ -155,6 +157,14 @@ function applyGlobalPurchaseFilters<
 
   if (params.projectId) {
     scoped = scoped.eq("project_id", params.projectId)
+  }
+
+  if (params.dateFrom) {
+    scoped = scoped.gte("purchase_date", params.dateFrom)
+  }
+
+  if (params.dateTo) {
+    scoped = scoped.lte("purchase_date", params.dateTo)
   }
 
   if (params.q) {

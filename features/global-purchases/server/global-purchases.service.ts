@@ -6,6 +6,7 @@ import { GlobalPurchasesApiError } from "../api/global-purchases-errors"
 import { globalPurchasesCacheTags } from "../api/global-purchases-query-keys"
 import type {
   GlobalPurchaseMutationInput,
+  GlobalPurchaseRow,
   GlobalPurchasesExportFormat,
   GlobalPurchasesListParams,
 } from "@/types/global-purchases"
@@ -156,7 +157,7 @@ async function getGlobalPurchasesForExport(
   workspaceOwnerId: string,
   params: GlobalPurchasesListParams
 ) {
-  const purchases = []
+  const purchases: GlobalPurchaseRow[] = []
   let cursor = 0
   let hasMore = true
 

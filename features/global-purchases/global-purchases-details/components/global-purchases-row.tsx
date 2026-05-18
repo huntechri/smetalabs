@@ -128,7 +128,7 @@ export function GlobalPurchasesRow({
   }
 
   return (
-    <div className="mx-3 my-1.5 grid gap-2 rounded-md border border-border p-2 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(320px,1.65fr)_80px_minmax(180px,0.72fr)_minmax(260px,1.15fr)_minmax(180px,0.55fr)]">
+    <div className="mx-3 my-1.5 grid gap-2 rounded-md border border-border p-2 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(460px,2fr)_76px_minmax(150px,0.55fr)_minmax(230px,0.85fr)_minmax(240px,0.85fr)]">
       <div className="min-w-0 rounded-md border border-border p-2">
         <span className="mb-1 block text-xs text-muted-foreground uppercase">Наименование</span>
         <div className="break-words text-sm font-medium leading-snug">{row.title}</div>
@@ -174,7 +174,7 @@ export function GlobalPurchasesRow({
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Badge variant="outline" className="max-w-28 cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted">
+              <Badge variant="outline" className="max-w-36 cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted">
                 <span className="truncate">{row.projectTitle ?? "Объект"}</span>
                 <CaretDown className="size-2.5" />
               </Badge>

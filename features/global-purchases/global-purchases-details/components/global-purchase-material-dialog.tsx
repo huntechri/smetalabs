@@ -1,6 +1,6 @@
 "use client"
 
-import { type FormEvent, useState } from "react"
+import { type FormEvent, useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -19,6 +19,8 @@ import { fetchDirectoryMaterials } from "@/features/directory-materials/api/dire
 import type { DirectoryMaterial } from "@/features/directory-materials/types"
 import type { GlobalPurchaseMutationInput } from "@/types/global-purchases"
 import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
+
+const MATERIAL_SEARCH_MIN_LENGTH = 2
 
 function formatMoney(value: number) {
   return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`
@@ -64,22 +66,31 @@ export function GlobalPurchaseMaterialDialog({
   const [search, setSearch] = useState("")
   const [submittedSearch, setSubmittedSearch] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const canSearch = submittedSearch.length >= MATERIAL_SEARCH_MIN_LENGTH
   const materialsQuery = useQuery({
     queryKey: ["global-purchases", "material-picker", submittedSearch],
     queryFn: () =>
       fetchDirectoryMaterials({
-        q: submittedSearch || undefined,
+        q: submittedSearch,
         status: "active",
         limit: 50,
         sort: "relevance",
       }),
-    enabled: open,
+    enabled: open && canSearch,
     staleTime: 30_000,
   })
 
+  useEffect(() => {
+    if (open) return
+    setSearch("")
+    setSubmittedSearch("")
+    setError(null)
+  }, [open])
+
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setSubmittedSearch(search.trim())
+    const nextSearch = search.trim()
+    setSubmittedSearch(nextSearch)
   }
 
   const handleSelect = async (material: DirectoryMaterial) => {
@@ -92,8 +103,10 @@ export function GlobalPurchaseMaterialDialog({
     }
   }
 
-  const materials = materialsQuery.data?.data ?? []
-  const loading = materialsQuery.isLoading || materialsQuery.isFetching
+  const materials = canSearch ? materialsQuery.data?.data ?? [] : []
+  const loading = canSearch && (materialsQuery.isLoading || materialsQuery.isFetching)
+  const showSearchPrompt = !canSearch
+  const showEmpty = canSearch && !loading && materials.length === 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -109,7 +122,7 @@ export function GlobalPurchaseMaterialDialog({
             aria-label="Поиск материалов"
             className="h-8"
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Поиск материалов"
+            placeholder="Введите минимум 2 символа"
             value={search}
           />
           <Button type="submit" variant="outline">
@@ -120,6 +133,15 @@ export function GlobalPurchaseMaterialDialog({
         <FieldError>{error ?? materialsQuery.error?.message ?? null}</FieldError>
 
         <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-md border border-border">
+          {showSearchPrompt ? (
+            <Empty className="border-0">
+              <EmptyHeader>
+                <EmptyTitle>Введите название материала</EmptyTitle>
+                <EmptyDescription>Поиск начнётся после ввода минимум 2 символов.</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : null}
+
           {loading ? (
             <div className="space-y-2 p-3">
               {Array.from({ length: 6 }).map((_, index) => (
@@ -128,7 +150,7 @@ export function GlobalPurchaseMaterialDialog({
             </div>
           ) : null}
 
-          {!loading && materials.length === 0 ? (
+          {showEmpty ? (
             <Empty className="border-0">
               <EmptyHeader>
                 <EmptyTitle>Материалы не найдены</EmptyTitle>

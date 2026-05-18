@@ -149,6 +149,7 @@ export function GlobalPurchasesSection({
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
   const showSkeletonRows = loading && purchases.length === 0
+  const isReplacing = Boolean(replacementRow)
 
   return (
     <>
@@ -170,13 +171,15 @@ export function GlobalPurchasesSection({
         {meta ? <CardFooter className="flex flex-col gap-3 border-t p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div><div className="flex gap-2"><Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button><Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button></div></CardFooter> : null}
       </Card>
       <GlobalPurchaseMaterialDialog
-        actionLabel={replacementRow ? "Заменить" : "Добавить"}
-        description={replacementRow ? "Выберите новый материал. Объект, дата и фактические значения сохранятся." : undefined}
+        actionLabel={isReplacing ? "Заменить" : "Добавить"}
+        closeOnSelect={isReplacing}
+        description={isReplacing ? "Выберите новый материал. Объект, дата и фактические значения сохранятся." : undefined}
         onOpenChange={handleMaterialDialogOpenChange}
         onSelect={handleSelectMaterial}
         open={materialDialogOpen}
+        quantityPrompt={!isReplacing}
         saving={saving || savingRowId !== null}
-        title={replacementRow ? "Заменить материал в закупке" : undefined}
+        title={isReplacing ? "Заменить материал в закупке" : undefined}
       />
     </>
   )

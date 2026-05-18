@@ -32,9 +32,21 @@ type ReadonlySearchParams = {
 const GLOBAL_PURCHASES_STALE_TIME_MS = 30_000
 const GLOBAL_PURCHASES_GC_TIME_MS = 5 * 60_000
 
+function getTodayIsoDate() {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
 function getStringParam(searchParams: ReadonlySearchParams, key: string) {
   const value = searchParams.get(key)?.trim()
   return value || undefined
+}
+
+function getDateParam(searchParams: ReadonlySearchParams, key: string) {
+  return getStringParam(searchParams, key) ?? getTodayIsoDate()
 }
 
 function getNumberParam(searchParams: ReadonlySearchParams, key: string) {
@@ -70,8 +82,8 @@ function getListParams(searchParams: ReadonlySearchParams): GlobalPurchasesListP
     q: getStringParam(searchParams, "q"),
     status: getStatusParam(searchParams),
     projectId: getStringParam(searchParams, "projectId"),
-    dateFrom: getStringParam(searchParams, "dateFrom"),
-    dateTo: getStringParam(searchParams, "dateTo"),
+    dateFrom: getDateParam(searchParams, "dateFrom"),
+    dateTo: getDateParam(searchParams, "dateTo"),
     limit: getNumberParam(searchParams, "limit") ?? 50,
     cursor: getNumberParam(searchParams, "cursor") ?? 0,
     sort: getSortParam(searchParams) ?? "project_asc",

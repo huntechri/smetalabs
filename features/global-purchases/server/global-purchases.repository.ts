@@ -141,7 +141,12 @@ function mapGlobalPurchaseRow(row: GlobalPurchaseDbRow): GlobalPurchaseRow {
   }
 }
 
-function applyGlobalPurchaseFilters(query: any, params: NormalizedListParams) {
+function applyGlobalPurchaseFilters<
+  T extends {
+    or: (filters: string) => T
+    eq: (column: string, value: string) => T
+  },
+>(query: T, params: NormalizedListParams) {
   let scoped = query
 
   if (params.status !== "all") {
@@ -173,7 +178,9 @@ function applyGlobalPurchaseFilters(query: any, params: NormalizedListParams) {
   return scoped
 }
 
-function applyGlobalPurchaseSort(query: any, params: NormalizedListParams) {
+function applyGlobalPurchaseSort<
+  T extends { order: (column: string, options?: { ascending?: boolean }) => T },
+>(query: T, params: NormalizedListParams) {
   if (params.sort === "title_asc") {
     return query.order("normalized_title", { ascending: true }).order("id", { ascending: true })
   }

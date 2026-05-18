@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -113,12 +114,39 @@ export function GlobalPurchasesRow({
   row: GlobalPurchaseRow
   saving: boolean
 }) {
+  const [visibleFactQuantity, setVisibleFactQuantity] = useState<number | null>(row.factQuantity)
+  const [visibleFactPrice, setVisibleFactPrice] = useState<number | null>(row.factPrice)
+
+  useEffect(() => {
+    setVisibleFactQuantity(row.factQuantity)
+  }, [row.id, row.factQuantity])
+
+  useEffect(() => {
+    setVisibleFactPrice(row.factPrice)
+  }, [row.id, row.factPrice])
+
   const updateFactQuantity = async (value: string) => {
-    await onUpdate(row, buildInput(row, { factQuantity: parseNullableNumber(value) }))
+    const nextValue = parseNullableNumber(value)
+    setVisibleFactQuantity(nextValue)
+
+    try {
+      await onUpdate(row, buildInput(row, { factQuantity: nextValue }))
+    } catch (err) {
+      setVisibleFactQuantity(row.factQuantity)
+      throw err
+    }
   }
 
   const updateFactPrice = async (value: string) => {
-    await onUpdate(row, buildInput(row, { factPrice: parseNullableNumber(value) }))
+    const nextValue = parseNullableNumber(value)
+    setVisibleFactPrice(nextValue)
+
+    try {
+      await onUpdate(row, buildInput(row, { factPrice: nextValue }))
+    } catch (err) {
+      setVisibleFactPrice(row.factPrice)
+      throw err
+    }
   }
 
   const updateProject = async (projectId: string | null) => {
@@ -150,7 +178,7 @@ export function GlobalPurchasesRow({
             formatDisplay={formatEditableNumber}
             label="Факт"
             onChange={saving ? undefined : updateFactQuantity}
-            value={row.factQuantity ?? ""}
+            value={visibleFactQuantity ?? ""}
           />
         </div>
       </div>
@@ -165,7 +193,7 @@ export function GlobalPurchasesRow({
             label="Факт"
             onChange={saving ? undefined : updateFactPrice}
             suffix="₽"
-            value={row.factPrice ?? ""}
+            value={visibleFactPrice ?? ""}
           />
         </div>
       </div>

@@ -27,25 +27,10 @@ const projectMutationSchema = z.object({
       return value
     }, z.string().uuid("Выберите заказчика из списка").nullable())
     .optional(),
-  customerName: nullableText(200),
   address: nullableText(400),
-  budgetAmount: z
-    .preprocess((value) => {
-      if (value === "" || value === null || value === undefined) return null
-      if (typeof value === "string") return Number(value.replace(",", "."))
-      return value
-    }, z.number().finite().min(0, "Бюджет не может быть отрицательным").nullable())
-    .optional(),
   startDate: nullableText(20),
   endDate: nullableText(20),
   status: z.enum(PROJECT_STATUSES).default("new"),
-  progress: z
-    .preprocess((value) => {
-      if (value === "" || value === null || value === undefined) return 0
-      if (typeof value === "string") return Number(value)
-      return value
-    }, z.number().int().min(0, "Прогресс не может быть меньше 0").max(100, "Прогресс не может быть больше 100"))
-    .default(0),
 })
 
 const projectIdSchema = z.string().uuid("Некорректный идентификатор проекта")

@@ -62,6 +62,10 @@ export function GlobalPurchasesSection() {
     await updatePurchase(purchase.id, input)
   }
 
+  const handleCreateFromMaterial = async (input: GlobalPurchaseMutationInput) => {
+    await createPurchase(input)
+  }
+
   const currentCursor = params.cursor ?? 0
   const currentLimit = params.limit ?? meta?.limit ?? DEFAULT_LIMIT
   const pageStart = purchases.length > 0 ? currentCursor + 1 : 0
@@ -83,7 +87,7 @@ export function GlobalPurchasesSection() {
         </CardContent>
         {meta ? <CardFooter className="flex flex-col gap-3 border-t p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div><div className="flex gap-2"><Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button><Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button></div></CardFooter> : null}
       </Card>
-      <GlobalPurchaseMaterialDialog onOpenChange={setMaterialDialogOpen} onSelect={createPurchase} open={materialDialogOpen} saving={saving} />
+      <GlobalPurchaseMaterialDialog onOpenChange={setMaterialDialogOpen} onSelect={handleCreateFromMaterial} open={materialDialogOpen} saving={saving} />
     </>
   )
 }

@@ -174,7 +174,7 @@ export function GlobalPurchasesRow({
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Badge variant="outline" className="max-w-36 cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted">
+              <Badge variant="outline" className="max-w-28 cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted">
                 <span className="truncate">{row.projectTitle ?? "Объект"}</span>
                 <CaretDown className="size-2.5" />
               </Badge>

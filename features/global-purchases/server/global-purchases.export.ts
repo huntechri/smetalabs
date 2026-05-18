@@ -12,6 +12,7 @@ const STATUS_LABELS: Record<GlobalPurchaseRow["status"], string> = {
   cancelled: "Отменено",
 }
 
+const XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 const textEncoder = new TextEncoder()
 
 function escapeXml(value: string | number | null | undefined) {
@@ -28,10 +29,6 @@ function formatDate(value: string | null | undefined) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleDateString("ru-RU")
-}
-
-function numberValue(value: number | null | undefined) {
-  return value === null || value === undefined ? "" : String(value)
 }
 
 function columnName(index: number) {
@@ -391,8 +388,8 @@ export function buildGlobalPurchasesExportFile(
   }
 
   return {
-    body: buildXlsx(purchases),
-    contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    body: new Blob([buildXlsx(purchases)], { type: XLSX_CONTENT_TYPE }),
+    contentType: XLSX_CONTENT_TYPE,
     extension: "xlsx",
   }
 }

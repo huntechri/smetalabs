@@ -12,7 +12,7 @@ const GLOBAL_PURCHASE_STATUSES = [
   "received",
   "cancelled",
 ] as const
-const GLOBAL_PURCHASE_SORTS = ["relevance", "updated_desc", "title_asc"] as const
+const GLOBAL_PURCHASE_SORTS = ["relevance", "updated_desc", "title_asc", "project_asc"] as const
 
 function nullableText(maxLength: number) {
   return z
@@ -117,7 +117,7 @@ export function normalizeGlobalPurchasesListParams(params: GlobalPurchasesListPa
     dateTo: params.dateTo?.trim() || undefined,
     limit,
     cursor,
-    sort: params.sort ?? "relevance",
+    sort: params.sort ?? "project_asc",
   }
 }
 

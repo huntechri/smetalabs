@@ -72,7 +72,7 @@ export type GlobalPurchasesListResponse = {
 }
 
 export type GlobalPurchasesExportFile = {
-  body: Uint8Array
+  body: Blob
   contentType: string
   extension: string
 }

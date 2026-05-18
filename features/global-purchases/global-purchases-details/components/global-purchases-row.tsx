@@ -14,7 +14,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { GlobalPurchaseMutationInput, GlobalPurchaseRow } from "@/types/global-purchases"
 import type { ProjectRow } from "@/types/project"
-import { ArchiveIcon, CalendarDots, CaretDown, GearSixIcon } from "@phosphor-icons/react"
+import { CalendarDots, CaretDown, GearSixIcon, SwapIcon, TrashIcon } from "@phosphor-icons/react"
 
 function formatMoney(value: number | null) {
   if (value === null) return "—"
@@ -99,13 +99,15 @@ function ReadonlyMetricBadge({ label, value, suffix }: { label: string; value: s
 }
 
 export function GlobalPurchasesRow({
-  onArchive,
+  onDelete,
+  onReplace,
   onUpdate,
   projects,
   row,
   saving,
 }: {
-  onArchive: (row: GlobalPurchaseRow) => void
+  onDelete: (row: GlobalPurchaseRow) => void
+  onReplace: (row: GlobalPurchaseRow) => void
   onUpdate: (row: GlobalPurchaseRow, input: GlobalPurchaseMutationInput) => Promise<void>
   projects: ProjectRow[]
   row: GlobalPurchaseRow
@@ -207,9 +209,9 @@ export function GlobalPurchasesRow({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem disabled>Редактирование через строку</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onReplace(row)}><SwapIcon />Заменить</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onArchive(row)} variant="destructive"><ArchiveIcon />Архивировать</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDelete(row)} variant="destructive"><TrashIcon />Удалить</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

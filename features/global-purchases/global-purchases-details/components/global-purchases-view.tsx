@@ -1,8 +1,6 @@
 import { Suspense } from "react"
-import {
-  GlobalPurchasesRowsSkeleton,
-  GlobalPurchasesSection,
-} from "@/features/global-purchases/global-purchases-details/components/global-purchases-section"
+import { GlobalPurchasesSection } from "@/features/global-purchases/global-purchases-details/components/global-purchases-section"
+import { GlobalPurchasesRowsSkeleton } from "@/features/global-purchases/global-purchases-details/components/global-purchases-list"
 import type { ProjectRow } from "@/types/project"
 
 export function GlobalPurchasesView({

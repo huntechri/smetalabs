@@ -42,22 +42,18 @@ type FormState = {
   title: string
   customerCounterpartyId: string
   address: string
-  budgetAmount: string
   startDate: string
   endDate: string
   status: ProjectStatus
-  progress: string
 }
 
 const EMPTY_FORM: FormState = {
   title: "",
   customerCounterpartyId: "",
   address: "",
-  budgetAmount: "",
   startDate: "",
   endDate: "",
   status: "new",
-  progress: "0",
 }
 
 function initialState(project?: ProjectRow | null): FormState {
@@ -67,11 +63,9 @@ function initialState(project?: ProjectRow | null): FormState {
     title: project.title,
     customerCounterpartyId: project.customerCounterpartyId ?? "",
     address: project.address ?? "",
-    budgetAmount: project.budgetAmount === null ? "" : String(project.budgetAmount),
     startDate: project.startDate ?? "",
     endDate: project.endDate ?? "",
     status: project.status,
-    progress: String(project.progress),
   }
 }
 
@@ -85,18 +79,13 @@ function errorMessage(error: unknown) {
 }
 
 function toMutationInput(form: FormState): ProjectMutationInput {
-  const budget = form.budgetAmount.trim()
-  const progress = form.progress.trim()
-
   return {
     title: form.title.trim(),
     customerCounterpartyId: nullable(form.customerCounterpartyId),
     address: nullable(form.address),
-    budgetAmount: budget ? Number(budget.replace(",", ".")) : null,
     startDate: nullable(form.startDate),
     endDate: nullable(form.endDate),
     status: form.status,
-    progress: progress ? Number(progress) : 0,
   }
 }
 
@@ -152,21 +141,6 @@ export function CreateProjectDialog({
     if (!title) {
       setError("Укажите название проекта")
       return
-    }
-
-    const progress = Number(form.progress)
-    if (!Number.isFinite(progress) || progress < 0 || progress > 100) {
-      setError("Прогресс должен быть от 0 до 100")
-      return
-    }
-
-    const budget = form.budgetAmount.trim()
-    if (budget) {
-      const budgetAmount = Number(budget.replace(",", "."))
-      if (!Number.isFinite(budgetAmount) || budgetAmount < 0) {
-        setError("Бюджет не может быть отрицательным")
-        return
-      }
     }
 
     try {
@@ -237,14 +211,19 @@ export function CreateProjectDialog({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="project-budget">Бюджет</FieldLabel>
-              <Input
-                id="project-budget"
-                inputMode="decimal"
-                maxLength={20}
-                value={form.budgetAmount}
-                onChange={(event) => setField("budgetAmount", event.target.value)}
-              />
+              <FieldLabel htmlFor="project-status">Статус</FieldLabel>
+              <Select value={form.status} onValueChange={(value) => setField("status", value)}>
+                <SelectTrigger id="project-status" className="w-full">
+                  <SelectValue placeholder="Выберите статус" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field className="sm:col-span-2">
@@ -274,33 +253,6 @@ export function CreateProjectDialog({
                 maxLength={20}
                 value={form.endDate}
                 onChange={(event) => setField("endDate", event.target.value)}
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="project-status">Статус</FieldLabel>
-              <Select value={form.status} onValueChange={(value) => setField("status", value)}>
-                <SelectTrigger id="project-status" className="w-full">
-                  <SelectValue placeholder="Выберите статус" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="project-progress">Прогресс, %</FieldLabel>
-              <Input
-                id="project-progress"
-                inputMode="numeric"
-                maxLength={3}
-                value={form.progress}
-                onChange={(event) => setField("progress", event.target.value)}
               />
             </Field>
           </FieldGroup>

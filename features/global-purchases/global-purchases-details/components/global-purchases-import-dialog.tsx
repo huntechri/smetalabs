@@ -50,9 +50,10 @@ function parseDate(value: string) {
   const match = trimmed.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
   if (!match) return null
 
-  const day = match[1].padStart(2, "0")
-  const month = match[2].padStart(2, "0")
-  return `${match[3]}-${month}-${day}`
+  const day = match[1]!.padStart(2, "0")
+  const month = match[2]!.padStart(2, "0")
+  const year = match[3]!
+  return `${year}-${month}-${day}`
 }
 
 function splitDelimitedLine(line: string, delimiter: string) {
@@ -97,8 +98,8 @@ function parseDelimited(text: string) {
 
   if (lines.length === 0) return []
 
-  const delimiter = (lines[0].match(/;/g)?.length ?? 0) >= (lines[0].match(/,/g)?.length ?? 0) ? ";" : ","
-  const headers = splitDelimitedLine(lines[0], delimiter).map(normalizeKey)
+  const delimiter = (lines[0]!.match(/;/g)?.length ?? 0) >= (lines[0]!.match(/,/g)?.length ?? 0) ? ";" : ","
+  const headers = splitDelimitedLine(lines[0]!, delimiter).map(normalizeKey)
 
   return lines.slice(1).map((line) => {
     const cells = splitDelimitedLine(line, delimiter)
@@ -269,24 +270,27 @@ export function GlobalPurchasesImportDialog({
             </Empty>
           ) : null}
 
-          {previewRows.map((row) => (
-            <Card key={row.index} className="m-2 rounded-md bg-transparent p-0 shadow-none">
-              <CardContent className="grid gap-2 p-3 sm:grid-cols-[80px_minmax(0,1fr)_160px] sm:items-center">
-                <div className="text-xs text-muted-foreground">Строка {row.index}</div>
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-medium">
-                    {row.input?.title ?? pick(row.source, ["Наименование", "Название", "Материал", "title"]) || "—"}
+          {previewRows.map((row) => {
+            const sourceTitle = pick(row.source, ["Наименование", "Название", "Материал", "title"])
+            return (
+              <Card key={row.index} className="m-2 rounded-md bg-transparent p-0 shadow-none">
+                <CardContent className="grid gap-2 p-3 sm:grid-cols-[80px_minmax(0,1fr)_160px] sm:items-center">
+                  <div className="text-xs text-muted-foreground">Строка {row.index}</div>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium">
+                      {row.input?.title ?? sourceTitle || "—"}
+                    </div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {row.input ? `${row.input.factQuantity ?? ""} ${row.input.unit} × ${row.input.factPrice ?? ""}` : row.errors.join("; ")}
+                    </div>
                   </div>
-                  <div className="truncate text-xs text-muted-foreground">
-                    {row.input ? `${row.input.factQuantity ?? ""} ${row.input.unit} × ${row.input.factPrice ?? ""}` : row.errors.join("; ")}
+                  <div className={row.status === "valid" ? "text-xs text-muted-foreground" : "text-xs text-destructive"}>
+                    {row.status === "valid" ? "Готово к импорту" : row.errors.join("; ")}
                   </div>
-                </div>
-                <div className={row.status === "valid" ? "text-xs text-muted-foreground" : "text-xs text-destructive"}>
-                  {row.status === "valid" ? "Готово к импорту" : row.errors.join("; ")}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
 
         <DialogFooter className="shrink-0">

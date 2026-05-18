@@ -189,13 +189,21 @@ function applyGlobalPurchaseFilters<
 }
 
 function applyGlobalPurchaseSort<
-  T extends { order: (column: string, options?: { ascending?: boolean }) => T },
+  T extends { order: (column: string, options?: { ascending?: boolean; nullsFirst?: boolean }) => T },
 >(query: T, params: NormalizedListParams) {
   if (params.sort === "title_asc") {
     return query.order("normalized_title", { ascending: true }).order("id", { ascending: true })
   }
 
-  return query.order("updated_at", { ascending: false }).order("id", { ascending: true })
+  if (params.sort === "updated_desc") {
+    return query.order("updated_at", { ascending: false }).order("id", { ascending: true })
+  }
+
+  return query
+    .order("project_title", { ascending: true, nullsFirst: false })
+    .order("purchase_date", { ascending: true, nullsFirst: false })
+    .order("normalized_title", { ascending: true })
+    .order("id", { ascending: true })
 }
 
 async function getProjectSnapshotForWorkspace(

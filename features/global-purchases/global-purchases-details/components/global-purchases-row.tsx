@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -99,6 +99,8 @@ function ReadonlyMetricBadge({ label, value, suffix }: { label: string; value: s
   )
 }
 
+const FACT_SAVE_DELAY_MS = 450
+
 export function GlobalPurchasesRow({
   onDelete,
   onReplace,
@@ -116,45 +118,83 @@ export function GlobalPurchasesRow({
 }) {
   const [visibleFactQuantity, setVisibleFactQuantity] = useState<number | null>(row.factQuantity)
   const [visibleFactPrice, setVisibleFactPrice] = useState<number | null>(row.factPrice)
+  const rowRef = useRef(row)
+  const factQuantityRef = useRef(row.factQuantity)
+  const factPriceRef = useRef(row.factPrice)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const saveVersionRef = useRef(0)
 
   useEffect(() => {
+    rowRef.current = row
+    factQuantityRef.current = row.factQuantity
+    factPriceRef.current = row.factPrice
     setVisibleFactQuantity(row.factQuantity)
-  }, [row.id, row.factQuantity])
+    setVisibleFactPrice(row.factPrice)
+  }, [row])
 
   useEffect(() => {
-    setVisibleFactPrice(row.factPrice)
-  }, [row.id, row.factPrice])
-
-  const updateFactQuantity = async (value: string) => {
-    const nextValue = parseNullableNumber(value)
-    setVisibleFactQuantity(nextValue)
-
-    try {
-      await onUpdate(row, buildInput(row, { factQuantity: nextValue, factPrice: visibleFactPrice }))
-    } catch (err) {
-      setVisibleFactQuantity(row.factQuantity)
-      throw err
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
+  }, [])
+
+  const scheduleFactSave = () => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    const saveVersion = saveVersionRef.current + 1
+    saveVersionRef.current = saveVersion
+
+    saveTimerRef.current = setTimeout(async () => {
+      const currentRow = rowRef.current
+      try {
+        await onUpdate(
+          currentRow,
+          buildInput(currentRow, {
+            factQuantity: factQuantityRef.current,
+            factPrice: factPriceRef.current,
+          })
+        )
+      } catch (err) {
+        if (saveVersionRef.current === saveVersion) {
+          factQuantityRef.current = currentRow.factQuantity
+          factPriceRef.current = currentRow.factPrice
+          setVisibleFactQuantity(currentRow.factQuantity)
+          setVisibleFactPrice(currentRow.factPrice)
+        }
+        throw err
+      }
+    }, FACT_SAVE_DELAY_MS)
   }
 
-  const updateFactPrice = async (value: string) => {
+  const updateFactQuantity = (value: string) => {
     const nextValue = parseNullableNumber(value)
-    setVisibleFactPrice(nextValue)
+    factQuantityRef.current = nextValue
+    setVisibleFactQuantity(nextValue)
+    rowRef.current = { ...rowRef.current, factQuantity: nextValue }
+    scheduleFactSave()
+  }
 
-    try {
-      await onUpdate(row, buildInput(row, { factQuantity: visibleFactQuantity, factPrice: nextValue }))
-    } catch (err) {
-      setVisibleFactPrice(row.factPrice)
-      throw err
-    }
+  const updateFactPrice = (value: string) => {
+    const nextValue = parseNullableNumber(value)
+    factPriceRef.current = nextValue
+    setVisibleFactPrice(nextValue)
+    rowRef.current = { ...rowRef.current, factPrice: nextValue }
+    scheduleFactSave()
   }
 
   const updateProject = async (projectId: string | null) => {
-    await onUpdate(row, buildInput(row, { projectId }))
+    const project = projects.find((item) => item.id === projectId)
+    rowRef.current = {
+      ...rowRef.current,
+      projectId,
+      projectTitle: project?.title ?? null,
+    }
+    await onUpdate(rowRef.current, buildInput(rowRef.current, { projectId }))
   }
 
   const updateDate = async (date: Date | undefined) => {
-    await onUpdate(row, buildInput(row, { purchaseDate: date ? toIsoDate(date) : null }))
+    const purchaseDate = date ? toIsoDate(date) : null
+    rowRef.current = { ...rowRef.current, purchaseDate }
+    await onUpdate(rowRef.current, buildInput(rowRef.current, { purchaseDate }))
   }
 
   return (

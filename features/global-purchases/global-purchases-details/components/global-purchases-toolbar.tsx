@@ -2,7 +2,6 @@
 
 import { type FormEvent, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useQuery } from "@tanstack/react-query"
 import type { DateRange } from "react-day-picker"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -15,9 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { fetchProjects } from "@/features/projects/api/projects-client"
-import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
 import { dispatchGlobalPurchasesCreateEvent } from "@/features/global-purchases/lib/global-purchases-events"
+import type { ProjectRow } from "@/types/project"
 import { CalendarDots, MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 
 function toDate(value: string) {
@@ -47,18 +45,13 @@ function getDateButtonLabel(dateFrom: string, dateTo: string) {
   return "Даты"
 }
 
-export function GlobalPurchasesToolbar() {
+export function GlobalPurchasesToolbar({ projects }: { projects: ProjectRow[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") ?? "")
   const currentProjectId = searchParams.get("projectId") ?? ""
   const dateFrom = searchParams.get("dateFrom") ?? ""
   const dateTo = searchParams.get("dateTo") ?? ""
-  const projectsQuery = useQuery({
-    queryKey: projectsQueryKeys.list({ status: "all", limit: 100, sort: "title_asc" }),
-    queryFn: () => fetchProjects({ status: "all", limit: 100, sort: "title_asc" }),
-    staleTime: 30_000,
-  })
 
   useEffect(() => {
     setSearch(searchParams.get("q") ?? "")
@@ -94,7 +87,7 @@ export function GlobalPurchasesToolbar() {
 
   const selectedRange: DateRange | undefined = dateFrom || dateTo ? { from: toDate(dateFrom), to: toDate(dateTo) } : undefined
   const currentProjectTitle =
-    projectsQuery.data?.data.find((project) => project.id === currentProjectId)?.title ?? "Все объекты"
+    projects.find((project) => project.id === currentProjectId)?.title ?? "Все объекты"
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border p-2 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
@@ -112,7 +105,7 @@ export function GlobalPurchasesToolbar() {
             <DropdownMenuTrigger asChild><Button size="sm" type="button" variant="outline">{currentProjectTitle}</Button></DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="max-h-72 w-72 overflow-y-auto">
               <DropdownMenuItem onClick={() => replaceParams({ projectId: null })}>Все объекты</DropdownMenuItem>
-              {(projectsQuery.data?.data ?? []).map((project) => <DropdownMenuItem key={project.id} onClick={() => replaceParams({ projectId: project.id })}>{project.title}</DropdownMenuItem>)}
+              {projects.map((project) => <DropdownMenuItem key={project.id} onClick={() => replaceParams({ projectId: project.id })}>{project.title}</DropdownMenuItem>)}
             </DropdownMenuContent>
           </DropdownMenu>
           <Popover>

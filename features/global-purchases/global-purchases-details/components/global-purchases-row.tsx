@@ -1,141 +1,95 @@
-import { useState } from "react"
-import type { GlobalPurchaseRow } from "@/types/global-purchases"
-import { getTotal } from "@/lib/calculations"
-import { formatMoney, formatDate } from "@/lib/formatters"
-import { GlobalPurchasesName } from "./global-purchases-name"
-import { EditableBadge } from "@/components/ui/editable-badge"
-import { GlobalPurchasesMetricGroup } from "./global-purchases-metric-group"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { CalendarDots, CaretDown } from "@phosphor-icons/react"
+import type { GlobalPurchaseRow, GlobalPurchaseStatus } from "@/types/global-purchases"
+import { ArchiveIcon, GearSixIcon, PencilSimpleIcon, PlusIcon } from "@phosphor-icons/react"
+
+const statusLabels: Record<GlobalPurchaseStatus, string> = {
+  planned: "План",
+  ordered: "Заказано",
+  partially_received: "Частично получено",
+  received: "Получено",
+  cancelled: "Отменено",
+}
+
+function formatMoney(value: number | null) {
+  if (value === null) return "—"
+  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`
+}
+
+function formatNumber(value: number | null) {
+  if (value === null) return "—"
+  return value.toLocaleString("ru-RU", { maximumFractionDigits: 3 })
+}
+
+function formatDate(value: string | null) {
+  if (!value) return "—"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString("ru-RU")
+}
 
 export function GlobalPurchasesRow({
+  onArchive,
+  onEdit,
+  onInsertAfter,
   row,
-  onUpdate,
+  saving,
 }: {
+  onArchive: (row: GlobalPurchaseRow) => void
+  onEdit: (row: GlobalPurchaseRow) => void
+  onInsertAfter: (row: GlobalPurchaseRow) => void
   row: GlobalPurchaseRow
-  onUpdate: (id: string, updates: Partial<GlobalPurchaseRow>) => void
+  saving: boolean
 }) {
-  const planTotal = getTotal(row.planQuantity, row.planPrice)
-  const factTotal = getTotal(row.factQuantity, row.factPrice)
-  const deviationTotal = planTotal - factTotal
-
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>()
-  const [selectedSupplier, setSelectedSupplier] = useState("Поставщик 1")
-  const [selectedObject, setSelectedObject] = useState("Нет")
-
   return (
-    <div className="border-b border-dashed border-green-500 last:border-b-0">
-      <div className="m-3 grid gap-3 rounded-md border border-dashed border-green-500 p-3 transition-colors hover:bg-muted/50 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]">
-        <div className="flex min-w-0 flex-col gap-3 rounded-md border border-dashed border-green-300 p-2">
-          <GlobalPurchasesName value={row.title} unit={row.unit} />
+    <div className="mx-3 my-1.5 grid gap-3 rounded-md border border-border p-3 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(420px,1fr)_minmax(620px,1fr)]">
+      <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(0,1fr)_minmax(160px,0.35fr)]">
+        <div className="min-w-0 rounded-md border border-border p-2">
+          <span className="mb-1 block text-xs text-muted-foreground uppercase">ЗАКУПКА</span>
+          <div className="break-words text-sm font-medium leading-snug">{row.title}</div>
+          <div className="mt-1 flex min-w-0 flex-wrap gap-1.5">
+            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal"><span className="text-muted-foreground">Ед.:</span><span>{row.unit}</span></Badge>
+            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal"><span>{statusLabels[row.status]}</span></Badge>
+          </div>
         </div>
-
-        <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[1fr_minmax(200px,0.5fr)_minmax(140px,0.35fr)]">
-          <GlobalPurchasesMetricGroup title="Стоимость">
-            <EditableBadge
-              label="Кол-во"
-              value={row.factQuantity}
-              onChange={(v) =>
-                onUpdate(row.id, { factQuantity: Number(v) })
-              }
-            />
-            <EditableBadge
-              label="Цена"
-              value={row.factPrice}
-              onChange={(v) =>
-                onUpdate(row.id, { factPrice: Number(v) })
-              }
-              formatDisplay={(v) => formatMoney(Number(v))}
-            />
-            <EditableBadge
-              label="Сумма"
-              strong
-              value={factTotal}
-              formatDisplay={(v) => formatMoney(Number(v))}
-            />
-          </GlobalPurchasesMetricGroup>
-
-          <GlobalPurchasesMetricGroup title="Параметры">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Badge
-                  variant="outline"
-                  className="gap-1 rounded-md px-1.5 py-0.5 font-normal cursor-pointer hover:bg-muted"
-                >
-                  <CalendarDots className="size-2.5" />
-                  <span className="text-muted-foreground">Дата:</span>
-                  <span>{formatDate(selectedDate)}</span>
-                </Badge>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                />
-              </PopoverContent>
-            </Popover>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Badge
-                  variant="outline"
-                  className="gap-1 rounded-md px-1.5 py-0.5 font-normal cursor-pointer hover:bg-muted"
-                >
-                  <span className="text-muted-foreground">Поставщик:</span>
-                  <span>{selectedSupplier}</span>
-                  <CaretDown className="size-2.5" />
-                </Badge>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {["Поставщик 1", "Поставщик 2", "Поставщик 3", "Без поставщика"].map(
-                  (status) => (
-                    <DropdownMenuItem
-                      key={status}
-                      onClick={() => setSelectedSupplier(status)}
-                    >
-                      {status}
-                    </DropdownMenuItem>
-                  ),
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </GlobalPurchasesMetricGroup>
-
-          <GlobalPurchasesMetricGroup title="Объект">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Badge
-                  variant="outline"
-                  className="gap-1 rounded-md px-1.5 py-0.5 font-normal cursor-pointer hover:bg-muted"
-                >
-                  <span className="text-muted-foreground">Объект:</span>
-                  <span>{selectedObject}</span>
-                  <CaretDown className="size-2.5" />
-                </Badge>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {["Объект А", "Объект Б", "Объект В", "Нет"].map(
-                  (obj) => (
-                    <DropdownMenuItem
-                      key={obj}
-                      onClick={() => setSelectedObject(obj)}
-                    >
-                      {obj}
-                    </DropdownMenuItem>
-                  ),
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </GlobalPurchasesMetricGroup>
+        <div className="min-w-0 rounded-md border border-border p-2">
+          <span className="mb-1 block text-xs text-muted-foreground uppercase">ДАТА</span>
+          <div className="text-xs font-medium leading-snug">{formatDate(row.purchaseDate)}</div>
+        </div>
+      </div>
+      <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(240px,0.85fr)_minmax(260px,0.9fr)_minmax(160px,0.35fr)]">
+        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
+          <div className="text-xs text-muted-foreground uppercase">ПЛАН</div>
+          <div className="flex min-w-0 flex-wrap gap-1.5">
+            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"><span className="text-muted-foreground">Кол-во:</span><span>{formatNumber(row.planQuantity)}</span></Badge>
+            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-medium tabular-nums"><span>{formatMoney(row.planTotal)}</span></Badge>
+          </div>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
+          <div className="text-xs text-muted-foreground uppercase">ФАКТ / ОБЪЕКТ</div>
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"><span className="text-muted-foreground">Факт:</span><span>{formatMoney(row.factTotal)}</span></Badge>
+            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"><span className="text-muted-foreground">Откл.:</span><span>{formatMoney(row.deviationTotal)}</span></Badge>
+            {row.projectTitle ? <Badge variant="outline" className="max-w-full gap-1 rounded-md px-1.5 py-0.5 font-normal"><span className="text-muted-foreground">Объект:</span><span className="truncate">{row.projectTitle}</span></Badge> : null}
+          </div>
+        </div>
+        <div className="flex min-w-0 items-start justify-end rounded-md border border-border p-1.5">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button aria-label={`Действия для ${row.title}`} disabled={saving} size="icon-sm" type="button" variant="ghost"><GearSixIcon /></Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={() => onInsertAfter(row)}><PlusIcon />Добавить ниже</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(row)}><PencilSimpleIcon />Редактировать</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onArchive(row)} variant="destructive"><ArchiveIcon />Архивировать</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>

@@ -64,6 +64,9 @@ export const globalPurchases = pgTable(
     index("idx_global_purchases_workspace_project")
       .on(t.workspaceOwnerId, t.projectId)
       .where(sql`${t.projectId} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+    index("idx_global_purchases_workspace_project_sort")
+      .on(t.workspaceOwnerId, t.projectTitle, t.purchaseDate, t.normalizedTitle, t.id)
+      .where(sql`${t.archivedAt} IS NULL AND ${t.deletedAt} IS NULL`),
     index("idx_global_purchases_workspace_title").on(t.workspaceOwnerId, t.normalizedTitle),
     index("idx_global_purchases_workspace_updated_at").on(t.workspaceOwnerId, t.updatedAt),
     check("chk_global_purchases_title_not_empty", sql`btrim(${t.title}) <> ''`),

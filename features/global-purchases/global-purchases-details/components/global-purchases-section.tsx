@@ -128,14 +128,12 @@ export function GlobalPurchasesSection() {
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
   const showSkeletonRows = loading && purchases.length === 0
   const projects = projectsQuery.data?.data ?? []
-  const listBusy = isFetching && !showSkeletonRows
 
   return (
     <>
       <Card className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg py-0 shadow-sm">
         {error ? <FieldError className="m-3 mb-0 rounded-md border border-destructive/30 bg-destructive/10 p-3">{error}</FieldError> : null}
         <CardContent className="scrollbar-subtle relative min-h-0 flex-1 overflow-y-auto px-0 py-0">
-          {listBusy ? <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-background/90 px-2 py-1 text-xs text-muted-foreground shadow-sm">Обновление...</div> : null}
           {showSkeletonRows ? <GlobalPurchasesRowsSkeleton /> : null}
           {!showSkeletonRows && purchases.length === 0 ? <Empty className="h-full border-0"><EmptyHeader><EmptyTitle>Закупки не найдены</EmptyTitle><EmptyDescription>Добавьте закупку из справочника материалов или измените поиск.</EmptyDescription></EmptyHeader></Empty> : null}
           {!showSkeletonRows ? purchases.map((row) => <GlobalPurchasesRow key={row.id} onDelete={handleDelete} onReplace={handleReplace} onUpdate={handleUpdate} projects={projects} row={row} saving={savingRowId === row.id} />) : null}

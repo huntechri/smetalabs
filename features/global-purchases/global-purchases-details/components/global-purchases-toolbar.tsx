@@ -23,6 +23,7 @@ import {
   CalendarDots,
   ExportIcon,
   FileArrowDownIcon,
+  FunnelIcon,
   MagnifyingGlassIcon,
   PlusIcon,
 } from "@phosphor-icons/react"
@@ -64,7 +65,7 @@ function getDateButtonLabel(dateFrom: string, dateTo: string) {
 
 function exportGlobalPurchases() {
   const params = new URLSearchParams(window.location.search)
-  params.set("format", "xls")
+  params.set("format", "xlsx")
   params.delete("cursor")
   params.delete("limit")
   window.location.href = `/api/global-purchases/export?${params.toString()}`
@@ -113,6 +114,7 @@ export function GlobalPurchasesToolbar({ projects }: { projects: ProjectRow[] })
   const selectedRange: DateRange | undefined = { from: toDate(dateFrom), to: toDate(dateTo) }
   const currentProjectTitle =
     projects.find((project) => project.id === currentProjectId)?.title ?? "Все объекты"
+  const dateButtonLabel = getDateButtonLabel(dateFrom, dateTo)
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border p-2 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
@@ -129,7 +131,11 @@ export function GlobalPurchasesToolbar({ projects }: { projects: ProjectRow[] })
           <Button size="sm" type="button" variant="outline" onClick={dispatchGlobalPurchasesImportEvent} title="Импорт закупок из CSV"><FileArrowDownIcon data-icon="inline-start" />Импорт</Button>
           <Button size="sm" type="button" variant="outline" onClick={exportGlobalPurchases} title="Экспорт закупок в Excel"><ExportIcon data-icon="inline-start" />Экспорт</Button>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button size="sm" type="button" variant="outline">{currentProjectTitle}</Button></DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>
+              <Button aria-label="Фильтр по объектам" size="icon-sm" type="button" variant={currentProjectId ? "default" : "outline"} title={currentProjectTitle}>
+                <FunnelIcon />
+              </Button>
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="max-h-72 w-72 overflow-y-auto">
               <DropdownMenuItem onClick={() => replaceParams({ projectId: null })}>Все объекты</DropdownMenuItem>
               {projects.map((project) => <DropdownMenuItem key={project.id} onClick={() => replaceParams({ projectId: project.id })}>{project.title}</DropdownMenuItem>)}
@@ -137,9 +143,8 @@ export function GlobalPurchasesToolbar({ projects }: { projects: ProjectRow[] })
           </DropdownMenu>
           <Popover>
             <PopoverTrigger asChild>
-              <Button size="sm" type="button" variant="outline" aria-label="Фильтр по датам">
-                <CalendarDots data-icon="inline-start" />
-                {getDateButtonLabel(dateFrom, dateTo)}
+              <Button size="icon-sm" type="button" variant="outline" aria-label="Фильтр по датам" title={dateButtonLabel}>
+                <CalendarDots />
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-auto p-0">

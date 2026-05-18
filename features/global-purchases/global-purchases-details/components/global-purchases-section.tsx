@@ -21,7 +21,7 @@ const SKELETON_ROW_COUNT = 6
 function GlobalPurchasesRowSkeleton() {
   return (
     <Card size="sm" className="mx-3 my-1.5 rounded-md bg-transparent p-0">
-      <CardContent className="grid gap-2 p-2 xl:grid-cols-[minmax(220px,1.2fr)_96px_minmax(180px,0.7fr)_minmax(180px,0.7fr)_minmax(260px,1fr)]">
+      <CardContent className="grid gap-2 p-2 xl:grid-cols-[minmax(460px,2fr)_76px_minmax(150px,0.55fr)_minmax(230px,0.85fr)_minmax(240px,0.85fr)]">
         {Array.from({ length: 5 }).map((_, index) => (
           <div key={index} className="space-y-2 rounded-md border border-border p-2">
             <Skeleton className="h-3 w-20" />
@@ -40,6 +40,7 @@ export function GlobalPurchasesRowsSkeleton() {
 export function GlobalPurchasesSection() {
   const { archivePurchase, createPurchase, error, isFetching, loading, meta, params, purchases, saving, setCursor, updatePurchase } = useGlobalPurchases()
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false)
+  const [savingRowId, setSavingRowId] = useState<string | null>(null)
   const projectsQuery = useQuery({
     queryKey: projectsQueryKeys.list({ status: "all", limit: 100, sort: "title_asc" }),
     queryFn: () => fetchProjects({ status: "all", limit: 100, sort: "title_asc" }),
@@ -55,11 +56,22 @@ export function GlobalPurchasesSection() {
   const handleArchive = async (purchase: GlobalPurchaseRow) => {
     const confirmed = window.confirm(`Архивировать закупку «${purchase.title}»? Она исчезнет из обычного списка.`)
     if (!confirmed) return
-    await archivePurchase(purchase.id)
+
+    setSavingRowId(purchase.id)
+    try {
+      await archivePurchase(purchase.id)
+    } finally {
+      setSavingRowId(null)
+    }
   }
 
   const handleUpdate = async (purchase: GlobalPurchaseRow, input: GlobalPurchaseMutationInput) => {
-    await updatePurchase(purchase.id, input)
+    setSavingRowId(purchase.id)
+    try {
+      await updatePurchase(purchase.id, input)
+    } finally {
+      setSavingRowId(null)
+    }
   }
 
   const handleCreateFromMaterial = async (input: GlobalPurchaseMutationInput) => {
@@ -73,17 +85,19 @@ export function GlobalPurchasesSection() {
   const totalLabel = meta?.hasMore ? `минимум ${meta.total}` : String(meta?.total ?? purchases.length)
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
-  const showSkeletonRows = loading || isFetching
+  const showSkeletonRows = loading && purchases.length === 0
   const projects = projectsQuery.data?.data ?? []
+  const listBusy = isFetching && !showSkeletonRows
 
   return (
     <>
       <Card className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg py-0 shadow-sm">
         {error ? <FieldError className="m-3 mb-0 rounded-md border border-destructive/30 bg-destructive/10 p-3">{error}</FieldError> : null}
         <CardContent className="scrollbar-subtle relative min-h-0 flex-1 overflow-y-auto px-0 py-0">
+          {listBusy ? <div className="absolute right-3 top-3 z-10 rounded-md border border-border bg-background/90 px-2 py-1 text-xs text-muted-foreground shadow-sm">Обновление...</div> : null}
           {showSkeletonRows ? <GlobalPurchasesRowsSkeleton /> : null}
           {!showSkeletonRows && purchases.length === 0 ? <Empty className="h-full border-0"><EmptyHeader><EmptyTitle>Закупки не найдены</EmptyTitle><EmptyDescription>Добавьте закупку из справочника материалов или измените поиск.</EmptyDescription></EmptyHeader></Empty> : null}
-          {!showSkeletonRows ? purchases.map((row) => <GlobalPurchasesRow key={row.id} onArchive={handleArchive} onUpdate={handleUpdate} projects={projects} row={row} saving={saving || isFetching || projectsQuery.isFetching} />) : null}
+          {!showSkeletonRows ? purchases.map((row) => <GlobalPurchasesRow key={row.id} onArchive={handleArchive} onUpdate={handleUpdate} projects={projects} row={row} saving={savingRowId === row.id} />) : null}
         </CardContent>
         {meta ? <CardFooter className="flex flex-col gap-3 border-t p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div><div className="flex gap-2"><Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button><Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button></div></CardFooter> : null}
       </Card>

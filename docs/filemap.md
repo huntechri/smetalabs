@@ -1,6 +1,6 @@
 # SmetaLabs — Filemap
 
-> Last updated: 2026-05-17
+> Last updated: 2026-05-18
 >
 > Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/projects`, see [`docs/projects-architecture.md`](./projects-architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md).
 
@@ -92,7 +92,7 @@ features/
 ├── dashboard/
 ├── projects/
 │   ├── api/                # client API, errors, query keys/cache tags
-│   ├── components/         # projects screen, toolbar, cards and form dialog
+│   ├── components/         # projects screen, source-aligned toolbar, cards and form dialog
 │   ├── hooks/              # TanStack Query hook and mutations
 │   └── server/             # repository/service/route logic
 ├── estimates/
@@ -176,7 +176,9 @@ db/
 │   ├── 023_material_embedding_backfill.sql
 │   ├── 024_directory_counterparties_foundation.sql
 │   ├── 025_directory_counterparties_function_grants.sql
-│   └── 026_projects_foundation.sql
+│   ├── 026_projects_foundation.sql
+│   ├── 027_projects_function_grants.sql
+│   └── 028_projects_customer_counterparty.sql
 └── schema/
     ├── index.ts
     ├── projects.ts
@@ -200,12 +202,12 @@ db/
 ```txt
 /projects
   → app/api/projects/** exposes workspace-scoped list/read/create/update/archive routes
-  → features/projects/** owns UI hooks, form dialog, cards, repository and service logic
+  → features/projects/** owns UI hooks, source-aligned form/toolbar/cards, repository and service logic
   → docs/projects-architecture.md fixes the first-version contract
-  → db/schema/projects.ts and db/migrations/026_projects_foundation.sql provide storage and search fields
+  → db/schema/projects.ts and db/migrations/026-028_projects_*.sql provide storage, helper grants and customer link
 ```
 
-Projects stay workspace-scoped through `workspace_owner_id`. The first version supports real list data, search, status filtering, create, update and soft archive. Project estimates, participants, files, payments, detailed project page, import/export and AI behavior remain outside this slice.
+Projects stay workspace-scoped through `workspace_owner_id`. The first version supports real list data, search, status filtering, create, update and soft archive. Customer selection is linked to active counterparties of type `customer`. Budget and progress are system-managed placeholders in this slice: they are displayed but not entered manually. Project estimates, participants, files, payments, detailed project page, automatic budget/progress calculation, import/export and AI behavior remain outside this slice.
 
 ### Directory counterparties production slice
 
@@ -269,8 +271,10 @@ Works export uses the active screen filters/search for category and subcategory 
 
 ## Recent directory/deployment updates
 
-- `docs/projects-architecture.md` — first-version contract for `/projects`.
+- `docs/projects-architecture.md` — first-version contract for `/projects`, including customer selection and system-managed budget/progress.
 - `db/migrations/026_projects_foundation.sql` — workspace-scoped projects storage with soft archive and search fields.
+- `db/migrations/027_projects_function_grants.sql` — grants for project helper functions used during save.
+- `db/migrations/028_projects_customer_counterparty.sql` — optional link from projects to customer counterparties.
 - `features/projects/**` and `app/api/projects/**` — projects list, create, update, archive, search and status filter flow.
 - `docs/directory-counterparties-architecture.md` — first-version contract for the counterparties catalog, including save helper grants.
 - `db/migrations/024_directory_counterparties_foundation.sql` — workspace-scoped counterparties storage with soft archive and search fields.

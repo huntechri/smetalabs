@@ -2,7 +2,7 @@
 
 > Last updated: 2026-05-18
 >
-> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/projects`, see [`docs/projects-architecture.md`](./projects-architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md).
+> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/projects`, see [`docs/projects-architecture.md`](./projects-architecture.md). For `/procurements`, see [`docs/global-purchases-architecture.md`](./global-purchases-architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md).
 
 ---
 
@@ -68,6 +68,7 @@ app/
 └── api/
     ├── access-control/roles/route.ts
     ├── projects/                 # workspace-scoped projects list/read/create/update/archive endpoints
+    ├── global-purchases/         # workspace-scoped procurements list/read/create/update/archive endpoints
     ├── directory-counterparties/  # workspace-scoped counterparties catalog read/search/CRUD endpoints
     ├── directory-materials/       # workspace-scoped materials catalog read/search/CRUD/import/export/AI endpoints
     ├── directory-works/           # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
@@ -99,6 +100,11 @@ features/
 ├── purchases/
 ├── execution/
 ├── global-purchases/
+│   ├── api/                # client API, errors, query keys/cache tags
+│   ├── global-purchases-details/components/ # procurements toolbar, list rows and form dialog
+│   ├── hooks/              # TanStack Query hook and mutations
+│   ├── lib/                # UI events
+│   └── server/             # repository/service/route logic
 ├── directories/
 ├── directory-counterparties/
 │   ├── api/                # client API, errors, query keys/cache tags
@@ -178,10 +184,12 @@ db/
 │   ├── 025_directory_counterparties_function_grants.sql
 │   ├── 026_projects_foundation.sql
 │   ├── 027_projects_function_grants.sql
-│   └── 028_projects_customer_counterparty.sql
+│   ├── 028_projects_customer_counterparty.sql
+│   └── 029_global_purchases_foundation.sql
 └── schema/
     ├── index.ts
     ├── projects.ts
+    ├── global-purchases.ts
     ├── directory-counterparties.ts
     ├── directory-materials.ts
     ├── directory-works.ts
@@ -208,6 +216,18 @@ db/
 ```
 
 Projects stay workspace-scoped through `workspace_owner_id`. The first version supports real list data, search, status filtering, create, update and soft archive. Customer selection is linked to active counterparties of type `customer`. Budget and progress are system-managed placeholders in this slice: they are displayed but not entered manually. Project estimates, participants, files, payments, detailed project page, automatic budget/progress calculation, import/export and AI behavior remain outside this slice.
+
+### Global purchases first production slice
+
+```txt
+/procurements
+  → app/api/global-purchases/** exposes workspace-scoped list/read/create/update/archive routes
+  → features/global-purchases/** owns UI hooks, form dialog, toolbar, repository and service logic
+  → docs/global-purchases-architecture.md fixes the first-version contract
+  → db/schema/global-purchases.ts and db/migrations/029_global_purchases_foundation.sql provide storage and access rules
+```
+
+Global purchases stay workspace-scoped through `workspace_owner_id`. The first version supports real list data, search, status filtering, project filtering, create, update and soft archive. Project selection is linked to active non-archived projects. Supplier selection, import, export, AI behavior, warehouse logic and payments remain outside this slice.
 
 ### Directory counterparties production slice
 
@@ -271,6 +291,9 @@ Works export uses the active screen filters/search for category and subcategory 
 
 ## Recent directory/deployment updates
 
+- `docs/global-purchases-architecture.md` — first-version contract for `/procurements`, including fields, access, project filter and disabled supplier/import/export scope.
+- `db/migrations/029_global_purchases_foundation.sql` — workspace-scoped global purchases storage with soft archive and search fields.
+- `features/global-purchases/**` and `app/api/global-purchases/**` — procurements list, create, update, archive, search, status filter and project filter flow.
 - `docs/projects-architecture.md` — first-version contract for `/projects`, including customer selection and system-managed budget/progress.
 - `db/migrations/026_projects_foundation.sql` — workspace-scoped projects storage with soft archive and search fields.
 - `db/migrations/027_projects_function_grants.sql` — grants for project helper functions used during save.

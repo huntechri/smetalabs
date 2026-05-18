@@ -8,6 +8,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -33,11 +34,19 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Не удалось сохранить закупку"
 }
 
-function materialToPurchaseInput(material: GlobalPurchaseMaterialOption): GlobalPurchaseMutationInput {
+function parseQuantity(value: string) {
+  const parsed = Number(value.trim().replace(",", "."))
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+function materialToPurchaseInput(
+  material: GlobalPurchaseMaterialOption,
+  planQuantity: number
+): GlobalPurchaseMutationInput {
   return {
     title: material.title,
     unit: material.unit,
-    planQuantity: 0,
+    planQuantity,
     planPrice: material.planPrice,
     factQuantity: null,
     factPrice: null,
@@ -51,24 +60,32 @@ function materialToPurchaseInput(material: GlobalPurchaseMaterialOption): Global
 
 export function GlobalPurchaseMaterialDialog({
   actionLabel = "Добавить",
+  closeOnSelect = false,
   description = "Выберите товар из справочника материалов. В закупку попадут название, единица измерения и цена.",
   onOpenChange,
   onSelect,
   open,
+  quantityPrompt = true,
   saving,
   title = "Добавить закупку из материалов",
 }: {
   actionLabel?: string
+  closeOnSelect?: boolean
   description?: string
   onOpenChange: (open: boolean) => void
   onSelect: (input: GlobalPurchaseMutationInput) => Promise<void>
   open: boolean
+  quantityPrompt?: boolean
   saving: boolean
   title?: string
 }) {
   const [search, setSearch] = useState("")
   const [submittedSearch, setSubmittedSearch] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [selectedMaterial, setSelectedMaterial] = useState<GlobalPurchaseMaterialOption | null>(null)
+  const [quantityDialogOpen, setQuantityDialogOpen] = useState(false)
+  const [quantity, setQuantity] = useState("1")
+  const [quantityError, setQuantityError] = useState<string | null>(null)
   const normalizedSearch = search.trim().replace(/\s+/g, " ")
   const canSearch = submittedSearch.length >= MATERIAL_SEARCH_MIN_LENGTH
   const materialsQuery = useQuery({
@@ -85,6 +102,10 @@ export function GlobalPurchaseMaterialDialog({
     setSearch("")
     setSubmittedSearch("")
     setError(null)
+    setSelectedMaterial(null)
+    setQuantityDialogOpen(false)
+    setQuantity("1")
+    setQuantityError(null)
   }, [open])
 
   useEffect(() => {
@@ -104,12 +125,43 @@ export function GlobalPurchaseMaterialDialog({
   }
 
   const handleSelect = async (material: GlobalPurchaseMaterialOption) => {
+    if (quantityPrompt) {
+      setSelectedMaterial(material)
+      setQuantity("1")
+      setQuantityError(null)
+      setQuantityDialogOpen(true)
+      return
+    }
+
     try {
       setError(null)
-      await onSelect(materialToPurchaseInput(material))
-      onOpenChange(false)
+      await onSelect(materialToPurchaseInput(material, 0))
+      if (closeOnSelect) onOpenChange(false)
     } catch (err) {
       setError(getErrorMessage(err))
+    }
+  }
+
+  const handleQuantitySubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!selectedMaterial) return
+
+    const parsedQuantity = parseQuantity(quantity)
+    if (parsedQuantity === null) {
+      setQuantityError("Введите количество больше 0")
+      return
+    }
+
+    try {
+      setQuantityError(null)
+      setError(null)
+      await onSelect(materialToPurchaseInput(selectedMaterial, parsedQuantity))
+      setQuantityDialogOpen(false)
+      setSelectedMaterial(null)
+      setQuantity("1")
+      if (closeOnSelect) onOpenChange(false)
+    } catch (err) {
+      setQuantityError(getErrorMessage(err))
     }
   }
 
@@ -119,80 +171,111 @@ export function GlobalPurchaseMaterialDialog({
   const showEmpty = canSearch && !loading && materials.length === 0
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-4rem)] overflow-hidden sm:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="flex h-[min(720px,calc(100vh-4rem))] max-h-[calc(100vh-4rem)] flex-col overflow-hidden sm:max-w-3xl">
+          <DialogHeader className="shrink-0">
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
+          </DialogHeader>
 
-        <form className="flex items-center gap-2" onSubmit={handleSearch}>
-          <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
-          <Input
-            aria-label="Поиск материалов"
-            className="h-8"
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Введите минимум 2 символа"
-            value={search}
-          />
-          <Button type="submit" variant="outline">
-            Поиск
-          </Button>
-        </form>
+          <form className="flex shrink-0 items-center gap-2" onSubmit={handleSearch}>
+            <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
+            <Input
+              aria-label="Поиск материалов"
+              className="h-8"
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Введите минимум 2 символа"
+              value={search}
+            />
+            <Button type="submit" variant="outline">
+              Поиск
+            </Button>
+          </form>
 
-        <FieldError>{error ?? materialsQuery.error?.message ?? null}</FieldError>
+          <FieldError>{error ?? materialsQuery.error?.message ?? null}</FieldError>
 
-        <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-md border border-border">
-          {showSearchPrompt ? (
-            <Empty className="border-0">
-              <EmptyHeader>
-                <EmptyTitle>Введите название материала</EmptyTitle>
-                <EmptyDescription>Поиск начнётся после ввода минимум 2 символов.</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : null}
+          <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-md border border-border">
+            {showSearchPrompt ? (
+              <Empty className="h-full min-h-80 border-0">
+                <EmptyHeader>
+                  <EmptyTitle>Введите название материала</EmptyTitle>
+                  <EmptyDescription>Поиск начнётся после ввода минимум 2 символов.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : null}
 
-          {loading && materials.length === 0 ? (
-            <div className="space-y-2 p-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton key={index} className="h-14 w-full rounded-md" />
-              ))}
-            </div>
-          ) : null}
+            {loading && materials.length === 0 ? (
+              <div className="space-y-2 p-3">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <Skeleton key={index} className="h-14 w-full rounded-md" />
+                ))}
+              </div>
+            ) : null}
 
-          {showEmpty ? (
-            <Empty className="border-0">
-              <EmptyHeader>
-                <EmptyTitle>Материалы не найдены</EmptyTitle>
-                <EmptyDescription>Измените поиск или добавьте материал в справочник.</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : null}
+            {showEmpty ? (
+              <Empty className="h-full min-h-80 border-0">
+                <EmptyHeader>
+                  <EmptyTitle>Материалы не найдены</EmptyTitle>
+                  <EmptyDescription>Измените поиск или добавьте материал в справочник.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : null}
 
-          {materials.map((material) => (
-            <Card key={material.id} className="m-2 rounded-md bg-transparent p-0 shadow-none">
-              <CardContent className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-medium">{material.title}</div>
-                  <div className="truncate text-xs text-muted-foreground">{material.category}</div>
-                </div>
-                <div className="text-xs text-muted-foreground">{material.unit}</div>
-                <div className="text-xs font-medium tabular-nums">{formatMoney(material.planPrice)}</div>
-                <Button
-                  disabled={saving}
-                  onClick={() => handleSelect(material)}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <PlusIcon data-icon="inline-start" />
-                  {actionLabel}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </DialogContent>
-    </Dialog>
+            {materials.map((material) => (
+              <Card key={material.id} className="m-2 rounded-md bg-transparent p-0 shadow-none">
+                <CardContent className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium">{material.title}</div>
+                    <div className="truncate text-xs text-muted-foreground">{material.category}</div>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{material.unit}</div>
+                  <div className="text-xs font-medium tabular-nums">{formatMoney(material.planPrice)}</div>
+                  <Button
+                    disabled={saving}
+                    onClick={() => handleSelect(material)}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <PlusIcon data-icon="inline-start" />
+                    {actionLabel}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={quantityDialogOpen} onOpenChange={setQuantityDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Количество</DialogTitle>
+            <DialogDescription>
+              {selectedMaterial ? selectedMaterial.title : "Введите количество материала"}
+            </DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={handleQuantitySubmit}>
+            <Input
+              autoFocus
+              inputMode="decimal"
+              onChange={(event) => setQuantity(event.target.value)}
+              placeholder="Количество"
+              value={quantity}
+            />
+            <FieldError>{quantityError}</FieldError>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setQuantityDialogOpen(false)}>
+                Отмена
+              </Button>
+              <Button type="submit" disabled={saving}>
+                Добавить
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

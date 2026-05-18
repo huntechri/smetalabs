@@ -7,7 +7,7 @@ export type GlobalPurchaseStatus =
 
 export type GlobalPurchasesStatusFilter = GlobalPurchaseStatus | "all"
 export type GlobalPurchasesSort = "relevance" | "updated_desc" | "title_asc" | "project_asc"
-export type GlobalPurchasesExportFormat = "xls"
+export type GlobalPurchasesExportFormat = "xlsx"
 
 export type GlobalPurchasesListParams = {
   q?: string
@@ -72,7 +72,7 @@ export type GlobalPurchasesListResponse = {
 }
 
 export type GlobalPurchasesExportFile = {
-  body: string
+  body: Uint8Array
   contentType: string
   extension: string
 }

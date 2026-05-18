@@ -10,9 +10,9 @@ import {
   createGlobalPurchaseForWorkspace,
   getGlobalPurchaseForWorkspace,
   listGlobalPurchasesForWorkspace,
-  searchGlobalPurchaseMaterialOptionsForWorkspace,
   updateGlobalPurchaseForWorkspace,
 } from "./global-purchases.repository"
+import { searchGlobalPurchaseMaterialOptionsForWorkspace } from "./global-purchases-material-options.repository"
 import { normalizeGlobalPurchasesListParams } from "./global-purchases.schemas"
 
 type GlobalPurchasesContext = {

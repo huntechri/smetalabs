@@ -32,6 +32,7 @@
 заменить материал в существующей строке
 удалить строку из обычного списка
 перейти на следующую или предыдущую страницу списка
+скачать шаблон CSV для импорта
 импортировать закупки из CSV с предпросмотром
 экспортировать текущую выборку в XLSX для логистики
 ```
@@ -174,11 +175,13 @@ id
 
 Удаление из текущего интерфейса мягкое. Строка не удаляется физически из базы, а получает отметку `archivedAt`. Обычный список такие строки не показывает.
 
-Подтверждение удаления сделано через общий `Dialog`.
+Подтверждение удаления сделано через общий `Dialog` и вынесено в отдельный компонент подтверждения.
 
 ## Импорт закупок
 
 Первый слой импорта принимает CSV-файл и показывает предпросмотр перед применением.
+
+В окне импорта есть кнопка скачивания шаблона. Шаблон содержит заголовки и пример строки, чтобы пользователь мог заполнить файл без ручного угадывания колонок.
 
 Ожидаемые колонки:
 
@@ -206,7 +209,7 @@ id
 Цена план = Цена факт
 ```
 
-Перед применением каждая строка проверяется отдельно. Строки с ошибками показываются в предпросмотре и не применяются. Корректные строки создаются через существующее создание закупки, поэтому рабочая область и права доступа проверяются тем же серверным слоем.
+Перед применением каждая строка проверяется отдельно. Разбор CSV и проверка строк находятся в отдельном файле подготовки импорта. Окно импорта отвечает только за скачивание шаблона, выбор файла, предпросмотр и применение корректных строк.
 
 Ограничения текущего слоя импорта:
 
@@ -444,23 +447,22 @@ global-purchases-value.tsx
 global-purchases-metric-group.tsx
 ```
 
-## Технический долг текущего экрана
+## Разбиение экрана
 
-После добавления импорта и экспорта экран начал разрастаться. Перед следующим крупным этапом раздел нужно дробить, чтобы один экран не отвечал за всё сразу.
+Экран больше не должен собирать список, страницы, подтверждение удаления и разбор импорта в одном файле.
 
-Рекомендуемое разбиение:
+Текущее разбиение:
 
 ```txt
 GlobalPurchasesSection        сборка раздела и общие связи
 GlobalPurchasesList           группы, строки, пустое состояние и загрузка
 GlobalPurchasesPagination     страницы списка
 GlobalPurchaseArchiveDialog   подтверждение удаления
-useGlobalPurchasesDialogs     открытие и закрытие окон
-подготовка импорта            отдельный файл для разбора CSV и проверки строк
-GlobalPurchasesImportDialog   только файл, предпросмотр и кнопки
+global-purchases-import-parser.ts  шаблон импорта, разбор CSV и проверка строк
+GlobalPurchasesImportDialog   скачивание шаблона, выбор файла, предпросмотр и применение
 ```
 
-Этот пункт не блокирует текущий PR, но должен быть первым шагом перед расширением импорта, поставщиков, логистики или массовых действий.
+Следующий возможный шаг — вынести открытие и закрытие окон в отдельный хук, если раздел начнёт снова разрастаться.
 
 ## Что не входит в текущий этап
 
@@ -496,6 +498,7 @@ features/global-purchases/api/global-purchases-errors.ts
 features/global-purchases/api/global-purchases-query-keys.ts
 features/global-purchases/hooks/use-global-purchases.ts
 features/global-purchases/lib/global-purchases-events.ts
+features/global-purchases/lib/global-purchases-import-parser.ts
 features/global-purchases/server/global-purchases.export.ts
 features/global-purchases/server/global-purchases.route-handlers.ts
 features/global-purchases/server/global-purchases.service.ts
@@ -506,7 +509,10 @@ features/global-purchases/global-purchases-details/components/global-purchases-s
 features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx
 features/global-purchases/global-purchases-details/components/global-purchases-view.tsx
 features/global-purchases/global-purchases-details/components/global-purchases-section.tsx
+features/global-purchases/global-purchases-details/components/global-purchases-list.tsx
+features/global-purchases/global-purchases-details/components/global-purchases-pagination.tsx
 features/global-purchases/global-purchases-details/components/global-purchases-row.tsx
+features/global-purchases/global-purchases-details/components/global-purchase-archive-dialog.tsx
 features/global-purchases/global-purchases-details/components/global-purchase-material-dialog.tsx
 features/global-purchases/global-purchases-details/components/global-purchases-import-dialog.tsx
 types/global-purchases.ts
@@ -549,6 +555,7 @@ db/migrations/031_global_purchases_link_indexes.sql
 удаление убирает строку из обычного списка
 изменение строки не вызывает полный перезапрос списка
 импорт открывается из верхней панели
+шаблон CSV скачивается из окна импорта
 CSV-файл показывает предпросмотр
 строки с ошибками не импортируются
 корректные строки импортируются как закупки

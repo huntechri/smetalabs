@@ -4,6 +4,14 @@ import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { FieldError } from "@/components/ui/field"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -83,6 +91,7 @@ export function GlobalPurchasesSection({
   const { archivePurchase, createPurchase, error, isFetching, loading, meta, params, purchases, saving, setCursor, updatePurchase } = useGlobalPurchases()
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false)
   const [replacementRow, setReplacementRow] = useState<GlobalPurchaseRow | null>(null)
+  const [rowPendingArchive, setRowPendingArchive] = useState<GlobalPurchaseRow | null>(null)
   const [savingRowId, setSavingRowId] = useState<string | null>(null)
   const purchaseGroups = useMemo(() => groupPurchasesByProject(purchases), [purchases])
 
@@ -95,13 +104,17 @@ export function GlobalPurchasesSection({
     return () => window.removeEventListener(GLOBAL_PURCHASES_CREATE_EVENT, handleCreate)
   }, [])
 
-  const handleDelete = async (purchase: GlobalPurchaseRow) => {
-    const confirmed = window.confirm(`Удалить закупку «${purchase.title}»? Она исчезнет из обычного списка.`)
-    if (!confirmed) return
+  const handleDelete = (purchase: GlobalPurchaseRow) => {
+    setRowPendingArchive(purchase)
+  }
 
-    setSavingRowId(purchase.id)
+  const handleConfirmArchive = async () => {
+    if (!rowPendingArchive) return
+
+    setSavingRowId(rowPendingArchive.id)
     try {
-      await archivePurchase(purchase.id)
+      await archivePurchase(rowPendingArchive.id)
+      setRowPendingArchive(null)
     } finally {
       setSavingRowId(null)
     }
@@ -150,6 +163,7 @@ export function GlobalPurchasesSection({
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
   const showSkeletonRows = loading && purchases.length === 0
   const isReplacing = Boolean(replacementRow)
+  const archiveInProgress = rowPendingArchive ? savingRowId === rowPendingArchive.id || saving : false
 
   return (
     <>
@@ -170,6 +184,36 @@ export function GlobalPurchasesSection({
         </CardContent>
         {meta ? <CardFooter className="flex flex-col gap-3 border-t p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div><div className="flex gap-2"><Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button><Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button></div></CardFooter> : null}
       </Card>
+      <Dialog open={Boolean(rowPendingArchive)} onOpenChange={(open) => !open && setRowPendingArchive(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Удалить закупку?</DialogTitle>
+            <DialogDescription>
+              {rowPendingArchive
+                ? `Закупка «${rowPendingArchive.title}» исчезнет из обычного списка. Данные останутся в архиве.`
+                : "Закупка исчезнет из обычного списка. Данные останутся в архиве."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={archiveInProgress}
+              onClick={() => setRowPendingArchive(null)}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={archiveInProgress}
+              onClick={handleConfirmArchive}
+            >
+              Удалить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <GlobalPurchaseMaterialDialog
         actionLabel={isReplacing ? "Заменить" : "Добавить"}
         closeOnSelect={isReplacing}

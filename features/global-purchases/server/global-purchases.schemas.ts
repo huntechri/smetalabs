@@ -14,7 +14,7 @@ const GLOBAL_PURCHASE_STATUSES = [
   "cancelled",
 ] as const
 const GLOBAL_PURCHASE_SORTS = ["relevance", "updated_desc", "title_asc", "project_asc"] as const
-const GLOBAL_PURCHASE_EXPORT_FORMATS = ["xls"] as const
+const GLOBAL_PURCHASE_EXPORT_FORMATS = ["xlsx"] as const
 
 function getTodayIsoDate() {
   const date = new Date()
@@ -133,7 +133,7 @@ export function parseGlobalPurchasesExportParams(params: URLSearchParams): {
   return {
     format: GLOBAL_PURCHASE_EXPORT_FORMATS.includes(format as GlobalPurchasesExportFormat)
       ? (format as GlobalPurchasesExportFormat)
-      : "xls",
+      : "xlsx",
     params: {
       q: getStringParam(params, "q"),
       status: getStatusParam(params),

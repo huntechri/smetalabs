@@ -2,7 +2,6 @@
 
 import type { ProjectRow } from "@/types/project"
 import {
-  ArrowSquareOut,
   BuildingApartment,
   CalendarBlank,
   CurrencyRub,
@@ -19,11 +18,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Frame } from "@/components/ui/frame"
 import { Separator } from "@/components/ui/separator"
 
 interface ProjectCardProps {
   project: ProjectRow
+  disabled?: boolean
+  onEdit: (project: ProjectRow) => void
+  onArchive: (project: ProjectRow) => void
 }
 
 const STATUS_CONFIG: Record<
@@ -54,26 +55,24 @@ const STATUS_CONFIG: Record<
   },
 }
 
-function formatMoney(value: number): string {
+function formatMoney(value: number | null): string {
+  if (value === null) return "Бюджет не указан"
   return value.toLocaleString("ru-RU") + " ₽"
 }
 
-function formatDateRange(start?: string, end?: string): string {
+function formatDateRange(start?: string | null, end?: string | null): string {
   if (!start && !end) return "Сроки не указаны"
   if (start && end) return `${start} – ${end}`
   return start || end || ""
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project, disabled, onEdit, onArchive }: ProjectCardProps) {
   const statusCfg = STATUS_CONFIG[project.status]
 
   return (
-    <Frame className="border-amber-500">
-      <Card>
+    <Card className="h-full">
       <CardHeader>
-        {/* Status badges row */}
-        <Frame className="items-center gap-2 border-green-400 p-1.5">
-          {/* Status badge with dot */}
+        <div className="flex items-center gap-2">
           <Badge
             variant={statusCfg.badgeVariant}
             className={statusCfg.badgeClassName}
@@ -83,48 +82,36 @@ export function ProjectCard({ project }: ProjectCardProps) {
             />
             {statusCfg.label}
           </Badge>
+        </div>
 
-        </Frame>
+        <CardTitle>{project.title}</CardTitle>
 
-        {/* Title */}
-        <Frame className="border-green-300 p-2">
-          <CardTitle>{project.title}</CardTitle>
-        </Frame>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <BuildingApartment className="size-3 shrink-0" />
+          <span>{project.customerName ?? "Заказчик не указан"}</span>
+        </div>
 
-        {/* Customer */}
-        <Frame className="border-green-300 p-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <BuildingApartment className="size-3 shrink-0" />
-            <span>{project.customer}</span>
-          </div>
-        </Frame>
-
-        {/* Address */}
-        <Frame className="border-green-300 p-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="size-3 shrink-0" />
-            <span>{project.address ?? "Адрес не указан"}</span>
-          </div>
-        </Frame>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <MapPin className="size-3 shrink-0" />
+          <span>{project.address ?? "Адрес не указан"}</span>
+        </div>
       </CardHeader>
 
       <CardContent>
-        <Frame className="grid grid-cols-1 gap-3 border-blue-400 p-2 min-w-0 @xs:grid-cols-2">
-          {/* Budget block */}
-          <Frame className="border-amber-500 p-3 min-w-0">
+        <div className="grid grid-cols-1 gap-3 min-w-0 @xs:grid-cols-2">
+          <div className="rounded-lg border bg-muted/20 p-3 min-w-0">
             <div className="flex flex-col w-full">
               <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
                 <CurrencyRub className="size-3 shrink-0" />
                 <span>Бюджет</span>
               </div>
               <div className="w-full truncate text-xs font-medium">
-                {formatMoney(project.budget)}
+                {formatMoney(project.budgetAmount)}
               </div>
             </div>
-          </Frame>
+          </div>
 
-          {/* Dates block */}
-          <Frame className="border-amber-500 p-3 min-w-0">
+          <div className="rounded-lg border bg-muted/20 p-3 min-w-0">
             <div className="flex flex-col w-full">
               <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
                 <CalendarBlank className="size-3 shrink-0" />
@@ -134,10 +121,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 {formatDateRange(project.startDate, project.endDate)}
               </div>
             </div>
-          </Frame>
+          </div>
 
-          {/* Progress block */}
-          <Frame className="col-span-2 border-amber-500 p-3 min-w-0">
+          <div className="col-span-1 rounded-lg border bg-muted/20 p-3 min-w-0 @xs:col-span-2">
             <div className="flex flex-col w-full">
               <div className="mb-1 text-[0.625rem] text-muted-foreground">
                 Прогресс
@@ -152,35 +138,27 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 />
               </div>
             </div>
-          </Frame>
-        </Frame>
+          </div>
+        </div>
       </CardContent>
 
       <Separator />
 
       <CardFooter>
-        <Frame className="gap-2 border-purple-400 p-1.5">
-          <Frame className="border-purple-300 p-1">
-            <Button variant="outline" size="xs">
-              <ArrowSquareOut data-icon="inline-start" />
-              Открыть
-            </Button>
-          </Frame>
-          <Frame className="border-purple-300 p-1">
-            <Button variant="outline" size="xs">
-              <NotePencil data-icon="inline-start" />
-              Ред.
-            </Button>
-          </Frame>
-          <Frame className="border-purple-300 p-1">
-            <Button variant="destructive" size="xs">
-              <Trash data-icon="inline-start" />
-              Удалить
-            </Button>
-          </Frame>
-        </Frame>
+        <div className="flex flex-wrap gap-2">
+          <Button disabled size="xs" variant="outline" title="Страница проекта будет добавлена отдельно">
+            Открыть
+          </Button>
+          <Button disabled={disabled} variant="outline" size="xs" onClick={() => onEdit(project)}>
+            <NotePencil data-icon="inline-start" />
+            Ред.
+          </Button>
+          <Button disabled={disabled} variant="destructive" size="xs" onClick={() => onArchive(project)}>
+            <Trash data-icon="inline-start" />
+            Архивировать
+          </Button>
+        </div>
       </CardFooter>
-      </Card>
-    </Frame>
+    </Card>
   )
 }

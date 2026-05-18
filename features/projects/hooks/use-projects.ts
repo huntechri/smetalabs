@@ -1,33 +1,159 @@
-import { useMemo, useState } from "react"
-import { projectsMock } from "@/features/projects/__mocks__/projects"
-import type { ProjectStatus } from "@/types/project"
+"use client"
+
+import { useMemo } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  archiveProject,
+  createProject,
+  fetchProjects,
+  updateProject,
+} from "@/features/projects/api/projects-client"
+import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
+import type {
+  ProjectMutationInput,
+  ProjectStatus,
+  ProjectsListParams,
+  ProjectsSort,
+} from "@/types/project"
+
+type ReadonlySearchParams = {
+  get: (name: string) => string | null
+}
+
+const PROJECTS_STALE_TIME_MS = 30_000
+const PROJECTS_GC_TIME_MS = 5 * 60_000
+
+function getStringParam(searchParams: ReadonlySearchParams, key: string) {
+  const value = searchParams.get(key)?.trim()
+  return value || undefined
+}
+
+function getNumberParam(searchParams: ReadonlySearchParams, key: string) {
+  const value = searchParams.get(key)
+  if (!value) return undefined
+
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
+}
+
+function getStatusParam(searchParams: ReadonlySearchParams): ProjectStatus | "all" {
+  const status = searchParams.get("status")
+  if (status === "new" || status === "in_progress" || status === "completed") return status
+  return "all"
+}
+
+function getSortParam(searchParams: ReadonlySearchParams): ProjectsSort | undefined {
+  const sort = searchParams.get("sort")
+  if (sort === "relevance" || sort === "updated_desc" || sort === "title_asc") return sort
+  return undefined
+}
+
+function getListParams(searchParams: ReadonlySearchParams): ProjectsListParams {
+  return {
+    q: getStringParam(searchParams, "q"),
+    status: getStatusParam(searchParams),
+    limit: getNumberParam(searchParams, "limit") ?? 50,
+    cursor: getNumberParam(searchParams, "cursor") ?? 0,
+    sort: getSortParam(searchParams) ?? "relevance",
+  }
+}
 
 export function useProjects() {
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<ProjectStatus | "all">("all")
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const params = useMemo(() => getListParams(searchParams), [searchParams])
 
-  const filteredProjects = useMemo(() => {
-    const query = search.toLowerCase().trim()
+  const projectsQuery = useQuery({
+    queryKey: projectsQueryKeys.list(params),
+    queryFn: () => fetchProjects(params),
+    staleTime: PROJECTS_STALE_TIME_MS,
+    gcTime: PROJECTS_GC_TIME_MS,
+    refetchOnWindowFocus: true,
+    placeholderData: (previousData) => previousData,
+  })
 
-    return projectsMock.filter((project) => {
-      const matchesSearch =
-        !query ||
-        project.title.toLowerCase().includes(query) ||
-        project.customer.toLowerCase().includes(query)
+  const updateUrlParams = (next: Partial<ProjectsListParams>) => {
+    const urlParams = new URLSearchParams(searchParams.toString())
 
-      const matchesStatus =
-        statusFilter === "all" || project.status === statusFilter
+    for (const [key, value] of Object.entries(next)) {
+      if (value === undefined || value === "" || value === "all") {
+        urlParams.delete(key)
+      } else {
+        urlParams.set(key, String(value))
+      }
+    }
 
-      return matchesSearch && matchesStatus
-    })
-  }, [search, statusFilter])
+    if ("q" in next || "status" in next || "sort" in next) {
+      urlParams.delete("cursor")
+    }
+
+    const query = urlParams.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname)
+  }
+
+  const invalidateProjects = async () => {
+    await queryClient.invalidateQueries({ queryKey: projectsQueryKeys.all })
+  }
+
+  const createMutation = useMutation({
+    mutationFn: createProject,
+    onSuccess: async (response) => {
+      await invalidateProjects()
+      await queryClient.invalidateQueries({ queryKey: projectsQueryKeys.detail(response.data.id) })
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: updateProject,
+    onSuccess: async (response) => {
+      await invalidateProjects()
+      await queryClient.invalidateQueries({ queryKey: projectsQueryKeys.detail(response.data.id) })
+    },
+  })
+
+  const archiveMutation = useMutation({
+    mutationFn: archiveProject,
+    onSuccess: async (response) => {
+      await invalidateProjects()
+      await queryClient.invalidateQueries({ queryKey: projectsQueryKeys.detail(response.data.id) })
+    },
+  })
 
   return {
-    projects: projectsMock,
-    search,
-    setSearch,
-    statusFilter,
-    setStatusFilter,
-    filteredProjects,
+    projects: projectsQuery.data?.data ?? [],
+    meta: projectsQuery.data?.meta ?? null,
+    params,
+    search: params.q ?? "",
+    statusFilter: params.status ?? "all",
+    loading: projectsQuery.isLoading,
+    isFetching: projectsQuery.isFetching,
+    error:
+      projectsQuery.error?.message ??
+      createMutation.error?.message ??
+      updateMutation.error?.message ??
+      archiveMutation.error?.message ??
+      null,
+    saving: createMutation.isPending || updateMutation.isPending || archiveMutation.isPending,
+    setSearch: (q: string) => updateUrlParams({ q: q.trim() || undefined }),
+    setStatusFilter: (status: ProjectStatus | "all") => updateUrlParams({ status }),
+    setCursor: (cursor: number) => updateUrlParams({ cursor }),
+    refetch: async () => {
+      await projectsQuery.refetch()
+    },
+    createProject: async (input: ProjectMutationInput) => {
+      const response = await createMutation.mutateAsync(input)
+      return response.data
+    },
+    updateProject: async (id: string, input: ProjectMutationInput) => {
+      const response = await updateMutation.mutateAsync({ id, input })
+      return response.data
+    },
+    archiveProject: async (id: string) => {
+      const response = await archiveMutation.mutateAsync(id)
+      return response.data
+    },
   }
 }

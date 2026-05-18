@@ -130,7 +130,7 @@ export function GlobalPurchasesRow({
     setVisibleFactQuantity(nextValue)
 
     try {
-      await onUpdate(row, buildInput(row, { factQuantity: nextValue }))
+      await onUpdate(row, buildInput(row, { factQuantity: nextValue, factPrice: visibleFactPrice }))
     } catch (err) {
       setVisibleFactQuantity(row.factQuantity)
       throw err
@@ -142,7 +142,7 @@ export function GlobalPurchasesRow({
     setVisibleFactPrice(nextValue)
 
     try {
-      await onUpdate(row, buildInput(row, { factPrice: nextValue }))
+      await onUpdate(row, buildInput(row, { factQuantity: visibleFactQuantity, factPrice: nextValue }))
     } catch (err) {
       setVisibleFactPrice(row.factPrice)
       throw err
@@ -177,7 +177,7 @@ export function GlobalPurchasesRow({
             className="max-w-full"
             formatDisplay={formatEditableNumber}
             label="Факт"
-            onChange={saving ? undefined : updateFactQuantity}
+            onChange={updateFactQuantity}
             value={visibleFactQuantity ?? ""}
           />
         </div>
@@ -191,7 +191,7 @@ export function GlobalPurchasesRow({
             className="max-w-full"
             formatDisplay={formatEditableMoney}
             label="Факт"
-            onChange={saving ? undefined : updateFactPrice}
+            onChange={updateFactPrice}
             suffix="₽"
             value={visibleFactPrice ?? ""}
           />

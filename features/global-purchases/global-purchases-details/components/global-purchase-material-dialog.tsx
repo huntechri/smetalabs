@@ -49,15 +49,15 @@ function parseQuantity(value: string) {
 
 function materialToPurchaseInput(
   material: GlobalPurchaseMaterialOption,
-  planQuantity: number
+  factQuantity: number | null
 ): GlobalPurchaseMutationInput {
   return {
     title: material.title,
     unit: material.unit,
-    planQuantity,
+    planQuantity: 0,
     planPrice: material.planPrice,
-    factQuantity: null,
-    factPrice: null,
+    factQuantity,
+    factPrice: material.planPrice,
     supplierId: null,
     projectId: null,
     purchaseDate: getTodayIsoDate(),
@@ -143,7 +143,7 @@ export function GlobalPurchaseMaterialDialog({
 
     try {
       setError(null)
-      await onSelect(materialToPurchaseInput(material, 0))
+      await onSelect(materialToPurchaseInput(material, null))
       if (closeOnSelect) onOpenChange(false)
     } catch (err) {
       setError(getErrorMessage(err))

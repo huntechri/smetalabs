@@ -1,6 +1,6 @@
 "use client"
 
-import { type FormEvent, useEffect, useState } from "react"
+import { type FormEvent, useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -15,12 +15,15 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { fetchDirectoryMaterials } from "@/features/directory-materials/api/directory-materials-client"
-import type { DirectoryMaterial } from "@/features/directory-materials/types"
-import type { GlobalPurchaseMutationInput } from "@/types/global-purchases"
+import { fetchGlobalPurchaseMaterialOptions } from "@/features/global-purchases/api/global-purchases-client"
+import type {
+  GlobalPurchaseMaterialOption,
+  GlobalPurchaseMutationInput,
+} from "@/types/global-purchases"
 import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 
 const MATERIAL_SEARCH_MIN_LENGTH = 2
+const MATERIAL_SEARCH_DELAY_MS = 250
 
 function formatMoney(value: number) {
   return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`
@@ -30,12 +33,12 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Не удалось сохранить закупку"
 }
 
-function materialToPurchaseInput(material: DirectoryMaterial): GlobalPurchaseMutationInput {
+function materialToPurchaseInput(material: GlobalPurchaseMaterialOption): GlobalPurchaseMutationInput {
   return {
-    title: material.name,
-    unit: material.unitLabel || material.unit,
+    title: material.title,
+    unit: material.unit,
     planQuantity: 0,
-    planPrice: material.priceAmount,
+    planPrice: material.planPrice,
     factQuantity: null,
     factPrice: null,
     supplierId: null,
@@ -66,18 +69,15 @@ export function GlobalPurchaseMaterialDialog({
   const [search, setSearch] = useState("")
   const [submittedSearch, setSubmittedSearch] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const normalizedSearch = search.trim().replace(/\s+/g, " ")
   const canSearch = submittedSearch.length >= MATERIAL_SEARCH_MIN_LENGTH
   const materialsQuery = useQuery({
-    queryKey: ["global-purchases", "material-picker", submittedSearch],
-    queryFn: () =>
-      fetchDirectoryMaterials({
-        q: submittedSearch,
-        status: "active",
-        limit: 50,
-        sort: "relevance",
-      }),
+    queryKey: ["global-purchases", "material-options", submittedSearch],
+    queryFn: () => fetchGlobalPurchaseMaterialOptions(submittedSearch),
     enabled: open && canSearch,
-    staleTime: 30_000,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    placeholderData: (previousData) => previousData,
   })
 
   useEffect(() => {
@@ -87,13 +87,23 @@ export function GlobalPurchaseMaterialDialog({
     setError(null)
   }, [open])
 
+  useEffect(() => {
+    if (!open) return
+    if (normalizedSearch.length < MATERIAL_SEARCH_MIN_LENGTH) {
+      setSubmittedSearch("")
+      return
+    }
+
+    const timeout = window.setTimeout(() => setSubmittedSearch(normalizedSearch), MATERIAL_SEARCH_DELAY_MS)
+    return () => window.clearTimeout(timeout)
+  }, [normalizedSearch, open])
+
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const nextSearch = search.trim()
-    setSubmittedSearch(nextSearch)
+    if (normalizedSearch.length >= MATERIAL_SEARCH_MIN_LENGTH) setSubmittedSearch(normalizedSearch)
   }
 
-  const handleSelect = async (material: DirectoryMaterial) => {
+  const handleSelect = async (material: GlobalPurchaseMaterialOption) => {
     try {
       setError(null)
       await onSelect(materialToPurchaseInput(material))
@@ -103,7 +113,7 @@ export function GlobalPurchaseMaterialDialog({
     }
   }
 
-  const materials = canSearch ? materialsQuery.data?.data ?? [] : []
+  const materials = useMemo(() => (canSearch ? materialsQuery.data?.data ?? [] : []), [canSearch, materialsQuery.data])
   const loading = canSearch && (materialsQuery.isLoading || materialsQuery.isFetching)
   const showSearchPrompt = !canSearch
   const showEmpty = canSearch && !loading && materials.length === 0
@@ -142,7 +152,7 @@ export function GlobalPurchaseMaterialDialog({
             </Empty>
           ) : null}
 
-          {loading ? (
+          {loading && materials.length === 0 ? (
             <div className="space-y-2 p-3">
               {Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton key={index} className="h-14 w-full rounded-md" />
@@ -159,30 +169,28 @@ export function GlobalPurchaseMaterialDialog({
             </Empty>
           ) : null}
 
-          {!loading
-            ? materials.map((material) => (
-                <Card key={material.id} className="m-2 rounded-md bg-transparent p-0 shadow-none">
-                  <CardContent className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">{material.name}</div>
-                      <div className="truncate text-xs text-muted-foreground">{material.category}</div>
-                    </div>
-                    <div className="text-xs text-muted-foreground">{material.unitLabel || material.unit}</div>
-                    <div className="text-xs font-medium tabular-nums">{formatMoney(material.priceAmount)}</div>
-                    <Button
-                      disabled={saving}
-                      onClick={() => handleSelect(material)}
-                      size="sm"
-                      type="button"
-                      variant="outline"
-                    >
-                      <PlusIcon data-icon="inline-start" />
-                      {actionLabel}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))
-            : null}
+          {materials.map((material) => (
+            <Card key={material.id} className="m-2 rounded-md bg-transparent p-0 shadow-none">
+              <CardContent className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium">{material.title}</div>
+                  <div className="truncate text-xs text-muted-foreground">{material.category}</div>
+                </div>
+                <div className="text-xs text-muted-foreground">{material.unit}</div>
+                <div className="text-xs font-medium tabular-nums">{formatMoney(material.planPrice)}</div>
+                <Button
+                  disabled={saving}
+                  onClick={() => handleSelect(material)}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <PlusIcon data-icon="inline-start" />
+                  {actionLabel}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </DialogContent>
     </Dialog>

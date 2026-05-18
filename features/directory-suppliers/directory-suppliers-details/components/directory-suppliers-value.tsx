@@ -10,7 +10,7 @@ export function DirectorySuppliersValue({
   className?: string
   label: string
   strong?: boolean
-  value: number | string
+  value: number | string | null
 }) {
   return (
     <Badge
@@ -22,7 +22,7 @@ export function DirectorySuppliersValue({
       )}
     >
       <span className="text-muted-foreground">{label}:</span>
-      <span>{value}</span>
+      <span>{value || "—"}</span>
     </Badge>
   )
 }

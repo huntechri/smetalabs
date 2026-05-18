@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
+import { EditableBadge } from "@/components/ui/editable-badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { GlobalPurchaseMutationInput, GlobalPurchaseRow } from "@/types/global-purchases"
 import type { ProjectRow } from "@/types/project"
@@ -23,8 +22,24 @@ function formatMoney(value: number | null) {
 }
 
 function formatNumber(value: number | null) {
-  if (value === null) return ""
-  return String(value)
+  if (value === null) return "—"
+  return value.toLocaleString("ru-RU", { maximumFractionDigits: 3 })
+}
+
+function formatEditableNumber(value: string | number) {
+  const text = String(value).trim()
+  if (!text) return "—"
+  const parsed = Number(text.replace(",", "."))
+  if (!Number.isFinite(parsed)) return text
+  return parsed.toLocaleString("ru-RU", { maximumFractionDigits: 3 })
+}
+
+function formatEditableMoney(value: string | number) {
+  const text = String(value).trim()
+  if (!text) return "—"
+  const parsed = Number(text.replace(",", "."))
+  if (!Number.isFinite(parsed)) return text
+  return parsed.toLocaleString("ru-RU", { maximumFractionDigits: 2 })
 }
 
 function formatDate(value: string | null) {
@@ -74,6 +89,15 @@ function buildInput(
   }
 }
 
+function ReadonlyMetricBadge({ label, value, suffix }: { label: string; value: string; suffix?: string }) {
+  return (
+    <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
+      <span className="text-muted-foreground">{label}:</span>
+      <span>{value}{suffix ? ` ${suffix}` : ""}</span>
+    </Badge>
+  )
+}
+
 export function GlobalPurchasesRow({
   onArchive,
   onUpdate,
@@ -87,21 +111,12 @@ export function GlobalPurchasesRow({
   row: GlobalPurchaseRow
   saving: boolean
 }) {
-  const [planQuantity, setPlanQuantity] = useState(formatNumber(row.planQuantity))
-  const [factQuantity, setFactQuantity] = useState(formatNumber(row.factQuantity))
-  const [planPrice, setPlanPrice] = useState(formatNumber(row.planPrice))
-  const [factPrice, setFactPrice] = useState(formatNumber(row.factPrice))
-
-  const updateQuantity = async () => {
-    const nextPlanQuantity = parseNullableNumber(planQuantity) ?? 0
-    const nextFactQuantity = parseNullableNumber(factQuantity)
-    await onUpdate(row, buildInput(row, { planQuantity: nextPlanQuantity, factQuantity: nextFactQuantity }))
+  const updateFactQuantity = async (value: string) => {
+    await onUpdate(row, buildInput(row, { factQuantity: parseNullableNumber(value) }))
   }
 
-  const updatePrice = async () => {
-    const nextPlanPrice = parseNullableNumber(planPrice) ?? 0
-    const nextFactPrice = parseNullableNumber(factPrice)
-    await onUpdate(row, buildInput(row, { planPrice: nextPlanPrice, factPrice: nextFactPrice }))
+  const updateFactPrice = async (value: string) => {
+    await onUpdate(row, buildInput(row, { factPrice: parseNullableNumber(value) }))
   }
 
   const updateProject = async (projectId: string | null) => {
@@ -113,7 +128,7 @@ export function GlobalPurchasesRow({
   }
 
   return (
-    <div className="mx-3 my-1.5 grid gap-2 rounded-md border border-border p-2 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(220px,1.2fr)_96px_minmax(180px,0.7fr)_minmax(180px,0.7fr)_minmax(260px,1fr)]">
+    <div className="mx-3 my-1.5 grid gap-2 rounded-md border border-border p-2 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(320px,1.65fr)_80px_minmax(180px,0.72fr)_minmax(260px,1.15fr)_minmax(180px,0.55fr)]">
       <div className="min-w-0 rounded-md border border-border p-2">
         <span className="mb-1 block text-xs text-muted-foreground uppercase">Наименование</span>
         <div className="break-words text-sm font-medium leading-snug">{row.title}</div>
@@ -126,19 +141,32 @@ export function GlobalPurchasesRow({
 
       <div className="min-w-0 rounded-md border border-border p-2">
         <span className="mb-1 block text-xs text-muted-foreground uppercase">Кол-во План/Факт</span>
-        <div className="grid grid-cols-2 gap-1.5">
-          <Input aria-label="Плановое количество" className="h-7" disabled={saving} min="0" onBlur={updateQuantity} onChange={(event) => setPlanQuantity(event.target.value)} type="number" value={planQuantity} />
-          <Input aria-label="Фактическое количество" className="h-7" disabled={saving} min="0" onBlur={updateQuantity} onChange={(event) => setFactQuantity(event.target.value)} placeholder="Факт" type="number" value={factQuantity} />
+        <div className="flex min-w-0 flex-wrap gap-1.5">
+          <ReadonlyMetricBadge label="План" value={formatNumber(row.planQuantity)} />
+          <EditableBadge
+            className="max-w-full"
+            formatDisplay={formatEditableNumber}
+            label="Факт"
+            onChange={saving ? undefined : updateFactQuantity}
+            value={row.factQuantity ?? ""}
+          />
         </div>
       </div>
 
       <div className="min-w-0 rounded-md border border-border p-2">
         <span className="mb-1 block text-xs text-muted-foreground uppercase">Цена План/Факт</span>
-        <div className="grid grid-cols-2 gap-1.5">
-          <Input aria-label="Плановая цена" className="h-7" disabled={saving} min="0" onBlur={updatePrice} onChange={(event) => setPlanPrice(event.target.value)} type="number" value={planPrice} />
-          <Input aria-label="Фактическая цена" className="h-7" disabled={saving} min="0" onBlur={updatePrice} onChange={(event) => setFactPrice(event.target.value)} placeholder="Факт" type="number" value={factPrice} />
+        <div className="flex min-w-0 flex-wrap gap-1.5">
+          <ReadonlyMetricBadge label="План" suffix="₽" value={formatMoney(row.planPrice)} />
+          <EditableBadge
+            className="max-w-full"
+            formatDisplay={formatEditableMoney}
+            label="Факт"
+            onChange={saving ? undefined : updateFactPrice}
+            suffix="₽"
+            value={row.factPrice ?? ""}
+          />
         </div>
-        <div className="mt-1 text-xs text-muted-foreground">План: {formatMoney(row.planTotal)} ₽</div>
+        <div className="mt-1 text-xs text-muted-foreground">Сумма план: {formatMoney(row.planTotal)} ₽</div>
       </div>
 
       <div className="min-w-0 rounded-md border border-border p-2">
@@ -146,7 +174,7 @@ export function GlobalPurchasesRow({
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Badge variant="outline" className="max-w-44 cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted">
+              <Badge variant="outline" className="max-w-28 cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted">
                 <span className="truncate">{row.projectTitle ?? "Объект"}</span>
                 <CaretDown className="size-2.5" />
               </Badge>

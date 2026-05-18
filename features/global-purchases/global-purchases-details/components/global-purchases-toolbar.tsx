@@ -15,28 +15,15 @@ import { Input } from "@/components/ui/input"
 import { fetchProjects } from "@/features/projects/api/projects-client"
 import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
 import { dispatchGlobalPurchasesCreateEvent } from "@/features/global-purchases/lib/global-purchases-events"
-import type { GlobalPurchaseStatus } from "@/types/global-purchases"
-import { FunnelIcon, MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
-
-const statusOptions: Array<{ value: GlobalPurchaseStatus | "all"; label: string }> = [
-  { value: "all", label: "Все статусы" },
-  { value: "planned", label: "План" },
-  { value: "ordered", label: "Заказано" },
-  { value: "partially_received", label: "Частично получено" },
-  { value: "received", label: "Получено" },
-  { value: "cancelled", label: "Отменено" },
-]
-
-function getStatusLabel(value: string | null) {
-  return statusOptions.find((status) => status.value === value)?.label ?? "Все статусы"
-}
+import { CalendarDots, MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 
 export function GlobalPurchasesToolbar() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") ?? "")
-  const currentStatus = searchParams.get("status") ?? "all"
   const currentProjectId = searchParams.get("projectId") ?? ""
+  const dateFrom = searchParams.get("dateFrom") ?? ""
+  const dateTo = searchParams.get("dateTo") ?? ""
   const projectsQuery = useQuery({
     queryKey: projectsQueryKeys.list({ status: "all", limit: 100, sort: "title_asc" }),
     queryFn: () => fetchProjects({ status: "all", limit: 100, sort: "title_asc" }),
@@ -55,7 +42,7 @@ export function GlobalPurchasesToolbar() {
       else params.set(key, value)
     }
 
-    if ("q" in updates || "status" in updates || "projectId" in updates) {
+    if ("q" in updates || "projectId" in updates || "dateFrom" in updates || "dateTo" in updates) {
       params.delete("cursor")
     }
 
@@ -84,16 +71,18 @@ export function GlobalPurchasesToolbar() {
         <ButtonGroup className="flex-wrap">
           <Button size="sm" type="button" variant="outline" onClick={dispatchGlobalPurchasesCreateEvent}><PlusIcon data-icon="inline-start" />Закупка</Button>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button size="sm" type="button" variant="outline"><FunnelIcon data-icon="inline-start" />{getStatusLabel(currentStatus)}</Button></DropdownMenuTrigger>
-            <DropdownMenuContent align="start">{statusOptions.map((option) => <DropdownMenuItem key={option.value} onClick={() => replaceParams({ status: option.value })}>{option.label}</DropdownMenuItem>)}</DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
             <DropdownMenuTrigger asChild><Button size="sm" type="button" variant="outline">{currentProjectTitle}</Button></DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="max-h-72 w-72 overflow-y-auto">
               <DropdownMenuItem onClick={() => replaceParams({ projectId: null })}>Все объекты</DropdownMenuItem>
               {(projectsQuery.data?.data ?? []).map((project) => <DropdownMenuItem key={project.id} onClick={() => replaceParams({ projectId: project.id })}>{project.title}</DropdownMenuItem>)}
             </DropdownMenuContent>
           </DropdownMenu>
+          <div className="flex items-center gap-1 rounded-md border border-input bg-background px-2">
+            <CalendarDots className="size-4 text-muted-foreground" />
+            <Input aria-label="Дата от" className="h-7 w-32 border-0 px-1 shadow-none" onChange={(event) => replaceParams({ dateFrom: event.target.value || null })} type="date" value={dateFrom} />
+            <span className="text-xs text-muted-foreground">-</span>
+            <Input aria-label="Дата до" className="h-7 w-32 border-0 px-1 shadow-none" onChange={(event) => replaceParams({ dateTo: event.target.value || null })} type="date" value={dateTo} />
+          </div>
         </ButtonGroup>
       </div>
     </div>

@@ -69,3 +69,15 @@ export type GlobalPurchasesListResponse = {
     total: number
   }
 }
+
+export type GlobalPurchaseMaterialOption = {
+  id: string
+  title: string
+  unit: string
+  planPrice: number
+  category: string
+}
+
+export type GlobalPurchaseMaterialOptionsResponse = {
+  data: GlobalPurchaseMaterialOption[]
+}

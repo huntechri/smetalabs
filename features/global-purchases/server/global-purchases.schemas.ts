@@ -95,6 +95,8 @@ export function parseGlobalPurchasesListParams(params: URLSearchParams): GlobalP
         ? (status as GlobalPurchaseStatus | "all")
         : "all",
     projectId: getStringParam(params, "projectId"),
+    dateFrom: getStringParam(params, "dateFrom"),
+    dateTo: getStringParam(params, "dateTo"),
     limit: getNumberParam(params, "limit"),
     cursor: getNumberParam(params, "cursor"),
     sort: GLOBAL_PURCHASE_SORTS.includes(sort as GlobalPurchasesSort)
@@ -111,6 +113,8 @@ export function normalizeGlobalPurchasesListParams(params: GlobalPurchasesListPa
     q: params.q?.trim() || undefined,
     status: params.status ?? "all",
     projectId: params.projectId?.trim() || undefined,
+    dateFrom: params.dateFrom?.trim() || undefined,
+    dateTo: params.dateTo?.trim() || undefined,
     limit,
     cursor,
     sort: params.sort ?? "relevance",

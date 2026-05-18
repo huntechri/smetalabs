@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type {
   GlobalPurchaseStatus,
+  GlobalPurchasesExportFormat,
   GlobalPurchasesListParams,
   GlobalPurchasesSort,
 } from "@/types/global-purchases"
@@ -13,6 +14,7 @@ const GLOBAL_PURCHASE_STATUSES = [
   "cancelled",
 ] as const
 const GLOBAL_PURCHASE_SORTS = ["relevance", "updated_desc", "title_asc", "project_asc"] as const
+const GLOBAL_PURCHASE_EXPORT_FORMATS = ["xls"] as const
 
 function getTodayIsoDate() {
   const date = new Date()
@@ -96,24 +98,50 @@ function getNumberParam(params: URLSearchParams, key: string) {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
 }
 
-export function parseGlobalPurchasesListParams(params: URLSearchParams): GlobalPurchasesListParams {
+function getStatusParam(params: URLSearchParams) {
   const status = params.get("status")
-  const sort = params.get("sort")
+  return status === "all" || GLOBAL_PURCHASE_STATUSES.includes(status as GlobalPurchaseStatus)
+    ? (status as GlobalPurchaseStatus | "all")
+    : "all"
+}
 
+function getSortParam(params: URLSearchParams) {
+  const sort = params.get("sort")
+  return GLOBAL_PURCHASE_SORTS.includes(sort as GlobalPurchasesSort)
+    ? (sort as GlobalPurchasesSort)
+    : undefined
+}
+
+export function parseGlobalPurchasesListParams(params: URLSearchParams): GlobalPurchasesListParams {
   return {
     q: getStringParam(params, "q"),
-    status:
-      status === "all" || GLOBAL_PURCHASE_STATUSES.includes(status as GlobalPurchaseStatus)
-        ? (status as GlobalPurchaseStatus | "all")
-        : "all",
+    status: getStatusParam(params),
     projectId: getStringParam(params, "projectId"),
     dateFrom: getDateParam(params, "dateFrom"),
     dateTo: getDateParam(params, "dateTo"),
     limit: getNumberParam(params, "limit"),
     cursor: getNumberParam(params, "cursor"),
-    sort: GLOBAL_PURCHASE_SORTS.includes(sort as GlobalPurchasesSort)
-      ? (sort as GlobalPurchasesSort)
-      : undefined,
+    sort: getSortParam(params),
+  }
+}
+
+export function parseGlobalPurchasesExportParams(params: URLSearchParams): {
+  format: GlobalPurchasesExportFormat
+  params: GlobalPurchasesListParams
+} {
+  const format = params.get("format")
+  return {
+    format: GLOBAL_PURCHASE_EXPORT_FORMATS.includes(format as GlobalPurchasesExportFormat)
+      ? (format as GlobalPurchasesExportFormat)
+      : "xls",
+    params: {
+      q: getStringParam(params, "q"),
+      status: getStatusParam(params),
+      projectId: getStringParam(params, "projectId"),
+      dateFrom: getDateParam(params, "dateFrom"),
+      dateTo: getDateParam(params, "dateTo"),
+      sort: getSortParam(params) ?? "project_asc",
+    },
   }
 }
 

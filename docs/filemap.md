@@ -1,6 +1,6 @@
 # SmetaLabs — Filemap
 
-> Last updated: 2026-05-18
+> Last updated: 2026-05-18 (auto-update: backend-architecture §9, design-system Spinner added)
 >
 > Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/projects`, see [`docs/projects-architecture.md`](./projects-architecture.md). For `/procurements`, see [`docs/global-purchases-architecture.md`](./global-purchases-architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md). For `/directories/suppliers`, see [`docs/directory-suppliers-architecture.md`](./directory-suppliers-architecture.md).
 

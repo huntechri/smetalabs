@@ -44,7 +44,8 @@
    - A. [Сущность → Таблица](#a-сущность--таблица)
    - B. [Страница → Запрашиваемые данные](#b-страница--запрашиваемые-данные)
    - C. [Связи Foreign Key (полный список)](#c-связи-foreign-key-полный-список)
-9. [Чек-лист реализации](#9-чек-лист-реализации)
+9. [Документация модулей](#9-документация-модулей)
+10. [Чек-лист реализации](#10-чек-лист-реализации)
 
 ---
 
@@ -1810,7 +1811,20 @@ permissions.id           ◀── role_permissions.permission_id
 
 ---
 
-## 9. Чек-лист реализации
+## 9. Документация модулей
+
+Каждый production-ready модуль имеет собственную архитектурную документацию:
+
+- **[Directory Counterparties](./directory-counterparties-architecture.md)** — справочник контрагентов (заказчики и подрядчики). CRUD, поиск, архивирование, workspace scope.
+- **[Directory Materials](./directory-materials-architecture.md)** — справочник материалов. CRUD, поиск, импорт/экспорт, AI-поиск, embeddings, workspace scope.
+- **[Directory Suppliers](./directory-suppliers-architecture.md)** — справочник поставщиков. CRUD, поиск, архивирование, workspace scope (без импорта/экспорта/AI в первой версии).
+- **[Directory Works](./directory-works-architecture.md)** — справочник работ. Канонический контракт: CRUD, поиск, импорт/экспорт, embeddings, AI/hybrid-поиск, кэширование, performance hardening.
+- **[Global Purchases](./global-purchases-architecture.md)** — глобальные закупки. CRUD, импорт CSV, экспорт XLSX, привязка к проектам и материалам, фильтрация по дате/объекту.
+- **[Projects](./projects-architecture.md)** — проекты. CRUD, поиск, статусная модель, привязка к контрагентам, архивирование, workspace scope.
+
+---
+
+## 10. Чек-лист реализации
 
 - [x] Supabase проект создан, переменные окружения добавлены
 - [x] Drizzle конфигурация (`drizzle.config.ts`) настроена

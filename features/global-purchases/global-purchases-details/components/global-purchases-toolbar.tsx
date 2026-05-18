@@ -18,6 +18,14 @@ import { dispatchGlobalPurchasesCreateEvent } from "@/features/global-purchases/
 import type { ProjectRow } from "@/types/project"
 import { CalendarDots, MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 
+function getTodayIsoDate() {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
 function toDate(value: string) {
   if (!value) return undefined
   const [year, month, day] = value.split("-").map(Number)
@@ -42,7 +50,7 @@ function getDateButtonLabel(dateFrom: string, dateTo: string) {
   if (dateFrom && dateTo) return `${formatShortDate(dateFrom)}–${formatShortDate(dateTo)}`
   if (dateFrom) return `с ${formatShortDate(dateFrom)}`
   if (dateTo) return `до ${formatShortDate(dateTo)}`
-  return "Даты"
+  return "Сегодня"
 }
 
 export function GlobalPurchasesToolbar({ projects }: { projects: ProjectRow[] }) {
@@ -50,8 +58,8 @@ export function GlobalPurchasesToolbar({ projects }: { projects: ProjectRow[] })
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") ?? "")
   const currentProjectId = searchParams.get("projectId") ?? ""
-  const dateFrom = searchParams.get("dateFrom") ?? ""
-  const dateTo = searchParams.get("dateTo") ?? ""
+  const dateFrom = searchParams.get("dateFrom") ?? getTodayIsoDate()
+  const dateTo = searchParams.get("dateTo") ?? getTodayIsoDate()
 
   useEffect(() => {
     setSearch(searchParams.get("q") ?? "")
@@ -81,11 +89,11 @@ export function GlobalPurchasesToolbar({ projects }: { projects: ProjectRow[] })
   const handleDateRangeSelect = (range: DateRange | undefined) => {
     replaceParams({
       dateFrom: range?.from ? toIsoDate(range.from) : null,
-      dateTo: range?.to ? toIsoDate(range.to) : null,
+      dateTo: range?.to ? toIsoDate(range.to) : range?.from ? toIsoDate(range.from) : null,
     })
   }
 
-  const selectedRange: DateRange | undefined = dateFrom || dateTo ? { from: toDate(dateFrom), to: toDate(dateTo) } : undefined
+  const selectedRange: DateRange | undefined = { from: toDate(dateFrom), to: toDate(dateTo) }
   const currentProjectTitle =
     projects.find((project) => project.id === currentProjectId)?.title ?? "Все объекты"
 
@@ -119,7 +127,7 @@ export function GlobalPurchasesToolbar({ projects }: { projects: ProjectRow[] })
               <Calendar mode="range" selected={selectedRange} onSelect={handleDateRangeSelect} numberOfMonths={2} />
               <div className="flex justify-end border-t p-2">
                 <Button size="sm" type="button" variant="ghost" onClick={() => replaceParams({ dateFrom: null, dateTo: null })}>
-                  Сбросить
+                  Сегодня
                 </Button>
               </div>
             </PopoverContent>

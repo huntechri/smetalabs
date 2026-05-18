@@ -53,7 +53,7 @@ function getStatusParam(searchParams: ReadonlySearchParams): GlobalPurchasesStat
 
 function getSortParam(searchParams: ReadonlySearchParams): GlobalPurchasesSort | undefined {
   const sort = searchParams.get("sort")
-  if (sort === "relevance" || sort === "updated_desc" || sort === "title_asc") return sort
+  if (sort === "relevance" || sort === "updated_desc" || sort === "title_asc" || sort === "project_asc") return sort
   return undefined
 }
 
@@ -66,7 +66,7 @@ function getListParams(searchParams: ReadonlySearchParams): GlobalPurchasesListP
     dateTo: getStringParam(searchParams, "dateTo"),
     limit: getNumberParam(searchParams, "limit") ?? 50,
     cursor: getNumberParam(searchParams, "cursor") ?? 0,
-    sort: getSortParam(searchParams) ?? "relevance",
+    sort: getSortParam(searchParams) ?? "project_asc",
   }
 }
 

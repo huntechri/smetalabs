@@ -62,6 +62,8 @@ function getListParams(searchParams: ReadonlySearchParams): GlobalPurchasesListP
     q: getStringParam(searchParams, "q"),
     status: getStatusParam(searchParams),
     projectId: getStringParam(searchParams, "projectId"),
+    dateFrom: getStringParam(searchParams, "dateFrom"),
+    dateTo: getStringParam(searchParams, "dateTo"),
     limit: getNumberParam(searchParams, "limit") ?? 50,
     cursor: getNumberParam(searchParams, "cursor") ?? 0,
     sort: getSortParam(searchParams) ?? "relevance",
@@ -95,7 +97,14 @@ export function useGlobalPurchases() {
       }
     }
 
-    if ("q" in next || "status" in next || "projectId" in next || "sort" in next) {
+    if (
+      "q" in next ||
+      "status" in next ||
+      "projectId" in next ||
+      "dateFrom" in next ||
+      "dateTo" in next ||
+      "sort" in next
+    ) {
       urlParams.delete("cursor")
     }
 
@@ -138,6 +147,8 @@ export function useGlobalPurchases() {
     search: params.q ?? "",
     statusFilter: params.status ?? "all",
     projectFilter: params.projectId ?? "",
+    dateFromFilter: params.dateFrom ?? "",
+    dateToFilter: params.dateTo ?? "",
     loading: purchasesQuery.isLoading,
     isFetching: purchasesQuery.isFetching,
     error:
@@ -151,6 +162,8 @@ export function useGlobalPurchases() {
     setStatusFilter: (status: GlobalPurchasesStatusFilter) => updateUrlParams({ status }),
     setProjectFilter: (projectId: string | undefined) =>
       updateUrlParams({ projectId: projectId?.trim() || undefined }),
+    setDateFilters: (dateFrom?: string, dateTo?: string) =>
+      updateUrlParams({ dateFrom: dateFrom?.trim() || undefined, dateTo: dateTo?.trim() || undefined }),
     setCursor: (cursor: number) => updateUrlParams({ cursor }),
     refetch: async () => {
       await purchasesQuery.refetch()

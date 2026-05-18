@@ -12,6 +12,8 @@ export type GlobalPurchasesListParams = {
   q?: string
   status?: GlobalPurchasesStatusFilter
   projectId?: string
+  dateFrom?: string
+  dateTo?: string
   limit?: number
   cursor?: number
   sort?: GlobalPurchasesSort

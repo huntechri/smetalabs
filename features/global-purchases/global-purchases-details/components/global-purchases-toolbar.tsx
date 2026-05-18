@@ -3,8 +3,10 @@
 import { type FormEvent, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
+import type { DateRange } from "react-day-picker"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
+import { Calendar } from "@/components/ui/calendar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +14,38 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { fetchProjects } from "@/features/projects/api/projects-client"
 import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
 import { dispatchGlobalPurchasesCreateEvent } from "@/features/global-purchases/lib/global-purchases-events"
 import { CalendarDots, MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
+
+function toDate(value: string) {
+  if (!value) return undefined
+  const [year, month, day] = value.split("-").map(Number)
+  if (!year || !month || !day) return undefined
+  return new Date(year, month - 1, day)
+}
+
+function toIsoDate(value: Date) {
+  const year = value.getFullYear()
+  const month = String(value.getMonth() + 1).padStart(2, "0")
+  const day = String(value.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+function formatShortDate(value: string) {
+  const date = toDate(value)
+  if (!date) return ""
+  return date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" })
+}
+
+function getDateButtonLabel(dateFrom: string, dateTo: string) {
+  if (dateFrom && dateTo) return `${formatShortDate(dateFrom)}–${formatShortDate(dateTo)}`
+  if (dateFrom) return `с ${formatShortDate(dateFrom)}`
+  if (dateTo) return `до ${formatShortDate(dateTo)}`
+  return "Даты"
+}
 
 export function GlobalPurchasesToolbar() {
   const router = useRouter()
@@ -55,6 +85,14 @@ export function GlobalPurchasesToolbar() {
     replaceParams({ q: search.trim() || null })
   }
 
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    replaceParams({
+      dateFrom: range?.from ? toIsoDate(range.from) : null,
+      dateTo: range?.to ? toIsoDate(range.to) : null,
+    })
+  }
+
+  const selectedRange: DateRange | undefined = dateFrom || dateTo ? { from: toDate(dateFrom), to: toDate(dateTo) } : undefined
   const currentProjectTitle =
     projectsQuery.data?.data.find((project) => project.id === currentProjectId)?.title ?? "Все объекты"
 
@@ -77,12 +115,22 @@ export function GlobalPurchasesToolbar() {
               {(projectsQuery.data?.data ?? []).map((project) => <DropdownMenuItem key={project.id} onClick={() => replaceParams({ projectId: project.id })}>{project.title}</DropdownMenuItem>)}
             </DropdownMenuContent>
           </DropdownMenu>
-          <div className="flex items-center gap-1 rounded-md border border-input bg-background px-2">
-            <CalendarDots className="size-4 text-muted-foreground" />
-            <Input aria-label="Дата от" className="h-7 w-32 border-0 px-1 shadow-none" onChange={(event) => replaceParams({ dateFrom: event.target.value || null })} type="date" value={dateFrom} />
-            <span className="text-xs text-muted-foreground">-</span>
-            <Input aria-label="Дата до" className="h-7 w-32 border-0 px-1 shadow-none" onChange={(event) => replaceParams({ dateTo: event.target.value || null })} type="date" value={dateTo} />
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="sm" type="button" variant="outline" aria-label="Фильтр по датам">
+                <CalendarDots data-icon="inline-start" />
+                {getDateButtonLabel(dateFrom, dateTo)}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-auto p-0">
+              <Calendar mode="range" selected={selectedRange} onSelect={handleDateRangeSelect} numberOfMonths={2} />
+              <div className="flex justify-end border-t p-2">
+                <Button size="sm" type="button" variant="ghost" onClick={() => replaceParams({ dateFrom: null, dateTo: null })}>
+                  Сбросить
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </ButtonGroup>
       </div>
     </div>

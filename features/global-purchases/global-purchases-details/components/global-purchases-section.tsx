@@ -16,10 +16,14 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { FieldError } from "@/components/ui/field"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useGlobalPurchases } from "@/features/global-purchases/hooks/use-global-purchases"
-import { GLOBAL_PURCHASES_CREATE_EVENT } from "@/features/global-purchases/lib/global-purchases-events"
+import {
+  GLOBAL_PURCHASES_CREATE_EVENT,
+  GLOBAL_PURCHASES_IMPORT_EVENT,
+} from "@/features/global-purchases/lib/global-purchases-events"
 import type { GlobalPurchaseMutationInput, GlobalPurchaseRow } from "@/types/global-purchases"
 import type { ProjectRow } from "@/types/project"
 import { GlobalPurchaseMaterialDialog } from "./global-purchase-material-dialog"
+import { GlobalPurchasesImportDialog } from "./global-purchases-import-dialog"
 import { GlobalPurchasesRow } from "./global-purchases-row"
 
 const DEFAULT_LIMIT = 50
@@ -90,6 +94,7 @@ export function GlobalPurchasesSection({
 }) {
   const { archivePurchase, createPurchase, error, isFetching, loading, meta, params, purchases, saving, setCursor, updatePurchase } = useGlobalPurchases()
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [replacementRow, setReplacementRow] = useState<GlobalPurchaseRow | null>(null)
   const [rowPendingArchive, setRowPendingArchive] = useState<GlobalPurchaseRow | null>(null)
   const [savingRowId, setSavingRowId] = useState<string | null>(null)
@@ -102,6 +107,12 @@ export function GlobalPurchasesSection({
     }
     window.addEventListener(GLOBAL_PURCHASES_CREATE_EVENT, handleCreate)
     return () => window.removeEventListener(GLOBAL_PURCHASES_CREATE_EVENT, handleCreate)
+  }, [])
+
+  useEffect(() => {
+    const handleImport = () => setImportDialogOpen(true)
+    window.addEventListener(GLOBAL_PURCHASES_IMPORT_EVENT, handleImport)
+    return () => window.removeEventListener(GLOBAL_PURCHASES_IMPORT_EVENT, handleImport)
   }, [])
 
   const handleDelete = (purchase: GlobalPurchaseRow) => {
@@ -224,6 +235,13 @@ export function GlobalPurchasesSection({
         quantityPrompt={!isReplacing}
         saving={saving || savingRowId !== null}
         title={isReplacing ? "Заменить материал в закупке" : undefined}
+      />
+      <GlobalPurchasesImportDialog
+        onImport={createPurchase}
+        onOpenChange={setImportDialogOpen}
+        open={importDialogOpen}
+        projects={projects}
+        saving={saving}
       />
     </>
   )

@@ -2,7 +2,7 @@
 
 > Last updated: 2026-05-18
 >
-> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/projects`, see [`docs/projects-architecture.md`](./projects-architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md).
+> Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/projects`, see [`docs/projects-architecture.md`](./projects-architecture.md). For `/procurements`, see [`docs/global-purchases-architecture.md`](./global-purchases-architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md).
 
 ---
 
@@ -68,6 +68,7 @@ app/
 └── api/
     ├── access-control/roles/route.ts
     ├── projects/                 # workspace-scoped projects list/read/create/update/archive endpoints
+    ├── global-purchases/         # workspace-scoped procurements list/read/create/update/archive/material-picker endpoints
     ├── directory-counterparties/  # workspace-scoped counterparties catalog read/search/CRUD endpoints
     ├── directory-materials/       # workspace-scoped materials catalog read/search/CRUD/import/export/AI endpoints
     ├── directory-works/           # workspace-scoped works catalog read/search/CRUD/import/export/AI endpoints
@@ -99,6 +100,11 @@ features/
 ├── purchases/
 ├── execution/
 ├── global-purchases/
+│   ├── api/                # client API, errors, query keys/cache tags
+│   ├── global-purchases-details/components/ # procurements screen, toolbar, grouped list, rows and material picker
+│   ├── hooks/              # TanStack Query hook and mutations
+│   ├── lib/                # UI events
+│   └── server/             # repository/service/route/material-options logic
 ├── directories/
 ├── directory-counterparties/
 │   ├── api/                # client API, errors, query keys/cache tags
@@ -178,10 +184,14 @@ db/
 │   ├── 025_directory_counterparties_function_grants.sql
 │   ├── 026_projects_foundation.sql
 │   ├── 027_projects_function_grants.sql
-│   └── 028_projects_customer_counterparty.sql
+│   ├── 028_projects_customer_counterparty.sql
+│   ├── 029_global_purchases_foundation.sql
+│   ├── 030_global_purchases_project_sort_index.sql
+│   └── 031_global_purchases_link_indexes.sql
 └── schema/
     ├── index.ts
     ├── projects.ts
+    ├── global-purchases.ts
     ├── directory-counterparties.ts
     ├── directory-materials.ts
     ├── directory-works.ts
@@ -208,6 +218,19 @@ db/
 ```
 
 Projects stay workspace-scoped through `workspace_owner_id`. The first version supports real list data, search, status filtering, create, update and soft archive. Customer selection is linked to active counterparties of type `customer`. Budget and progress are system-managed placeholders in this slice: they are displayed but not entered manually. Project estimates, participants, files, payments, detailed project page, automatic budget/progress calculation, import/export and AI behavior remain outside this slice.
+
+### Global purchases first production slice
+
+```txt
+/procurements
+  → app/api/global-purchases/** exposes workspace-scoped list/read/create/update/archive routes
+  → app/api/global-purchases/material-options exposes lightweight material picker search
+  → features/global-purchases/** owns UI hooks, material picker, toolbar, grouped list, repository and service logic
+  → docs/global-purchases-architecture.md fixes the first-version contract
+  → db/schema/global-purchases.ts and db/migrations/029-031_global_purchases_*.sql provide storage, ordering and link indexes
+```
+
+Global purchases stay workspace-scoped through `workspace_owner_id`. The first version opens on today's date by default, supports real list data, text search, project filtering, date filtering, grouped rows by object, material-based create, material replacement, fact quantity/price edits, row date/object edits and soft archive. Project selection is linked to active non-archived projects. Material adding uses the materials catalog as source but queries only a lightweight material-picker endpoint. Supplier selection, import, export, AI behavior, warehouse logic, payments and manual plan editing remain outside this slice.
 
 ### Directory counterparties production slice
 
@@ -238,59 +261,6 @@ The materials catalog must stay workspace-scoped through `workspace_owner_id = w
 ```txt
 /directories/works
   → app/api/directory-works/** exposes workspace-scoped read/search/CRUD/import/export/AI routes
-  → features/directory-works/** owns UI hooks, dialogs, repository/service/search/import/export/embeddings
-  → docs/directory-works-architecture.md fixes the production contract and hardening strategy
-  → db/schema/directory-works.ts and db/migrations/010-016 provide DB foundation, read RPCs, AI search and performance hardening
 ```
 
-Works export uses the active screen filters/search for category and subcategory scoped downloads, resets browser pagination and remains bounded by the export cap.
-
----
-
-## Quick placement guide
-
-| Task                                   | Put it here                                            |
-| -------------------------------------- | ------------------------------------------------------ |
-| New route/page                         | `app/(main)/.../page.tsx` or `app/(auth)/.../page.tsx` |
-| New feature screen                     | `features/<feature>/components/*-view.tsx`             |
-| Feature-only hook                      | `features/<feature>/hooks/use-*.ts`                    |
-| Cross-feature type                     | `types/*.ts`                                           |
-| Feature-private type                   | `features/<feature>/types.ts`                          |
-| API endpoint                           | `app/api/<domain>/route.ts`                            |
-| Server action                          | `app/actions/<domain>.ts`                              |
-| Auth/RBAC helper                       | `lib/auth/*.ts`                                        |
-| Supabase client/session infrastructure | `lib/supabase/*.ts`                                    |
-| DB schema                              | `db/schema/*.ts`                                       |
-| SQL migration                          | `db/migrations/*.sql`                                  |
-| Deployment helper script               | `scripts/*.mjs`                                        |
-| Vercel deployment config               | `vercel.json`                                          |
-| shadcn primitive                       | `components/ui/*.tsx`                                  |
-| Business UI                            | `features/<feature>/components/*.tsx`                  |
-
----
-
-## Recent directory/deployment updates
-
-- `docs/projects-architecture.md` — first-version contract for `/projects`, including customer selection and system-managed budget/progress.
-- `db/migrations/026_projects_foundation.sql` — workspace-scoped projects storage with soft archive and search fields.
-- `db/migrations/027_projects_function_grants.sql` — grants for project helper functions used during save.
-- `db/migrations/028_projects_customer_counterparty.sql` — optional link from projects to customer counterparties.
-- `features/projects/**` and `app/api/projects/**` — projects list, create, update, archive, search and status filter flow.
-- `docs/directory-counterparties-architecture.md` — first-version contract for the counterparties catalog, including save helper grants.
-- `db/migrations/024_directory_counterparties_foundation.sql` — workspace-scoped counterparties storage with soft archive and search fields.
-- `db/migrations/025_directory_counterparties_function_grants.sql` — grants for search helper functions used during counterparty save.
-- `features/directory-counterparties/**` and `app/api/directory-counterparties/**` — counterparties list, create, update, archive and regular search flow.
-- `features/directory-works/directory-works-details/components/directory-works-section.tsx` — works export now keeps the current screen filters/search, including category and subcategory, while dropping pagination.
-- `features/directory-materials/server/directory-materials.service.ts` — materials export now collects matching rows in bounded batches instead of exporting only the first page.
-- `docs/directory-module-standard.md` — shared export rule now explicitly covers full directory, selected category and selected subcategory behavior.
-- `docs/directory-materials-architecture.md` — production materials catalog contract, current rollout state and AI processing/search foundation.
-- `db/migrations/018_directory_materials_ai_search.sql` — material-only AI search function over prepared embeddings.
-- `features/directory-materials/server/directory-materials-ai.ts` — materials AI data queue, provider-side processing and hybrid AI search logic.
-- `app/api/directory-materials/embeddings/process/route.ts` — material-only AI data processing endpoint.
-- `app/api/directory-materials/ai-search/route.ts` — material-only AI search endpoint.
-- `db/migrations/017_directory_materials_import.sql` — staged import jobs and rows for materials.
-- `features/directory-materials/server/directory-materials-import.repository.ts` — materials CSV preview/apply flow with row validation, duplicate detection and conflict marking.
-- `features/directory-materials/directory-materials-details/components/directory-material-import-dialog.tsx` — materials import dialog and CSV preview UI.
-- `docs/directory-works-architecture.md` — canonical implemented architecture for #64/#65-#71, including DB foundation, search, CRUD, import/export, AI search, cache/indexing and observability.
-- `docs/directory-works-performance-hardening.md` — focused #71 notes for cache/indexing/performance diagnostics.
-- `scripts/vercel-ignore-build.mjs` and `vercel.json` — guarded Vercel build/deployment behavior for primary vs non-primary branches.
+Directory works stay workspace-scoped and must follow the dedicated contract in `docs/directory-works-architecture.md`.

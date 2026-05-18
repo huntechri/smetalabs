@@ -13,7 +13,6 @@ import {
   updateGlobalPurchaseForWorkspace,
 } from "./global-purchases.repository"
 import { searchGlobalPurchaseMaterialOptionsForWorkspace } from "./global-purchases-material-options.repository"
-import { listGlobalPurchaseSuppliersForWorkspace } from "./global-purchases-suppliers.repository"
 import { normalizeGlobalPurchasesListParams } from "./global-purchases.schemas"
 
 type GlobalPurchasesContext = {
@@ -96,17 +95,6 @@ export async function searchGlobalPurchaseMaterialOptions(query: string) {
   const data = await unstable_cache(
     () => searchGlobalPurchaseMaterialOptionsForWorkspace(context.workspaceOwnerId, normalizedQuery),
     ["global-purchases:material-options", cacheKey],
-    { revalidate: LIST_CACHE_REVALIDATE_SECONDS, tags: [context.cacheTags.list] }
-  )()
-
-  return { data }
-}
-
-export async function listGlobalPurchaseSupplierOptions() {
-  const context = await requireGlobalPurchasesReadContext()
-  const data = await unstable_cache(
-    () => listGlobalPurchaseSuppliersForWorkspace(context.workspaceOwnerId),
-    ["global-purchases:supplier-options", context.workspaceOwnerId],
     { revalidate: LIST_CACHE_REVALIDATE_SECONDS, tags: [context.cacheTags.list] }
   )()
 

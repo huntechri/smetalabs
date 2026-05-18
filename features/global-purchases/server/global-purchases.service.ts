@@ -164,6 +164,7 @@ async function getGlobalPurchasesForExport(
   while (hasMore && purchases.length < MAX_EXPORT_ROWS) {
     const response = await listGlobalPurchasesForWorkspace(workspaceOwnerId, {
       ...params,
+      status: params.status ?? "all",
       sort: params.sort ?? "project_asc",
       limit: EXPORT_BATCH_LIMIT,
       cursor,

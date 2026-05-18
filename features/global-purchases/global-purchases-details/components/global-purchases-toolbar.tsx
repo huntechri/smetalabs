@@ -2,9 +2,9 @@
 
 import { type FormEvent, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
-import { Calendar } from "@/components/ui/calendar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,108 +12,88 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import {
-  CalendarDots,
-  ExportIcon,
-  FileArrowDownIcon,
-  Funnel,
-  MagnifyingGlassIcon,
-  PlusIcon,
-} from "@phosphor-icons/react"
+import { fetchProjects } from "@/features/projects/api/projects-client"
+import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
+import { dispatchGlobalPurchasesCreateEvent } from "@/features/global-purchases/lib/global-purchases-events"
+import type { GlobalPurchaseStatus } from "@/types/global-purchases"
+import { FunnelIcon, MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 
-const filterOptions = ["Все объекты", "Объект А", "Объект Б", "Объект В", "Без объекта"]
-
-const actions = [
-  { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
-  { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
-  { label: "Закупка", icon: <PlusIcon data-icon="inline-start" /> },
+const statusOptions: Array<{ value: GlobalPurchaseStatus | "all"; label: string }> = [
+  { value: "all", label: "Все статусы" },
+  { value: "planned", label: "План" },
+  { value: "ordered", label: "Заказано" },
+  { value: "partially_received", label: "Частично получено" },
+  { value: "received", label: "Получено" },
+  { value: "cancelled", label: "Отменено" },
 ]
+
+function getStatusLabel(value: string | null) {
+  return statusOptions.find((status) => status.value === value)?.label ?? "Все статусы"
+}
 
 export function GlobalPurchasesToolbar() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") ?? "")
-  const [filterObject, setFilterObject] = useState("Все объекты")
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>()
+  const currentStatus = searchParams.get("status") ?? "all"
+  const currentProjectId = searchParams.get("projectId") ?? ""
+  const projectsQuery = useQuery({
+    queryKey: projectsQueryKeys.list({ status: "all", limit: 100, sort: "title_asc" }),
+    queryFn: () => fetchProjects({ status: "all", limit: 100, sort: "title_asc" }),
+    staleTime: 30_000,
+  })
 
   useEffect(() => {
     setSearch(searchParams.get("q") ?? "")
   }, [searchParams])
 
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
+  const replaceParams = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString())
-    const query = search.trim()
 
-    if (query) {
-      params.set("q", query)
-    } else {
-      params.delete("q")
+    for (const [key, value] of Object.entries(updates)) {
+      if (!value || value === "all") params.delete(key)
+      else params.set(key, value)
+    }
+
+    if ("q" in updates || "status" in updates || "projectId" in updates) {
+      params.delete("cursor")
     }
 
     const nextSearch = params.toString()
     router.replace(nextSearch ? `?${nextSearch}` : window.location.pathname)
   }
 
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    replaceParams({ q: search.trim() || null })
+  }
+
+  const currentProjectTitle =
+    projectsQuery.data?.data.find((project) => project.id === currentProjectId)?.title ?? "Все объекты"
+
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-dashed border-cyan-300 p-2 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
-      <form
-        className="min-w-0 flex-1 rounded-md border border-dashed border-sky-400 p-2"
-        onSubmit={handleSearch}
-      >
+    <div className="flex flex-col gap-3 rounded-lg border border-border p-2 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
+      <form className="min-w-0 flex-1 rounded-md border border-border p-2" onSubmit={handleSearch}>
         <div className="flex min-w-0 items-center gap-2">
           <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
-          <Input
-            aria-label="Поиск закупок"
-            className="h-8"
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Поиск закупок"
-            value={search}
-          />
-          <Button type="submit" variant="outline">
-            <MagnifyingGlassIcon className="sm:hidden" data-icon="inline-start" />
-            <span className="hidden sm:inline">Поиск</span>
-          </Button>
+          <Input aria-label="Поиск закупок" className="h-8" onChange={(event) => setSearch(event.target.value)} placeholder="Поиск закупок" value={search} />
+          <Button type="submit" variant="outline"><MagnifyingGlassIcon className="sm:hidden" data-icon="inline-start" /><span className="hidden sm:inline">Поиск</span></Button>
         </div>
       </form>
-
-      <div className="flex rounded-md border border-dashed border-teal-400 p-2">
+      <div className="flex rounded-md border border-border p-2">
         <ButtonGroup className="flex-wrap">
-          {actions.map((action) => (
-            <Button key={action.label} size="sm" type="button" variant="outline">
-              {action.icon}
-              {action.label}
-            </Button>
-          ))}
+          <Button size="sm" type="button" variant="outline" onClick={dispatchGlobalPurchasesCreateEvent}><PlusIcon data-icon="inline-start" />Закупка</Button>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" type="button" variant="outline" aria-label="Фильтр">
-                <Funnel />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {filterOptions.map((option) => (
-                <DropdownMenuItem
-                  key={option}
-                  onClick={() => setFilterObject(option)}
-                >
-                  {option}
-                </DropdownMenuItem>
-              ))}
+            <DropdownMenuTrigger asChild><Button size="sm" type="button" variant="outline"><FunnelIcon data-icon="inline-start" />{getStatusLabel(currentStatus)}</Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="start">{statusOptions.map((option) => <DropdownMenuItem key={option.value} onClick={() => replaceParams({ status: option.value })}>{option.label}</DropdownMenuItem>)}</DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button size="sm" type="button" variant="outline">{currentProjectTitle}</Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="max-h-72 w-72 overflow-y-auto">
+              <DropdownMenuItem onClick={() => replaceParams({ projectId: null })}>Все объекты</DropdownMenuItem>
+              {(projectsQuery.data?.data ?? []).map((project) => <DropdownMenuItem key={project.id} onClick={() => replaceParams({ projectId: project.id })}>{project.title}</DropdownMenuItem>)}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button size="sm" type="button" variant="outline" aria-label="Фильтр по дате">
-                <CalendarDots />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} />
-            </PopoverContent>
-          </Popover>
         </ButtonGroup>
       </div>
     </div>

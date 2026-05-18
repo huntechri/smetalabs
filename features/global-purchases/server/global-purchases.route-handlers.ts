@@ -4,6 +4,7 @@ import { GlobalPurchasesApiError } from "../api/global-purchases-errors"
 import {
   archiveGlobalPurchase,
   createGlobalPurchase,
+  exportGlobalPurchases,
   getGlobalPurchase,
   listGlobalPurchases,
   searchGlobalPurchaseMaterialOptions,
@@ -12,6 +13,7 @@ import {
 import {
   parseGlobalPurchaseId,
   parseGlobalPurchaseMutationBody,
+  parseGlobalPurchasesExportParams,
   parseGlobalPurchasesListParams,
 } from "./global-purchases.schemas"
 
@@ -46,6 +48,24 @@ export async function handleGlobalPurchasesListRequest(request: NextRequest) {
     return NextResponse.json(response)
   } catch (err) {
     return handleGlobalPurchasesRouteError(err, "[GET /api/global-purchases]")
+  }
+}
+
+export async function handleGlobalPurchasesExportRequest(request: NextRequest) {
+  try {
+    const { format, params } = parseGlobalPurchasesExportParams(request.nextUrl.searchParams)
+    const file = await exportGlobalPurchases(format, params)
+    const date = new Date().toISOString().slice(0, 10)
+
+    return new NextResponse(file.body, {
+      headers: {
+        "Cache-Control": "no-store",
+        "Content-Disposition": `attachment; filename="global-purchases-${date}.${file.extension}"`,
+        "Content-Type": file.contentType,
+      },
+    })
+  } catch (err) {
+    return handleGlobalPurchasesRouteError(err, "[GET /api/global-purchases/export]")
   }
 }
 

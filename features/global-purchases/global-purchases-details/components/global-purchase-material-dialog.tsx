@@ -25,7 +25,7 @@ function formatMoney(value: number) {
 }
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Не удалось создать закупку"
+  return error instanceof Error ? error.message : "Не удалось сохранить закупку"
 }
 
 function materialToPurchaseInput(material: DirectoryMaterial): GlobalPurchaseMutationInput {
@@ -45,15 +45,21 @@ function materialToPurchaseInput(material: DirectoryMaterial): GlobalPurchaseMut
 }
 
 export function GlobalPurchaseMaterialDialog({
+  actionLabel = "Добавить",
+  description = "Выберите товар из справочника материалов. В закупку попадут название, единица измерения и цена.",
   onOpenChange,
   onSelect,
   open,
   saving,
+  title = "Добавить закупку из материалов",
 }: {
+  actionLabel?: string
+  description?: string
   onOpenChange: (open: boolean) => void
   onSelect: (input: GlobalPurchaseMutationInput) => Promise<void>
   open: boolean
   saving: boolean
+  title?: string
 }) {
   const [search, setSearch] = useState("")
   const [submittedSearch, setSubmittedSearch] = useState("")
@@ -93,10 +99,8 @@ export function GlobalPurchaseMaterialDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[calc(100vh-4rem)] overflow-hidden sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Добавить закупку из материалов</DialogTitle>
-          <DialogDescription>
-            Выберите товар из справочника материалов. В закупку попадут название, единица измерения и цена.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <form className="flex items-center gap-2" onSubmit={handleSearch}>
@@ -151,7 +155,7 @@ export function GlobalPurchaseMaterialDialog({
                       variant="outline"
                     >
                       <PlusIcon data-icon="inline-start" />
-                      Добавить
+                      {actionLabel}
                     </Button>
                   </CardContent>
                 </Card>

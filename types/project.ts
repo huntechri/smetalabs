@@ -43,11 +43,8 @@ export type ProjectsListResponse = {
 export type ProjectMutationInput = {
   title: string
   customerCounterpartyId?: string | null
-  customerName?: string | null
   address?: string | null
-  budgetAmount?: number | null
   startDate?: string | null
   endDate?: string | null
   status?: ProjectStatus
-  progress?: number
 }

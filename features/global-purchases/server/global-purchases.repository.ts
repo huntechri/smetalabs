@@ -1,6 +1,7 @@
 import { supabase } from "@/db"
 import { GlobalPurchasesApiError } from "../api/global-purchases-errors"
 import type {
+  GlobalPurchaseMaterialOption,
   GlobalPurchaseMutationInput,
   GlobalPurchaseRow,
   GlobalPurchasesListParams,
@@ -33,8 +34,15 @@ type GlobalPurchaseDbRow = {
   updated_at: string
 }
 
-type GlobalPurchaseIdRow = { id: string }
 type ProjectSnapshotRow = { id: string; title: string }
+type MaterialOptionDbRow = {
+  id: string
+  name: string
+  unit_code: string
+  unit_label: string
+  price_amount: string | number
+  category: string
+}
 
 const GLOBAL_PURCHASE_SELECT = [
   "id",
@@ -57,6 +65,7 @@ const GLOBAL_PURCHASE_SELECT = [
   "updated_at",
 ].join(",")
 
+const MATERIAL_OPTION_SELECT = "id,name,unit_code,unit_label,price_amount,category"
 const MAX_SEARCH_TOKENS = 8
 
 function normalizeSearch(value: string) {
@@ -97,10 +106,6 @@ function toGlobalPurchaseRow(data: unknown) {
   return data as GlobalPurchaseDbRow
 }
 
-function toIdRow(data: unknown) {
-  return data as GlobalPurchaseIdRow
-}
-
 function getFactTotal(factQuantity: number | null, factPrice: number | null) {
   if (factQuantity === null || factPrice === null) return null
   return factQuantity * factPrice
@@ -138,6 +143,16 @@ function mapGlobalPurchaseRow(row: GlobalPurchaseDbRow): GlobalPurchaseRow {
       createdBy: row.created_by,
       updatedBy: row.updated_by,
     },
+  }
+}
+
+function mapMaterialOption(row: MaterialOptionDbRow): GlobalPurchaseMaterialOption {
+  return {
+    id: row.id,
+    title: row.name,
+    unit: row.unit_label || row.unit_code,
+    planPrice: toNumber(row.price_amount),
+    category: row.category,
   }
 }
 
@@ -299,6 +314,34 @@ export async function listGlobalPurchasesForWorkspace(
   }
 }
 
+export async function searchGlobalPurchaseMaterialOptionsForWorkspace(
+  workspaceOwnerId: string,
+  queryText: string
+): Promise<GlobalPurchaseMaterialOption[]> {
+  const tokens = getSearchTokens(queryText)
+  if (tokens.length === 0) return []
+
+  let query = supabase
+    .from("directory_materials")
+    .select(MATERIAL_OPTION_SELECT)
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .eq("status", "active")
+    .is("deleted_at", null)
+    .limit(25)
+
+  for (const token of tokens) {
+    const q = escapeLike(token)
+    query = query.or(
+      [`normalized_name.ilike.%${q}%`, `search_text.ilike.%${q}%`, `code.ilike.%${q}%`].join(",")
+    )
+  }
+
+  const { data, error } = await query.order("normalized_name", { ascending: true })
+  if (error) throw error
+
+  return ((data ?? []) as MaterialOptionDbRow[]).map(mapMaterialOption)
+}
+
 export async function getGlobalPurchaseForWorkspace(
   workspaceOwnerId: string,
   id: string,
@@ -334,16 +377,11 @@ export async function createGlobalPurchaseForWorkspace(
       ...(await toGlobalPurchaseMutationRow(workspaceOwnerId, userId, input)),
       created_by: userId,
     })
-    .select("id")
+    .select(GLOBAL_PURCHASE_SELECT)
     .single()
 
   if (error) throw error
-
-  const created = toIdRow(data)
-  const purchase = await getGlobalPurchaseForWorkspace(workspaceOwnerId, created.id)
-  if (!purchase) throw new GlobalPurchasesApiError("INTERNAL_ERROR", "Созданная закупка не найдена", 500)
-
-  return purchase
+  return mapGlobalPurchaseRow(toGlobalPurchaseRow(data))
 }
 
 export async function updateGlobalPurchaseForWorkspace(
@@ -352,23 +390,22 @@ export async function updateGlobalPurchaseForWorkspace(
   id: string,
   input: GlobalPurchaseMutationInput
 ): Promise<GlobalPurchaseRow> {
-  const existing = await getGlobalPurchaseForWorkspace(workspaceOwnerId, id)
-  if (!existing) throw new GlobalPurchasesApiError("NOT_FOUND", "Закупка не найдена", 404)
-
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("global_purchases")
     .update(await toGlobalPurchaseMutationRow(workspaceOwnerId, userId, input))
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
     .is("archived_at", null)
     .is("deleted_at", null)
+    .select(GLOBAL_PURCHASE_SELECT)
+    .single()
 
-  if (error) throw error
+  if (error) {
+    if (error.code === "PGRST116") throw new GlobalPurchasesApiError("NOT_FOUND", "Закупка не найдена", 404)
+    throw error
+  }
 
-  const purchase = await getGlobalPurchaseForWorkspace(workspaceOwnerId, id)
-  if (!purchase) throw new GlobalPurchasesApiError("INTERNAL_ERROR", "Обновлённая закупка не найдена", 500)
-
-  return purchase
+  return mapGlobalPurchaseRow(toGlobalPurchaseRow(data))
 }
 
 export async function archiveGlobalPurchaseForWorkspace(
@@ -376,10 +413,7 @@ export async function archiveGlobalPurchaseForWorkspace(
   userId: string,
   id: string
 ): Promise<GlobalPurchaseRow> {
-  const existing = await getGlobalPurchaseForWorkspace(workspaceOwnerId, id)
-  if (!existing) throw new GlobalPurchasesApiError("NOT_FOUND", "Закупка не найдена", 404)
-
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("global_purchases")
     .update({
       archived_at: new Date().toISOString(),
@@ -389,8 +423,13 @@ export async function archiveGlobalPurchaseForWorkspace(
     .eq("id", id)
     .is("archived_at", null)
     .is("deleted_at", null)
+    .select(GLOBAL_PURCHASE_SELECT)
+    .single()
 
-  if (error) throw error
+  if (error) {
+    if (error.code === "PGRST116") throw new GlobalPurchasesApiError("NOT_FOUND", "Закупка не найдена", 404)
+    throw error
+  }
 
-  return existing
+  return mapGlobalPurchaseRow(toGlobalPurchaseRow(data))
 }

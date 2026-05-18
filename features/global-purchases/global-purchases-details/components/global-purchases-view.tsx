@@ -3,8 +3,15 @@ import {
   GlobalPurchasesRowsSkeleton,
   GlobalPurchasesSection,
 } from "@/features/global-purchases/global-purchases-details/components/global-purchases-section"
+import type { ProjectRow } from "@/types/project"
 
-export function GlobalPurchasesView() {
+export function GlobalPurchasesView({
+  projects,
+  projectsLoading,
+}: {
+  projects: ProjectRow[]
+  projectsLoading: boolean
+}) {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 rounded-xl border border-border p-1">
@@ -17,7 +24,7 @@ export function GlobalPurchasesView() {
             </div>
           }
         >
-          <GlobalPurchasesSection />
+          <GlobalPurchasesSection projects={projects} projectsLoading={projectsLoading} />
         </Suspense>
       </div>
     </div>

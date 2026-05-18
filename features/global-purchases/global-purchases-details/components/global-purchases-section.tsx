@@ -1,18 +1,16 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { FieldError } from "@/components/ui/field"
 import { Skeleton } from "@/components/ui/skeleton"
-import { fetchProjects } from "@/features/projects/api/projects-client"
-import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
 import { useGlobalPurchases } from "@/features/global-purchases/hooks/use-global-purchases"
 import { GLOBAL_PURCHASES_CREATE_EVENT } from "@/features/global-purchases/lib/global-purchases-events"
 import type { GlobalPurchaseMutationInput, GlobalPurchaseRow } from "@/types/global-purchases"
+import type { ProjectRow } from "@/types/project"
 import { GlobalPurchaseMaterialDialog } from "./global-purchase-material-dialog"
 import { GlobalPurchasesRow } from "./global-purchases-row"
 
@@ -75,17 +73,18 @@ function groupPurchasesByProject(rows: GlobalPurchaseRow[]): PurchaseGroup[] {
   return Array.from(groups.values())
 }
 
-export function GlobalPurchasesSection() {
+export function GlobalPurchasesSection({
+  projects,
+  projectsLoading,
+}: {
+  projects: ProjectRow[]
+  projectsLoading: boolean
+}) {
   const { archivePurchase, createPurchase, error, isFetching, loading, meta, params, purchases, saving, setCursor, updatePurchase } = useGlobalPurchases()
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false)
   const [replacementRow, setReplacementRow] = useState<GlobalPurchaseRow | null>(null)
   const [savingRowId, setSavingRowId] = useState<string | null>(null)
   const purchaseGroups = useMemo(() => groupPurchasesByProject(purchases), [purchases])
-  const projectsQuery = useQuery({
-    queryKey: projectsQueryKeys.list({ status: "all", limit: 100, sort: "title_asc" }),
-    queryFn: () => fetchProjects({ status: "all", limit: 100, sort: "title_asc" }),
-    staleTime: 30_000,
-  })
 
   useEffect(() => {
     const handleCreate = () => {
@@ -150,7 +149,6 @@ export function GlobalPurchasesSection() {
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
   const showSkeletonRows = loading && purchases.length === 0
-  const projects = projectsQuery.data?.data ?? []
 
   return (
     <>
@@ -165,7 +163,7 @@ export function GlobalPurchasesSection() {
                 <span className="truncate">{group.title}</span>
                 <Badge variant="secondary" className="rounded-md px-1.5 py-0 text-[10px] font-normal">{group.rows.length}</Badge>
               </div>
-              {group.rows.map((row) => <GlobalPurchasesRow key={row.id} onDelete={handleDelete} onReplace={handleReplace} onUpdate={handleUpdate} projects={projects} row={row} saving={savingRowId === row.id} />)}
+              {group.rows.map((row) => <GlobalPurchasesRow key={row.id} onDelete={handleDelete} onReplace={handleReplace} onUpdate={handleUpdate} projects={projects} row={row} saving={savingRowId === row.id || projectsLoading} />)}
             </section>
           )) : null}
         </CardContent>

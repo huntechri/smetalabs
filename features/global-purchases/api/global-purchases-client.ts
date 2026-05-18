@@ -2,6 +2,7 @@ import type {
   GlobalPurchaseMaterialOptionsResponse,
   GlobalPurchaseMutationInput,
   GlobalPurchaseRow,
+  GlobalPurchaseSupplierOptionsResponse,
   GlobalPurchasesListParams,
   GlobalPurchasesListResponse,
 } from "@/types/global-purchases"
@@ -56,6 +57,13 @@ export function fetchGlobalPurchaseMaterialOptions(q: string) {
   return fetchJson<GlobalPurchaseMaterialOptionsResponse>(
     `/api/global-purchases/material-options?${params.toString()}`,
     "поиск материалов"
+  )
+}
+
+export function fetchGlobalPurchaseSupplierOptions() {
+  return fetchJson<GlobalPurchaseSupplierOptionsResponse>(
+    "/api/global-purchases/supplier-options",
+    "список поставщиков"
   )
 }
 

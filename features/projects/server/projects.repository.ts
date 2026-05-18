@@ -211,11 +211,11 @@ async function toProjectMutationRow(
     customer_counterparty_id: customer?.id ?? null,
     customer_name: customer?.name ?? null,
     address: toNullableString(input.address),
-    budget_amount: input.budgetAmount ?? null,
+    budget_amount: null,
     start_date: toNullableString(input.startDate),
     end_date: toNullableString(input.endDate),
     status: input.status ?? "new",
-    progress: input.progress ?? 0,
+    progress: 0,
     search_text: "pending",
     updated_by: userId,
   }

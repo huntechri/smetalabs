@@ -2,17 +2,17 @@
 
 > Last updated: 2026-05-19
 >
-> Status: production slice for `/projects` and project estimate records.
+> Status: production slice for `/projects`, project estimate records and estimate content server layer.
 >
-> Related issues: #129.
+> Related issues: #129, #142, #143.
 
 ## Назначение
 
-Раздел проектов хранит базовый список объектов текущей рабочей области. Первый рабочий слой нужен для того, чтобы пользователь мог открыть `/projects`, увидеть реальные проекты, найти нужный проект, добавить новый, изменить существующий и убрать проект из обычного списка через архив.
+Раздел проектов хранит базовый список объектов текущей рабочей области. Пользователь может открыть `/projects`, увидеть реальные проекты, найти нужный проект, добавить новый, изменить существующий и убрать проект из обычного списка через архив.
 
 Этот раздел не является справочником, но использует тот же общий подход к безопасной работе с данными: текущая рабочая область определяется на сервере, чтение доступно только участникам рабочей области, изменение доступно только разрешённым ролям, а обычный список не показывает архивные и удалённые записи.
 
-Страница конкретного проекта `/projects/[projectId]` содержит первый рабочий слой реестра смет проекта. Этот слой хранит только строки списка смет проекта и не является содержимым сметы.
+Страница конкретного проекта `/projects/[projectId]` содержит реестр смет проекта. Реестр смет хранит строки списка смет через `project_estimate_records`. Содержимое выбранной сметы хранится отдельным слоем: разделы, работы и материалы.
 
 ## Поля проекта
 
@@ -76,7 +76,7 @@ deletedAt
 /projects/[projectId]
 ```
 
-Этот слой хранит только строки списка смет. Он не хранит состав сметы, работы, материалы, расчёты, документы, закупки или выполнение.
+Этот слой хранит только строки списка смет. Он не хранит состав сметы напрямую.
 
 Поля строки реестра:
 
@@ -84,7 +84,7 @@ deletedAt
 name        название сметы, обязательно
 type        тип сметы, сейчас системное значение по умолчанию
 status      new / in_progress / completed
-amount      сумма, сейчас системное значение
+amount      сумма, обновляется серверным слоем содержимого сметы
 createdAt   дата создания
 ```
 
@@ -111,21 +111,85 @@ deletedAt
 
 Удаление мягкое: строка получает `deletedAt` и исчезает из обычного списка.
 
-## Что не входит в текущий слой реестра смет
+## Содержимое сметы
+
+Содержимое выбранной сметы хранится под строкой `project_estimate_records`:
+
+```txt
+project_estimate_records
+  -> project_estimate_sections
+      -> project_estimate_works
+          -> project_estimate_materials
+```
+
+`project_estimate_records` не заменяется и не дублируется новой таблицей смет. Он остаётся шапкой сметы и строкой списка.
+
+Серверный слой содержимого сметы поддерживает:
+
+```txt
+получить полное дерево сметы
+создать раздел
+изменить раздел
+мягко убрать раздел
+изменить порядок разделов
+добавить работу из справочника
+добавить ручную работу
+изменить работу
+мягко убрать работу
+изменить порядок работ
+перенести работу в другой раздел
+добавить материал из справочника
+добавить ручной материал
+изменить материал
+мягко убрать материал
+изменить порядок материалов
+перенести материал в другую работу
+```
+
+Серверные адреса:
+
+```txt
+GET  /api/projects/:projectId/estimate-records/:recordId/content
+POST /api/projects/:projectId/estimate-records/:recordId/changes
+GET  /api/projects/:projectId/estimate-records/:recordId/work-options
+GET  /api/projects/:projectId/estimate-records/:recordId/material-options
+```
+
+`GET /content` возвращает форму:
+
+```txt
+record
+sections[]
+  works[]
+    materials[]
+summary
+```
+
+`POST /changes` принимает одно действие над содержимым сметы и возвращает обновлённое дерево сметы с итогами. UI должен считать ответ сервера источником актуальных сумм.
+
+Работы и материалы из справочников копируются в строки сметы. Будущие изменения справочников не должны менять старую смету.
+
+Для материала используется поле `consumption`, а не `waste`. Расход связывает количество материала с количеством работы:
+
+```txt
+количество материала = количество работы / расход
+расход = количество работы / количество материала
+material.total_amount = material.quantity * material.price
+```
+
+Если пользователь меняет количество работы, материалы с заполненным расходом пересчитывают количество от нового количества работы. Материалы без расхода остаются ручными по количеству.
+
+## Что не входит в текущий слой содержимого сметы
 
 Не реализуется:
 
 ```txt
-состав сметы
-разделы сметы
-работы внутри сметы
-материалы внутри сметы
-расчёты
-документы
-закупки
-выполнение
-импорт
-экспорт
+UI редактора сметы
+визуальные dialog-окна
+экспорт сметы
+импорт сметы
+закупки из сметы
+выполнение и акты
 AI-функции
 ```
 
@@ -143,7 +207,15 @@ public.projects
 public.project_estimate_records
 ```
 
-Обе таблицы привязаны к текущей рабочей области через `workspace_owner_id`. Клиент не передаёт рабочую область как источник истины. Сервер определяет текущую рабочую область по текущему пользователю и проверяет доступ перед чтением или изменением.
+Содержимое сметы хранится отдельно:
+
+```txt
+public.project_estimate_sections
+public.project_estimate_works
+public.project_estimate_materials
+```
+
+Все эти таблицы привязаны к текущей рабочей области через `workspace_owner_id`. Клиент не передаёт рабочую область как источник истины. Сервер определяет текущую рабочую область по текущему пользователю и проверяет доступ перед чтением или изменением.
 
 `project_estimate_records` дополнительно привязана к проекту через `project_id` и не может ссылаться на проект из другой рабочей области.
 
@@ -197,18 +269,29 @@ features/projects/server/project-estimate-records.route-handlers.ts
 features/projects/server/project-estimate-records.service.ts
 features/projects/server/project-estimate-records.repository.ts
 features/projects/server/project-estimate-records.schemas.ts
+features/projects/server/project-estimate-content.route-handlers.ts
+features/projects/server/project-estimate-content.service.ts
+features/projects/server/project-estimate-content.repository.ts
+features/projects/server/project-estimate-content.schemas.ts
 types/project.ts
 types/project-estimate-record.ts
+types/project-estimate-content.ts
 app/api/projects/route.ts
 app/api/projects/[id]/route.ts
 app/api/projects/[id]/estimate-records/route.ts
 app/api/projects/[id]/estimate-records/[recordId]/route.ts
+app/api/projects/[id]/estimate-records/[recordId]/content/route.ts
+app/api/projects/[id]/estimate-records/[recordId]/changes/route.ts
+app/api/projects/[id]/estimate-records/[recordId]/work-options/route.ts
+app/api/projects/[id]/estimate-records/[recordId]/material-options/route.ts
 db/schema/projects.ts
 db/schema/project-estimate-records.ts
+db/schema/project-estimate-content.ts
 db/migrations/026_projects_foundation.sql
 db/migrations/027_projects_function_grants.sql
 db/migrations/028_projects_customer_counterparty.sql
 db/migrations/033_project_estimate_records_foundation.sql
+db/migrations/034_project_estimate_content_foundation.sql
 ```
 
 ## Проверка готовности
@@ -234,6 +317,17 @@ db/migrations/033_project_estimate_records_foundation.sql
 можно удалить смету из списка
 после действий список смет обновляется
 удалённая смета исчезает из обычного списка
+GET /content возвращает record, sections, works, materials и summary
+POST /changes создаёт раздел
+POST /changes добавляет работу из справочника
+POST /changes добавляет материал из справочника
+POST /changes добавляет ручную работу и ручной материал
+POST /changes меняет количество, цену, расход и название
+POST /changes мягко убирает раздел, работу и материал
+суммы пересчитываются на сервере
+project_estimate_records.amount обновляется после изменений
+work-options ищет по справочнику работ текущей рабочей области
+material-options ищет по справочнику материалов текущей рабочей области
 есть загрузка, пустое состояние и понятная ошибка
 отладочные рамки удалены
 временный список не используется в рабочем потоке

@@ -8,8 +8,7 @@ import {
   fetchProjectEstimateWorkOptions,
   type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
-import { EstimateEditorHeader } from "@/features/estimates/estimate-details/components/estimate-editor-header"
-import { EstimateEmptyContent } from "@/features/estimates/estimate-details/components/estimate-empty-content"
+import { EstimateEmptyState } from "@/features/estimates/estimate-details/components/estimate-empty-state"
 import { EstimateMaterialPickerDialog } from "@/features/estimates/estimate-details/components/estimate-material-picker-dialog"
 import { EstimateSectionCard } from "@/features/estimates/estimate-details/components/estimate-section-card"
 import { EstimateSectionDialog } from "@/features/estimates/estimate-details/components/estimate-section-dialog"
@@ -46,14 +45,14 @@ export function EstimateEditorView({
   projectId: string
   recordId: string
 }) {
-  const { content, loading, isFetching, error, saving, applyChange, refetch } =
+  const { content, loading, error, saving, applyChange, refetch } =
     useProjectEstimateContent(projectId, recordId)
   const [sectionOpen, setSectionOpen] = React.useState(false)
   const [workDialog, setWorkDialog] = React.useState<WorkDialogState>(EMPTY_WORK_DIALOG)
   const [materialDialog, setMaterialDialog] = React.useState<MaterialDialogState>(EMPTY_MATERIAL_DIALOG)
   const [workSearch, setWorkSearch] = React.useState("")
   const [materialSearch, setMaterialSearch] = React.useState("")
-  const [message, setMessage] = React.useState<string | null>(null)
+  const [, setMessage] = React.useState<string | null>(null)
 
   const workParams = React.useMemo(
     () => ({ q: workSearch, limit: 30, cursor: 0 }),
@@ -256,21 +255,10 @@ export function EstimateEditorView({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-4 p-4 lg:p-6">
-      <EstimateEditorHeader
-        content={content}
-        isFetching={isFetching}
-        message={message}
-        saving={saving}
-      />
-
-      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto">
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border border-dashed border-red-500 p-1">
         {content.sections.length === 0 ? (
-          <EstimateEmptyContent
-            saving={saving}
-            onCreateSection={() => setSectionOpen(true)}
-            onCreateWork={() => openWorkDialog()}
-          />
+          <EstimateEmptyState onCreateClick={() => setSectionOpen(true)} />
         ) : (
           <div className="flex flex-col gap-4">
             {content.sections.map((section) => (
@@ -279,16 +267,12 @@ export function EstimateEditorView({
                 section={section}
                 saving={saving}
                 onArchive={archive}
+                onAddSection={() => setSectionOpen(true)}
                 onAddWork={openWorkDialog}
                 onAddMaterial={openMaterialDialog}
                 onSave={save}
               />
             ))}
-            <div className="flex justify-end">
-              <Button disabled={saving} variant="outline" onClick={() => setSectionOpen(true)}>
-                Раздел
-              </Button>
-            </div>
           </div>
         )}
       </div>

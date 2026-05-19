@@ -3,6 +3,7 @@ import { ProjectsApiError } from "../api/projects-errors"
 import { handleProjectsRouteError } from "./projects.route-handlers"
 import {
   createProjectEstimateRecord,
+  deleteProjectEstimateRecord,
   listProjectEstimateRecords,
   updateProjectEstimateRecord,
 } from "./project-estimate-records.service"
@@ -64,5 +65,19 @@ export async function handleProjectEstimateRecordUpdateRequest(
     return NextResponse.json(response)
   } catch (err) {
     return handleProjectsRouteError(err, "[PATCH /api/projects/[id]/estimate-records/[recordId]]")
+  }
+}
+
+export async function handleProjectEstimateRecordDeleteRequest(
+  projectIdParam: string,
+  recordIdParam: string
+) {
+  try {
+    const projectId = parseProjectId(projectIdParam)
+    const recordId = parseEstimateRecordId(recordIdParam)
+    const response = await deleteProjectEstimateRecord(projectId, recordId)
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleProjectsRouteError(err, "[DELETE /api/projects/[id]/estimate-records/[recordId]]")
   }
 }

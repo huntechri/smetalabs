@@ -1,7 +1,7 @@
 "use client"
 
 import { ChartAreaInteractive } from "@/features/projects/project-overview/components/chart-area-interactive"
-import { DataTable } from "@/features/projects/project-overview/components/data-table"
+import { EstimatesTable } from "@/features/projects/project-overview/components/estimates-table"
 import { SectionCards } from "@/features/projects/project-overview/components/section-cards"
 import data from "./data.json"
 
@@ -16,7 +16,7 @@ export default function ProjectDetailsPage() {
           <div className="px-4 lg:px-6">
             <ChartAreaInteractive />
           </div>
-          <DataTable data={data} />
+          <EstimatesTable data={data} />
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 # SmetaLabs — Filemap
 
-> Last updated: 2026-05-18
+> Last updated: 2026-05-19
 >
 > Canonical compact project map. For layer ownership and architectural rules, see [`docs/architecture.md`](./architecture.md). For `/projects`, see [`docs/projects-architecture.md`](./projects-architecture.md). For `/procurements`, see [`docs/global-purchases-architecture.md`](./global-purchases-architecture.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog contract and hardening notes, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md). For `/directories/materials`, see [`docs/directory-materials-architecture.md`](./directory-materials-architecture.md). For `/directories/counterparties`, see [`docs/directory-counterparties-architecture.md`](./directory-counterparties-architecture.md). For `/directories/suppliers`, see [`docs/directory-suppliers-architecture.md`](./directory-suppliers-architecture.md).
 
@@ -104,8 +104,8 @@ features/
 │   ├── api/                # client API, errors, query keys/cache tags
 │   ├── global-purchases-details/components/ # procurements screen, toolbar, grouped list, rows and material picker
 │   ├── hooks/              # TanStack Query hook and mutations
-│   ├── lib/                # UI events
-│   └── server/             # repository/service/route/material-options logic
+│   ├── lib/                # UI events + CSV import parser
+│   ├── server/             # repository/service/route/material-options/export logic
 ├── directories/
 ├── directory-counterparties/
 │   ├── api/                # client API, errors, query keys/cache tags
@@ -129,7 +129,17 @@ features/
 │   ├── directory-materials-details/components/
 │   ├── hooks/
 │   ├── lib/
+│   │   └── directory-materials-events.ts
 │   ├── server/
+│   │   ├── directory-materials.repository.ts
+│   │   ├── directory-materials.service.ts
+│   │   ├── directory-materials.schemas.ts
+│   │   ├── directory-materials.route-handlers.ts
+│   │   ├── directory-materials-import.repository.ts
+│   │   ├── directory-materials-fast-import.repository.ts
+│   │   ├── directory-materials-large-import.repository.ts
+│   │   ├── directory-materials.export.ts
+│   │   └── directory-materials-ai.ts
 │   └── types.ts
 ├── directory-works/
 │   ├── api/
@@ -137,7 +147,19 @@ features/
 │   ├── directory-works-details/components/
 │   ├── hooks/
 │   ├── lib/
+│   │   └── directory-works-events.ts
 │   ├── server/
+│   │   ├── directory-works.repository.ts
+│   │   ├── directory-works.service.ts
+│   │   ├── directory-works.schemas.ts
+│   │   ├── directory-works.route-handlers.ts
+│   │   ├── directory-works-import.repository.ts
+│   │   ├── directory-works-large-import.repository.ts
+│   │   ├── directory-works.export.ts
+│   │   ├── directory-works.search.ts
+│   │   ├── directory-works.embeddings.ts
+│   │   ├── directory-works.observability.ts
+│   │   └── directory-works.ordering.ts
 │   └── types.ts
 ├── access-control/
 ├── account-settings/
@@ -185,7 +207,11 @@ db/
 │   ├── 016_directory_works_large_catalog_read.sql
 │   ├── 017_directory_materials_import.sql
 │   ├── 018_directory_materials_ai_search.sql
+│   ├── 017_fix_directory_works_search_ambiguous_id.sql
+│   ├── 018_directory_works_staged_search.sql
 │   ├── 019_directory_materials_foundation.sql
+│   ├── 019_directory_works_manual_order.sql
+│   ├── 020_large_directory_import_batches.sql
 │   ├── 021_material_search_terms.sql
 │   ├── 023_material_embedding_backfill.sql
 │   ├── 024_directory_counterparties_foundation.sql

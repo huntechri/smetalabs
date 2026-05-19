@@ -21,20 +21,17 @@ export function EstimateMaterialCard({
   onChange: (payload: MaterialChangePayload) => void
 }) {
   return (
-    <Card
-      size="sm"
-      className="min-h-36 gap-3 border border-dashed border-blue-500 bg-background shadow-none"
-    >
+    <Card size="sm" className="min-h-36 gap-3 bg-background shadow-none">
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <Frame className="border-blue-300">
+              <Frame>
                 <Badge variant="outline">
                   {workNumber}.{index + 1}
                 </Badge>
               </Frame>
-              <Frame className="border-blue-300">
+              <Frame>
                 <Badge variant="secondary">{material.unitLabel}</Badge>
               </Frame>
             </div>

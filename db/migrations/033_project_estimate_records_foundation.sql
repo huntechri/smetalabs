@@ -19,7 +19,7 @@ LANGUAGE sql
 IMMUTABLE
 SET search_path = ''
 AS $$
-  SELECT regexp_replace(lower(trim(coalesce(value, '')), '\s+', ' ', 'g');
+  SELECT regexp_replace(lower(trim(coalesce(value, ''))), '\s+', ' ', 'g');
 $$;
 
 CREATE OR REPLACE FUNCTION private.set_project_estimate_record_search_fields()

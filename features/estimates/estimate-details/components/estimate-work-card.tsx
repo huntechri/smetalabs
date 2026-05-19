@@ -47,8 +47,8 @@ export function EstimateWorkCard({
 
   return (
     <Collapsible open={expanded} onOpenChange={onToggle}>
-      <div className="border-b border-dashed border-green-500 last:border-b-0">
-        <div className="m-3 flex flex-col gap-3 rounded-md border border-dashed border-green-500 p-3 transition-colors hover:bg-muted/50 lg:flex-row lg:items-center lg:justify-between">
+      <div className="border-b last:border-b-0">
+        <div className="m-3 flex flex-col gap-3 rounded-md border bg-background p-3 transition-colors hover:bg-muted/50 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-1 flex-wrap items-start gap-3">
             <div className="flex w-full items-center gap-3 lg:w-auto">
               <CollapsibleTrigger asChild>
@@ -56,7 +56,7 @@ export function EstimateWorkCard({
                   aria-label={expanded ? "Свернуть работу" : "Развернуть работу"}
                   type="button"
                 >
-                  <Frame className="border-green-300">
+                  <Frame>
                     <CaretRightIcon
                       weight="bold"
                       className={cn(
@@ -68,7 +68,7 @@ export function EstimateWorkCard({
                 </button>
               </CollapsibleTrigger>
               <EstimateWorkNumber value={work.number} />
-              <div className="ml-auto rounded-md border border-dashed border-green-300 p-1 lg:hidden">
+              <div className="ml-auto rounded-md border bg-background p-1 lg:hidden">
                 <EstimateWorkActions />
               </div>
             </div>
@@ -83,7 +83,7 @@ export function EstimateWorkCard({
             />
           </div>
 
-          <div className="flex w-full flex-col gap-3 rounded-md border border-dashed border-green-400 p-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
+          <div className="flex w-full flex-col gap-3 rounded-md border bg-background p-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
             <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-80">
               <EditableBadge
                 label="Кол-во"
@@ -120,15 +120,15 @@ export function EstimateWorkCard({
                 <span>{formatMoney(work.totalAmount)}</span>
               </Badge>
             </div>
-            <div className="hidden rounded-md border border-dashed border-green-300 p-1 lg:block">
+            <div className="hidden rounded-md border bg-background p-1 lg:block">
               <EstimateWorkActions />
             </div>
           </div>
         </div>
 
         <CollapsibleContent>
-          <div className="border-t border-dashed border-purple-500 bg-muted/20 px-4 py-4">
-            <div className="rounded-md border border-dashed border-purple-400 p-3">
+          <div className="border-t bg-muted/20 px-4 py-4">
+            <div className="rounded-md border bg-background p-3">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {work.materials.map((material, index) => (
                   <EstimateMaterialCard
@@ -142,12 +142,8 @@ export function EstimateWorkCard({
                 ))}
               </div>
 
-              <div className="mt-3 flex justify-end border-t border-dashed border-purple-300 pt-3">
-                <FramedButton
-                  frameClassName="border-purple-300"
-                  variant="outline"
-                  onClick={() => onAddMaterial(work)}
-                >
+              <div className="mt-3 flex justify-end border-t pt-3">
+                <FramedButton variant="outline" onClick={() => onAddMaterial(work)}>
                   <PlusIcon data-icon="inline-start" />
                   Материал
                 </FramedButton>

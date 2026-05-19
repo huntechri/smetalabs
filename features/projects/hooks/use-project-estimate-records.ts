@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   createProjectEstimateRecord,
+  deleteProjectEstimateRecord,
   fetchProjectEstimateRecords,
   updateProjectEstimateRecord,
 } from "@/features/projects/api/project-estimate-records-client"
@@ -48,6 +49,11 @@ export function useProjectEstimateRecords(projectId: string) {
     onSuccess: invalidateEstimateRecords,
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: (recordId: string) => deleteProjectEstimateRecord({ projectId, recordId }),
+    onSuccess: invalidateEstimateRecords,
+  })
+
   return {
     records: estimateRecordsQuery.data?.data ?? [],
     meta: estimateRecordsQuery.data?.meta ?? null,
@@ -57,8 +63,9 @@ export function useProjectEstimateRecords(projectId: string) {
       estimateRecordsQuery.error?.message ??
       createMutation.error?.message ??
       updateMutation.error?.message ??
+      deleteMutation.error?.message ??
       null,
-    saving: createMutation.isPending || updateMutation.isPending,
+    saving: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
     refetch: async () => {
       await estimateRecordsQuery.refetch()
     },
@@ -68,6 +75,10 @@ export function useProjectEstimateRecords(projectId: string) {
     },
     updateRecord: async (recordId: string, input: ProjectEstimateRecordMutationInput) => {
       const response = await updateMutation.mutateAsync({ recordId, input })
+      return response.data
+    },
+    deleteRecord: async (recordId: string) => {
+      const response = await deleteMutation.mutateAsync(recordId)
       return response.data
     },
   }

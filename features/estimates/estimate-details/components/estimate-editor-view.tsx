@@ -8,10 +8,10 @@ import {
   fetchProjectEstimateWorkOptions,
   type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
+import { CreateSectionDialog } from "@/features/estimates/estimate-details/components/create-section-dialog"
 import { EstimateEmptyState } from "@/features/estimates/estimate-details/components/estimate-empty-state"
 import { EstimateMaterialPickerDialog } from "@/features/estimates/estimate-details/components/estimate-material-picker-dialog"
 import { EstimateSectionCard } from "@/features/estimates/estimate-details/components/estimate-section-card"
-import { EstimateSectionDialog } from "@/features/estimates/estimate-details/components/estimate-section-dialog"
 import { EstimateWorkPickerDialog } from "@/features/estimates/estimate-details/components/estimate-work-picker-dialog"
 import { parseDecimal, parseText } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
 import type {
@@ -124,10 +124,8 @@ export function EstimateEditorView({
     await save(input, "Не удалось удалить строку")
   }
 
-  const createSection = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    const title = parseText(new FormData(event.currentTarget).get("title"))
+  const createSection = async (data: { name: string; number: string }) => {
+    const title = parseText(data.name)
     if (!title) return
 
     await save(
@@ -277,11 +275,10 @@ export function EstimateEditorView({
         )}
       </div>
 
-      <EstimateSectionDialog
+      <CreateSectionDialog
         open={sectionOpen}
-        saving={saving}
         onOpenChange={setSectionOpen}
-        onSubmit={createSection}
+        onConfirm={createSection}
       />
       <EstimateWorkPickerDialog
         state={workDialog}

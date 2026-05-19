@@ -247,3 +247,29 @@ export async function updateProjectEstimateRecordForWorkspace(
 
   return updated
 }
+
+export async function deleteProjectEstimateRecordForWorkspace(
+  workspaceOwnerId: string,
+  userId: string,
+  projectId: string,
+  recordId: string
+): Promise<ProjectEstimateRecordRow> {
+  const existing = await getProjectEstimateRecordForWorkspace(workspaceOwnerId, projectId, recordId)
+  if (!existing) throw new ProjectsApiError("NOT_FOUND", "Смета не найдена", 404)
+
+  const { error } = await supabase
+    .from("project_estimate_records")
+    .update({
+      deleted_at: new Date().toISOString(),
+      updated_by: userId,
+    })
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .eq("project_id", projectId)
+    .eq("id", recordId)
+    .is("archived_at", null)
+    .is("deleted_at", null)
+
+  if (error) throw error
+
+  return existing
+}

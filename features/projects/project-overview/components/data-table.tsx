@@ -85,10 +85,7 @@ const columns: ColumnDef<EstimateRow>[] = [
     accessorKey: "name",
     header: "Наименование",
     cell: ({ row }) => (
-      <Button
-        variant="link"
-        className="h-auto max-w-full justify-start truncate px-0 text-left text-foreground"
-      >
+      <Button variant="link" className="w-fit px-0 text-left text-foreground">
         {row.original.name}
       </Button>
     ),
@@ -97,7 +94,7 @@ const columns: ColumnDef<EstimateRow>[] = [
     accessorKey: "type",
     header: "Тип сметы",
     cell: ({ row }) => (
-      <Badge variant="outline" className="max-w-full truncate px-1.5 text-muted-foreground">
+      <Badge variant="outline" className="px-1.5 text-muted-foreground">
         {row.original.type}
       </Badge>
     ),
@@ -106,7 +103,7 @@ const columns: ColumnDef<EstimateRow>[] = [
     accessorKey: "status",
     header: "Статус",
     cell: ({ row }) => (
-      <Badge variant="outline" className="max-w-full truncate px-1.5 text-muted-foreground">
+      <Badge variant="outline" className="px-1.5 text-muted-foreground">
         {row.original.status === "Завершено" ? (
           <CheckCircle className="fill-green-500 dark:fill-green-400" />
         ) : (
@@ -120,16 +117,16 @@ const columns: ColumnDef<EstimateRow>[] = [
     accessorKey: "amount",
     header: () => <div className="w-full text-right">Сумма</div>,
     cell: ({ row }) => (
-      <div className="text-right font-medium tabular-nums whitespace-nowrap">
+      <div className="text-right font-medium tabular-nums">
         {formatMoney(row.original.amount)}
       </div>
     ),
   },
   {
     accessorKey: "createdAt",
-    header: "Дата создания",
+    header: "Дата создания сметы",
     cell: ({ row }) => (
-      <span className="block whitespace-nowrap text-muted-foreground">
+      <span className="text-muted-foreground">
         {formatDate(row.original.createdAt)}
       </span>
     ),
@@ -190,15 +187,7 @@ export function DataTable({ data: _data }: { data: unknown[] }) {
 
       <TabsContent value="estimates" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
         <div className="overflow-hidden rounded-lg border">
-          <Table className="table-fixed">
-            <colgroup>
-              <col className="w-[38%]" />
-              <col className="w-[16%]" />
-              <col className="w-[14%]" />
-              <col className="w-[12%]" />
-              <col className="w-[14%]" />
-              <col className="w-[6%]" />
-            </colgroup>
+          <Table>
             <TableHeader className="sticky top-0 z-10 bg-muted">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -217,7 +206,7 @@ export function DataTable({ data: _data }: { data: unknown[] }) {
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="overflow-hidden">
+                      <TableCell key={cell.id}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}

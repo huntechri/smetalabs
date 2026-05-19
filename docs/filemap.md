@@ -72,11 +72,13 @@ db/
 │   ├── 030_global_purchases_project_sort_index.sql
 │   ├── 031_global_purchases_link_indexes.sql
 │   ├── 032_directory_suppliers_foundation.sql
-│   └── 033_project_estimate_records_foundation.sql
+│   ├── 033_project_estimate_records_foundation.sql
+│   └── 034_project_estimate_content_foundation.sql
 └── schema/
     ├── index.ts
     ├── projects.ts
     ├── project-estimate-records.ts
+    ├── project-estimate-content.ts
     ├── global-purchases.ts
     ├── directory-counterparties.ts
     ├── directory-suppliers.ts
@@ -102,13 +104,15 @@ db/
   → app/api/projects/[id]/estimate-records/** exposes project-scoped estimate-record list/create/update/delete routes
   → features/projects/** owns UI hooks, source-aligned form/toolbar/cards, project overview, repository and service logic
   → docs/projects-architecture.md fixes the current contract
+  → docs/project-estimate-content-architecture.md fixes the estimate content storage contract
   → db/schema/projects.ts and db/migrations/026-028_projects_*.sql provide project storage, helper grants and customer link
   → db/schema/project-estimate-records.ts and db/migrations/033_project_estimate_records_foundation.sql provide estimate-record storage
+  → db/schema/project-estimate-content.ts and db/migrations/034_project_estimate_content_foundation.sql provide estimate section/work/material storage
 ```
 
 Projects stay workspace-scoped through `workspace_owner_id`. The project list supports real list data, search, status filtering, create, update and soft archive. Customer selection is linked to active counterparties of type `customer`. Budget and progress are system-managed placeholders in this slice: they are displayed but not entered manually.
 
-The project estimate-record layer stores only rows shown in the project estimate table: name, type, status, amount and creation date. It supports list, create by name, rename and soft delete. It does not include estimate contents, works, materials, calculations, documents, purchases, execution, import, export or AI behavior.
+The project estimate-record layer stores rows shown in the project estimate table: name, type, status, amount and creation date. It supports list, create by name, rename and soft delete. The estimate-content storage layer extends each record with sections, works and materials. It stores copied work/material values, row order and totals, but still does not include API routes for content editing, UI editor behavior, documents, purchases, execution, import, export or AI behavior.
 
 ### Global purchases first production slice
 

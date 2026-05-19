@@ -16,11 +16,13 @@ import type { EstimateDialogState } from "@/features/projects/project-overview/t
 
 export function EstimateNameDialog({
   state,
+  saving,
   onOpenChange,
   onNameChange,
   onSubmit,
 }: {
   state: EstimateDialogState
+  saving?: boolean
   onOpenChange: (open: boolean) => void
   onNameChange: (name: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
@@ -41,6 +43,7 @@ export function EstimateNameDialog({
               <Input
                 id="estimate-name"
                 autoFocus
+                disabled={saving}
                 maxLength={200}
                 value={state.name}
                 onChange={(event) => onNameChange(event.target.value)}
@@ -51,10 +54,17 @@ export function EstimateNameDialog({
           <FieldError>{state.error}</FieldError>
 
           <DialogFooter showCloseButton={false}>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={saving}
+              onClick={() => onOpenChange(false)}
+            >
               Отмена
             </Button>
-            <Button type="submit">Сохранить</Button>
+            <Button type="submit" disabled={saving}>
+              Сохранить
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

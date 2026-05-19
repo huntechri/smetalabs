@@ -1,15 +1,6 @@
-import { z } from "zod"
+import type { ProjectEstimateRecordRow } from "@/types/project-estimate-record"
 
-export const estimateRowSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  type: z.string(),
-  status: z.enum(["Новая", "В работе", "Завершено"]),
-  amount: z.number(),
-  createdAt: z.string(),
-})
-
-export type EstimateRow = z.infer<typeof estimateRowSchema>
+export type EstimateRow = ProjectEstimateRecordRow
 
 export type EstimateDialogState = {
   open: boolean

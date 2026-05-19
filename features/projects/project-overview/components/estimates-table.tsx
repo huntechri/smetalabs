@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useProjectEstimateRecords } from "@/features/projects/hooks/use-project-estimate-records"
+import { EstimateDeleteDialog } from "@/features/projects/project-overview/components/estimate-delete-dialog"
 import { EstimateNameDialog } from "@/features/projects/project-overview/components/estimate-name-dialog"
 import {
   formatEstimateAmount,
@@ -57,9 +58,12 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
     saving,
     createRecord,
     updateRecord,
+    deleteRecord,
   } = useProjectEstimateRecords(projectId)
   const [dialogState, setDialogState] =
     React.useState<EstimateDialogState>(EMPTY_DIALOG_STATE)
+  const [estimateToDelete, setEstimateToDelete] = React.useState<EstimateRow | null>(null)
+  const [deleteError, setDeleteError] = React.useState<string | null>(null)
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
@@ -83,8 +87,18 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
     })
   }
 
+  const openDeleteDialog = (estimate: EstimateRow) => {
+    setDeleteError(null)
+    setEstimateToDelete(estimate)
+  }
+
   const closeDialog = () => {
     setDialogState(EMPTY_DIALOG_STATE)
+  }
+
+  const closeDeleteDialog = () => {
+    setDeleteError(null)
+    setEstimateToDelete(null)
   }
 
   const columns = React.useMemo<ColumnDef<EstimateRow>[]>(
@@ -159,9 +173,11 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
                 <DropdownMenuItem onSelect={() => openEditDialog(row.original)}>
                   Редактировать
                 </DropdownMenuItem>
-                <DropdownMenuItem disabled>Создать копию</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem disabled variant="destructive">
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={() => openDeleteDialog(row.original)}
+                >
                   Удалить
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -218,6 +234,17 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
         ...current,
         error: err instanceof Error ? err.message : "Не удалось сохранить смету",
       }))
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!estimateToDelete) return
+
+    try {
+      await deleteRecord(estimateToDelete.id)
+      closeDeleteDialog()
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Не удалось удалить смету")
     }
   }
 
@@ -313,6 +340,15 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
         onOpenChange={handleDialogOpenChange}
         onNameChange={handleDialogNameChange}
         onSubmit={handleDialogSubmit}
+      />
+      <EstimateDeleteDialog
+        estimate={estimateToDelete}
+        saving={saving}
+        error={deleteError}
+        onOpenChange={(open) => {
+          if (!open) closeDeleteDialog()
+        }}
+        onConfirm={handleDeleteConfirm}
       />
     </>
   )

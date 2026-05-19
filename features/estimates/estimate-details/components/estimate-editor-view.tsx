@@ -135,33 +135,6 @@ export function EstimateEditorView({
     setSectionOpen(false)
   }
 
-  const addManualWork = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!workDialog.sectionId) return
-
-    const form = new FormData(event.currentTarget)
-    const title = parseText(form.get("title"))
-    const unit = parseText(form.get("unit"))
-    if (!title || !unit) return
-
-    await save(
-      {
-        action: "add_manual_work",
-        payload: {
-          sectionId: workDialog.sectionId,
-          title,
-          unitCode: unit,
-          unitLabel: unit,
-          quantity: parseDecimal(form.get("quantity"), 1),
-          price: parseDecimal(form.get("price"), 0),
-          category: parseText(form.get("category")),
-          notes: parseText(form.get("notes")),
-        },
-      },
-      "Не удалось добавить работу"
-    )
-  }
-
   const addDirectoryWork = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!workDialog.sectionId || !workDialog.selected) return
@@ -293,7 +266,6 @@ export function EstimateEditorView({
         onSelect={(selected: ProjectEstimateOptionRow) =>
           setWorkDialog((current) => ({ ...current, selected }))
         }
-        onManualSubmit={addManualWork}
         onDirectorySubmit={addDirectoryWork}
       />
       <EstimateMaterialPickerDialog

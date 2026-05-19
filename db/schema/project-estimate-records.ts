@@ -52,6 +52,11 @@ export const projectEstimateRecords = pgTable(
   },
   (t) => [
     uniqueIndex("uq_project_estimate_records_id_workspace").on(t.id, t.workspaceOwnerId),
+    uniqueIndex("uq_project_estimate_records_id_workspace_project").on(
+      t.id,
+      t.workspaceOwnerId,
+      t.projectId
+    ),
     index("idx_project_estimate_records_project_active").on(
       t.workspaceOwnerId,
       t.projectId,

@@ -1,3 +1,3 @@
-export default function ProjectDetailsPage({ params }: { params: { projectId: string } }) {
-  return null;
+export default function ProjectDetailsPage() {
+  return <div />
 }

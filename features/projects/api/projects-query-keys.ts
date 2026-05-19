@@ -12,6 +12,12 @@ export const projectsQueryKeys = {
     projectId: string,
     params: ProjectEstimateRecordsListParams = {}
   ) => [...projectsQueryKeys.estimateRecords(projectId), "list", params] as const,
+  estimateRecordContent: (projectId: string, recordId: string) =>
+    [...projectsQueryKeys.estimateRecords(projectId), recordId, "content"] as const,
+  estimateWorkOptions: (projectId: string, recordId: string, params: object = {}) =>
+    [...projectsQueryKeys.estimateRecords(projectId), recordId, "work-options", params] as const,
+  estimateMaterialOptions: (projectId: string, recordId: string, params: object = {}) =>
+    [...projectsQueryKeys.estimateRecords(projectId), recordId, "material-options", params] as const,
 }
 
 export const projectsCacheTags = {

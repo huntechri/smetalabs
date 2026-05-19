@@ -32,27 +32,67 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export const schema = z.object({
   id: z.number(),
-  header: z.string(),
+  name: z.string(),
   type: z.string(),
-  status: z.string(),
-  target: z.string(),
-  limit: z.string(),
-  reviewer: z.string(),
+  status: z.enum(["Новая", "В работе", "Завершено"]),
+  amount: z.number(),
+  createdAt: z.string(),
 })
 
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
+type EstimateRow = z.infer<typeof schema>
+
+const estimatesData: EstimateRow[] = [
   {
-    accessorKey: "header",
-    header: "Раздел",
+    id: 1,
+    name: "Смета на отделочные работы",
+    type: "Основная",
+    status: "Новая",
+    amount: 1250000,
+    createdAt: "2026-05-19",
+  },
+  {
+    id: 2,
+    name: "Смета на инженерные сети",
+    type: "Дополнительная",
+    status: "В работе",
+    amount: 875000,
+    createdAt: "2026-05-18",
+  },
+  {
+    id: 3,
+    name: "Смета на черновые материалы",
+    type: "Основная",
+    status: "Завершено",
+    amount: 640000,
+    createdAt: "2026-05-17",
+  },
+]
+
+function formatMoney(value: number) {
+  return value.toLocaleString("ru-RU", {
+    style: "currency",
+    currency: "RUB",
+    maximumFractionDigits: 0,
+  })
+}
+
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString("ru-RU")
+}
+
+const columns: ColumnDef<EstimateRow>[] = [
+  {
+    accessorKey: "name",
+    header: "Наименование",
     cell: ({ row }) => (
       <Button variant="link" className="w-fit px-0 text-left text-foreground">
-        {row.original.header}
+        {row.original.name}
       </Button>
     ),
   },
   {
     accessorKey: "type",
-    header: "Тип",
+    header: "Тип сметы",
     cell: ({ row }) => (
       <Badge variant="outline" className="px-1.5 text-muted-foreground">
         {row.original.type}
@@ -64,7 +104,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     header: "Статус",
     cell: ({ row }) => (
       <Badge variant="outline" className="px-1.5 text-muted-foreground">
-        {row.original.status === "Done" ? (
+        {row.original.status === "Завершено" ? (
           <CheckCircle className="fill-green-500 dark:fill-green-400" />
         ) : (
           <Spinner className="animate-spin" />
@@ -74,53 +114,59 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     ),
   },
   {
-    accessorKey: "target",
-    header: () => <div className="w-full text-right">Цель</div>,
-    cell: ({ row }) => <div className="text-right tabular-nums">{row.original.target}</div>,
+    accessorKey: "amount",
+    header: () => <div className="w-full text-right">Сумма</div>,
+    cell: ({ row }) => (
+      <div className="text-right font-medium tabular-nums">
+        {formatMoney(row.original.amount)}
+      </div>
+    ),
   },
   {
-    accessorKey: "limit",
-    header: () => <div className="w-full text-right">Лимит</div>,
-    cell: ({ row }) => <div className="text-right tabular-nums">{row.original.limit}</div>,
-  },
-  {
-    accessorKey: "reviewer",
-    header: "Проверяющий",
-    cell: ({ row }) => row.original.reviewer,
+    accessorKey: "createdAt",
+    header: "Дата создания сметы",
+    cell: ({ row }) => (
+      <span className="text-muted-foreground">
+        {formatDate(row.original.createdAt)}
+      </span>
+    ),
   },
   {
     id: "actions",
+    header: () => <div className="text-right">Действия</div>,
     cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-            size="icon"
-          >
-            <DotsThreeVertical />
-            <span className="sr-only">Открыть меню</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Редактировать</DropdownMenuItem>
-          <DropdownMenuItem>Создать копию</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Удалить</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+              size="icon"
+            >
+              <DotsThreeVertical />
+              <span className="sr-only">Открыть меню</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuItem>Редактировать</DropdownMenuItem>
+            <DropdownMenuItem>Создать копию</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive">Удалить</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     ),
   },
 ]
 
-export function DataTable({ data }: { data: z.infer<typeof schema>[] }) {
+export function DataTable({ data: _data }: { data: unknown[] }) {
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
   })
 
   const table = useReactTable({
-    data,
+    data: estimatesData,
     columns,
     state: { pagination },
     onPaginationChange: setPagination,
@@ -129,19 +175,17 @@ export function DataTable({ data }: { data: z.infer<typeof schema>[] }) {
   })
 
   return (
-    <Tabs defaultValue="outline" className="w-full flex-col justify-start gap-6">
+    <Tabs defaultValue="estimates" className="w-full flex-col justify-start gap-6">
       <div className="flex items-center justify-between px-4 lg:px-6">
         <TabsList className="**:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1">
-          <TabsTrigger value="outline">Содержание</TabsTrigger>
-          <TabsTrigger value="planning">Планирование</TabsTrigger>
-          <TabsTrigger value="documents">Документы</TabsTrigger>
+          <TabsTrigger value="estimates">Сметы</TabsTrigger>
         </TabsList>
         <Button variant="outline" size="sm">
-          Добавить раздел
+          Создать смету
         </Button>
       </div>
 
-      <TabsContent value="outline" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
+      <TabsContent value="estimates" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
         <div className="overflow-hidden rounded-lg border">
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-muted">
@@ -171,7 +215,7 @@ export function DataTable({ data }: { data: z.infer<typeof schema>[] }) {
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-24 text-center">
-                    Нет данных.
+                    Сметы не найдены.
                   </TableCell>
                 </TableRow>
               )}
@@ -179,7 +223,7 @@ export function DataTable({ data }: { data: z.infer<typeof schema>[] }) {
           </Table>
         </div>
         <div className="flex items-center justify-between px-4 text-sm text-muted-foreground">
-          <div>Всего строк: {table.getFilteredRowModel().rows.length}</div>
+          <div>Всего смет: {table.getFilteredRowModel().rows.length}</div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -202,13 +246,6 @@ export function DataTable({ data }: { data: z.infer<typeof schema>[] }) {
             </Button>
           </div>
         </div>
-      </TabsContent>
-
-      <TabsContent value="planning" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed" />
-      </TabsContent>
-      <TabsContent value="documents" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed" />
       </TabsContent>
     </Tabs>
   )

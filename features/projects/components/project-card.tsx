@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import type { ProjectRow } from "@/types/project"
 import {
   BuildingApartment,
@@ -146,8 +147,8 @@ export function ProjectCard({ project, disabled, onEdit, onArchive }: ProjectCar
 
       <CardFooter>
         <div className="flex flex-wrap gap-2">
-          <Button disabled size="xs" variant="outline" title="Страница проекта будет добавлена отдельно">
-            Открыть
+          <Button asChild size="xs" variant="outline">
+            <Link href={`/projects/${project.id}`}>Открыть</Link>
           </Button>
           <Button disabled={disabled} variant="outline" size="xs" onClick={() => onEdit(project)}>
             <NotePencil data-icon="inline-start" />

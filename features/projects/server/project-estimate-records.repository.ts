@@ -120,7 +120,7 @@ export async function listProjectEstimateRecordsForWorkspace(
   workspaceOwnerId: string,
   projectId: string,
   params: NormalizedListParams
-): Promise<ProjectEstimatesListResponse> {
+): Promise<ProjectEstimateRecordsListResponse> {
   await assertProjectExists(workspaceOwnerId, projectId)
 
   const from = params.cursor

@@ -1,12 +1,16 @@
-"use client"
-
 import { ChartAreaInteractive } from "@/features/projects/project-overview/components/chart-area-interactive"
 import { EstimatesTable } from "@/features/projects/project-overview/components/estimates-table"
 import { SectionCards } from "@/features/projects/project-overview/components/section-cards"
 
 export const dynamic = "force-dynamic"
 
-export default function ProjectDetailsPage({ params }: { params: { projectId: string } }) {
+type ProjectDetailsPageProps = {
+  params: Promise<{ projectId: string }>
+}
+
+export default async function ProjectDetailsPage({ params }: ProjectDetailsPageProps) {
+  const { projectId } = await params
+
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2 min-h-0">
@@ -15,7 +19,7 @@ export default function ProjectDetailsPage({ params }: { params: { projectId: st
           <div className="px-4 lg:px-6">
             <ChartAreaInteractive />
           </div>
-          <EstimatesTable projectId={params.projectId} />
+          <EstimatesTable projectId={projectId} />
         </div>
       </div>
     </div>

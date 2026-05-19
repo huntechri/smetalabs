@@ -84,3 +84,19 @@ export function updateProjectEstimateRecord({
     }
   )
 }
+
+export function deleteProjectEstimateRecord({
+  projectId,
+  recordId,
+}: {
+  projectId: string
+  recordId: string
+}) {
+  return fetchJson<{ data: ProjectEstimateRecordRow }>(
+    `/api/projects/${projectId}/estimate-records/${recordId}`,
+    "удаления сметы",
+    {
+      method: "DELETE",
+    }
+  )
+}

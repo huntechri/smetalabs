@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import {
   Collapsible,
@@ -45,6 +45,14 @@ export function EstimateSectionCard({
   const [expandedWorks, setExpandedWorks] = useState<Set<string>>(
     () => new Set(section.works[0] ? [section.works[0].id] : [])
   )
+
+  useEffect(() => {
+    setExpandedWorks((current) => {
+      const next = new Set(current)
+      section.works.forEach((work) => next.add(work.id))
+      return next
+    })
+  }, [section.works])
 
   const toggleWork = (workId: string) => {
     setExpandedWorks((current) => {

@@ -11,7 +11,7 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 CREATE SCHEMA IF NOT EXISTS private;
-GRANT USAGE ON SCHEMA private TO authenticated;
+GRANT USAGE ON SCHEMA private TO authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION private.project_estimate_record_normalize(value text)
 RETURNS text
@@ -19,7 +19,7 @@ LANGUAGE sql
 IMMUTABLE
 SET search_path = ''
 AS $$
-  SELECT regexp_replace(lower(trim(coalesce(value, ''))), '\s+', ' ', 'g');
+  SELECT regexp_replace(lower(trim(coalesce(value, '')), '\s+', ' ', 'g');
 $$;
 
 CREATE OR REPLACE FUNCTION private.set_project_estimate_record_search_fields()
@@ -99,4 +99,5 @@ CREATE POLICY "project_estimate_records_delete" ON public.project_estimate_recor
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.project_estimate_records TO authenticated;
 
 REVOKE EXECUTE ON FUNCTION private.project_estimate_record_normalize(text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION private.project_estimate_record_normalize(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION private.project_estimate_record_normalize(text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION private.set_project_estimate_record_search_fields() TO authenticated, service_role;

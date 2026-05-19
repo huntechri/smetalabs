@@ -1,95 +1,76 @@
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { EditableBadge } from "@/components/ui/editable-badge"
-import { Frame } from "@/components/ui/frame"
-import { getTotal } from "@/lib/calculations"
+import { Textarea } from "@/components/ui/textarea"
 import { formatConsumption, formatMoney, parseDecimalInput } from "@/lib/formatters"
-import { EstimateMaterialActions } from "./estimate-material-actions"
-import { EstimateMaterialName } from "./estimate-material-name"
-
-import type { Material } from "@/types/estimate"
+import type { ProjectEstimateContentMaterial } from "@/types/project-estimate-content"
+import type { MaterialChangePayload } from "@/features/estimates/estimate-details/types"
 
 export function EstimateMaterialCard({
-  index,
   material,
-  workNumber,
-  onUpdate,
+  saving,
+  onArchive,
+  onChange,
 }: {
-  index: number
-  material: Material
-  workNumber: string
-  onUpdate: (id: string, updates: Partial<Material>) => void
+  material: ProjectEstimateContentMaterial
+  saving: boolean
+  onArchive: () => void
+  onChange: (payload: MaterialChangePayload) => void
 }) {
   return (
-    <Card
-      size="sm"
-      className="min-h-36 gap-3 border border-dashed border-blue-500 bg-background shadow-none"
-    >
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <Frame className="border-blue-300">
-                <Badge variant="outline">
-                  {workNumber}.{index + 1}
-                </Badge>
-              </Frame>
-              <Frame className="border-blue-300">
-                <Badge variant="secondary">
-                  {material.unit}
-                </Badge>
-              </Frame>
-            </div>
-          </div>
-          <EstimateMaterialActions title={material.title} />
+    <div className="rounded-md border border-dashed bg-background p-3">
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline">{material.number}</Badge>
+          {material.code ? <Badge variant="outline">{material.code}</Badge> : null}
+          <Badge variant="secondary">{material.unitLabel}</Badge>
         </div>
-        <EstimateMaterialName
+        <Button disabled={saving} size="sm" variant="destructive" onClick={onArchive}>
+          Удалить
+        </Button>
+      </div>
+      <Textarea
+        disabled={saving}
+        defaultValue={material.title}
+        onBlur={(event) => {
+          const title = event.currentTarget.value.trim()
+          if (title && title !== material.title) onChange({ title })
+        }}
+      />
+      <div className="mt-2 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+        <EditableBadge
+          label="Кол-во"
+          value={material.quantity}
           onChange={(value) =>
-            onUpdate(material.id, { title: value })
+            onChange({ quantity: Number(value), changedField: "quantity" })
           }
-          value={material.title}
         />
-      </CardHeader>
-
-      <CardContent>
-        <dl className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-          <EditableBadge
-            label="Кол-во"
-            onChange={(value) =>
-              onUpdate(material.id, { quantity: Number(value) })
-            }
-            value={material.quantity}
-          />
-          <EditableBadge
-            label="Расход"
-            onChange={(value) =>
-              onUpdate(material.id, {
-                waste: parseDecimalInput(value),
-              })
-            }
-            formatDisplay={(v) => formatConsumption(Number(v))}
-            value={material.waste}
-          />
-          <EditableBadge
-            label="Цена"
-            onChange={(value) =>
-              onUpdate(material.id, { price: Number(value) })
-            }
-            value={material.price}
-          />
-          <Badge
-            variant="outline"
-            className="gap-1 rounded-md px-1.5 py-0.5 font-semibold tabular-nums"
-          >
-            <span className="text-muted-foreground">Итого:</span>
-            <span>
-              {formatMoney(
-                getTotal(material.quantity, material.price)
-              )}
-            </span>
-          </Badge>
-        </dl>
-      </CardContent>
-    </Card>
+        <EditableBadge
+          label="Расход"
+          value={material.consumption ?? ""}
+          formatDisplay={() =>
+            material.consumption === null
+              ? "—"
+              : formatConsumption(material.consumption)
+          }
+          onChange={(value) =>
+            onChange({
+              consumption: parseDecimalInput(value),
+              changedField: "consumption",
+            })
+          }
+        />
+        <EditableBadge
+          label="Цена"
+          value={material.price}
+          onChange={(value) =>
+            onChange({ price: Number(value), changedField: "price" })
+          }
+        />
+        <Badge variant="outline" className="justify-center">
+          {formatMoney(material.totalAmount)}
+        </Badge>
+      </div>
+    </div>
   )
 }

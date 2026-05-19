@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { CheckCircle, DotsThreeVertical, Spinner } from "@phosphor-icons/react"
 
 import { Badge } from "@/components/ui/badge"
@@ -173,11 +172,12 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
                   pageRows.map((estimate) => (
                     <TableRow key={estimate.id}>
                       <TableCell>
-                        <Button asChild variant="link" className="h-auto w-fit px-0 text-left text-foreground">
-                          <Link href={`/projects/${projectId}/estimates/${estimate.id}`}>
-                            {estimate.name}
-                          </Link>
-                        </Button>
+                        <a
+                          className="inline-flex text-left text-xs/relaxed font-medium text-foreground underline-offset-4 hover:underline"
+                          href={`/projects/${projectId}/estimates/${estimate.id}`}
+                        >
+                          {estimate.name}
+                        </a>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="px-1.5 text-muted-foreground">

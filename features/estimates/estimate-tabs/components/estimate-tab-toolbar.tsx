@@ -44,10 +44,21 @@ const tabActions: Record<string, ToolbarAction[]> = {
 }
 
 function getActiveTab(pathname: string) {
-  if (pathname.endsWith("/purchases")) return "purchases"
-  if (pathname.endsWith("/execution")) return "execution"
-  if (pathname.endsWith("/finances")) return "finances"
-  if (pathname.endsWith("/documents")) return "documents"
+  if (pathname.endsWith("/purchases")) {
+    return "purchases"
+  }
+
+  if (pathname.endsWith("/execution")) {
+    return "execution"
+  }
+
+  if (pathname.endsWith("/finances")) {
+    return "finances"
+  }
+
+  if (pathname.endsWith("/documents")) {
+    return "documents"
+  }
 
   return "estimate"
 }
@@ -93,8 +104,11 @@ export function EstimateTabToolbar() {
   }
 
   return (
-    <div className="flex flex-col gap-3 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
-      <form className="min-w-0 flex-1" onSubmit={handleSearch}>
+    <div className="flex flex-col gap-3 rounded-lg border border-dashed border-cyan-300 p-2 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
+      <form
+        className="min-w-0 flex-1 rounded-md border border-dashed border-sky-400 p-2"
+        onSubmit={handleSearch}
+      >
         <div className="flex min-w-0 items-center gap-2">
           <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
           <Input
@@ -111,19 +125,21 @@ export function EstimateTabToolbar() {
         </div>
       </form>
 
-      <ButtonGroup className="flex-wrap">
-        {actions.map((action) => (
-          <Button
-            key={action.label}
-            size="sm"
-            type="button"
-            variant={action.variant ?? "outline"}
-          >
-            {action.icon}
-            {action.label}
-          </Button>
-        ))}
-      </ButtonGroup>
+      <div className="flex rounded-md border border-dashed border-teal-400 p-2">
+        <ButtonGroup className="flex-wrap">
+          {actions.map((action) => (
+            <Button
+              key={action.label}
+              size="sm"
+              type="button"
+              variant={action.variant ?? "outline"}
+            >
+              {action.icon}
+              {action.label}
+            </Button>
+          ))}
+        </ButtonGroup>
+      </div>
     </div>
   )
 }

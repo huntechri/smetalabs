@@ -40,10 +40,11 @@
    - 7.3 [RLS-политики](#73-rls-политики-ключевые)
    - 7.4 [Supabase Storage RLS](#74-supabase-storage-rls)
    - 7.5 [Переменные окружения](#75-переменные-окружения)
-8. [Приложение: Карта связей](#приложение-карта-связей)
+[Приложение: Карта связей](#приложение-карта-связей)
    - A. [Сущность → Таблица](#a-сущность--таблица)
    - B. [Страница → Запрашиваемые данные](#b-страница--запрашиваемые-данные)
    - C. [Связи Foreign Key (полный список)](#c-связи-foreign-key-полный-список)
+8. [Документация модулей](#8-документация-модулей)
 9. [Чек-лист реализации](#9-чек-лист-реализации)
 
 ---
@@ -1807,6 +1808,19 @@ roles.id                 ◀── user_roles.role_id
 
 permissions.id           ◀── role_permissions.permission_id
 ```
+
+---
+
+## 8. Документация модулей
+
+Каждый модуль имеет отдельный архитектурный документ, описывающий контракт, состояние реализации, границы и план развития:
+
+- **[directory-counterparties-architecture.md](./directory-counterparties-architecture.md)** — справочник контрагентов: заказчики и подрядчики рабочей области, CRUD, обычный поиск и архивирование.
+- **[directory-materials-architecture.md](./directory-materials-architecture.md)** — справочник материалов: read/write/export/import, AI-поиск на сервере, staged-импорт и батчевая обработка.
+- **[directory-suppliers-architecture.md](./directory-suppliers-architecture.md)** — справочник поставщиков: read, write, archive, regular search (без import/export/AI в первой версии).
+- **[directory-works-architecture.md](./directory-works-architecture.md)** — справочник работ: канонический контракт каталога (DB, search, CRUD, import/export, embeddings, кэширование, observability).
+- **[global-purchases-architecture.md](./global-purchases-architecture.md)** — глобальные закупки: первый рабочий слой с импортом CSV, экспортом XLSX, группировкой строк и material-picker.
+- **[projects-architecture.md](./projects-architecture.md)** — проекты: базовый список объектов рабочей области с реальными данными, CRUD, фильтрацией и архивированием.
 
 ---
 

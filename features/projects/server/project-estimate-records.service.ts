@@ -8,6 +8,7 @@ import type {
 import { requireProjectsReadContext, requireProjectsWriteContext } from "./projects.service"
 import {
   createProjectEstimateRecordForWorkspace,
+  deleteProjectEstimateRecordForWorkspace,
   listProjectEstimateRecordsForWorkspace,
   updateProjectEstimateRecordForWorkspace,
 } from "./project-estimate-records.repository"
@@ -83,6 +84,19 @@ export async function updateProjectEstimateRecord(
     projectId,
     recordId,
     input
+  )
+
+  revalidateEstimateRecords(context.workspaceOwnerId, projectId)
+  return { data: record }
+}
+
+export async function deleteProjectEstimateRecord(projectId: string, recordId: string) {
+  const context = await requireProjectsWriteContext()
+  const record = await deleteProjectEstimateRecordForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    projectId,
+    recordId
   )
 
   revalidateEstimateRecords(context.workspaceOwnerId, projectId)

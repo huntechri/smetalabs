@@ -28,12 +28,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useProjectEstimateRecords } from "@/features/projects/hooks/use-project-estimate-records"
+import { EstimateDeleteDialog } from "@/features/projects/project-overview/components/estimate-delete-dialog"
 import { EstimateNameDialog } from "@/features/projects/project-overview/components/estimate-name-dialog"
 import {
-  ESTIMATES_DATA,
-  createLocalEstimate,
   formatEstimateAmount,
   formatEstimateDate,
+  formatEstimateStatus,
 } from "@/features/projects/project-overview/lib/estimate-table-data"
 import type {
   EstimateDialogState,
@@ -47,10 +48,22 @@ const EMPTY_DIALOG_STATE: EstimateDialogState = {
   error: null,
 }
 
-export function EstimatesTable({ data: _data }: { data: unknown[] }) {
-  const [data, setData] = React.useState<EstimateRow[]>(ESTIMATES_DATA)
+export function EstimatesTable({ projectId }: { projectId: string }) {
+  const {
+    records,
+    meta,
+    loading,
+    isFetching,
+    error,
+    saving,
+    createRecord,
+    updateRecord,
+    deleteRecord,
+  } = useProjectEstimateRecords(projectId)
   const [dialogState, setDialogState] =
     React.useState<EstimateDialogState>(EMPTY_DIALOG_STATE)
+  const [estimateToDelete, setEstimateToDelete] = React.useState<EstimateRow | null>(null)
+  const [deleteError, setDeleteError] = React.useState<string | null>(null)
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
@@ -74,8 +87,18 @@ export function EstimatesTable({ data: _data }: { data: unknown[] }) {
     })
   }
 
+  const openDeleteDialog = (estimate: EstimateRow) => {
+    setDeleteError(null)
+    setEstimateToDelete(estimate)
+  }
+
   const closeDialog = () => {
     setDialogState(EMPTY_DIALOG_STATE)
+  }
+
+  const closeDeleteDialog = () => {
+    setDeleteError(null)
+    setEstimateToDelete(null)
   }
 
   const columns = React.useMemo<ColumnDef<EstimateRow>[]>(
@@ -103,12 +126,12 @@ export function EstimatesTable({ data: _data }: { data: unknown[] }) {
         header: "Статус",
         cell: ({ row }) => (
           <Badge variant="outline" className="px-1.5 text-muted-foreground">
-            {row.original.status === "Завершено" ? (
+            {row.original.status === "completed" ? (
               <CheckCircle className="fill-green-500 dark:fill-green-400" />
             ) : (
               <Spinner className="animate-spin" />
             )}
-            {row.original.status}
+            {formatEstimateStatus(row.original.status)}
           </Badge>
         ),
       },
@@ -150,9 +173,13 @@ export function EstimatesTable({ data: _data }: { data: unknown[] }) {
                 <DropdownMenuItem onSelect={() => openEditDialog(row.original)}>
                   Редактировать
                 </DropdownMenuItem>
-                <DropdownMenuItem>Создать копию</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive">Удалить</DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={() => openDeleteDialog(row.original)}
+                >
+                  Удалить
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -163,7 +190,7 @@ export function EstimatesTable({ data: _data }: { data: unknown[] }) {
   )
 
   const table = useReactTable({
-    data,
+    data: records,
     columns,
     state: { pagination },
     onPaginationChange: setPagination,
@@ -184,7 +211,7 @@ export function EstimatesTable({ data: _data }: { data: unknown[] }) {
     setDialogState((current) => ({ ...current, name, error: null }))
   }
 
-  const handleDialogSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleDialogSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const name = dialogState.name.trim()
@@ -193,18 +220,32 @@ export function EstimatesTable({ data: _data }: { data: unknown[] }) {
       return
     }
 
-    if (dialogState.estimate) {
-      setData((current) =>
-        current.map((estimate) =>
-          estimate.id === dialogState.estimate?.id ? { ...estimate, name } : estimate
-        )
-      )
-      closeDialog()
-      return
-    }
+    try {
+      if (dialogState.estimate) {
+        await updateRecord(dialogState.estimate.id, { name })
+        closeDialog()
+        return
+      }
 
-    setData((current) => [...current, createLocalEstimate(name, current)])
-    closeDialog()
+      await createRecord({ name })
+      closeDialog()
+    } catch (err) {
+      setDialogState((current) => ({
+        ...current,
+        error: err instanceof Error ? err.message : "Не удалось сохранить смету",
+      }))
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!estimateToDelete) return
+
+    try {
+      await deleteRecord(estimateToDelete.id)
+      closeDeleteDialog()
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Не удалось удалить смету")
+    }
   }
 
   return (
@@ -214,12 +255,13 @@ export function EstimatesTable({ data: _data }: { data: unknown[] }) {
           <TabsList className="**:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1">
             <TabsTrigger value="estimates">Сметы</TabsTrigger>
           </TabsList>
-          <Button variant="outline" size="sm" onClick={openCreateDialog}>
+          <Button variant="outline" size="sm" onClick={openCreateDialog} disabled={saving}>
             Создать смету
           </Button>
         </div>
 
         <TabsContent value="estimates" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
+          {error ? <div className="text-xs text-destructive">{error}</div> : null}
           <div className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-muted">
@@ -236,7 +278,13 @@ export function EstimatesTable({ data: _data }: { data: unknown[] }) {
                 ))}
               </TableHeader>
               <TableBody>
-                {table.getRowModel().rows?.length ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                      Загрузка смет...
+                    </TableCell>
+                  </TableRow>
+                ) : table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow key={row.id}>
                       {row.getVisibleCells().map((cell) => (
@@ -257,7 +305,10 @@ export function EstimatesTable({ data: _data }: { data: unknown[] }) {
             </Table>
           </div>
           <div className="flex items-center justify-between px-4 text-sm text-muted-foreground">
-            <div>Всего смет: {table.getFilteredRowModel().rows.length}</div>
+            <div>
+              Всего смет: {meta?.total ?? table.getFilteredRowModel().rows.length}
+              {isFetching ? " · обновление..." : ""}
+            </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -268,7 +319,7 @@ export function EstimatesTable({ data: _data }: { data: unknown[] }) {
                 Назад
               </Button>
               <div className="text-sm font-medium text-foreground">
-                {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+                {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
               </div>
               <Button
                 variant="outline"
@@ -285,9 +336,19 @@ export function EstimatesTable({ data: _data }: { data: unknown[] }) {
 
       <EstimateNameDialog
         state={dialogState}
+        saving={saving}
         onOpenChange={handleDialogOpenChange}
         onNameChange={handleDialogNameChange}
         onSubmit={handleDialogSubmit}
+      />
+      <EstimateDeleteDialog
+        estimate={estimateToDelete}
+        saving={saving}
+        error={deleteError}
+        onOpenChange={(open) => {
+          if (!open) closeDeleteDialog()
+        }}
+        onConfirm={handleDeleteConfirm}
       />
     </>
   )

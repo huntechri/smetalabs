@@ -25,12 +25,6 @@ const bodySchema = z.object({
     .max(1000, "Коэффициент слишком большой"),
 })
 
-type WorkRow = {
-  id: string
-  base_price: string | number | null
-  price: string | number
-}
-
 type RecordCoefficientRow = {
   works_coefficient_percent: string | number
 }
@@ -89,58 +83,19 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     const body = bodySchema.parse(await readJsonBody(request))
     const context = await requireProjectsWriteContext()
 
-    const { data: record, error: recordLookupError } = await supabase
-      .from("project_estimate_records")
-      .select("id")
-      .eq("workspace_owner_id", context.workspaceOwnerId)
-      .eq("project_id", projectId)
-      .eq("id", estimateRecordId)
-      .is("archived_at", null)
-      .is("deleted_at", null)
-      .maybeSingle()
+    const { error } = await supabase.rpc("apply_project_estimate_work_coefficient", {
+      p_workspace_owner_id: context.workspaceOwnerId,
+      p_project_id: projectId,
+      p_estimate_record_id: estimateRecordId,
+      p_coefficient_percent: body.coefficientPercent,
+      p_updated_by: context.userId,
+    })
 
-    if (recordLookupError) throw recordLookupError
-    if (!record) throw new ProjectsApiError("NOT_FOUND", "Смета не найдена", 404)
-
-    const { data: works, error: worksError } = await supabase
-      .from("project_estimate_works")
-      .select("id,base_price,price")
-      .eq("workspace_owner_id", context.workspaceOwnerId)
-      .eq("project_id", projectId)
-      .eq("estimate_record_id", estimateRecordId)
-      .is("archived_at", null)
-      .is("deleted_at", null)
-
-    if (worksError) throw worksError
-
-    const { error: recordUpdateError } = await supabase
-      .from("project_estimate_records")
-      .update({
-        works_coefficient_percent: body.coefficientPercent,
-        updated_by: context.userId,
-      })
-      .eq("workspace_owner_id", context.workspaceOwnerId)
-      .eq("project_id", projectId)
-      .eq("id", estimateRecordId)
-
-    if (recordUpdateError) throw recordUpdateError
-
-    for (const work of (works ?? []) as WorkRow[]) {
-      const basePrice = toNumber(work.base_price) || toNumber(work.price)
-      const { error } = await supabase
-        .from("project_estimate_works")
-        .update({
-          base_price: basePrice,
-          price: basePrice,
-          updated_by: context.userId,
-        })
-        .eq("workspace_owner_id", context.workspaceOwnerId)
-        .eq("project_id", projectId)
-        .eq("estimate_record_id", estimateRecordId)
-        .eq("id", work.id)
-
-      if (error) throw error
+    if (error?.message?.includes("PROJECT_ESTIMATE_RECORD_NOT_FOUND")) {
+      throw new ProjectsApiError("NOT_FOUND", "Смета не найдена", 404)
     }
+
+    if (error) throw error
 
     const response = await getProjectEstimateContentForWorkspace(
       context.workspaceOwnerId,

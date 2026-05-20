@@ -38,7 +38,11 @@ export function EstimateDebugMaterialCard({
               </Frame>
             </div>
           </div>
-          <EstimateMaterialActions title={material.title} />
+          <EstimateMaterialActions
+            disabled
+            title={material.title}
+            onArchive={() => undefined}
+          />
         </div>
         <EstimateMaterialName
           onChange={(value) => onUpdate(material.id, { title: value })}

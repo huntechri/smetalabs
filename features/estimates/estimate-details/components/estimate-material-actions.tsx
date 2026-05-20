@@ -13,12 +13,12 @@ import { DotsThreeVerticalIcon } from "@phosphor-icons/react"
 
 export function EstimateMaterialActions({ title }: { title: string }) {
   return (
-    <Frame className="border-blue-300">
+    <Frame>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             aria-label={`Действия с материалом ${title}`}
-            size="icon-sm"
+            size="icon-xs"
             type="button"
             variant="ghost"
           >

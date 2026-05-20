@@ -152,10 +152,6 @@ export function EstimateWorkCard({
               <div className="mt-3 flex justify-end border-t pt-3">
                 <Frame>
                   <ButtonGroup>
-                    <Button size="xs" variant="outline" onClick={() => onAddMaterial(work)}>
-                      <PlusIcon data-icon="inline-start" />
-                      Материал
-                    </Button>
                     <Button size="xs" variant="outline" onClick={onAddSection}>
                       <PlusIcon data-icon="inline-start" />
                       Раздел
@@ -163,6 +159,10 @@ export function EstimateWorkCard({
                     <Button size="xs" variant="outline" onClick={onAddWork}>
                       <PlusIcon data-icon="inline-start" />
                       Работа
+                    </Button>
+                    <Button size="xs" variant="outline" onClick={() => onAddMaterial(work)}>
+                      <PlusIcon data-icon="inline-start" />
+                      Материал
                     </Button>
                     <Button
                       aria-label="Удалить раздел"

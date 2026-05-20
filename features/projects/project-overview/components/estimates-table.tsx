@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { CheckCircle, DotsThreeVertical, Spinner } from "@phosphor-icons/react"
 
 import { Badge } from "@/components/ui/badge"
@@ -44,7 +43,6 @@ const EMPTY_DIALOG_STATE: EstimateDialogState = {
 }
 
 export function EstimatesTable({ projectId }: { projectId: string }) {
-  const router = useRouter()
   const {
     records,
     meta,
@@ -70,10 +68,6 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
 
   const getEstimateHref = (estimateId: string) =>
     `/projects/${projectId}/estimates/${estimateId}`
-
-  const openEstimate = (estimateId: string) => {
-    router.push(getEstimateHref(estimateId))
-  }
 
   const openCreateDialog = () => {
     setDialogState({ open: true, estimate: null, name: "", error: null })
@@ -179,83 +173,67 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
                     </TableCell>
                   </TableRow>
                 ) : pageRows.length ? (
-                  pageRows.map((estimate) => {
-                    const href = getEstimateHref(estimate.id)
-
-                    return (
-                      <TableRow
-                        key={estimate.id}
-                        className="cursor-pointer"
-                        onClick={() => openEstimate(estimate.id)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault()
-                            openEstimate(estimate.id)
-                          }
-                        }}
-                        tabIndex={0}
-                      >
-                        <TableCell>
-                          <Link
-                            className="inline-flex text-left text-xs/relaxed font-medium text-foreground underline-offset-4 hover:underline"
-                            href={href}
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            {estimate.name}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="px-1.5 text-muted-foreground">
-                            {estimate.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="px-1.5 text-muted-foreground">
-                            {estimate.status === "completed" ? (
-                              <CheckCircle className="fill-green-500 dark:fill-green-400" />
-                            ) : (
-                              <Spinner className="animate-spin" />
-                            )}
-                            {formatEstimateStatus(estimate.status)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-medium tabular-nums">
-                          {formatEstimateAmount(estimate.amount)}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {formatEstimateDate(estimate.createdAt)}
-                        </TableCell>
-                        <TableCell onClick={(event) => event.stopPropagation()}>
-                          <div className="flex justify-end">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-                                  size="icon"
-                                >
-                                  <DotsThreeVertical />
-                                  <span className="sr-only">Открыть меню</span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-32">
-                                <DropdownMenuItem onSelect={() => openEditDialog(estimate)}>
-                                  Редактировать
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  variant="destructive"
-                                  onSelect={() => openDeleteDialog(estimate)}
-                                >
-                                  Удалить
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })
+                  pageRows.map((estimate) => (
+                    <TableRow key={estimate.id}>
+                      <TableCell>
+                        <Link
+                          className="inline-flex text-left text-xs/relaxed font-medium text-foreground underline-offset-4 hover:underline"
+                          href={getEstimateHref(estimate.id)}
+                        >
+                          {estimate.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="px-1.5 text-muted-foreground">
+                          {estimate.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="px-1.5 text-muted-foreground">
+                          {estimate.status === "completed" ? (
+                            <CheckCircle className="fill-green-500 dark:fill-green-400" />
+                          ) : (
+                            <Spinner className="animate-spin" />
+                          )}
+                          {formatEstimateStatus(estimate.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-medium tabular-nums">
+                        {formatEstimateAmount(estimate.amount)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatEstimateDate(estimate.createdAt)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+                                size="icon"
+                              >
+                                <DotsThreeVertical />
+                                <span className="sr-only">Открыть меню</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-32">
+                              <DropdownMenuItem onSelect={() => openEditDialog(estimate)}>
+                                Редактировать
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onSelect={() => openDeleteDialog(estimate)}
+                              >
+                                Удалить
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 ) : (
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">

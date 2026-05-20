@@ -129,18 +129,18 @@ export function EstimateSectionCard({
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/20 px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
-          <FramedButton size="sm" variant="outline" onClick={onAddSection}>
+          <FramedButton size="xs" variant="outline" onClick={onAddSection}>
             <PlusIcon data-icon="inline-start" />
             Раздел
           </FramedButton>
-          <FramedButton size="sm" variant="outline" onClick={() => onAddWork(section.id)}>
+          <FramedButton size="xs" variant="outline" onClick={() => onAddWork(section.id)}>
             <PlusIcon data-icon="inline-start" />
             Работа
           </FramedButton>
         </div>
         <FramedButton
           disabled={saving}
-          size="sm"
+          size="xs"
           variant="destructive"
           onClick={() =>
             onArchive({

@@ -42,46 +42,47 @@ export function EstimateMaterialPickerDialog({
   onSelect: (row: ProjectEstimateMaterialOptionRow) => void
   onDirectorySubmit: (event: FormEvent<HTMLFormElement>) => void
 }) {
-  const [submittedSearch, setSubmittedSearch] = useState(query.trim())
+  const [searchText, setSearchText] = useState(query)
   const [quantityDialogOpen, setQuantityDialogOpen] = useState(false)
   const [quantity, setQuantity] = useState("1")
   const [consumption, setConsumption] = useState("")
   const [price, setPrice] = useState("0")
   const [quantityError, setQuantityError] = useState<string | null>(null)
-  const normalizedSearch = query.trim().replace(/\s+/g, " ")
-  const canSearch = submittedSearch.length >= MATERIAL_SEARCH_MIN_LENGTH
+  const normalizedSearch = searchText.trim().replace(/\s+/g, " ")
+  const canSearch = query.trim().length >= MATERIAL_SEARCH_MIN_LENGTH
   const visibleOptions = useMemo(() => (canSearch ? options : []), [canSearch, options])
   const showSearchPrompt = !canSearch
   const showEmpty = canSearch && !loading && visibleOptions.length === 0
 
   useEffect(() => {
     if (state.open) return
-    setSubmittedSearch("")
+    setSearchText("")
+    onQueryChange("")
     setQuantityDialogOpen(false)
     setQuantity("1")
     setConsumption("")
     setPrice("0")
     setQuantityError(null)
-  }, [state.open])
+  }, [onQueryChange, state.open])
 
   useEffect(() => {
     if (!state.open) return
     if (normalizedSearch.length < MATERIAL_SEARCH_MIN_LENGTH) {
-      setSubmittedSearch("")
+      onQueryChange("")
       return
     }
 
     const timeout = window.setTimeout(
-      () => setSubmittedSearch(normalizedSearch),
+      () => onQueryChange(normalizedSearch),
       MATERIAL_SEARCH_DELAY_MS
     )
     return () => window.clearTimeout(timeout)
-  }, [normalizedSearch, state.open])
+  }, [normalizedSearch, onQueryChange, state.open])
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (normalizedSearch.length >= MATERIAL_SEARCH_MIN_LENGTH) {
-      setSubmittedSearch(normalizedSearch)
+      onQueryChange(normalizedSearch)
     }
   }
 
@@ -140,9 +141,9 @@ export function EstimateMaterialPickerDialog({
             <Input
               aria-label="Поиск материалов"
               className="h-8"
-              onChange={(event) => onQueryChange(event.target.value)}
+              onChange={(event) => setSearchText(event.target.value)}
               placeholder="Введите минимум 2 символа"
-              value={query}
+              value={searchText}
             />
             <Button type="submit" variant="outline">
               Поиск

@@ -22,9 +22,13 @@ export type EstimateArchiveRequest = {
 
 export type EstimateArchive = (request: EstimateArchiveRequest) => void
 
+export type WorkDialogMode = "add" | "replace"
+
 export type WorkDialogState = {
   open: boolean
+  mode: WorkDialogMode
   sectionId: string | null
+  work: ProjectEstimateContentWork | null
   selected: ProjectEstimateOptionRow | null
 }
 

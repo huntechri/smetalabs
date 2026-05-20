@@ -37,7 +37,9 @@ import type {
 
 const EMPTY_WORK_DIALOG: WorkDialogState = {
   open: false,
+  mode: "add",
   sectionId: null,
+  work: null,
   selected: null,
 }
 
@@ -47,7 +49,7 @@ const EMPTY_MATERIAL_DIALOG: MaterialDialogState = {
   selected: null,
 }
 
-const OPTION_SEARCH_MIN_LENGTH = 2
+const OPTION_SEARCH_MIN_LENGTH = 3
 
 export function EstimateEditorView({
   projectId,
@@ -127,7 +129,27 @@ export function EstimateEditorView({
 
   const openWorkDialog = async (sectionId?: string) => {
     const target = sectionId ?? (await ensureSection())
-    if (target) setWorkDialog({ open: true, sectionId: target, selected: null })
+    if (target) {
+      setWorkSearch("")
+      setWorkDialog({
+        open: true,
+        mode: "add",
+        sectionId: target,
+        work: null,
+        selected: null,
+      })
+    }
+  }
+
+  const openReplaceWorkDialog = (work: ProjectEstimateContentWork) => {
+    setWorkSearch("")
+    setWorkDialog({
+      open: true,
+      mode: "replace",
+      sectionId: work.sectionId,
+      work,
+      selected: null,
+    })
   }
 
   const openMaterialDialog = (work: ProjectEstimateContentWork) => {
@@ -169,6 +191,23 @@ export function EstimateEditorView({
       "Не удалось добавить работу"
     )
     setWorkDialog((current) => ({ ...current, selected: null }))
+  }
+
+  const replaceDirectoryWork = async (selected: ProjectEstimateOptionRow) => {
+    if (!workDialog.work) return
+
+    await save(
+      {
+        action: "update_work",
+        payload: {
+          workId: workDialog.work.id,
+          title: selected.title,
+          price: selected.price,
+        },
+      },
+      "Не удалось заменить работу"
+    )
+    setWorkDialog(EMPTY_WORK_DIALOG)
   }
 
   const addDirectoryMaterial = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -227,6 +266,7 @@ export function EstimateEditorView({
                 onAddSection={() => setSectionOpen(true)}
                 onAddWork={openWorkDialog}
                 onAddMaterial={openMaterialDialog}
+                onReplaceWork={openReplaceWorkDialog}
                 onSave={save}
               />
             ))}
@@ -249,9 +289,10 @@ export function EstimateEditorView({
         onOpenChange={(open) => {
           if (!open) setWorkDialog(EMPTY_WORK_DIALOG)
         }}
-        onSelect={(selected: ProjectEstimateOptionRow) =>
+        onSelect={(selected: ProjectEstimateOptionRow) => {
           setWorkDialog((current) => ({ ...current, selected }))
-        }
+          if (workDialog.mode === "replace") void replaceDirectoryWork(selected)
+        }}
         onDirectorySubmit={addDirectoryWork}
       />
       <EstimateMaterialPickerDialog

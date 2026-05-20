@@ -18,7 +18,7 @@ import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 import type { ProjectEstimateOptionRow } from "@/types/project-estimate-content"
 import type { WorkDialogState } from "@/features/estimates/estimate-details/types"
 
-const WORK_SEARCH_MIN_LENGTH = 2
+const WORK_SEARCH_MIN_LENGTH = 3
 const WORK_SEARCH_DELAY_MS = 250
 
 export function EstimateWorkPickerDialog({
@@ -52,6 +52,7 @@ export function EstimateWorkPickerDialog({
   const visibleOptions = useMemo(() => (canSearch ? options : []), [canSearch, options])
   const showSearchPrompt = !canSearch
   const showEmpty = canSearch && !loading && visibleOptions.length === 0
+  const isReplaceMode = state.mode === "replace"
 
   useEffect(() => {
     if (state.open) return
@@ -89,6 +90,9 @@ export function EstimateWorkPickerDialog({
     setQuantity("1")
     setPrice(String(work.price))
     setQuantityError(null)
+
+    if (isReplaceMode) return
+
     setQuantityDialogOpen(true)
   }
 
@@ -118,9 +122,13 @@ export function EstimateWorkPickerDialog({
       <Dialog open={state.open} onOpenChange={onOpenChange}>
         <DialogContent className="flex h-[min(720px,calc(100vh-4rem))] max-h-[calc(100vh-4rem)] flex-col overflow-hidden sm:max-w-3xl">
           <DialogHeader className="shrink-0">
-            <DialogTitle>Добавить работу из справочника</DialogTitle>
+            <DialogTitle>
+              {isReplaceMode ? "Заменить работу из справочника" : "Добавить работу из справочника"}
+            </DialogTitle>
             <DialogDescription>
-              Выберите работу из справочника работ. В смету попадут название, единица измерения и цена.
+              {isReplaceMode
+                ? "Выберите работу из справочника. В текущей строке будет заменено название и цена."
+                : "Выберите работу из справочника работ. В смету попадут название, единица измерения и цена."}
             </DialogDescription>
           </DialogHeader>
 
@@ -130,7 +138,7 @@ export function EstimateWorkPickerDialog({
               aria-label="Поиск работ"
               className="h-8"
               onChange={(event) => setSearchText(event.target.value)}
-              placeholder="Введите минимум 2 символа"
+              placeholder="Введите минимум 3 символа"
               value={searchText}
             />
             <Button type="submit" variant="outline">
@@ -143,7 +151,7 @@ export function EstimateWorkPickerDialog({
               <Empty className="h-full min-h-80 border-0">
                 <EmptyHeader>
                   <EmptyTitle>Введите название работы</EmptyTitle>
-                  <EmptyDescription>Поиск начнётся после ввода минимум 2 символов.</EmptyDescription>
+                  <EmptyDescription>Поиск начнётся после ввода минимум 3 символов.</EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ) : null}
@@ -184,7 +192,7 @@ export function EstimateWorkPickerDialog({
                     variant="outline"
                   >
                     <PlusIcon data-icon="inline-start" />
-                    Добавить
+                    {isReplaceMode ? "Заменить" : "Добавить"}
                   </Button>
                 </CardContent>
               </Card>

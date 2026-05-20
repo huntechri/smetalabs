@@ -31,6 +31,25 @@ features/<feature>/
 
 ---
 
+## `types/`
+
+```txt
+types/
+├── directory-counterparty.ts
+├── directory-supplier.ts
+├── directory-work.ts
+├── estimate.ts
+├── execution.ts
+├── global-purchases.ts
+├── project.ts
+├── project-estimate-content.ts    # Sections, works, materials for estimate content storage
+├── project-estimate-record.ts     # Estimate record row types (name, type, status, amount)
+├── purchase.ts
+└── roles.ts
+```
+
+---
+
 ## `db/`
 
 ```txt
@@ -94,6 +113,69 @@ db/
 
 ---
 
+## `app/api/projects/`
+
+```txt
+app/api/projects/
+├── route.ts                                    # GET (list), POST (create)
+├── [id]/
+│   ├── route.ts                                # GET (read), PATCH (update), DELETE (archive)
+│   └── estimate-records/
+│       ├── route.ts                            # GET (list), POST (create)
+│       └── [recordId]/
+│           ├── route.ts                        # PATCH (rename), DELETE (soft delete)
+│           ├── changes/route.ts                # GET — estimate content changes log (stub)
+│           ├── content/route.ts                # GET — read sections/works/materials
+│           ├── material-options/route.ts        # GET — lightweight material picker for estimate
+│           └── work-options/route.ts            # GET — lightweight work picker for estimate
+```
+
+---
+
+## `features/projects/`
+
+```txt
+features/projects/
+├── api/
+│   ├── projects-client.ts                    # Client-side API calls for projects CRUD
+│   ├── projects-errors.ts                    # Error classes for project operations
+│   ├── projects-query-keys.ts                # TanStack Query key factory
+│   └── project-estimate-records-client.ts    # Client-side API calls for estimate records CRUD
+├── components/
+│   ├── create-project-dialog.tsx             # Dialog for creating a new project
+│   ├── project-card.tsx                      # Card component for project list item
+│   ├── projects-toolbar.tsx                  # Toolbar: search, status filter, create button
+│   └── projects-view.tsx                     # Main projects page layout
+├── hooks/
+│   ├── use-projects.ts                       # TanStack Query hook for projects list
+│   └── use-project-estimate-records.ts       # TanStack Query hook for estimate records
+├── project-overview/
+│   ├── components/
+│   │   ├── chart-area-interactive.tsx        # Interactive chart for project overview
+│   │   ├── estimate-delete-dialog.tsx        # Confirm dialog for soft-deleting an estimate record
+│   │   ├── estimate-name-dialog.tsx          # Dialog for creating/renaming an estimate record
+│   │   ├── estimates-table.tsx               # Table of estimate records for a project
+│   │   └── section-cards.tsx                 # Cards displaying estimate content sections
+│   ├── lib/
+│   │   └── estimate-table-data.ts            # Data transformation for estimates table
+│   └── types.ts                              # Project overview specific types
+└── server/
+    ├── projects.repository.ts                # DB queries for projects (Drizzle)
+    ├── projects.route-handlers.ts            # Next.js route handler implementations
+    ├── projects.schemas.ts                   # Zod validation schemas for projects
+    ├── projects.service.ts                   # Business logic for projects
+    ├── project-estimate-records.repository.ts  # DB queries for estimate records (Drizzle)
+    ├── project-estimate-records.route-handlers.ts # Route handler implementations for estimate records
+    ├── project-estimate-records.schemas.ts    # Zod validation schemas for estimate records
+    ├── project-estimate-records.service.ts    # Business logic for estimate records
+    ├── project-estimate-content.repository.ts  # DB queries for estimate content (sections/works/materials)
+    ├── project-estimate-content.route-handlers.ts # Route handler implementations for estimate content
+    ├── project-estimate-content.schemas.ts    # Zod validation schemas for estimate content
+    └── project-estimate-content.service.ts    # Business logic for estimate content
+```
+
+---
+
 ## Current critical flows
 
 ### Projects and project estimate records
@@ -102,6 +184,10 @@ db/
 /projects
   → app/api/projects/** exposes workspace-scoped list/read/create/update/archive routes
   → app/api/projects/[id]/estimate-records/** exposes project-scoped estimate-record list/create/update/delete routes
+  → app/api/projects/[id]/estimate-records/[recordId]/content exposes estimate content (sections/works/materials)
+  → app/api/projects/[id]/estimate-records/[recordId]/material-options exposes lightweight material picker
+  → app/api/projects/[id]/estimate-records/[recordId]/work-options exposes lightweight work picker
+  → app/api/projects/[id]/estimate-records/[recordId]/changes exposes content changes log (stub)
   → features/projects/** owns UI hooks, source-aligned form/toolbar/cards, project overview, repository and service logic
   → docs/projects-architecture.md fixes the current contract
   → docs/project-estimate-content-architecture.md fixes the estimate content storage contract
@@ -112,7 +198,7 @@ db/
 
 Projects stay workspace-scoped through `workspace_owner_id`. The project list supports real list data, search, status filtering, create, update and soft archive. Customer selection is linked to active counterparties of type `customer`. Budget and progress are system-managed placeholders in this slice: they are displayed but not entered manually.
 
-The project estimate-record layer stores rows shown in the project estimate table: name, type, status, amount and creation date. It supports list, create by name, rename and soft delete. The estimate-content storage layer extends each record with sections, works and materials. It stores copied work/material values, row order and totals, but still does not include API routes for content editing, UI editor behavior, documents, purchases, execution, import, export or AI behavior.
+The project estimate-record layer stores rows shown in the project estimate table: name, type, status, amount and creation date. It supports list, create by name, rename and soft delete. The estimate-content storage layer extends each record with sections, works and materials. It stores copied work/material values, row order and totals. Content reading is exposed via `GET /content`, while editing UI, documents, purchases, execution, import, export and AI behavior remain outside this slice.
 
 ### Global purchases first production slice
 

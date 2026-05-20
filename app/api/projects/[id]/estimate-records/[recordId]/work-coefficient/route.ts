@@ -4,9 +4,7 @@ import { supabase } from "@/db"
 import { ProjectsApiError } from "@/features/projects/api/projects-errors"
 import { handleProjectsRouteError } from "@/features/projects/server/projects.route-handlers"
 import { requireProjectsWriteContext } from "@/features/projects/server/projects.service"
-import {
-  getProjectEstimateContentForWorkspace,
-} from "@/features/projects/server/project-estimate-content.repository"
+import { getProjectEstimateContentForWorkspace } from "@/features/projects/server/project-estimate-content.repository"
 import {
   parseEstimateContentProjectId,
   parseEstimateContentRecordId,
@@ -33,20 +31,6 @@ type WorkRow = {
 function toNumber(value: string | number | null | undefined) {
   const parsed = typeof value === "number" ? value : Number(value ?? 0)
   return Number.isFinite(parsed) ? parsed : 0
-}
-
-function roundMoney(value: number) {
-  return Math.round(value * 100) / 100
-}
-
-function roundWorkPriceToTen(value: number) {
-  if (value <= 0) return 0
-  return Math.ceil(value / 10) * 10
-}
-
-function calculateWorkPrice(basePrice: number, coefficientPercent: number) {
-  if (coefficientPercent <= 0) return roundMoney(basePrice)
-  return roundWorkPriceToTen(basePrice * (1 + coefficientPercent / 100))
 }
 
 async function readJsonBody(request: NextRequest) {
@@ -103,10 +87,13 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
     for (const work of (works ?? []) as WorkRow[]) {
       const basePrice = toNumber(work.base_price) || toNumber(work.price)
-      const price = calculateWorkPrice(basePrice, body.coefficientPercent)
       const { error } = await supabase
         .from("project_estimate_works")
-        .update({ base_price: basePrice, price, updated_by: context.userId })
+        .update({
+          base_price: basePrice,
+          price: basePrice,
+          updated_by: context.userId,
+        })
         .eq("workspace_owner_id", context.workspaceOwnerId)
         .eq("project_id", projectId)
         .eq("estimate_record_id", estimateRecordId)

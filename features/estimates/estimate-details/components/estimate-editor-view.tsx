@@ -4,6 +4,14 @@ import * as React from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   fetchProjectEstimateMaterialOptions,
   fetchProjectEstimateWorkOptions,
   type EstimateContentChangeInput,
@@ -15,6 +23,7 @@ import { EstimateSectionCard } from "@/features/estimates/estimate-details/compo
 import { EstimateWorkPickerDialog } from "@/features/estimates/estimate-details/components/estimate-work-picker-dialog"
 import { parseDecimal, parseText } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
 import type {
+  EstimateArchiveRequest,
   MaterialDialogState,
   WorkDialogState,
 } from "@/features/estimates/estimate-details/types"
@@ -50,6 +59,7 @@ export function EstimateEditorView({
   const [sectionOpen, setSectionOpen] = React.useState(false)
   const [workDialog, setWorkDialog] = React.useState<WorkDialogState>(EMPTY_WORK_DIALOG)
   const [materialDialog, setMaterialDialog] = React.useState<MaterialDialogState>(EMPTY_MATERIAL_DIALOG)
+  const [archiveRequest, setArchiveRequest] = React.useState<EstimateArchiveRequest | null>(null)
   const [workSearch, setWorkSearch] = React.useState("")
   const [materialSearch, setMaterialSearch] = React.useState("")
   const [, setMessage] = React.useState<string | null>(null)
@@ -119,12 +129,13 @@ export function EstimateEditorView({
     setMaterialDialog({ open: true, work, selected: null })
   }
 
-  const archive = async (input: EstimateContentChangeInput) => {
-    if (!window.confirm("Убрать строку из сметы?")) return
-    await save(input, "Не удалось удалить строку")
+  const confirmArchive = async () => {
+    if (!archiveRequest) return
+    await save(archiveRequest.input, archiveRequest.fallback)
+    setArchiveRequest(null)
   }
 
-  const createSection = async (data: { name: string; number: string }) => {
+  const createSection = async (data: { name: string }) => {
     const title = parseText(data.name)
     if (!title) return
 
@@ -207,7 +218,7 @@ export function EstimateEditorView({
                 key={section.id}
                 section={section}
                 saving={saving}
-                onArchive={archive}
+                onArchive={setArchiveRequest}
                 onAddSection={() => setSectionOpen(true)}
                 onAddWork={openWorkDialog}
                 onAddMaterial={openMaterialDialog}
@@ -253,6 +264,36 @@ export function EstimateEditorView({
         }
         onDirectorySubmit={addDirectoryMaterial}
       />
+      <Dialog
+        open={archiveRequest !== null}
+        onOpenChange={(open) => {
+          if (!open) setArchiveRequest(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{archiveRequest?.title}</DialogTitle>
+            <DialogDescription>{archiveRequest?.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setArchiveRequest(null)}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={saving}
+              onClick={confirmArchive}
+            >
+              Удалить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

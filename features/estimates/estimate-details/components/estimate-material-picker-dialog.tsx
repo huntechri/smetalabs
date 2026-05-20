@@ -18,7 +18,7 @@ import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 import type { ProjectEstimateMaterialOptionRow } from "@/types/project-estimate-content"
 import type { MaterialDialogState } from "@/features/estimates/estimate-details/types"
 
-const MATERIAL_SEARCH_MIN_LENGTH = 2
+const MATERIAL_SEARCH_MIN_LENGTH = 3
 const MATERIAL_SEARCH_DELAY_MS = 250
 
 export function EstimateMaterialPickerDialog({
@@ -142,7 +142,7 @@ export function EstimateMaterialPickerDialog({
               aria-label="Поиск материалов"
               className="h-8"
               onChange={(event) => setSearchText(event.target.value)}
-              placeholder="Введите минимум 2 символа"
+              placeholder="Введите минимум 3 символа"
               value={searchText}
             />
             <Button type="submit" variant="outline">
@@ -155,7 +155,7 @@ export function EstimateMaterialPickerDialog({
               <Empty className="h-full min-h-80 border-0">
                 <EmptyHeader>
                   <EmptyTitle>Введите название материала</EmptyTitle>
-                  <EmptyDescription>Поиск начнётся после ввода минимум 2 символов.</EmptyDescription>
+                  <EmptyDescription>Поиск начнётся после ввода минимум 3 символов.</EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ) : null}

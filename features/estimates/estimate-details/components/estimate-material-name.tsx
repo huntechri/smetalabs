@@ -8,7 +8,7 @@ export function EstimateMaterialName({
   value: string
 }) {
   return (
-    <label className="block min-w-0 rounded-md border border-dashed border-blue-300 p-2">
+    <label className="block min-w-0 rounded-md border bg-background p-2">
       <span className="mb-1 block text-xs text-muted-foreground uppercase">
         Название
       </span>

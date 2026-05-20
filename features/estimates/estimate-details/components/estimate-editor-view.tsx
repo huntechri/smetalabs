@@ -11,7 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import {
+  applyProjectEstimateWorkCoefficient,
   fetchProjectEstimateMaterialOptions,
   fetchProjectEstimateWorkOptions,
   type EstimateContentChangeInput,
@@ -29,6 +31,7 @@ import type {
 } from "@/features/estimates/estimate-details/types"
 import { useProjectEstimateContent } from "@/features/estimates/hooks/use-project-estimate-content"
 import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
+import { PercentIcon } from "@phosphor-icons/react"
 import type {
   ProjectEstimateContentWork,
   ProjectEstimateMaterialOptionRow,
@@ -61,6 +64,10 @@ export function EstimateEditorView({
   const { content, loading, error, saving, applyChange, refetch } =
     useProjectEstimateContent(projectId, recordId)
   const [sectionOpen, setSectionOpen] = React.useState(false)
+  const [coefficientOpen, setCoefficientOpen] = React.useState(false)
+  const [coefficientValue, setCoefficientValue] = React.useState("0")
+  const [coefficientError, setCoefficientError] = React.useState<string | null>(null)
+  const [coefficientSaving, setCoefficientSaving] = React.useState(false)
   const [workDialog, setWorkDialog] = React.useState<WorkDialogState>(EMPTY_WORK_DIALOG)
   const [materialDialog, setMaterialDialog] = React.useState<MaterialDialogState>(EMPTY_MATERIAL_DIALOG)
   const [archiveRequest, setArchiveRequest] = React.useState<EstimateArchiveRequest | null>(null)
@@ -173,6 +180,35 @@ export function EstimateEditorView({
     setSectionOpen(false)
   }
 
+  const applyCoefficient = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const parsed = Number(coefficientValue.trim().replace(",", "."))
+
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      setCoefficientError("Введите коэффициент 0 или больше")
+      return
+    }
+
+    setCoefficientSaving(true)
+    setCoefficientError(null)
+
+    try {
+      await applyProjectEstimateWorkCoefficient({
+        projectId,
+        recordId,
+        coefficientPercent: parsed,
+      })
+      await refetch()
+      setCoefficientOpen(false)
+    } catch (err) {
+      setCoefficientError(
+        err instanceof Error ? err.message : "Не удалось применить коэффициент"
+      )
+    } finally {
+      setCoefficientSaving(false)
+    }
+  }
+
   const addDirectoryWork = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!workDialog.sectionId || !workDialog.selected) return
@@ -251,7 +287,18 @@ export function EstimateEditorView({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-2">
+      <div className="flex justify-end">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setCoefficientOpen(true)}
+        >
+          <PercentIcon data-icon="inline-start" />
+          Коэффициент
+        </Button>
+      </div>
+
       <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border bg-background p-1">
         {content.sections.length === 0 ? (
           <EstimateEmptyState onCreateClick={() => setSectionOpen(true)} />
@@ -261,7 +308,7 @@ export function EstimateEditorView({
               <EstimateSectionCard
                 key={section.id}
                 section={section}
-                saving={saving}
+                saving={saving || coefficientSaving}
                 onArchive={setArchiveRequest}
                 onAddSection={() => setSectionOpen(true)}
                 onAddWork={openWorkDialog}
@@ -282,7 +329,7 @@ export function EstimateEditorView({
       <EstimateWorkPickerDialog
         state={workDialog}
         query={workSearch}
-        saving={saving}
+        saving={saving || coefficientSaving}
         options={workOptions.data?.data ?? []}
         loading={workOptions.isLoading}
         onQueryChange={setWorkSearch}
@@ -298,7 +345,7 @@ export function EstimateEditorView({
       <EstimateMaterialPickerDialog
         state={materialDialog}
         query={materialSearch}
-        saving={saving}
+        saving={saving || coefficientSaving}
         options={materialOptions.data?.data ?? []}
         loading={materialOptions.isLoading}
         onQueryChange={setMaterialSearch}
@@ -310,6 +357,40 @@ export function EstimateEditorView({
         }
         onDirectorySubmit={addDirectoryMaterial}
       />
+      <Dialog open={coefficientOpen} onOpenChange={setCoefficientOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <form className="space-y-4" onSubmit={applyCoefficient}>
+            <DialogHeader>
+              <DialogTitle>Коэффициент работ</DialogTitle>
+              <DialogDescription>
+                Коэффициент применяется только к работам. Цена округляется вверх до ближайших 10 ₽.
+              </DialogDescription>
+            </DialogHeader>
+            <Input
+              autoFocus
+              inputMode="decimal"
+              onChange={(event) => setCoefficientValue(event.target.value)}
+              placeholder="10"
+              value={coefficientValue}
+            />
+            {coefficientError ? (
+              <p className="text-sm text-destructive">{coefficientError}</p>
+            ) : null}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCoefficientOpen(false)}
+              >
+                Отмена
+              </Button>
+              <Button type="submit" disabled={coefficientSaving}>
+                Применить
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={archiveRequest !== null}
         onOpenChange={(open) => {
@@ -332,7 +413,7 @@ export function EstimateEditorView({
             <Button
               type="button"
               variant="destructive"
-              disabled={saving}
+              disabled={saving || coefficientSaving}
               onClick={confirmArchive}
             >
               Удалить

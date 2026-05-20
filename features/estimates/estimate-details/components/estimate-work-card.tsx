@@ -165,13 +165,13 @@ export function EstimateWorkCard({
                       Работа
                     </Button>
                     <Button
+                      aria-label="Удалить раздел"
                       disabled={saving}
-                      size="xs"
+                      size="icon-xs"
                       variant="destructive"
                       onClick={onArchiveSection}
                     >
-                      <TrashIcon data-icon="inline-start" />
-                      Удалить раздел
+                      <TrashIcon />
                     </Button>
                   </ButtonGroup>
                 </Frame>

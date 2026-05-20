@@ -11,13 +11,16 @@ import type { MaterialChangePayload } from "@/features/estimates/estimate-detail
 export function EstimateMaterialCard({
   index,
   material,
+  saving,
   workNumber,
+  onArchive,
   onChange,
 }: {
   index: number
   material: ProjectEstimateContentMaterial
   saving: boolean
   workNumber: string
+  onArchive: () => void
   onChange: (payload: MaterialChangePayload) => void
 }) {
   return (
@@ -36,7 +39,11 @@ export function EstimateMaterialCard({
               </Frame>
             </div>
           </div>
-          <EstimateMaterialActions title={material.title} />
+          <EstimateMaterialActions
+            disabled={saving}
+            title={material.title}
+            onArchive={onArchive}
+          />
         </div>
         <EstimateMaterialName
           onChange={(title) => onChange({ title })}

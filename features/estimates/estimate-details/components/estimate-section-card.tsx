@@ -20,6 +20,7 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react"
 import type { EstimateContentChangeInput } from "@/features/estimates/api/project-estimate-content-client"
+import type { EstimateArchive } from "@/features/estimates/estimate-details/types"
 import type {
   ProjectEstimateContentSection,
   ProjectEstimateContentWork,
@@ -32,14 +33,16 @@ export function EstimateSectionCard({
   onAddSection,
   onAddWork,
   onAddMaterial,
+  onReplaceWork,
   onSave,
 }: {
   section: ProjectEstimateContentSection
   saving: boolean
-  onArchive: (input: EstimateContentChangeInput) => void
+  onArchive: EstimateArchive
   onAddSection: () => void
   onAddWork: (sectionId: string) => void
   onAddMaterial: (work: ProjectEstimateContentWork) => void
+  onReplaceWork: (work: ProjectEstimateContentWork) => void
   onSave: (input: EstimateContentChangeInput, fallback: string) => void
 }) {
   const [expandedSection, setExpandedSection] = useState(true)
@@ -71,8 +74,13 @@ export function EstimateSectionCard({
 
   const archiveSection = () => {
     onArchive({
-      action: "archive_section",
-      payload: { sectionId: section.id },
+      input: {
+        action: "archive_section",
+        payload: { sectionId: section.id },
+      },
+      title: "Удалить раздел?",
+      description: "Раздел, его работы и материалы будут убраны из сметы.",
+      fallback: "Не удалось удалить раздел",
     })
   }
 
@@ -125,6 +133,7 @@ export function EstimateSectionCard({
                   onAddWork={() => onAddWork(section.id)}
                   onAddMaterial={onAddMaterial}
                   onArchiveSection={archiveSection}
+                  onReplaceWork={onReplaceWork}
                   onSave={onSave}
                   onToggle={() => toggleWork(work.id)}
                 />

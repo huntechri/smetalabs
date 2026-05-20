@@ -13,9 +13,22 @@ export type EstimateSave = (
   fallback: string
 ) => Promise<EstimateContentData>
 
+export type EstimateArchiveRequest = {
+  input: EstimateContentChangeInput
+  title: string
+  description: string
+  fallback: string
+}
+
+export type EstimateArchive = (request: EstimateArchiveRequest) => void
+
+export type WorkDialogMode = "add" | "replace"
+
 export type WorkDialogState = {
   open: boolean
+  mode: WorkDialogMode
   sectionId: string | null
+  work: ProjectEstimateContentWork | null
   selected: ProjectEstimateOptionRow | null
 }
 

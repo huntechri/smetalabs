@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   applyProjectEstimateContentChange,
+  applyProjectEstimateWorkCoefficient,
   fetchProjectEstimateContent,
   type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
@@ -22,18 +23,26 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
     refetchOnWindowFocus: true,
   })
 
+  const updateContentCache = async (response: Awaited<ReturnType<typeof fetchProjectEstimateContent>>) => {
+    queryClient.setQueryData(
+      projectsQueryKeys.estimateRecordContent(projectId, recordId),
+      response
+    )
+    await queryClient.invalidateQueries({
+      queryKey: projectsQueryKeys.estimateRecords(projectId),
+    })
+  }
+
   const changeMutation = useMutation({
     mutationFn: (input: EstimateContentChangeInput) =>
       applyProjectEstimateContentChange({ projectId, recordId, input }),
-    onSuccess: async (response) => {
-      queryClient.setQueryData(
-        projectsQueryKeys.estimateRecordContent(projectId, recordId),
-        response
-      )
-      await queryClient.invalidateQueries({
-        queryKey: projectsQueryKeys.estimateRecords(projectId),
-      })
-    },
+    onSuccess: updateContentCache,
+  })
+
+  const coefficientMutation = useMutation({
+    mutationFn: (coefficientPercent: number) =>
+      applyProjectEstimateWorkCoefficient({ projectId, recordId, coefficientPercent }),
+    onSuccess: updateContentCache,
   })
 
   return {
@@ -43,13 +52,18 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
     error:
       contentQuery.error?.message ??
       changeMutation.error?.message ??
+      coefficientMutation.error?.message ??
       null,
-    saving: changeMutation.isPending,
+    saving: changeMutation.isPending || coefficientMutation.isPending,
     refetch: async () => {
       await contentQuery.refetch()
     },
     applyChange: async (input: EstimateContentChangeInput) => {
       const response = await changeMutation.mutateAsync(input)
+      return response.data
+    },
+    applyWorkCoefficient: async (coefficientPercent: number) => {
+      const response = await coefficientMutation.mutateAsync(coefficientPercent)
       return response.data
     },
   }

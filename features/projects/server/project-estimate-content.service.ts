@@ -6,18 +6,15 @@ import type {
   EstimateContentOptionsParams,
 } from "./project-estimate-content.schemas"
 import {
-  applyProjectEstimateContentChangeForWorkspace,
-  getProjectEstimateContentForWorkspace,
   listProjectEstimateMaterialOptionsForWorkspace,
   listProjectEstimateWorkOptionsForWorkspace,
+} from "./project-estimate-options.repository"
+import {
+  applyProjectEstimateContentChangeForWorkspace,
+  getProjectEstimateContentForWorkspace,
 } from "./project-estimate-content.repository"
 
-const CONTENT_CACHE_REVALIDATE_SECONDS = 30
 const OPTIONS_CACHE_REVALIDATE_SECONDS = 30
-
-function estimateContentCacheTag(workspaceOwnerId: string, projectId: string, recordId: string) {
-  return `projects:${workspaceOwnerId}:detail:${projectId}:estimate-records:${recordId}:content`
-}
 
 function estimateRecordsCacheTag(workspaceOwnerId: string, projectId: string) {
   return `projects:${workspaceOwnerId}:detail:${projectId}:estimate-records`
@@ -27,23 +24,14 @@ function estimateOptionsCacheTag(workspaceOwnerId: string, projectId: string, re
   return `projects:${workspaceOwnerId}:detail:${projectId}:estimate-records:${recordId}:options`
 }
 
-function revalidateEstimateContent(workspaceOwnerId: string, projectId: string, recordId: string) {
-  revalidateTag(estimateContentCacheTag(workspaceOwnerId, projectId, recordId), "max")
+function revalidateEstimateContent(workspaceOwnerId: string, projectId: string) {
   revalidateTag(estimateRecordsCacheTag(workspaceOwnerId, projectId), "max")
   revalidateTag(projectsCacheTags.detail(workspaceOwnerId, projectId), "max")
 }
 
 export async function getProjectEstimateContent(projectId: string, recordId: string) {
   const context = await requireProjectsReadContext()
-
-  return unstable_cache(
-    () => getProjectEstimateContentForWorkspace(context.workspaceOwnerId, projectId, recordId),
-    ["project-estimate-content", context.workspaceOwnerId, projectId, recordId],
-    {
-      revalidate: CONTENT_CACHE_REVALIDATE_SECONDS,
-      tags: [estimateContentCacheTag(context.workspaceOwnerId, projectId, recordId)],
-    }
-  )()
+  return getProjectEstimateContentForWorkspace(context.workspaceOwnerId, projectId, recordId)
 }
 
 export async function applyProjectEstimateContentChange(
@@ -60,7 +48,7 @@ export async function applyProjectEstimateContentChange(
     input
   )
 
-  revalidateEstimateContent(context.workspaceOwnerId, projectId, recordId)
+  revalidateEstimateContent(context.workspaceOwnerId, projectId)
   return response
 }
 

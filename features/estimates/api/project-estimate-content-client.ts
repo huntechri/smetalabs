@@ -12,6 +12,12 @@ export type EstimateContentOptionsParams = {
   cursor?: number
 }
 
+export type EstimateWorkCoefficientResponse = {
+  data: {
+    coefficientPercent: number
+  }
+}
+
 type SortItem = {
   id: string
   sortOrder: number
@@ -171,6 +177,38 @@ export function applyProjectEstimateContentChange({
     {
       method: "POST",
       body: JSON.stringify(input),
+    }
+  )
+}
+
+export function fetchProjectEstimateWorkCoefficient({
+  projectId,
+  recordId,
+}: {
+  projectId: string
+  recordId: string
+}) {
+  return fetchJson<EstimateWorkCoefficientResponse>(
+    `/api/projects/${projectId}/estimate-records/${recordId}/work-coefficient`,
+    "загрузки коэффициента"
+  )
+}
+
+export function applyProjectEstimateWorkCoefficient({
+  projectId,
+  recordId,
+  coefficientPercent,
+}: {
+  projectId: string
+  recordId: string
+  coefficientPercent: number
+}) {
+  return fetchJson<ProjectEstimateContentResponse>(
+    `/api/projects/${projectId}/estimate-records/${recordId}/work-coefficient`,
+    "применения коэффициента",
+    {
+      method: "POST",
+      body: JSON.stringify({ coefficientPercent }),
     }
   )
 }

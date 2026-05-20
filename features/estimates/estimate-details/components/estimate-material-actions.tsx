@@ -11,13 +11,22 @@ import {
 import { Frame } from "@/components/ui/frame"
 import { DotsThreeVerticalIcon } from "@phosphor-icons/react"
 
-export function EstimateMaterialActions({ title }: { title: string }) {
+export function EstimateMaterialActions({
+  disabled,
+  onArchive,
+  title,
+}: {
+  disabled: boolean
+  onArchive: () => void
+  title: string
+}) {
   return (
     <Frame>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             aria-label={`Действия с материалом ${title}`}
+            disabled={disabled}
             size="icon-xs"
             type="button"
             variant="ghost"
@@ -27,9 +36,13 @@ export function EstimateMaterialActions({ title }: { title: string }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
-            <DropdownMenuItem>Редактировать</DropdownMenuItem>
-            <DropdownMenuItem>Дублировать</DropdownMenuItem>
-            <DropdownMenuItem variant="destructive">Удалить</DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={disabled}
+              variant="destructive"
+              onSelect={onArchive}
+            >
+              Удалить
+            </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>

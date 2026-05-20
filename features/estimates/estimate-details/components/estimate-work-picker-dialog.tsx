@@ -18,7 +18,7 @@ import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 import type { ProjectEstimateOptionRow } from "@/types/project-estimate-content"
 import type { WorkDialogState } from "@/features/estimates/estimate-details/types"
 
-const WORK_SEARCH_MIN_LENGTH = 2
+const WORK_SEARCH_MIN_LENGTH = 3
 const WORK_SEARCH_DELAY_MS = 250
 
 export function EstimateWorkPickerDialog({
@@ -42,44 +42,46 @@ export function EstimateWorkPickerDialog({
   onSelect: (row: ProjectEstimateOptionRow) => void
   onDirectorySubmit: (event: FormEvent<HTMLFormElement>) => void
 }) {
-  const [submittedSearch, setSubmittedSearch] = useState(query.trim())
+  const [searchText, setSearchText] = useState(query)
   const [quantityDialogOpen, setQuantityDialogOpen] = useState(false)
   const [quantity, setQuantity] = useState("1")
   const [price, setPrice] = useState("0")
   const [quantityError, setQuantityError] = useState<string | null>(null)
-  const normalizedSearch = query.trim().replace(/\s+/g, " ")
-  const canSearch = submittedSearch.length >= WORK_SEARCH_MIN_LENGTH
+  const normalizedSearch = searchText.trim().replace(/\s+/g, " ")
+  const canSearch = query.trim().length >= WORK_SEARCH_MIN_LENGTH
   const visibleOptions = useMemo(() => (canSearch ? options : []), [canSearch, options])
   const showSearchPrompt = !canSearch
   const showEmpty = canSearch && !loading && visibleOptions.length === 0
+  const isReplaceMode = state.mode === "replace"
 
   useEffect(() => {
     if (state.open) return
-    setSubmittedSearch("")
+    setSearchText("")
+    onQueryChange("")
     setQuantityDialogOpen(false)
     setQuantity("1")
     setPrice("0")
     setQuantityError(null)
-  }, [state.open])
+  }, [onQueryChange, state.open])
 
   useEffect(() => {
     if (!state.open) return
     if (normalizedSearch.length < WORK_SEARCH_MIN_LENGTH) {
-      setSubmittedSearch("")
+      onQueryChange("")
       return
     }
 
     const timeout = window.setTimeout(
-      () => setSubmittedSearch(normalizedSearch),
+      () => onQueryChange(normalizedSearch),
       WORK_SEARCH_DELAY_MS
     )
     return () => window.clearTimeout(timeout)
-  }, [normalizedSearch, state.open])
+  }, [normalizedSearch, onQueryChange, state.open])
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (normalizedSearch.length >= WORK_SEARCH_MIN_LENGTH) {
-      setSubmittedSearch(normalizedSearch)
+      onQueryChange(normalizedSearch)
     }
   }
 
@@ -88,6 +90,9 @@ export function EstimateWorkPickerDialog({
     setQuantity("1")
     setPrice(String(work.price))
     setQuantityError(null)
+
+    if (isReplaceMode) return
+
     setQuantityDialogOpen(true)
   }
 
@@ -117,9 +122,13 @@ export function EstimateWorkPickerDialog({
       <Dialog open={state.open} onOpenChange={onOpenChange}>
         <DialogContent className="flex h-[min(720px,calc(100vh-4rem))] max-h-[calc(100vh-4rem)] flex-col overflow-hidden sm:max-w-3xl">
           <DialogHeader className="shrink-0">
-            <DialogTitle>Добавить работу из справочника</DialogTitle>
+            <DialogTitle>
+              {isReplaceMode ? "Заменить работу из справочника" : "Добавить работу из справочника"}
+            </DialogTitle>
             <DialogDescription>
-              Выберите работу из справочника работ. В смету попадут название, единица измерения и цена.
+              {isReplaceMode
+                ? "Выберите работу из справочника. В текущей строке будет заменено название и цена."
+                : "Выберите работу из справочника работ. В смету попадут название, единица измерения и цена."}
             </DialogDescription>
           </DialogHeader>
 
@@ -128,9 +137,9 @@ export function EstimateWorkPickerDialog({
             <Input
               aria-label="Поиск работ"
               className="h-8"
-              onChange={(event) => onQueryChange(event.target.value)}
-              placeholder="Введите минимум 2 символа"
-              value={query}
+              onChange={(event) => setSearchText(event.target.value)}
+              placeholder="Введите минимум 3 символа"
+              value={searchText}
             />
             <Button type="submit" variant="outline">
               Поиск
@@ -142,7 +151,7 @@ export function EstimateWorkPickerDialog({
               <Empty className="h-full min-h-80 border-0">
                 <EmptyHeader>
                   <EmptyTitle>Введите название работы</EmptyTitle>
-                  <EmptyDescription>Поиск начнётся после ввода минимум 2 символов.</EmptyDescription>
+                  <EmptyDescription>Поиск начнётся после ввода минимум 3 символов.</EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ) : null}
@@ -183,7 +192,7 @@ export function EstimateWorkPickerDialog({
                     variant="outline"
                   >
                     <PlusIcon data-icon="inline-start" />
-                    Добавить
+                    {isReplaceMode ? "Заменить" : "Добавить"}
                   </Button>
                 </CardContent>
               </Card>

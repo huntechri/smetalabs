@@ -1,10 +1,21 @@
 "use client"
 
 import * as React from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import {
   fetchProjectEstimateMaterialOptions,
+  fetchProjectEstimateWorkCoefficient,
   fetchProjectEstimateWorkOptions,
   type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
@@ -15,6 +26,7 @@ import { EstimateSectionCard } from "@/features/estimates/estimate-details/compo
 import { EstimateWorkPickerDialog } from "@/features/estimates/estimate-details/components/estimate-work-picker-dialog"
 import { parseDecimal, parseText } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
 import type {
+  EstimateArchiveRequest,
   MaterialDialogState,
   WorkDialogState,
 } from "@/features/estimates/estimate-details/types"
@@ -28,7 +40,9 @@ import type {
 
 const EMPTY_WORK_DIALOG: WorkDialogState = {
   open: false,
+  mode: "add",
   sectionId: null,
+  work: null,
   selected: null,
 }
 
@@ -38,6 +52,13 @@ const EMPTY_MATERIAL_DIALOG: MaterialDialogState = {
   selected: null,
 }
 
+const OPTION_SEARCH_MIN_LENGTH = 3
+const WORK_COEFFICIENT_DIALOG_KEY = "work-coefficient"
+
+function formatCoefficientInput(value: number) {
+  return Number.isInteger(value) ? String(value) : String(value).replace(".", ",")
+}
+
 export function EstimateEditorView({
   projectId,
   recordId,
@@ -45,11 +66,25 @@ export function EstimateEditorView({
   projectId: string
   recordId: string
 }) {
-  const { content, loading, error, saving, applyChange, refetch } =
-    useProjectEstimateContent(projectId, recordId)
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const {
+    content,
+    loading,
+    error,
+    saving,
+    applyChange,
+    applyWorkCoefficient,
+    refetch,
+  } = useProjectEstimateContent(projectId, recordId)
   const [sectionOpen, setSectionOpen] = React.useState(false)
+  const [coefficientOpen, setCoefficientOpen] = React.useState(false)
+  const [coefficientValue, setCoefficientValue] = React.useState("0")
+  const [coefficientError, setCoefficientError] = React.useState<string | null>(null)
   const [workDialog, setWorkDialog] = React.useState<WorkDialogState>(EMPTY_WORK_DIALOG)
   const [materialDialog, setMaterialDialog] = React.useState<MaterialDialogState>(EMPTY_MATERIAL_DIALOG)
+  const [archiveRequest, setArchiveRequest] = React.useState<EstimateArchiveRequest | null>(null)
   const [workSearch, setWorkSearch] = React.useState("")
   const [materialSearch, setMaterialSearch] = React.useState("")
   const [, setMessage] = React.useState<string | null>(null)
@@ -63,11 +98,38 @@ export function EstimateEditorView({
     [materialSearch]
   )
 
+  const canSearchWorks = workSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
+  const canSearchMaterials = materialSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
+
+  const coefficientQuery = useQuery({
+    queryKey: ["project-estimate-work-coefficient", projectId, recordId],
+    queryFn: () => fetchProjectEstimateWorkCoefficient({ projectId, recordId }),
+    enabled: coefficientOpen,
+    staleTime: 0,
+  })
+
+  React.useEffect(() => {
+    if (searchParams.get("dialog") !== WORK_COEFFICIENT_DIALOG_KEY) return
+
+    setCoefficientOpen(true)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("dialog")
+    const nextSearch = params.toString()
+    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
+  }, [pathname, router, searchParams])
+
+  React.useEffect(() => {
+    if (!coefficientOpen) return
+    const nextValue = coefficientQuery.data?.data.coefficientPercent
+    if (nextValue === undefined) return
+    setCoefficientValue(formatCoefficientInput(nextValue))
+  }, [coefficientOpen, coefficientQuery.data?.data.coefficientPercent])
+
   const workOptions = useQuery({
     queryKey: projectsQueryKeys.estimateWorkOptions(projectId, recordId, workParams),
     queryFn: () =>
       fetchProjectEstimateWorkOptions({ projectId, recordId, params: workParams }),
-    enabled: workDialog.open,
+    enabled: workDialog.open && canSearchWorks,
     staleTime: 30_000,
   })
 
@@ -83,7 +145,7 @@ export function EstimateEditorView({
         recordId,
         params: materialParams,
       }),
-    enabled: materialDialog.open,
+    enabled: materialDialog.open && canSearchMaterials,
     staleTime: 30_000,
   })
 
@@ -112,19 +174,40 @@ export function EstimateEditorView({
 
   const openWorkDialog = async (sectionId?: string) => {
     const target = sectionId ?? (await ensureSection())
-    if (target) setWorkDialog({ open: true, sectionId: target, selected: null })
+    if (target) {
+      setWorkSearch("")
+      setWorkDialog({
+        open: true,
+        mode: "add",
+        sectionId: target,
+        work: null,
+        selected: null,
+      })
+    }
+  }
+
+  const openReplaceWorkDialog = (work: ProjectEstimateContentWork) => {
+    setWorkSearch("")
+    setWorkDialog({
+      open: true,
+      mode: "replace",
+      sectionId: work.sectionId,
+      work,
+      selected: null,
+    })
   }
 
   const openMaterialDialog = (work: ProjectEstimateContentWork) => {
     setMaterialDialog({ open: true, work, selected: null })
   }
 
-  const archive = async (input: EstimateContentChangeInput) => {
-    if (!window.confirm("Убрать строку из сметы?")) return
-    await save(input, "Не удалось удалить строку")
+  const confirmArchive = async () => {
+    if (!archiveRequest) return
+    await save(archiveRequest.input, archiveRequest.fallback)
+    setArchiveRequest(null)
   }
 
-  const createSection = async (data: { name: string; number: string }) => {
+  const createSection = async (data: { name: string }) => {
     const title = parseText(data.name)
     if (!title) return
 
@@ -133,6 +216,28 @@ export function EstimateEditorView({
       "Не удалось добавить раздел"
     )
     setSectionOpen(false)
+  }
+
+  const applyCoefficient = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const parsed = Number(coefficientValue.trim().replace(",", "."))
+
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      setCoefficientError("Введите коэффициент 0 или больше")
+      return
+    }
+
+    setCoefficientError(null)
+
+    try {
+      await applyWorkCoefficient(parsed)
+      await coefficientQuery.refetch()
+      setCoefficientOpen(false)
+    } catch (err) {
+      setCoefficientError(
+        err instanceof Error ? err.message : "Не удалось применить коэффициент"
+      )
+    }
   }
 
   const addDirectoryWork = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -153,6 +258,23 @@ export function EstimateEditorView({
       "Не удалось добавить работу"
     )
     setWorkDialog((current) => ({ ...current, selected: null }))
+  }
+
+  const replaceDirectoryWork = async (selected: ProjectEstimateOptionRow) => {
+    if (!workDialog.work) return
+
+    await save(
+      {
+        action: "update_work",
+        payload: {
+          workId: workDialog.work.id,
+          title: selected.title,
+          price: selected.price,
+        },
+      },
+      "Не удалось заменить работу"
+    )
+    setWorkDialog(EMPTY_WORK_DIALOG)
   }
 
   const addDirectoryMaterial = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -207,10 +329,11 @@ export function EstimateEditorView({
                 key={section.id}
                 section={section}
                 saving={saving}
-                onArchive={archive}
+                onArchive={setArchiveRequest}
                 onAddSection={() => setSectionOpen(true)}
                 onAddWork={openWorkDialog}
                 onAddMaterial={openMaterialDialog}
+                onReplaceWork={openReplaceWorkDialog}
                 onSave={save}
               />
             ))}
@@ -233,9 +356,10 @@ export function EstimateEditorView({
         onOpenChange={(open) => {
           if (!open) setWorkDialog(EMPTY_WORK_DIALOG)
         }}
-        onSelect={(selected: ProjectEstimateOptionRow) =>
+        onSelect={(selected: ProjectEstimateOptionRow) => {
           setWorkDialog((current) => ({ ...current, selected }))
-        }
+          if (workDialog.mode === "replace") void replaceDirectoryWork(selected)
+        }}
         onDirectorySubmit={addDirectoryWork}
       />
       <EstimateMaterialPickerDialog
@@ -253,6 +377,71 @@ export function EstimateEditorView({
         }
         onDirectorySubmit={addDirectoryMaterial}
       />
+      <Dialog open={coefficientOpen} onOpenChange={setCoefficientOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <form className="space-y-4" onSubmit={applyCoefficient}>
+            <DialogHeader>
+              <DialogTitle>Коэффициент работ</DialogTitle>
+              <DialogDescription>
+                Коэффициент применяется только к работам. Цена округляется вверх до ближайших 10 ₽.
+              </DialogDescription>
+            </DialogHeader>
+            <Input
+              autoFocus
+              disabled={coefficientQuery.isLoading}
+              inputMode="decimal"
+              onChange={(event) => setCoefficientValue(event.target.value)}
+              placeholder="10"
+              value={coefficientValue}
+            />
+            {coefficientError ? (
+              <p className="text-sm text-destructive">{coefficientError}</p>
+            ) : null}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCoefficientOpen(false)}
+              >
+                Отмена
+              </Button>
+              <Button type="submit" disabled={saving || coefficientQuery.isLoading}>
+                Применить
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={archiveRequest !== null}
+        onOpenChange={(open) => {
+          if (!open) setArchiveRequest(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{archiveRequest?.title}</DialogTitle>
+            <DialogDescription>{archiveRequest?.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setArchiveRequest(null)}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={saving}
+              onClick={confirmArchive}
+            >
+              Удалить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

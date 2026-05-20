@@ -10,13 +10,15 @@ import { EditableBadge } from "@/components/ui/editable-badge"
 import { Frame } from "@/components/ui/frame"
 import { EstimateMaterialCard } from "@/features/estimates/estimate-details/components/estimate-material-card"
 import { EstimateName } from "@/features/estimates/estimate-details/components/estimate-name"
-import { EstimateWorkActions } from "@/features/estimates/estimate-details/components/estimate-work-actions"
 import { EstimateWorkNumber } from "@/features/estimates/estimate-details/components/estimate-work-number"
 import { formatMoney } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import { CaretRightIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react"
 import type { EstimateContentChangeInput } from "@/features/estimates/api/project-estimate-content-client"
-import type { MaterialChangePayload } from "@/features/estimates/estimate-details/types"
+import type {
+  EstimateArchive,
+  MaterialChangePayload,
+} from "@/features/estimates/estimate-details/types"
 import type { ProjectEstimateContentWork } from "@/types/project-estimate-content"
 
 export function EstimateWorkCard({
@@ -34,7 +36,7 @@ export function EstimateWorkCard({
   expanded: boolean
   work: ProjectEstimateContentWork
   saving: boolean
-  onArchive: (input: EstimateContentChangeInput) => void
+  onArchive: EstimateArchive
   onAddSection: () => void
   onAddWork: () => void
   onAddMaterial: (work: ProjectEstimateContentWork) => void
@@ -75,9 +77,29 @@ export function EstimateWorkCard({
                 </button>
               </CollapsibleTrigger>
               <EstimateWorkNumber value={work.number} />
-              <div className="ml-auto rounded-md border bg-background p-1 lg:hidden">
-                <EstimateWorkActions />
-              </div>
+              <Frame className="ml-auto lg:hidden">
+                <Button
+                  aria-label="Удалить работу"
+                  disabled={saving}
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                  onClick={() =>
+                    onArchive({
+                      input: {
+                        action: "archive_work",
+                        payload: { workId: work.id },
+                      },
+                      title: "Удалить работу?",
+                      description:
+                        "Работа и все её материалы будут убраны из сметы.",
+                      fallback: "Не удалось удалить работу",
+                    })
+                  }
+                >
+                  <TrashIcon />
+                </Button>
+              </Frame>
             </div>
             <EstimateName
               onChange={(title) =>
@@ -127,9 +149,29 @@ export function EstimateWorkCard({
                 <span>{formatMoney(work.totalAmount)}</span>
               </Badge>
             </div>
-            <div className="hidden rounded-md border bg-background p-1 lg:block">
-              <EstimateWorkActions />
-            </div>
+            <Frame className="hidden lg:inline-flex">
+              <Button
+                aria-label="Удалить работу"
+                disabled={saving}
+                size="icon-xs"
+                type="button"
+                variant="ghost"
+                onClick={() =>
+                  onArchive({
+                    input: {
+                      action: "archive_work",
+                      payload: { workId: work.id },
+                    },
+                    title: "Удалить работу?",
+                    description:
+                      "Работа и все её материалы будут убраны из сметы.",
+                    fallback: "Не удалось удалить работу",
+                  })
+                }
+              >
+                <TrashIcon />
+              </Button>
+            </Frame>
           </div>
         </div>
 
@@ -144,6 +186,17 @@ export function EstimateWorkCard({
                     material={material}
                     saving={saving}
                     workNumber={work.number}
+                    onArchive={() =>
+                      onArchive({
+                        input: {
+                          action: "archive_material",
+                          payload: { materialId: material.id },
+                        },
+                        title: "Удалить материал?",
+                        description: "Материал будет убран из этой работы.",
+                        fallback: "Не удалось удалить материал",
+                      })
+                    }
                     onChange={(payload) => updateMaterial(material.id, payload)}
                   />
                 ))}

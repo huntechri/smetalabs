@@ -42,44 +42,45 @@ export function EstimateWorkPickerDialog({
   onSelect: (row: ProjectEstimateOptionRow) => void
   onDirectorySubmit: (event: FormEvent<HTMLFormElement>) => void
 }) {
-  const [submittedSearch, setSubmittedSearch] = useState(query.trim())
+  const [searchText, setSearchText] = useState(query)
   const [quantityDialogOpen, setQuantityDialogOpen] = useState(false)
   const [quantity, setQuantity] = useState("1")
   const [price, setPrice] = useState("0")
   const [quantityError, setQuantityError] = useState<string | null>(null)
-  const normalizedSearch = query.trim().replace(/\s+/g, " ")
-  const canSearch = submittedSearch.length >= WORK_SEARCH_MIN_LENGTH
+  const normalizedSearch = searchText.trim().replace(/\s+/g, " ")
+  const canSearch = query.trim().length >= WORK_SEARCH_MIN_LENGTH
   const visibleOptions = useMemo(() => (canSearch ? options : []), [canSearch, options])
   const showSearchPrompt = !canSearch
   const showEmpty = canSearch && !loading && visibleOptions.length === 0
 
   useEffect(() => {
     if (state.open) return
-    setSubmittedSearch("")
+    setSearchText("")
+    onQueryChange("")
     setQuantityDialogOpen(false)
     setQuantity("1")
     setPrice("0")
     setQuantityError(null)
-  }, [state.open])
+  }, [onQueryChange, state.open])
 
   useEffect(() => {
     if (!state.open) return
     if (normalizedSearch.length < WORK_SEARCH_MIN_LENGTH) {
-      setSubmittedSearch("")
+      onQueryChange("")
       return
     }
 
     const timeout = window.setTimeout(
-      () => setSubmittedSearch(normalizedSearch),
+      () => onQueryChange(normalizedSearch),
       WORK_SEARCH_DELAY_MS
     )
     return () => window.clearTimeout(timeout)
-  }, [normalizedSearch, state.open])
+  }, [normalizedSearch, onQueryChange, state.open])
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (normalizedSearch.length >= WORK_SEARCH_MIN_LENGTH) {
-      setSubmittedSearch(normalizedSearch)
+      onQueryChange(normalizedSearch)
     }
   }
 
@@ -128,9 +129,9 @@ export function EstimateWorkPickerDialog({
             <Input
               aria-label="Поиск работ"
               className="h-8"
-              onChange={(event) => onQueryChange(event.target.value)}
+              onChange={(event) => setSearchText(event.target.value)}
               placeholder="Введите минимум 2 символа"
-              value={query}
+              value={searchText}
             />
             <Button type="submit" variant="outline">
               Поиск

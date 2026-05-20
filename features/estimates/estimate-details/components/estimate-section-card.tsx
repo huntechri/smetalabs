@@ -15,7 +15,9 @@ import { EstimateSummaryValue } from "@/features/estimates/estimate-details/comp
 import { EstimateWorkCard } from "@/features/estimates/estimate-details/components/estimate-work-card"
 import { cn } from "@/lib/utils"
 import {
+  CaretDownIcon,
   CaretRightIcon,
+  CaretUpIcon,
   PlusIcon,
   TrashIcon,
 } from "@phosphor-icons/react"
@@ -26,22 +28,36 @@ import type {
   ProjectEstimateContentWork,
 } from "@/types/project-estimate-content"
 
+type MoveDirection = "up" | "down"
+
 export function EstimateSectionCard({
   section,
+  sectionIndex,
+  sectionsCount,
+  reorderDisabled,
   saving,
   onArchive,
   onAddSection,
   onAddWork,
   onAddMaterial,
+  onMoveMaterial,
+  onMoveSection,
+  onMoveWork,
   onReplaceWork,
   onSave,
 }: {
   section: ProjectEstimateContentSection
+  sectionIndex: number
+  sectionsCount: number
+  reorderDisabled: boolean
   saving: boolean
   onArchive: EstimateArchive
   onAddSection: () => void
   onAddWork: (sectionId: string) => void
   onAddMaterial: (work: ProjectEstimateContentWork) => void
+  onMoveMaterial: (workId: string, materialId: string, direction: MoveDirection) => void
+  onMoveSection: (sectionId: string, direction: MoveDirection) => void
+  onMoveWork: (sectionId: string, workId: string, direction: MoveDirection) => void
   onReplaceWork: (work: ProjectEstimateContentWork) => void
   onSave: (input: EstimateContentChangeInput, fallback: string) => void
 }) {
@@ -87,12 +103,12 @@ export function EstimateSectionCard({
   return (
     <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
       <Collapsible open={expandedSection} onOpenChange={setExpandedSection}>
-        <CollapsibleTrigger asChild>
-          <button
-            className="flex w-full flex-col gap-3 border-b px-4 py-3 text-left transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between"
-            type="button"
-          >
-            <div className="flex min-w-0 items-start gap-3 rounded-md border bg-background p-2">
+        <div className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <CollapsibleTrigger asChild>
+            <button
+              className="flex min-w-0 flex-1 items-start gap-3 rounded-md border bg-background p-2 text-left transition-colors hover:bg-muted/50"
+              type="button"
+            >
               <Frame>
                 <CaretRightIcon
                   weight="bold"
@@ -109,30 +125,61 @@ export function EstimateSectionCard({
                   </Frame>
                 </div>
               </div>
-            </div>
+            </button>
+          </CollapsibleTrigger>
 
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="grid grid-cols-2 gap-3 rounded-md border bg-background p-2 sm:min-w-56">
               <EstimateSummaryValue label="Работы" value={section.worksAmount} />
               <EstimateSummaryValue label="Материалы" value={section.materialsAmount} />
             </div>
-          </button>
-        </CollapsibleTrigger>
+            <Frame>
+              <ButtonGroup>
+                <Button
+                  aria-label="Поднять раздел"
+                  disabled={saving || reorderDisabled || sectionIndex === 0}
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onMoveSection(section.id, "up")}
+                >
+                  <CaretUpIcon />
+                </Button>
+                <Button
+                  aria-label="Опустить раздел"
+                  disabled={saving || reorderDisabled || sectionIndex >= sectionsCount - 1}
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onMoveSection(section.id, "down")}
+                >
+                  <CaretDownIcon />
+                </Button>
+              </ButtonGroup>
+            </Frame>
+          </div>
+        </div>
 
         <CollapsibleContent>
           <Separator />
           <div className="flex flex-col">
             {section.works.length ? (
-              section.works.map((work) => (
+              section.works.map((work, index) => (
                 <EstimateWorkCard
                   key={work.id}
                   expanded={expandedWorks.has(work.id)}
                   work={work}
+                  workIndex={index}
+                  worksCount={section.works.length}
+                  reorderDisabled={reorderDisabled}
                   saving={saving}
                   onArchive={onArchive}
                   onAddSection={onAddSection}
                   onAddWork={() => onAddWork(section.id)}
                   onAddMaterial={onAddMaterial}
                   onArchiveSection={archiveSection}
+                  onMoveMaterial={onMoveMaterial}
+                  onMoveWork={(workId, direction) => onMoveWork(section.id, workId, direction)}
                   onReplaceWork={onReplaceWork}
                   onSave={onSave}
                   onToggle={() => toggleWork(work.id)}

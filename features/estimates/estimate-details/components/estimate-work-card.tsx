@@ -14,7 +14,9 @@ import { EstimateWorkNumber } from "@/features/estimates/estimate-details/compon
 import { formatMoney } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import {
+  CaretDownIcon,
   CaretRightIcon,
+  CaretUpIcon,
   PencilSimpleIcon,
   PlusIcon,
   TrashIcon,
@@ -26,27 +28,39 @@ import type {
 } from "@/features/estimates/estimate-details/types"
 import type { ProjectEstimateContentWork } from "@/types/project-estimate-content"
 
+type MoveDirection = "up" | "down"
+
 export function EstimateWorkCard({
   expanded,
   work,
+  workIndex,
+  worksCount,
+  reorderDisabled,
   saving,
   onArchive,
   onAddSection,
   onAddWork,
   onAddMaterial,
   onArchiveSection,
+  onMoveMaterial,
+  onMoveWork,
   onReplaceWork,
   onSave,
   onToggle,
 }: {
   expanded: boolean
   work: ProjectEstimateContentWork
+  workIndex: number
+  worksCount: number
+  reorderDisabled: boolean
   saving: boolean
   onArchive: EstimateArchive
   onAddSection: () => void
   onAddWork: () => void
   onAddMaterial: (work: ProjectEstimateContentWork) => void
   onArchiveSection: () => void
+  onMoveMaterial: (workId: string, materialId: string, direction: MoveDirection) => void
+  onMoveWork: (workId: string, direction: MoveDirection) => void
   onReplaceWork: (work: ProjectEstimateContentWork) => void
   onSave: (input: EstimateContentChangeInput, fallback: string) => void
   onToggle: () => void
@@ -97,6 +111,26 @@ export function EstimateWorkCard({
               <EstimateWorkNumber value={work.number} />
               <Frame className="ml-auto lg:hidden">
                 <ButtonGroup>
+                  <Button
+                    aria-label="Поднять работу"
+                    disabled={saving || reorderDisabled || workIndex === 0}
+                    size="icon-xs"
+                    type="button"
+                    variant="ghost"
+                    onClick={() => onMoveWork(work.id, "up")}
+                  >
+                    <CaretUpIcon />
+                  </Button>
+                  <Button
+                    aria-label="Опустить работу"
+                    disabled={saving || reorderDisabled || workIndex >= worksCount - 1}
+                    size="icon-xs"
+                    type="button"
+                    variant="ghost"
+                    onClick={() => onMoveWork(work.id, "down")}
+                  >
+                    <CaretDownIcon />
+                  </Button>
                   <Button
                     aria-label="Заменить работу"
                     disabled={saving}
@@ -171,6 +205,26 @@ export function EstimateWorkCard({
             <Frame className="hidden lg:inline-flex">
               <ButtonGroup>
                 <Button
+                  aria-label="Поднять работу"
+                  disabled={saving || reorderDisabled || workIndex === 0}
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onMoveWork(work.id, "up")}
+                >
+                  <CaretUpIcon />
+                </Button>
+                <Button
+                  aria-label="Опустить работу"
+                  disabled={saving || reorderDisabled || workIndex >= worksCount - 1}
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onMoveWork(work.id, "down")}
+                >
+                  <CaretDownIcon />
+                </Button>
+                <Button
                   aria-label="Заменить работу"
                   disabled={saving}
                   size="icon-xs"
@@ -204,6 +258,8 @@ export function EstimateWorkCard({
                     key={material.id}
                     index={index}
                     material={material}
+                    materialsCount={work.materials.length}
+                    reorderDisabled={reorderDisabled}
                     saving={saving}
                     workNumber={work.number}
                     onArchive={() =>
@@ -218,6 +274,8 @@ export function EstimateWorkCard({
                       })
                     }
                     onChange={(payload) => updateMaterial(material.id, payload)}
+                    onMoveNext={() => onMoveMaterial(work.id, material.id, "down")}
+                    onMovePrevious={() => onMoveMaterial(work.id, material.id, "up")}
                   />
                 ))}
               </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { CheckCircle, DotsThreeVertical, Spinner } from "@phosphor-icons/react"
 
 import { Badge } from "@/components/ui/badge"
@@ -43,6 +43,7 @@ const EMPTY_DIALOG_STATE: EstimateDialogState = {
 }
 
 export function EstimatesTable({ projectId }: { projectId: string }) {
+  const router = useRouter()
   const {
     records,
     meta,
@@ -68,6 +69,10 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
 
   const getEstimateHref = (estimateId: string) =>
     `/projects/${projectId}/estimates/${estimateId}`
+
+  const openEstimate = (estimateId: string) => {
+    router.push(getEstimateHref(estimateId))
+  }
 
   const openCreateDialog = () => {
     setDialogState({ open: true, estimate: null, name: "", error: null })
@@ -176,12 +181,13 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
                   pageRows.map((estimate) => (
                     <TableRow key={estimate.id}>
                       <TableCell>
-                        <Link
-                          className="inline-flex text-left text-xs/relaxed font-medium text-foreground underline-offset-4 hover:underline"
-                          href={getEstimateHref(estimate.id)}
+                        <button
+                          className="inline-flex cursor-pointer text-left text-xs/relaxed font-medium text-foreground underline-offset-4 hover:underline"
+                          type="button"
+                          onClick={() => openEstimate(estimate.id)}
                         >
                           {estimate.name}
-                        </Link>
+                        </button>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="px-1.5 text-muted-foreground">

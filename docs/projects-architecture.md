@@ -1,10 +1,10 @@
 # /projects — рабочий слой проектов
 
-> Last updated: 2026-05-19
+> Last updated: 2026-05-20
 >
 > Status: production slice for `/projects`, project estimate records and estimate content server layer.
 >
-> Related issues: #129, #142, #143.
+> Related issues: #129, #142, #143, #151.
 
 ## Назначение
 
@@ -105,6 +105,7 @@ deletedAt
 ```txt
 получить список смет проекта
 создать смету по названию
+открыть смету нажатием на название
 переименовать смету
 удалить смету из списка
 ```
@@ -313,6 +314,7 @@ db/migrations/034_project_estimate_content_foundation.sql
 /projects/[projectId] открывается
 таблица смет проекта берётся из базы
 можно создать смету по названию
+можно открыть смету нажатием на название
 можно переименовать смету
 можно удалить смету из списка
 после действий список смет обновляется

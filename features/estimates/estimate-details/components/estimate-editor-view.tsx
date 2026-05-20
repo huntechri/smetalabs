@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import {
   fetchProjectEstimateMaterialOptions,
+  fetchProjectEstimateWorkCoefficient,
   fetchProjectEstimateWorkOptions,
   type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
@@ -53,6 +54,10 @@ const EMPTY_MATERIAL_DIALOG: MaterialDialogState = {
 
 const OPTION_SEARCH_MIN_LENGTH = 3
 const WORK_COEFFICIENT_DIALOG_KEY = "work-coefficient"
+
+function formatCoefficientInput(value: number) {
+  return Number.isInteger(value) ? String(value) : String(value).replace(".", ",")
+}
 
 export function EstimateEditorView({
   projectId,
@@ -96,6 +101,13 @@ export function EstimateEditorView({
   const canSearchWorks = workSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
   const canSearchMaterials = materialSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
 
+  const coefficientQuery = useQuery({
+    queryKey: ["project-estimate-work-coefficient", projectId, recordId],
+    queryFn: () => fetchProjectEstimateWorkCoefficient({ projectId, recordId }),
+    enabled: coefficientOpen,
+    staleTime: 0,
+  })
+
   React.useEffect(() => {
     if (searchParams.get("dialog") !== WORK_COEFFICIENT_DIALOG_KEY) return
 
@@ -105,6 +117,13 @@ export function EstimateEditorView({
     const nextSearch = params.toString()
     router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
   }, [pathname, router, searchParams])
+
+  React.useEffect(() => {
+    if (!coefficientOpen) return
+    const nextValue = coefficientQuery.data?.data.coefficientPercent
+    if (nextValue === undefined) return
+    setCoefficientValue(formatCoefficientInput(nextValue))
+  }, [coefficientOpen, coefficientQuery.data?.data.coefficientPercent])
 
   const workOptions = useQuery({
     queryKey: projectsQueryKeys.estimateWorkOptions(projectId, recordId, workParams),
@@ -212,6 +231,7 @@ export function EstimateEditorView({
 
     try {
       await applyWorkCoefficient(parsed)
+      await coefficientQuery.refetch()
       setCoefficientOpen(false)
     } catch (err) {
       setCoefficientError(
@@ -368,6 +388,7 @@ export function EstimateEditorView({
             </DialogHeader>
             <Input
               autoFocus
+              disabled={coefficientQuery.isLoading}
               inputMode="decimal"
               onChange={(event) => setCoefficientValue(event.target.value)}
               placeholder="10"
@@ -384,7 +405,7 @@ export function EstimateEditorView({
               >
                 Отмена
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving || coefficientQuery.isLoading}>
                 Применить
               </Button>
             </DialogFooter>

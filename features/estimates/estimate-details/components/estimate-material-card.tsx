@@ -11,17 +11,25 @@ import type { MaterialChangePayload } from "@/features/estimates/estimate-detail
 export function EstimateMaterialCard({
   index,
   material,
+  materialsCount,
+  reorderDisabled,
   saving,
   workNumber,
   onArchive,
   onChange,
+  onMoveNext,
+  onMovePrevious,
 }: {
   index: number
   material: ProjectEstimateContentMaterial
+  materialsCount: number
+  reorderDisabled: boolean
   saving: boolean
   workNumber: string
   onArchive: () => void
   onChange: (payload: MaterialChangePayload) => void
+  onMoveNext: () => void
+  onMovePrevious: () => void
 }) {
   return (
     <Card size="sm" className="min-h-36 gap-3 bg-background shadow-none">
@@ -41,8 +49,12 @@ export function EstimateMaterialCard({
           </div>
           <EstimateMaterialActions
             disabled={saving}
+            moveDownDisabled={reorderDisabled || index >= materialsCount - 1}
+            moveUpDisabled={reorderDisabled || index === 0}
             title={material.title}
             onArchive={onArchive}
+            onMoveDown={onMoveNext}
+            onMoveUp={onMovePrevious}
           />
         </div>
         <EstimateMaterialName

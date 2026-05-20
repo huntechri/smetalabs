@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import {
@@ -30,7 +31,6 @@ import type {
 } from "@/features/estimates/estimate-details/types"
 import { useProjectEstimateContent } from "@/features/estimates/hooks/use-project-estimate-content"
 import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
-import { PercentIcon } from "@phosphor-icons/react"
 import type {
   ProjectEstimateContentWork,
   ProjectEstimateMaterialOptionRow,
@@ -52,6 +52,7 @@ const EMPTY_MATERIAL_DIALOG: MaterialDialogState = {
 }
 
 const OPTION_SEARCH_MIN_LENGTH = 3
+const WORK_COEFFICIENT_DIALOG_KEY = "work-coefficient"
 
 export function EstimateEditorView({
   projectId,
@@ -60,6 +61,9 @@ export function EstimateEditorView({
   projectId: string
   recordId: string
 }) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const {
     content,
     loading,
@@ -91,6 +95,16 @@ export function EstimateEditorView({
 
   const canSearchWorks = workSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
   const canSearchMaterials = materialSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
+
+  React.useEffect(() => {
+    if (searchParams.get("dialog") !== WORK_COEFFICIENT_DIALOG_KEY) return
+
+    setCoefficientOpen(true)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("dialog")
+    const nextSearch = params.toString()
+    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
+  }, [pathname, router, searchParams])
 
   const workOptions = useQuery({
     queryKey: projectsQueryKeys.estimateWorkOptions(projectId, recordId, workParams),
@@ -284,18 +298,7 @@ export function EstimateEditorView({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-2">
-      <div className="flex justify-end">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setCoefficientOpen(true)}
-        >
-          <PercentIcon data-icon="inline-start" />
-          Коэффициент
-        </Button>
-      </div>
-
+    <div className="flex h-full min-h-0 flex-1 flex-col">
       <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border bg-background p-1">
         {content.sections.length === 0 ? (
           <EstimateEmptyState onCreateClick={() => setSectionOpen(true)} />

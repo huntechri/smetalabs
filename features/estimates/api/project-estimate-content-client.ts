@@ -175,6 +175,25 @@ export function applyProjectEstimateContentChange({
   )
 }
 
+export function applyProjectEstimateWorkCoefficient({
+  projectId,
+  recordId,
+  coefficientPercent,
+}: {
+  projectId: string
+  recordId: string
+  coefficientPercent: number
+}) {
+  return fetchJson<ProjectEstimateContentResponse>(
+    `/api/projects/${projectId}/estimate-records/${recordId}/work-coefficient`,
+    "применения коэффициента",
+    {
+      method: "POST",
+      body: JSON.stringify({ coefficientPercent }),
+    }
+  )
+}
+
 export function fetchProjectEstimateWorkOptions({
   projectId,
   recordId,

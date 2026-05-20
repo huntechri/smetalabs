@@ -143,7 +143,7 @@ export function EstimateWorkCard({
               </div>
 
               <div className="mt-3 flex justify-end border-t pt-3">
-                <FramedButton size="sm" variant="outline" onClick={() => onAddMaterial(work)}>
+                <FramedButton size="xs" variant="outline" onClick={() => onAddMaterial(work)}>
                   <PlusIcon data-icon="inline-start" />
                   Материал
                 </FramedButton>

@@ -29,6 +29,7 @@ type DirectoryMaterialOptionRow = {
 
 const MATERIAL_OPTION_SELECT =
   "id,code,name,unit_code,unit_label,price_amount,category,supplier_name"
+const ESTIMATE_OPTION_SEARCH_MIN_LENGTH = 3
 
 function normalizeSearch(value: string) {
   return value.trim().replace(/\s+/g, " ")
@@ -87,16 +88,20 @@ export async function listProjectEstimateWorkOptionsForWorkspace(
   params: EstimateContentOptionsParams
 ): Promise<ProjectEstimateOptionsResponse<ProjectEstimateOptionRow>> {
   const normalizedQuery = normalizeSearch(params.q)
+  if (normalizedQuery.length < ESTIMATE_OPTION_SEARCH_MIN_LENGTH) {
+    return buildMeta([], params)
+  }
+
   const { data, error } = await supabase.rpc("search_directory_works", {
     p_workspace_owner_id: workspaceOwnerId,
-    p_q: normalizedQuery || null,
+    p_q: normalizedQuery,
     p_category: null,
     p_subcategory: null,
     p_unit: null,
     p_status: "active",
     p_limit: params.limit + 1,
     p_cursor: params.cursor,
-    p_sort: normalizedQuery ? "relevance" : "title_asc",
+    p_sort: "relevance",
   })
 
   if (error) throw error
@@ -114,23 +119,23 @@ export async function listProjectEstimateMaterialOptionsForWorkspace(
   const normalizedQuery = normalizeSearch(params.q)
   const limitWithSentinel = params.limit + 1
 
-  let query = supabase
+  if (normalizedQuery.length < ESTIMATE_OPTION_SEARCH_MIN_LENGTH) {
+    return buildMeta([], params)
+  }
+
+  const { data, error } = await supabase
     .from("directory_materials")
     .select(MATERIAL_OPTION_SELECT)
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("status", "active")
     .is("deleted_at", null)
-    .order("normalized_name", { ascending: true })
-    .range(params.cursor, params.cursor + limitWithSentinel - 1)
-
-  if (normalizedQuery.length >= 2) {
-    query = query.textSearch("search_fts", normalizedQuery, {
+    .textSearch("search_fts", normalizedQuery, {
       type: "websearch",
       config: "simple",
     })
-  }
+    .order("normalized_name", { ascending: true })
+    .range(params.cursor, params.cursor + limitWithSentinel - 1)
 
-  const { data, error } = await query
   if (error) throw error
 
   const rows = ((data ?? []) as DirectoryMaterialOptionRow[]).map(mapMaterialOption)

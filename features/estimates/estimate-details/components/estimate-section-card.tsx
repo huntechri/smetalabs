@@ -20,6 +20,7 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react"
 import type { EstimateContentChangeInput } from "@/features/estimates/api/project-estimate-content-client"
+import type { EstimateArchive } from "@/features/estimates/estimate-details/types"
 import type {
   ProjectEstimateContentSection,
   ProjectEstimateContentWork,
@@ -36,7 +37,7 @@ export function EstimateSectionCard({
 }: {
   section: ProjectEstimateContentSection
   saving: boolean
-  onArchive: (input: EstimateContentChangeInput) => void
+  onArchive: EstimateArchive
   onAddSection: () => void
   onAddWork: (sectionId: string) => void
   onAddMaterial: (work: ProjectEstimateContentWork) => void
@@ -71,8 +72,13 @@ export function EstimateSectionCard({
 
   const archiveSection = () => {
     onArchive({
-      action: "archive_section",
-      payload: { sectionId: section.id },
+      input: {
+        action: "archive_section",
+        payload: { sectionId: section.id },
+      },
+      title: "Удалить раздел?",
+      description: "Раздел, его работы и материалы будут убраны из сметы.",
+      fallback: "Не удалось удалить раздел",
     })
   }
 

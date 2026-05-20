@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ButtonGroup } from "@/components/ui/button-group"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { Frame } from "@/components/ui/frame"
-import { FramedButton } from "@/components/ui/framed-button"
 import { Separator } from "@/components/ui/separator"
 import { EstimateSummaryValue } from "@/features/estimates/estimate-details/components/estimate-summary-value"
 import { EstimateWorkCard } from "@/features/estimates/estimate-details/components/estimate-work-card"
@@ -68,6 +69,13 @@ export function EstimateSectionCard({
     })
   }
 
+  const archiveSection = () => {
+    onArchive({
+      action: "archive_section",
+      payload: { sectionId: section.id },
+    })
+  }
+
   return (
     <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
       <Collapsible open={expandedSection} onOpenChange={setExpandedSection}>
@@ -113,46 +121,45 @@ export function EstimateSectionCard({
                   work={work}
                   saving={saving}
                   onArchive={onArchive}
+                  onAddSection={onAddSection}
+                  onAddWork={() => onAddWork(section.id)}
                   onAddMaterial={onAddMaterial}
+                  onArchiveSection={archiveSection}
                   onSave={onSave}
                   onToggle={() => toggleWork(work.id)}
                 />
               ))
             ) : (
               <div className="p-4 text-sm text-muted-foreground">
-                В разделе пока нет работ.
+                <p>В разделе пока нет работ.</p>
+                <div className="mt-3 flex justify-end border-t pt-3">
+                  <Frame>
+                    <ButtonGroup>
+                      <Button size="xs" variant="outline" onClick={onAddSection}>
+                        <PlusIcon data-icon="inline-start" />
+                        Раздел
+                      </Button>
+                      <Button size="xs" variant="outline" onClick={() => onAddWork(section.id)}>
+                        <PlusIcon data-icon="inline-start" />
+                        Работа
+                      </Button>
+                      <Button
+                        disabled={saving}
+                        size="xs"
+                        variant="destructive"
+                        onClick={archiveSection}
+                      >
+                        <TrashIcon data-icon="inline-start" />
+                        Удалить раздел
+                      </Button>
+                    </ButtonGroup>
+                  </Frame>
+                </div>
               </div>
             )}
           </div>
         </CollapsibleContent>
       </Collapsible>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/20 px-4 py-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <FramedButton size="xs" variant="outline" onClick={onAddSection}>
-            <PlusIcon data-icon="inline-start" />
-            Раздел
-          </FramedButton>
-          <FramedButton size="xs" variant="outline" onClick={() => onAddWork(section.id)}>
-            <PlusIcon data-icon="inline-start" />
-            Работа
-          </FramedButton>
-        </div>
-        <FramedButton
-          disabled={saving}
-          size="xs"
-          variant="destructive"
-          onClick={() =>
-            onArchive({
-              action: "archive_section",
-              payload: { sectionId: section.id },
-            })
-          }
-        >
-          <TrashIcon data-icon="inline-start" />
-          Удалить раздел
-        </FramedButton>
-      </div>
     </section>
   )
 }

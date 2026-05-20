@@ -33,6 +33,7 @@ export function EstimateSectionCard({
   onAddSection,
   onAddWork,
   onAddMaterial,
+  onReplaceWork,
   onSave,
 }: {
   section: ProjectEstimateContentSection
@@ -41,6 +42,7 @@ export function EstimateSectionCard({
   onAddSection: () => void
   onAddWork: (sectionId: string) => void
   onAddMaterial: (work: ProjectEstimateContentWork) => void
+  onReplaceWork: (work: ProjectEstimateContentWork) => void
   onSave: (input: EstimateContentChangeInput, fallback: string) => void
 }) {
   const [expandedSection, setExpandedSection] = useState(true)
@@ -131,6 +133,7 @@ export function EstimateSectionCard({
                   onAddWork={() => onAddWork(section.id)}
                   onAddMaterial={onAddMaterial}
                   onArchiveSection={archiveSection}
+                  onReplaceWork={onReplaceWork}
                   onSave={onSave}
                   onToggle={() => toggleWork(work.id)}
                 />

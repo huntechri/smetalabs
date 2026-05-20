@@ -5,7 +5,7 @@ export type ProjectEstimateContentRecord = {
   type: string
   status: "new" | "in_progress" | "completed"
   amount: number
-  worksCoefficientPercent: number
+  worksCoefficientPercent?: number
 }
 
 export type ProjectEstimateContentMaterial = {

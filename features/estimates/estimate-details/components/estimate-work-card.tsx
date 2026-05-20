@@ -1,4 +1,6 @@
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ButtonGroup } from "@/components/ui/button-group"
 import {
   Collapsible,
   CollapsibleContent,
@@ -6,14 +8,13 @@ import {
 } from "@/components/ui/collapsible"
 import { EditableBadge } from "@/components/ui/editable-badge"
 import { Frame } from "@/components/ui/frame"
-import { FramedButton } from "@/components/ui/framed-button"
 import { EstimateMaterialCard } from "@/features/estimates/estimate-details/components/estimate-material-card"
 import { EstimateName } from "@/features/estimates/estimate-details/components/estimate-name"
 import { EstimateWorkActions } from "@/features/estimates/estimate-details/components/estimate-work-actions"
 import { EstimateWorkNumber } from "@/features/estimates/estimate-details/components/estimate-work-number"
 import { formatMoney } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
-import { CaretRightIcon, PlusIcon } from "@phosphor-icons/react"
+import { CaretRightIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react"
 import type { EstimateContentChangeInput } from "@/features/estimates/api/project-estimate-content-client"
 import type { MaterialChangePayload } from "@/features/estimates/estimate-details/types"
 import type { ProjectEstimateContentWork } from "@/types/project-estimate-content"
@@ -23,7 +24,10 @@ export function EstimateWorkCard({
   work,
   saving,
   onArchive,
+  onAddSection,
+  onAddWork,
   onAddMaterial,
+  onArchiveSection,
   onSave,
   onToggle,
 }: {
@@ -31,7 +35,10 @@ export function EstimateWorkCard({
   work: ProjectEstimateContentWork
   saving: boolean
   onArchive: (input: EstimateContentChangeInput) => void
+  onAddSection: () => void
+  onAddWork: () => void
   onAddMaterial: (work: ProjectEstimateContentWork) => void
+  onArchiveSection: () => void
   onSave: (input: EstimateContentChangeInput, fallback: string) => void
   onToggle: () => void
 }) {
@@ -143,10 +150,31 @@ export function EstimateWorkCard({
               </div>
 
               <div className="mt-3 flex justify-end border-t pt-3">
-                <FramedButton size="xs" variant="outline" onClick={() => onAddMaterial(work)}>
-                  <PlusIcon data-icon="inline-start" />
-                  Материал
-                </FramedButton>
+                <Frame>
+                  <ButtonGroup>
+                    <Button size="xs" variant="outline" onClick={() => onAddMaterial(work)}>
+                      <PlusIcon data-icon="inline-start" />
+                      Материал
+                    </Button>
+                    <Button size="xs" variant="outline" onClick={onAddSection}>
+                      <PlusIcon data-icon="inline-start" />
+                      Раздел
+                    </Button>
+                    <Button size="xs" variant="outline" onClick={onAddWork}>
+                      <PlusIcon data-icon="inline-start" />
+                      Работа
+                    </Button>
+                    <Button
+                      disabled={saving}
+                      size="xs"
+                      variant="destructive"
+                      onClick={onArchiveSection}
+                    >
+                      <TrashIcon data-icon="inline-start" />
+                      Удалить раздел
+                    </Button>
+                  </ButtonGroup>
+                </Frame>
               </div>
             </div>
           </div>

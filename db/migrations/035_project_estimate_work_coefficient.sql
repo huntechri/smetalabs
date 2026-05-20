@@ -63,8 +63,19 @@ AS $$
 DECLARE
   target_coefficient numeric(7, 3);
 BEGIN
-  IF NEW.base_price IS NULL OR NEW.base_price = 0 THEN
-    NEW.base_price = NEW.price;
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.base_price IS NULL OR NEW.base_price = 0 THEN
+      NEW.base_price = NEW.price;
+    END IF;
+  ELSIF TG_OP = 'UPDATE' THEN
+    IF NEW.price IS DISTINCT FROM OLD.price
+      AND NEW.base_price IS NOT DISTINCT FROM OLD.base_price THEN
+      NEW.base_price = NEW.price;
+    END IF;
+
+    IF NEW.base_price IS NULL OR NEW.base_price = 0 THEN
+      NEW.base_price = NEW.price;
+    END IF;
   END IF;
 
   SELECT COALESCE(record.works_coefficient_percent, 0)
@@ -85,6 +96,6 @@ $$;
 
 DROP TRIGGER IF EXISTS trg_project_estimate_works_prepare_price ON public.project_estimate_works;
 CREATE TRIGGER trg_project_estimate_works_prepare_price
-  BEFORE INSERT ON public.project_estimate_works
+  BEFORE INSERT OR UPDATE OF price, base_price ON public.project_estimate_works
   FOR EACH ROW
   EXECUTE FUNCTION private.project_estimate_work_prepare_price();

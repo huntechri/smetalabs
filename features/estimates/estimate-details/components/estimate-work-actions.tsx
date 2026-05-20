@@ -10,24 +10,21 @@ export function EstimateWorkActions() {
     <div className="flex items-center gap-1">
       <FramedButton
         aria-label="Редактировать работу"
-        frameClassName="border-green-300"
-        size="icon-sm"
+        size="icon-xs"
         variant="ghost"
       >
         <PencilSimpleIcon />
       </FramedButton>
       <FramedButton
         aria-label="Дублировать работу"
-        frameClassName="border-green-300"
-        size="icon-sm"
+        size="icon-xs"
         variant="ghost"
       >
         <CopyIcon />
       </FramedButton>
       <FramedButton
         aria-label="Настройки работы"
-        frameClassName="border-green-300"
-        size="icon-sm"
+        size="icon-xs"
         variant="ghost"
       >
         <GearSixIcon />

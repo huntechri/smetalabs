@@ -63,44 +63,42 @@ export function EstimateNavigationTabs() {
   const getTabHref = (path: string) => (path ? `${basePath}/${path}` : basePath)
 
   return (
-    <div className="rounded-xl border border-dashed border-pink-500 p-2">
-      <Tabs value={activeTab} className="w-full flex-col justify-start">
-        <div className="rounded-lg border border-dashed border-pink-300 p-2 @4xl/main:hidden">
-          <Select
-            value={activeTab}
-            onValueChange={(value) => {
-              const tab = estimateTabs.find((item) => item.value === value)
+    <Tabs value={activeTab} className="w-full flex-col justify-start">
+      <div className="@4xl/main:hidden">
+        <Select
+          value={activeTab}
+          onValueChange={(value) => {
+            const tab = estimateTabs.find((item) => item.value === value)
 
-              if (tab) {
-                router.push(getTabHref(tab.path))
-              }
-            }}
-          >
-            <SelectTrigger className="flex w-fit" size="sm">
-              <SelectValue placeholder="Раздел сметы" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {estimateTabs.map((tab) => (
-                  <SelectItem key={tab.value} value={tab.value}>
-                    {tab.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
+            if (tab) {
+              router.push(getTabHref(tab.path))
+            }
+          }}
+        >
+          <SelectTrigger className="flex w-fit" size="sm">
+            <SelectValue placeholder="Раздел сметы" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {estimateTabs.map((tab) => (
+                <SelectItem key={tab.value} value={tab.value}>
+                  {tab.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
 
-        <div className="hidden rounded-lg border border-dashed border-pink-300 p-2 @4xl/main:block">
-          <TabsList>
-            {estimateTabs.map((tab) => (
-              <TabsTrigger asChild key={tab.value} value={tab.value}>
-                <Link href={getTabHref(tab.path)}>{tab.label}</Link>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
-      </Tabs>
-    </div>
+      <div className="hidden @4xl/main:block">
+        <TabsList>
+          {estimateTabs.map((tab) => (
+            <TabsTrigger asChild key={tab.value} value={tab.value}>
+              <Link href={getTabHref(tab.path)}>{tab.label}</Link>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
+    </Tabs>
   )
 }

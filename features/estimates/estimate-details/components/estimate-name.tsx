@@ -8,7 +8,7 @@ export function EstimateName({
   value: string
 }) {
   return (
-    <label className="min-w-48 flex-1 rounded-md border border-dashed border-green-300 p-2">
+    <label className="min-w-48 flex-1 rounded-md border bg-background p-2">
       <span className="mb-1 block text-xs text-muted-foreground uppercase">
         Название
       </span>

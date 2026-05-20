@@ -1,13 +1,7 @@
 "use client"
 
 import * as React from "react"
-import {
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  useReactTable,
-  type ColumnDef,
-} from "@tanstack/react-table"
+import Link from "next/link"
 import { CheckCircle, DotsThreeVertical, Spinner } from "@phosphor-icons/react"
 
 import { Badge } from "@/components/ui/badge"
@@ -60,31 +54,27 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
     updateRecord,
     deleteRecord,
   } = useProjectEstimateRecords(projectId)
-  const [dialogState, setDialogState] =
-    React.useState<EstimateDialogState>(EMPTY_DIALOG_STATE)
+  const [dialogState, setDialogState] = React.useState<EstimateDialogState>(EMPTY_DIALOG_STATE)
   const [estimateToDelete, setEstimateToDelete] = React.useState<EstimateRow | null>(null)
   const [deleteError, setDeleteError] = React.useState<string | null>(null)
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  })
+  const [pageIndex, setPageIndex] = React.useState(0)
+  const pageSize = 10
+
+  const pageRows = React.useMemo(
+    () => records.slice(pageIndex * pageSize, pageIndex * pageSize + pageSize),
+    [pageIndex, records]
+  )
+  const pageCount = Math.max(1, Math.ceil(records.length / pageSize))
+
+  const getEstimateHref = (estimateId: string) =>
+    `/projects/${projectId}/estimates/${estimateId}`
 
   const openCreateDialog = () => {
-    setDialogState({
-      open: true,
-      estimate: null,
-      name: "",
-      error: null,
-    })
+    setDialogState({ open: true, estimate: null, name: "", error: null })
   }
 
   const openEditDialog = (estimate: EstimateRow) => {
-    setDialogState({
-      open: true,
-      estimate,
-      name: estimate.name,
-      error: null,
-    })
+    setDialogState({ open: true, estimate, name: estimate.name, error: null })
   }
 
   const openDeleteDialog = (estimate: EstimateRow) => {
@@ -92,111 +82,12 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
     setEstimateToDelete(estimate)
   }
 
-  const closeDialog = () => {
-    setDialogState(EMPTY_DIALOG_STATE)
-  }
+  const closeDialog = () => setDialogState(EMPTY_DIALOG_STATE)
 
   const closeDeleteDialog = () => {
     setDeleteError(null)
     setEstimateToDelete(null)
   }
-
-  const columns = React.useMemo<ColumnDef<EstimateRow>[]>(
-    () => [
-      {
-        accessorKey: "name",
-        header: "Наименование",
-        cell: ({ row }) => (
-          <Button variant="link" className="w-fit px-0 text-left text-foreground">
-            {row.original.name}
-          </Button>
-        ),
-      },
-      {
-        accessorKey: "type",
-        header: "Тип сметы",
-        cell: ({ row }) => (
-          <Badge variant="outline" className="px-1.5 text-muted-foreground">
-            {row.original.type}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: "status",
-        header: "Статус",
-        cell: ({ row }) => (
-          <Badge variant="outline" className="px-1.5 text-muted-foreground">
-            {row.original.status === "completed" ? (
-              <CheckCircle className="fill-green-500 dark:fill-green-400" />
-            ) : (
-              <Spinner className="animate-spin" />
-            )}
-            {formatEstimateStatus(row.original.status)}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: "amount",
-        header: () => <div className="w-full text-right">Сумма</div>,
-        cell: ({ row }) => (
-          <div className="text-right font-medium tabular-nums">
-            {formatEstimateAmount(row.original.amount)}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "createdAt",
-        header: "Дата создания сметы",
-        cell: ({ row }) => (
-          <span className="text-muted-foreground">
-            {formatEstimateDate(row.original.createdAt)}
-          </span>
-        ),
-      },
-      {
-        id: "actions",
-        header: () => <div className="text-right">Действия</div>,
-        cell: ({ row }) => (
-          <div className="flex justify-end">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-                  size="icon"
-                >
-                  <DotsThreeVertical />
-                  <span className="sr-only">Открыть меню</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-32">
-                <DropdownMenuItem onSelect={() => openEditDialog(row.original)}>
-                  Редактировать
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onSelect={() => openDeleteDialog(row.original)}
-                >
-                  Удалить
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ),
-      },
-    ],
-    []
-  )
-
-  const table = useReactTable({
-    data: records,
-    columns,
-    state: { pagination },
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-  })
 
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
@@ -265,38 +156,87 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
           <div className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-muted">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} colSpan={header.colSpan}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
+                <TableRow>
+                  <TableHead>Наименование</TableHead>
+                  <TableHead>Тип сметы</TableHead>
+                  <TableHead>Статус</TableHead>
+                  <TableHead className="text-right">Сумма</TableHead>
+                  <TableHead>Дата создания сметы</TableHead>
+                  <TableHead className="text-right">Действия</TableHead>
+                </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                       Загрузка смет...
                     </TableCell>
                   </TableRow>
-                ) : table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id}>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
+                ) : pageRows.length ? (
+                  pageRows.map((estimate) => (
+                    <TableRow key={estimate.id}>
+                      <TableCell>
+                        <Link
+                          className="inline-flex text-left text-xs/relaxed font-medium text-foreground underline-offset-4 hover:underline"
+                          href={getEstimateHref(estimate.id)}
+                        >
+                          {estimate.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="px-1.5 text-muted-foreground">
+                          {estimate.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="px-1.5 text-muted-foreground">
+                          {estimate.status === "completed" ? (
+                            <CheckCircle className="fill-green-500 dark:fill-green-400" />
+                          ) : (
+                            <Spinner className="animate-spin" />
+                          )}
+                          {formatEstimateStatus(estimate.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-medium tabular-nums">
+                        {formatEstimateAmount(estimate.amount)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {formatEstimateDate(estimate.createdAt)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+                                size="icon"
+                              >
+                                <DotsThreeVertical />
+                                <span className="sr-only">Открыть меню</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-32">
+                              <DropdownMenuItem onSelect={() => openEditDialog(estimate)}>
+                                Редактировать
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onSelect={() => openDeleteDialog(estimate)}
+                              >
+                                Удалить
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                       Сметы не найдены.
                     </TableCell>
                   </TableRow>
@@ -306,26 +246,26 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
           </div>
           <div className="flex items-center justify-between px-4 text-sm text-muted-foreground">
             <div>
-              Всего смет: {meta?.total ?? table.getFilteredRowModel().rows.length}
+              Всего смет: {meta?.total ?? records.length}
               {isFetching ? " · обновление..." : ""}
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() => setPageIndex((current) => Math.max(current - 1, 0))}
+                disabled={pageIndex === 0}
               >
                 Назад
               </Button>
               <div className="text-sm font-medium text-foreground">
-                {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
+                {pageIndex + 1} / {pageCount}
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                onClick={() => setPageIndex((current) => Math.min(current + 1, pageCount - 1))}
+                disabled={pageIndex >= pageCount - 1}
               >
                 Далее
               </Button>

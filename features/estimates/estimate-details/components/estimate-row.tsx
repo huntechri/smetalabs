@@ -7,10 +7,10 @@ import {
 import { EditableBadge } from "@/components/ui/editable-badge"
 import { Frame } from "@/components/ui/frame"
 import { FramedButton } from "@/components/ui/framed-button"
+import { EstimateDebugMaterialCard } from "@/features/estimates/estimate-details/components/estimate-debug-material-card"
 import { getTotal } from "@/lib/calculations"
 import { formatMoney } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
-import { EstimateMaterialCard } from "./estimate-material-card"
 import { EstimateName } from "./estimate-name"
 import { EstimateWorkActions } from "./estimate-work-actions"
 import { EstimateWorkNumber } from "./estimate-work-number"
@@ -108,7 +108,7 @@ export function EstimateRow({
             <div className="rounded-md border border-dashed border-purple-400 p-3">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {work.materials.map((material, index) => (
-                  <EstimateMaterialCard
+                  <EstimateDebugMaterialCard
                     key={material.id}
                     index={index}
                     material={material}

@@ -47,6 +47,8 @@ const EMPTY_MATERIAL_DIALOG: MaterialDialogState = {
   selected: null,
 }
 
+const OPTION_SEARCH_MIN_LENGTH = 2
+
 export function EstimateEditorView({
   projectId,
   recordId,
@@ -73,11 +75,14 @@ export function EstimateEditorView({
     [materialSearch]
   )
 
+  const canSearchWorks = workSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
+  const canSearchMaterials = materialSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
+
   const workOptions = useQuery({
     queryKey: projectsQueryKeys.estimateWorkOptions(projectId, recordId, workParams),
     queryFn: () =>
       fetchProjectEstimateWorkOptions({ projectId, recordId, params: workParams }),
-    enabled: workDialog.open,
+    enabled: workDialog.open && canSearchWorks,
     staleTime: 30_000,
   })
 
@@ -93,7 +98,7 @@ export function EstimateEditorView({
         recordId,
         params: materialParams,
       }),
-    enabled: materialDialog.open,
+    enabled: materialDialog.open && canSearchMaterials,
     staleTime: 30_000,
   })
 

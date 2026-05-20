@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
-  applyProjectEstimateWorkCoefficient,
   fetchProjectEstimateMaterialOptions,
   fetchProjectEstimateWorkOptions,
   type EstimateContentChangeInput,
@@ -61,13 +60,19 @@ export function EstimateEditorView({
   projectId: string
   recordId: string
 }) {
-  const { content, loading, error, saving, applyChange, refetch } =
-    useProjectEstimateContent(projectId, recordId)
+  const {
+    content,
+    loading,
+    error,
+    saving,
+    applyChange,
+    applyWorkCoefficient,
+    refetch,
+  } = useProjectEstimateContent(projectId, recordId)
   const [sectionOpen, setSectionOpen] = React.useState(false)
   const [coefficientOpen, setCoefficientOpen] = React.useState(false)
   const [coefficientValue, setCoefficientValue] = React.useState("0")
   const [coefficientError, setCoefficientError] = React.useState<string | null>(null)
-  const [coefficientSaving, setCoefficientSaving] = React.useState(false)
   const [workDialog, setWorkDialog] = React.useState<WorkDialogState>(EMPTY_WORK_DIALOG)
   const [materialDialog, setMaterialDialog] = React.useState<MaterialDialogState>(EMPTY_MATERIAL_DIALOG)
   const [archiveRequest, setArchiveRequest] = React.useState<EstimateArchiveRequest | null>(null)
@@ -189,23 +194,15 @@ export function EstimateEditorView({
       return
     }
 
-    setCoefficientSaving(true)
     setCoefficientError(null)
 
     try {
-      await applyProjectEstimateWorkCoefficient({
-        projectId,
-        recordId,
-        coefficientPercent: parsed,
-      })
-      await refetch()
+      await applyWorkCoefficient(parsed)
       setCoefficientOpen(false)
     } catch (err) {
       setCoefficientError(
         err instanceof Error ? err.message : "Не удалось применить коэффициент"
       )
-    } finally {
-      setCoefficientSaving(false)
     }
   }
 
@@ -308,7 +305,7 @@ export function EstimateEditorView({
               <EstimateSectionCard
                 key={section.id}
                 section={section}
-                saving={saving || coefficientSaving}
+                saving={saving}
                 onArchive={setArchiveRequest}
                 onAddSection={() => setSectionOpen(true)}
                 onAddWork={openWorkDialog}
@@ -329,7 +326,7 @@ export function EstimateEditorView({
       <EstimateWorkPickerDialog
         state={workDialog}
         query={workSearch}
-        saving={saving || coefficientSaving}
+        saving={saving}
         options={workOptions.data?.data ?? []}
         loading={workOptions.isLoading}
         onQueryChange={setWorkSearch}
@@ -345,7 +342,7 @@ export function EstimateEditorView({
       <EstimateMaterialPickerDialog
         state={materialDialog}
         query={materialSearch}
-        saving={saving || coefficientSaving}
+        saving={saving}
         options={materialOptions.data?.data ?? []}
         loading={materialOptions.isLoading}
         onQueryChange={setMaterialSearch}
@@ -384,7 +381,7 @@ export function EstimateEditorView({
               >
                 Отмена
               </Button>
-              <Button type="submit" disabled={coefficientSaving}>
+              <Button type="submit" disabled={saving}>
                 Применить
               </Button>
             </DialogFooter>
@@ -413,7 +410,7 @@ export function EstimateEditorView({
             <Button
               type="button"
               variant="destructive"
-              disabled={saving || coefficientSaving}
+              disabled={saving}
               onClick={confirmArchive}
             >
               Удалить

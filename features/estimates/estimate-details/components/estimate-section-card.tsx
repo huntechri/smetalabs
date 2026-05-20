@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -65,13 +65,23 @@ export function EstimateSectionCard({
   const [expandedWorks, setExpandedWorks] = useState<Set<string>>(
     () => new Set(section.works[0] ? [section.works[0].id] : [])
   )
+  const prevWorkIdsRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
-    setExpandedWorks((current) => {
-      const next = new Set(current)
-      section.works.forEach((work) => next.add(work.id))
-      return next
-    })
+    const currentIds = new Set(section.works.map((w) => w.id))
+    const newIds = new Set(
+      [...currentIds].filter((id) => !prevWorkIdsRef.current.has(id))
+    )
+
+    if (newIds.size > 0) {
+      setExpandedWorks((current) => {
+        const next = new Set(current)
+        newIds.forEach((id) => next.add(id))
+        return next
+      })
+    }
+
+    prevWorkIdsRef.current = currentIds
   }, [section.works])
 
   const toggleWork = (workId: string) => {

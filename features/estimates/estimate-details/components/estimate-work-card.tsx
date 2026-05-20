@@ -1,3 +1,5 @@
+"use client"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -86,6 +88,53 @@ export function EstimateWorkCard({
       fallback: "Не удалось удалить работу",
     })
 
+  const actionButtons = (
+    <Frame className="shrink-0">
+      <ButtonGroup>
+        <Button
+          aria-label="Поднять работу"
+          disabled={saving || reorderDisabled || workIndex === 0}
+          size="icon-xs"
+          type="button"
+          variant="ghost"
+          onClick={() => onMoveWork(work.id, "up")}
+        >
+          <CaretUpIcon />
+        </Button>
+        <Button
+          aria-label="Опустить работу"
+          disabled={saving || reorderDisabled || workIndex >= worksCount - 1}
+          size="icon-xs"
+          type="button"
+          variant="ghost"
+          onClick={() => onMoveWork(work.id, "down")}
+        >
+          <CaretDownIcon />
+        </Button>
+        <Button
+          aria-label="Заменить работу"
+          disabled={saving}
+          size="icon-xs"
+          type="button"
+          variant="ghost"
+          onClick={() => onReplaceWork(work)}
+        >
+          <PencilSimpleIcon />
+        </Button>
+        <Button
+          aria-label="Удалить работу"
+          disabled={saving}
+          size="icon-xs"
+          type="button"
+          variant="ghost"
+          onClick={archiveWork}
+        >
+          <TrashIcon />
+        </Button>
+      </ButtonGroup>
+    </Frame>
+  )
+
   return (
     <Collapsible open={expanded} onOpenChange={onToggle}>
       <div className="border-b last:border-b-0">
@@ -109,50 +158,7 @@ export function EstimateWorkCard({
                 </button>
               </CollapsibleTrigger>
               <EstimateWorkNumber value={work.number} />
-              <Frame className="ml-auto lg:hidden">
-                <ButtonGroup>
-                  <Button
-                    aria-label="Поднять работу"
-                    disabled={saving || reorderDisabled || workIndex === 0}
-                    size="icon-xs"
-                    type="button"
-                    variant="ghost"
-                    onClick={() => onMoveWork(work.id, "up")}
-                  >
-                    <CaretUpIcon />
-                  </Button>
-                  <Button
-                    aria-label="Опустить работу"
-                    disabled={saving || reorderDisabled || workIndex >= worksCount - 1}
-                    size="icon-xs"
-                    type="button"
-                    variant="ghost"
-                    onClick={() => onMoveWork(work.id, "down")}
-                  >
-                    <CaretDownIcon />
-                  </Button>
-                  <Button
-                    aria-label="Заменить работу"
-                    disabled={saving}
-                    size="icon-xs"
-                    type="button"
-                    variant="ghost"
-                    onClick={() => onReplaceWork(work)}
-                  >
-                    <PencilSimpleIcon />
-                  </Button>
-                  <Button
-                    aria-label="Удалить работу"
-                    disabled={saving}
-                    size="icon-xs"
-                    type="button"
-                    variant="ghost"
-                    onClick={archiveWork}
-                  >
-                    <TrashIcon />
-                  </Button>
-                </ButtonGroup>
-              </Frame>
+              <div className="ml-auto lg:hidden">{actionButtons}</div>
             </div>
             <EstimateName
               onChange={(title) =>
@@ -202,50 +208,7 @@ export function EstimateWorkCard({
                 <span>{formatMoney(work.totalAmount)}</span>
               </Badge>
             </div>
-            <Frame className="hidden lg:inline-flex">
-              <ButtonGroup>
-                <Button
-                  aria-label="Поднять работу"
-                  disabled={saving || reorderDisabled || workIndex === 0}
-                  size="icon-xs"
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onMoveWork(work.id, "up")}
-                >
-                  <CaretUpIcon />
-                </Button>
-                <Button
-                  aria-label="Опустить работу"
-                  disabled={saving || reorderDisabled || workIndex >= worksCount - 1}
-                  size="icon-xs"
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onMoveWork(work.id, "down")}
-                >
-                  <CaretDownIcon />
-                </Button>
-                <Button
-                  aria-label="Заменить работу"
-                  disabled={saving}
-                  size="icon-xs"
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onReplaceWork(work)}
-                >
-                  <PencilSimpleIcon />
-                </Button>
-                <Button
-                  aria-label="Удалить работу"
-                  disabled={saving}
-                  size="icon-xs"
-                  type="button"
-                  variant="ghost"
-                  onClick={archiveWork}
-                >
-                  <TrashIcon />
-                </Button>
-              </ButtonGroup>
-            </Frame>
+            <div className="hidden lg:inline-flex">{actionButtons}</div>
           </div>
         </div>
 

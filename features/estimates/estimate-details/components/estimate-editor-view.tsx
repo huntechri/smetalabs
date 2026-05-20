@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useCallback, useDeferredValue, useRef } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
@@ -186,13 +187,16 @@ export function EstimateEditorView({
   const [archiveRequest, setArchiveRequest] = React.useState<EstimateArchiveRequest | null>(null)
   const [workSearch, setWorkSearch] = React.useState("")
   const [materialSearch, setMaterialSearch] = React.useState("")
-  const [, setMessage] = React.useState<string | null>(null)
+  const ensuringRef = useRef(false)
+  const ensurePendingRef = useRef<Promise<string | null> | null>(null)
+  const coefficientTriggered = useRef(false)
 
   const estimateSearch = searchParams.get("q")?.trim() ?? ""
   const searchActive = estimateSearch.length > 0
+  const deferredSearch = useDeferredValue(estimateSearch)
   const visibleSections = React.useMemo(
-    () => filterSections(content?.sections ?? [], estimateSearch),
-    [content?.sections, estimateSearch]
+    () => filterSections(content?.sections ?? [], deferredSearch),
+    [content?.sections, deferredSearch]
   )
 
   const workParams = React.useMemo(
@@ -215,7 +219,12 @@ export function EstimateEditorView({
   })
 
   React.useEffect(() => {
-    if (searchParams.get("dialog") !== WORK_COEFFICIENT_DIALOG_KEY) return
+    if (searchParams.get("dialog") !== WORK_COEFFICIENT_DIALOG_KEY) {
+      coefficientTriggered.current = false
+      return
+    }
+    if (coefficientTriggered.current) return
+    coefficientTriggered.current = true
 
     setCoefficientOpen(true)
     const params = new URLSearchParams(searchParams.toString())
@@ -255,104 +264,125 @@ export function EstimateEditorView({
     staleTime: 30_000,
   })
 
-  const save = async (input: EstimateContentChangeInput, fallback: string) => {
-    setMessage("Сохраняется")
-    try {
-      const next = await applyChange(input)
-      setMessage("Сохранено")
-      return next
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : fallback)
-      throw err
-    }
-  }
+  const save = useCallback(
+    async (input: EstimateContentChangeInput, fallback: string) => {
+      try {
+        const next = await applyChange(input)
+        if (!next?.sections) return null
+        return next
+      } catch (err) {
+        throw err
+      }
+    },
+    [applyChange]
+  )
 
-  const ensureSection = async () => {
-    const existing = content?.sections[0]?.id
-    if (existing) return existing
-
-    const next = await save(
-      { action: "create_section", payload: { title: "Без раздела" } },
-      "Не удалось добавить раздел"
-    )
-    return next.sections[0]?.id ?? null
-  }
-
-  const clearEstimateSearch = () => {
+  const clearEstimateSearch = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete("q")
     const nextSearch = params.toString()
     router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
-  }
+  }, [pathname, router, searchParams])
 
-  const moveSection = async (sectionId: string, direction: MoveDirection) => {
-    if (!content || searchActive) return
-    const next = moveItem(content.sections, sectionId, direction)
-    if (!next) return
+  const ensureSection = useCallback(async () => {
+    const existing = content?.sections[0]?.id
+    if (existing) return existing
 
-    await save(
-      { action: "reorder_sections", payload: { items: sortPayload(next) } },
-      "Не удалось изменить порядок разделов"
-    )
-  }
-
-  const moveWork = async (
-    sectionId: string,
-    workId: string,
-    direction: MoveDirection
-  ) => {
-    if (!content || searchActive) return
-    const section = content.sections.find((item) => item.id === sectionId)
-    if (!section) return
-    const next = moveItem(section.works, workId, direction)
-    if (!next) return
-
-    await save(
-      {
-        action: "reorder_works",
-        payload: { sectionId, items: sortPayload(next) },
-      },
-      "Не удалось изменить порядок работ"
-    )
-  }
-
-  const moveMaterial = async (
-    workId: string,
-    materialId: string,
-    direction: MoveDirection
-  ) => {
-    if (!content || searchActive) return
-    const work = content.sections
-      .flatMap((section) => section.works)
-      .find((item) => item.id === workId)
-    if (!work) return
-    const next = moveItem(work.materials, materialId, direction)
-    if (!next) return
-
-    await save(
-      {
-        action: "reorder_materials",
-        payload: { workId, items: sortPayload(next) },
-      },
-      "Не удалось изменить порядок материалов"
-    )
-  }
-
-  const openWorkDialog = async (sectionId?: string) => {
-    const target = sectionId ?? (await ensureSection())
-    if (target) {
-      setWorkSearch("")
-      setWorkDialog({
-        open: true,
-        mode: "add",
-        sectionId: target,
-        work: null,
-        selected: null,
-      })
+    if (ensuringRef.current && ensurePendingRef.current) {
+      return ensurePendingRef.current
     }
-  }
 
-  const openReplaceWorkDialog = (work: ProjectEstimateContentWork) => {
+    ensuringRef.current = true
+    const promise = save(
+      { action: "create_section", payload: { title: "Без раздела" } },
+      "Не удалось добавить раздел"
+    ).then((next) => {
+      const id = next?.sections?.[0]?.id ?? null
+      ensuringRef.current = false
+      ensurePendingRef.current = null
+      return id
+    }).catch(() => {
+      ensuringRef.current = false
+      ensurePendingRef.current = null
+      return null
+    })
+
+    ensurePendingRef.current = promise
+    return promise
+  }, [content?.sections, save])
+
+  const moveSection = useCallback(
+    async (sectionId: string, direction: MoveDirection) => {
+      if (!content || searchActive) return
+      const next = moveItem(content.sections, sectionId, direction)
+      if (!next) return
+
+      await save(
+        { action: "reorder_sections", payload: { items: sortPayload(next) } },
+        "Не удалось изменить порядок разделов"
+      )
+    },
+    [content, searchActive, save]
+  )
+
+  const moveWork = useCallback(
+    async (sectionId: string, workId: string, direction: MoveDirection) => {
+      if (!content || searchActive) return
+      const section = content.sections.find((item) => item.id === sectionId)
+      if (!section) return
+      const next = moveItem(section.works, workId, direction)
+      if (!next) return
+
+      await save(
+        {
+          action: "reorder_works",
+          payload: { sectionId, items: sortPayload(next) },
+        },
+        "Не удалось изменить порядок работ"
+      )
+    },
+    [content, searchActive, save]
+  )
+
+  const moveMaterial = useCallback(
+    async (workId: string, materialId: string, direction: MoveDirection) => {
+      if (!content || searchActive) return
+      const work = content.sections
+        .flatMap((section) => section.works)
+        .find((item) => item.id === workId)
+      if (!work) return
+      const next = moveItem(work.materials, materialId, direction)
+      if (!next) return
+
+      await save(
+        {
+          action: "reorder_materials",
+          payload: { workId, items: sortPayload(next) },
+        },
+        "Не удалось изменить порядок материалов"
+      )
+    },
+    [content, searchActive, save]
+  )
+
+  const openWorkDialog = useCallback(
+    async (sectionId?: string) => {
+      const target = sectionId ?? (await ensureSection())
+      if (target) {
+        setWorkSearch("")
+        setWorkDialog({
+          open: true,
+          mode: "add",
+          sectionId: target,
+          work: null,
+          selected: null,
+        })
+      }
+    },
+    [ensureSection]
+  )
+
+  const openReplaceWorkDialog = useCallback((work: ProjectEstimateContentWork) => {
     setWorkSearch("")
     setWorkDialog({
       open: true,
@@ -361,110 +391,125 @@ export function EstimateEditorView({
       work,
       selected: null,
     })
-  }
+  }, [])
 
-  const openMaterialDialog = (work: ProjectEstimateContentWork) => {
+  const openMaterialDialog = useCallback((work: ProjectEstimateContentWork) => {
     setMaterialDialog({ open: true, work, selected: null })
-  }
+  }, [])
 
-  const confirmArchive = async () => {
+  const confirmArchive = useCallback(async () => {
     if (!archiveRequest) return
     await save(archiveRequest.input, archiveRequest.fallback)
     setArchiveRequest(null)
-  }
+  }, [archiveRequest, save])
 
-  const createSection = async (data: { name: string }) => {
-    const title = parseText(data.name)
-    if (!title) return
+  const createSection = useCallback(
+    async (data: { name: string }) => {
+      const title = parseText(data.name)
+      if (!title) return
 
-    await save(
-      { action: "create_section", payload: { title } },
-      "Не удалось добавить раздел"
-    )
-    setSectionOpen(false)
-  }
-
-  const applyCoefficient = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const parsed = Number(coefficientValue.trim().replace(",", "."))
-
-    if (!Number.isFinite(parsed) || parsed < 0) {
-      setCoefficientError("Введите коэффициент 0 или больше")
-      return
-    }
-
-    setCoefficientError(null)
-
-    try {
-      await applyWorkCoefficient(parsed)
-      await coefficientQuery.refetch()
-      setCoefficientOpen(false)
-    } catch (err) {
-      setCoefficientError(
-        err instanceof Error ? err.message : "Не удалось применить коэффициент"
+      await save(
+        { action: "create_section", payload: { title } },
+        "Не удалось добавить раздел"
       )
-    }
-  }
+      setSectionOpen(false)
+    },
+    [save]
+  )
 
-  const addDirectoryWork = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!workDialog.sectionId || !workDialog.selected) return
+  const applyCoefficient = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      const parsed = Number(coefficientValue.trim().replace(",", "."))
 
-    const form = new FormData(event.currentTarget)
-    await save(
-      {
-        action: "add_work_from_directory",
-        payload: {
-          sectionId: workDialog.sectionId,
-          directoryWorkId: workDialog.selected.id,
-          quantity: parseDecimal(form.get("quantity"), 1),
-          price: parseDecimal(form.get("price"), workDialog.selected.price),
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        setCoefficientError("Введите коэффициент 0 или больше")
+        return
+      }
+
+      setCoefficientError(null)
+
+      try {
+        await applyWorkCoefficient(parsed)
+        await coefficientQuery.refetch()
+        setCoefficientOpen(false)
+      } catch (err) {
+        setCoefficientError(
+          err instanceof Error ? err.message : "Не удалось применить коэффициент"
+        )
+      }
+    },
+    [applyWorkCoefficient, coefficientQuery, coefficientValue]
+  )
+
+  const addDirectoryWork = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      if (!workDialog.sectionId || !workDialog.selected) return
+
+      const form = new FormData(event.currentTarget)
+      await save(
+        {
+          action: "add_work_from_directory",
+          payload: {
+            sectionId: workDialog.sectionId,
+            directoryWorkId: workDialog.selected.id,
+            quantity: parseDecimal(form.get("quantity"), 1),
+            price: parseDecimal(form.get("price"), workDialog.selected.price),
+          },
         },
-      },
-      "Не удалось добавить работу"
-    )
-    setWorkDialog((current) => ({ ...current, selected: null }))
-  }
+        "Не удалось добавить работу"
+      )
+      setWorkDialog((current) => ({ ...current, selected: null }))
+    },
+    [save, workDialog.sectionId, workDialog.selected]
+  )
 
-  const replaceDirectoryWork = async (selected: ProjectEstimateOptionRow) => {
-    if (!workDialog.work) return
+  const replaceDirectoryWork = useCallback(
+    async (selected: ProjectEstimateOptionRow) => {
+      if (!workDialog.work) return
 
-    await save(
-      {
-        action: "update_work",
-        payload: {
-          workId: workDialog.work.id,
-          title: selected.title,
-          price: selected.price,
+      await save(
+        {
+          action: "update_work",
+          payload: {
+            workId: workDialog.work.id,
+            title: selected.title,
+            price: selected.price,
+          },
         },
-      },
-      "Не удалось заменить работу"
-    )
-    setWorkDialog(EMPTY_WORK_DIALOG)
-  }
+        "Не удалось заменить работу"
+      )
+      setWorkDialog(EMPTY_WORK_DIALOG)
+    },
+    [save, workDialog.work]
+  )
 
-  const addDirectoryMaterial = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!materialDialog.work || !materialDialog.selected) return
+  const addDirectoryMaterial = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      if (!materialDialog.work || !materialDialog.selected) return
 
-    const form = new FormData(event.currentTarget)
-    const consumption = parseDecimal(form.get("consumption"), undefined) ?? null
-    await save(
-      {
-        action: "add_material_from_directory",
-        payload: {
-          workId: materialDialog.work.id,
-          directoryMaterialId: materialDialog.selected.id,
-          quantity: parseDecimal(form.get("quantity"), undefined),
-          consumption,
-          price: parseDecimal(form.get("price"), materialDialog.selected.price),
-          changedField: consumption ? "consumption" : "quantity",
+      const form = new FormData(event.currentTarget)
+      const consumption = parseDecimal(form.get("consumption"), undefined) ?? null
+      await save(
+        {
+          action: "add_material_from_directory",
+          payload: {
+            workId: materialDialog.work.id,
+            directoryMaterialId: materialDialog.selected.id,
+            quantity: parseDecimal(form.get("quantity"), undefined),
+            consumption,
+            price: parseDecimal(form.get("price"), materialDialog.selected.price),
+            changedField: consumption ? "consumption" : "quantity",
+          },
         },
-      },
-      "Не удалось добавить материал"
-    )
-    setMaterialDialog((current) => ({ ...current, selected: null }))
-  }
+        "Не удалось добавить материал"
+      )
+      setMaterialDialog((current) => ({ ...current, selected: null }))
+    },
+    [save, materialDialog.work, materialDialog.selected]
+  )
 
   if (loading) {
     return <div className="p-4 text-sm text-muted-foreground">Загрузка сметы...</div>

@@ -13,7 +13,12 @@ import { EstimateName } from "@/features/estimates/estimate-details/components/e
 import { EstimateWorkNumber } from "@/features/estimates/estimate-details/components/estimate-work-number"
 import { formatMoney } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
-import { CaretRightIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react"
+import {
+  CaretRightIcon,
+  PencilSimpleIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@phosphor-icons/react"
 import type { EstimateContentChangeInput } from "@/features/estimates/api/project-estimate-content-client"
 import type {
   EstimateArchive,
@@ -30,6 +35,7 @@ export function EstimateWorkCard({
   onAddWork,
   onAddMaterial,
   onArchiveSection,
+  onReplaceWork,
   onSave,
   onToggle,
 }: {
@@ -41,6 +47,7 @@ export function EstimateWorkCard({
   onAddWork: () => void
   onAddMaterial: (work: ProjectEstimateContentWork) => void
   onArchiveSection: () => void
+  onReplaceWork: (work: ProjectEstimateContentWork) => void
   onSave: (input: EstimateContentChangeInput, fallback: string) => void
   onToggle: () => void
 }) {
@@ -53,6 +60,17 @@ export function EstimateWorkCard({
       "Не удалось сохранить изменение"
     )
   }
+
+  const archiveWork = () =>
+    onArchive({
+      input: {
+        action: "archive_work",
+        payload: { workId: work.id },
+      },
+      title: "Удалить работу?",
+      description: "Работа и все её материалы будут убраны из сметы.",
+      fallback: "Не удалось удалить работу",
+    })
 
   return (
     <Collapsible open={expanded} onOpenChange={onToggle}>
@@ -78,27 +96,28 @@ export function EstimateWorkCard({
               </CollapsibleTrigger>
               <EstimateWorkNumber value={work.number} />
               <Frame className="ml-auto lg:hidden">
-                <Button
-                  aria-label="Удалить работу"
-                  disabled={saving}
-                  size="icon-xs"
-                  type="button"
-                  variant="ghost"
-                  onClick={() =>
-                    onArchive({
-                      input: {
-                        action: "archive_work",
-                        payload: { workId: work.id },
-                      },
-                      title: "Удалить работу?",
-                      description:
-                        "Работа и все её материалы будут убраны из сметы.",
-                      fallback: "Не удалось удалить работу",
-                    })
-                  }
-                >
-                  <TrashIcon />
-                </Button>
+                <ButtonGroup>
+                  <Button
+                    aria-label="Заменить работу"
+                    disabled={saving}
+                    size="icon-xs"
+                    type="button"
+                    variant="ghost"
+                    onClick={() => onReplaceWork(work)}
+                  >
+                    <PencilSimpleIcon />
+                  </Button>
+                  <Button
+                    aria-label="Удалить работу"
+                    disabled={saving}
+                    size="icon-xs"
+                    type="button"
+                    variant="ghost"
+                    onClick={archiveWork}
+                  >
+                    <TrashIcon />
+                  </Button>
+                </ButtonGroup>
               </Frame>
             </div>
             <EstimateName
@@ -150,27 +169,28 @@ export function EstimateWorkCard({
               </Badge>
             </div>
             <Frame className="hidden lg:inline-flex">
-              <Button
-                aria-label="Удалить работу"
-                disabled={saving}
-                size="icon-xs"
-                type="button"
-                variant="ghost"
-                onClick={() =>
-                  onArchive({
-                    input: {
-                      action: "archive_work",
-                      payload: { workId: work.id },
-                    },
-                    title: "Удалить работу?",
-                    description:
-                      "Работа и все её материалы будут убраны из сметы.",
-                    fallback: "Не удалось удалить работу",
-                  })
-                }
-              >
-                <TrashIcon />
-              </Button>
+              <ButtonGroup>
+                <Button
+                  aria-label="Заменить работу"
+                  disabled={saving}
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onReplaceWork(work)}
+                >
+                  <PencilSimpleIcon />
+                </Button>
+                <Button
+                  aria-label="Удалить работу"
+                  disabled={saving}
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                  onClick={archiveWork}
+                >
+                  <TrashIcon />
+                </Button>
+              </ButtonGroup>
             </Frame>
           </div>
         </div>

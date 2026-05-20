@@ -9,12 +9,14 @@ import {
   ExportIcon,
   FileArrowDownIcon,
   MagnifyingGlassIcon,
+  PercentIcon,
   PlusIcon,
 } from "@phosphor-icons/react"
 
 type ToolbarAction = {
   label: string
   icon: React.ReactNode
+  action?: "workCoefficient"
   variant?: React.ComponentProps<typeof Button>["variant"]
 }
 
@@ -22,7 +24,11 @@ const tabActions: Record<string, ToolbarAction[]> = {
   estimate: [
     { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
     { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
-    { label: "Коэффициент", icon: <PlusIcon data-icon="inline-start" /> },
+    {
+      label: "Коэффициент",
+      icon: <PercentIcon data-icon="inline-start" />,
+      action: "workCoefficient",
+    },
   ],
   purchases: [
     { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
@@ -76,6 +82,11 @@ export function EstimateTabToolbar() {
     return labels[activeTab]
   }, [activeTab])
 
+  const replaceSearch = (params: URLSearchParams) => {
+    const nextSearch = params.toString()
+    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
+  }
+
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
@@ -88,8 +99,15 @@ export function EstimateTabToolbar() {
       params.delete("q")
     }
 
-    const nextSearch = params.toString()
-    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
+    replaceSearch(params)
+  }
+
+  const handleAction = (action: ToolbarAction) => {
+    if (action.action === "workCoefficient") {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set("dialog", "work-coefficient")
+      replaceSearch(params)
+    }
   }
 
   return (
@@ -118,6 +136,7 @@ export function EstimateTabToolbar() {
             size="sm"
             type="button"
             variant={action.variant ?? "outline"}
+            onClick={() => handleAction(action)}
           >
             {action.icon}
             {action.label}

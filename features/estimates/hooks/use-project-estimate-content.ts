@@ -75,6 +75,12 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
 
   const updateContentCache = useCallback(
     async (response: Awaited<ReturnType<typeof fetchProjectEstimateContent>> & { _partial?: boolean }) => {
+      // Helper to strip _optimistic flag from sections (used for temp→real ID replacement)
+      const stripOptimisticSections = (
+        sections: ProjectEstimateContentSection[]
+      ): ProjectEstimateContentSection[] =>
+        sections.filter((s) => !(s as Record<string, unknown>)._optimistic)
+
       // Opt 1: If this is a partial response (single section update), merge it
       // into the cached data instead of replacing the entire cache.
       if (response._partial) {
@@ -84,12 +90,17 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
 
         if (cached?.data?.sections && response.data?.sections?.[0]) {
           const updatedSection = response.data.sections[0]
-          const mergedSections = cached.data.sections.map((s) =>
+
+          // Strip any _optimistic sections from cache — they will be replaced
+          // by the real section from the server response (e.g. create_section)
+          const cleanSections = stripOptimisticSections(cached.data.sections)
+
+          const mergedSections = cleanSections.map((s) =>
             s.id === updatedSection.id ? updatedSection : s
           )
 
           // If the section is new (not in cache), append it
-          const hasSection = cached.data.sections.some((s) => s.id === updatedSection.id)
+          const hasSection = cleanSections.some((s) => s.id === updatedSection.id)
           if (!hasSection) {
             mergedSections.push(updatedSection)
           }
@@ -132,8 +143,20 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
     mutationFn: (input: EstimateContentChangeInput) =>
       applyProjectEstimateContentChange({ projectId, recordId, input }),
     onMutate: async (input) => {
-      // 1. Cancel outgoing queries to prevent overwriting optimistic update
-      await queryClient.cancelQueries({ queryKey: contentKey })
+      // 1. Cancel outgoing queries for update/move actions to prevent
+      //    a stale refetch from overwriting the optimistic update.
+      //    Insert/delete/reorder don't need this — the new item or removal
+      //    is immediately visible and any refetch would just confirm it.
+      const needsCancel =
+        input.action === "update_work" ||
+        input.action === "update_material" ||
+        input.action === "update_section" ||
+        input.action === "move_work_to_section" ||
+        input.action === "move_material_to_work"
+
+      if (needsCancel) {
+        await queryClient.cancelQueries({ queryKey: contentKey })
+      }
 
       // 2. Save snapshot for rollback
       const previous = queryClient.getQueryData<ProjectEstimateContentResponse>(contentKey)

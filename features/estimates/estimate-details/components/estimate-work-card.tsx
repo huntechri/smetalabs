@@ -16,6 +16,7 @@ import { EstimateName } from "@/features/estimates/estimate-details/components/e
 import { EstimateWorkNumber } from "@/features/estimates/estimate-details/components/estimate-work-number"
 import { useEstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
 import { formatMoney } from "@/lib/formatters"
+import { safeNumber } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
 import { cn } from "@/lib/utils"
 import {
   CaretDownIcon,
@@ -26,13 +27,6 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react"
 import type { ProjectEstimateContentWork } from "@/types/project-estimate-content"
-
-function safeNumber(value: string): number | undefined {
-  const trimmed = value.trim().replace(",", ".")
-  if (!trimmed) return undefined
-  const num = Number(trimmed)
-  return Number.isFinite(num) ? num : undefined
-}
 
 export function EstimateWorkCard({
   expanded,

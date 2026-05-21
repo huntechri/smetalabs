@@ -9,15 +9,9 @@ import { EstimateMaterialActions } from "@/features/estimates/estimate-details/c
 import { EstimateMaterialName } from "@/features/estimates/estimate-details/components/estimate-material-name"
 import { useEstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
 import { formatConsumption, formatMoney, parseDecimalInput } from "@/lib/formatters"
+import { safeNumber } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
 import type { ProjectEstimateContentMaterial } from "@/types/project-estimate-content"
 import type { MaterialChangePayload } from "@/features/estimates/estimate-details/types"
-
-function safeNumber(value: string): number | undefined {
-  const trimmed = value.trim().replace(",", ".")
-  if (!trimmed) return undefined
-  const num = Number(trimmed)
-  return Number.isFinite(num) ? num : undefined
-}
 
 export function EstimateMaterialCard({
   index,

@@ -17,26 +17,39 @@ function extractItemIds(input: EstimateContentChangeInput): string[] {
   switch (input.action) {
     case "archive_section":
       return [input.payload.sectionId]
+    case "update_section":
+      return [input.payload.sectionId]
     case "reorder_sections":
       return input.payload.items.map((item) => item.id)
     case "archive_work":
       return [input.payload.workId]
-    case "reorder_works":
-      return input.payload.items.map((item) => item.id)
     case "update_work":
+      return [input.payload.workId]
+    case "move_work_to_section":
       return [input.payload.workId]
     case "add_work_from_directory":
       return [input.payload.sectionId]
+    case "add_manual_work":
+      return [input.payload.sectionId]
     case "archive_material":
       return [input.payload.materialId]
-    case "reorder_materials":
-      return input.payload.items.map((item) => item.id)
     case "update_material":
+      return [input.payload.materialId]
+    case "move_material_to_work":
       return [input.payload.materialId]
     case "add_material_from_directory":
       return [input.payload.workId]
-    default:
+    case "add_manual_material":
+      return [input.payload.workId]
+    case "reorder_works":
+    case "reorder_materials":
+      return input.payload.items.map((item) => item.id)
+    case "create_section":
       return []
+    default: {
+      const _exhaustive: never = input
+      return []
+    }
   }
 }
 
@@ -78,8 +91,15 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
         })
       }
     },
-    onSettled: () => {
-      setSavingIds((prev) => (prev.size > 0 ? new Set() : prev))
+    onSettled: (_data, _error, input) => {
+      const ids = extractItemIds(input)
+      if (ids.length > 0) {
+        setSavingIds((prev) => {
+          const next = new Set(prev)
+          for (const id of ids) next.delete(id)
+          return next
+        })
+      }
     },
     onSuccess: updateContentCache,
   })

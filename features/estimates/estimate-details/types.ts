@@ -8,11 +8,6 @@ import type {
 
 export type EstimateContentData = ProjectEstimateContentResponse["data"]
 
-export type EstimateSave = (
-  input: EstimateContentChangeInput,
-  fallback: string
-) => Promise<EstimateContentData>
-
 export type EstimateArchiveRequest = {
   input: EstimateContentChangeInput
   title: string

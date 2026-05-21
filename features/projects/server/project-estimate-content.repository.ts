@@ -704,6 +704,7 @@ export async function applyProjectEstimateContentChangeForWorkspace(
         p_created_by: userId,
       })
       if (error) throw error
+      if (!sectionData) return { data: null as any, _duplicate: true } as any
       return { data: mapRpcSectionResponse(sectionData), _partial: true } as ProjectEstimateContentResponse & { _partial?: boolean }
     }
     case "add_manual_work": {
@@ -786,6 +787,7 @@ export async function applyProjectEstimateContentChangeForWorkspace(
         p_changed_field: input.payload.changedField ?? "quantity",
       })
       if (error) throw error
+      if (!sectionData) return { data: null as any, _duplicate: true } as any
       return { data: mapRpcSectionResponse(sectionData), _partial: true } as ProjectEstimateContentResponse & { _partial?: boolean }
     }
     case "add_manual_material": {

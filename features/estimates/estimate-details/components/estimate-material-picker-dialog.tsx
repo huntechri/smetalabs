@@ -25,6 +25,7 @@ export function EstimateMaterialPickerDialog({
   saving,
   options,
   loading,
+  addedCodes,
   onQueryChange,
   onOpenChange,
   onSelect,
@@ -35,6 +36,7 @@ export function EstimateMaterialPickerDialog({
   saving: boolean
   options: ProjectEstimateMaterialOptionRow[]
   loading: boolean
+  addedCodes: Set<string>
   onQueryChange: (value: string) => void
   onOpenChange: (open: boolean) => void
   onSelect: (row: ProjectEstimateMaterialOptionRow) => void
@@ -47,6 +49,8 @@ export function EstimateMaterialPickerDialog({
   const visibleOptions = useMemo(() => (canSearch ? options : []), [canSearch, options])
   const showSearchPrompt = !canSearch
   const showEmpty = canSearch && !loading && visibleOptions.length === 0
+
+  const isAdded = (code: string | null) => addedCodes.has(code ?? "")
 
   useEffect(() => {
     if (state.open) return
@@ -79,7 +83,6 @@ export function EstimateMaterialPickerDialog({
     onSelect(material)
     onDirectorySubmit(0, null, material.price, "quantity")
   }
-
 
   return (
     <Dialog open={state.open} onOpenChange={onOpenChange}>
@@ -145,14 +148,14 @@ export function EstimateMaterialPickerDialog({
                   <div className="text-xs text-muted-foreground">{material.unitLabel}</div>
                   <div className="text-xs font-medium tabular-nums">{formatMoney(material.price)}</div>
                   <Button
-                    disabled={saving}
+                    disabled={saving || isAdded(material.code)}
                     onClick={() => handleSelect(material)}
                     size="sm"
                     type="button"
                     variant="outline"
                   >
                     <PlusIcon data-icon="inline-start" />
-                    Добавить
+                    {isAdded(material.code) ? "Добавлено" : "Добавить"}
                   </Button>
                 </CardContent>
               </Card>

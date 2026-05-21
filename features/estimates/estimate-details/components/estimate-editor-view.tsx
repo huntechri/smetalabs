@@ -241,6 +241,27 @@ export function EstimateEditorView({
   const canSearchWorks = workSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
   const canSearchMaterials = materialSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
 
+  // Duplicate protection: track already-added directory item codes
+  const addedWorkCodes = React.useMemo(() => {
+    if (!content) return new Set<string>()
+    const codes = new Set<string>()
+    for (const s of content.sections) {
+      for (const w of s.works) {
+        if (w.code) codes.add(w.code)
+      }
+    }
+    return codes
+  }, [content])
+
+  const addedMaterialCodes = React.useMemo(() => {
+    if (!materialDialog.work) return new Set<string>()
+    const codes = new Set<string>()
+    for (const m of materialDialog.work.materials) {
+      if (m.code) codes.add(m.code)
+    }
+    return codes
+  }, [materialDialog.work])
+
   const coefficientQuery = useQuery({
     queryKey: ["project-estimate-work-coefficient", projectId, recordId],
     queryFn: () => fetchProjectEstimateWorkCoefficient({ projectId, recordId }),
@@ -641,6 +662,7 @@ export function EstimateEditorView({
           saving={saving}
           options={workOptions.data?.data ?? []}
           loading={workOptions.isLoading}
+          addedCodes={addedWorkCodes}
           onQueryChange={setWorkSearch}
           onOpenChange={handleWorkPickerOpenChange}
           onSelect={handleWorkSelect}
@@ -652,6 +674,7 @@ export function EstimateEditorView({
           saving={saving}
           options={materialOptions.data?.data ?? []}
           loading={materialOptions.isLoading}
+          addedCodes={addedMaterialCodes}
           onQueryChange={setMaterialSearch}
           onOpenChange={handleMaterialPickerOpenChange}
           onSelect={handleMaterialSelect}

@@ -62,6 +62,7 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
   const queryClient = useQueryClient()
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const sectionsRef = useRef<ProjectEstimateContentSection[] | null>(null)
+  const optimisticSnapshotRef = useRef<ProjectEstimateContentResponse | null>(null)
 
   const contentKey = projectsQueryKeys.estimateRecordContent(projectId, recordId)
 
@@ -160,6 +161,7 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
 
       // 2. Save snapshot for rollback
       const previous = queryClient.getQueryData<ProjectEstimateContentResponse>(contentKey)
+      optimisticSnapshotRef.current = previous ?? null
 
       // 3. Optimistically update the cache
       const optimistic = applyOptimisticChange(previous?.data, input)
@@ -192,7 +194,16 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
       setSavingIds((prev) => (prev.size > 0 ? new Set() : prev))
       // Don't invalidate — targeted re-read already updates cache via onSuccess
     },
-    onSuccess: updateContentCache,
+    onSuccess: (response) => {
+      if ((response as any)._duplicate) {
+        // Rollback optimistic temp item on duplicate
+        if (optimisticSnapshotRef.current) {
+          queryClient.setQueryData(contentKey, optimisticSnapshotRef.current)
+        }
+        return
+      }
+      updateContentCache(response)
+    },
   })
 
   const coefficientMutation = useMutation({

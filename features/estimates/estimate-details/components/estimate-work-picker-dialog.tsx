@@ -25,6 +25,7 @@ export function EstimateWorkPickerDialog({
   saving,
   options,
   loading,
+  addedCodes,
   onQueryChange,
   onOpenChange,
   onSelect,
@@ -35,6 +36,7 @@ export function EstimateWorkPickerDialog({
   saving: boolean
   options: ProjectEstimateOptionRow[]
   loading: boolean
+  addedCodes: Set<string>
   onQueryChange: (value: string) => void
   onOpenChange: (open: boolean) => void
   onSelect: (row: ProjectEstimateOptionRow) => void
@@ -48,6 +50,8 @@ export function EstimateWorkPickerDialog({
   const showSearchPrompt = !canSearch
   const showEmpty = canSearch && !loading && visibleOptions.length === 0
   const isReplaceMode = state.mode === "replace"
+
+  const isAdded = (code: string | null) => addedCodes.has(code ?? "")
 
   useEffect(() => {
     if (state.open) return
@@ -78,9 +82,7 @@ export function EstimateWorkPickerDialog({
 
   const handleSelect = (work: ProjectEstimateOptionRow) => {
     onSelect(work)
-
     if (isReplaceMode) return
-
     onDirectorySubmit(0, work.price)
   }
 
@@ -151,14 +153,14 @@ export function EstimateWorkPickerDialog({
                   <div className="text-xs text-muted-foreground">{work.unitLabel}</div>
                   <div className="text-xs font-medium tabular-nums">{formatMoney(work.price)}</div>
                   <Button
-                    disabled={saving}
+                    disabled={saving || isAdded(work.code)}
                     onClick={() => handleSelect(work)}
                     size="sm"
                     type="button"
                     variant="outline"
                   >
                     <PlusIcon data-icon="inline-start" />
-                    {isReplaceMode ? "Заменить" : "Добавить"}
+                    {isAdded(work.code) ? "Добавлено" : isReplaceMode ? "Заменить" : "Добавить"}
                   </Button>
                 </CardContent>
               </Card>

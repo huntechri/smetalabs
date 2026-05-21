@@ -1,10 +1,15 @@
+"use client"
+
+import { useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { EditableBadge } from "@/components/ui/editable-badge"
 import { Frame } from "@/components/ui/frame"
 import { EstimateMaterialActions } from "@/features/estimates/estimate-details/components/estimate-material-actions"
 import { EstimateMaterialName } from "@/features/estimates/estimate-details/components/estimate-material-name"
+import { useEstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
 import { formatConsumption, formatMoney, parseDecimalInput } from "@/lib/formatters"
+import { safeNumber } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
 import type { ProjectEstimateContentMaterial } from "@/types/project-estimate-content"
 import type { MaterialChangePayload } from "@/features/estimates/estimate-details/types"
 
@@ -12,25 +17,54 @@ export function EstimateMaterialCard({
   index,
   material,
   materialsCount,
-  reorderDisabled,
-  saving,
   workNumber,
   onArchive,
   onChange,
-  onMoveNext,
-  onMovePrevious,
 }: {
   index: number
   material: ProjectEstimateContentMaterial
   materialsCount: number
-  reorderDisabled: boolean
-  saving: boolean
   workNumber: string
   onArchive: () => void
   onChange: (payload: MaterialChangePayload) => void
-  onMoveNext: () => void
-  onMovePrevious: () => void
 }) {
+  const { savingIds, reorderDisabled, onMoveMaterial } = useEstimateEditorContext()
+
+  const isDisabled = savingIds.has(material.id)
+
+  const handleQuantityChange = useCallback(
+    (value: string) => {
+      const num = safeNumber(value)
+      if (num === undefined) return
+      onChange({ quantity: num, changedField: "quantity" })
+    },
+    [onChange]
+  )
+
+  const handlePriceChange = useCallback(
+    (value: string) => {
+      const num = safeNumber(value)
+      if (num === undefined) return
+      onChange({ price: num, changedField: "price" })
+    },
+    [onChange]
+  )
+
+  const handleConsumptionChange = useCallback(
+    (value: string) => {
+      onChange({
+        consumption: parseDecimalInput(value),
+        changedField: "consumption",
+      })
+    },
+    [onChange]
+  )
+
+  const handleTitleChange = useCallback(
+    (title: string) => onChange({ title }),
+    [onChange]
+  )
+
   return (
     <Card size="sm" className="min-h-36 gap-3 bg-background shadow-none">
       <CardHeader>
@@ -48,17 +82,17 @@ export function EstimateMaterialCard({
             </div>
           </div>
           <EstimateMaterialActions
-            disabled={saving}
+            disabled={isDisabled}
             moveDownDisabled={reorderDisabled || index >= materialsCount - 1}
             moveUpDisabled={reorderDisabled || index === 0}
             title={material.title}
             onArchive={onArchive}
-            onMoveDown={onMoveNext}
-            onMoveUp={onMovePrevious}
+            onMoveDown={() => onMoveMaterial(material.workId, material.id, "down")}
+            onMoveUp={() => onMoveMaterial(material.workId, material.id, "up")}
           />
         </div>
         <EstimateMaterialName
-          onChange={(title) => onChange({ title })}
+          onChange={handleTitleChange}
           value={material.title}
         />
       </CardHeader>
@@ -67,19 +101,12 @@ export function EstimateMaterialCard({
         <dl className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
           <EditableBadge
             label="Кол-во"
-            onChange={(value) =>
-              onChange({ quantity: Number(value), changedField: "quantity" })
-            }
+            onChange={handleQuantityChange}
             value={material.quantity}
           />
           <EditableBadge
             label="Расход"
-            onChange={(value) =>
-              onChange({
-                consumption: parseDecimalInput(value),
-                changedField: "consumption",
-              })
-            }
+            onChange={handleConsumptionChange}
             formatDisplay={(value) =>
               material.consumption === null
                 ? "—"
@@ -89,9 +116,7 @@ export function EstimateMaterialCard({
           />
           <EditableBadge
             label="Цена"
-            onChange={(value) =>
-              onChange({ price: Number(value), changedField: "price" })
-            }
+            onChange={handlePriceChange}
             value={material.price}
           />
           <Badge

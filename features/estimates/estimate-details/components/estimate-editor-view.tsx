@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useCallback, useDeferredValue, useRef } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ import {
   type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
 import { CreateSectionDialog } from "@/features/estimates/estimate-details/components/create-section-dialog"
+import { EstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
 import { EstimateEmptyState } from "@/features/estimates/estimate-details/components/estimate-empty-state"
 import { EstimateMaterialPickerDialog } from "@/features/estimates/estimate-details/components/estimate-material-picker-dialog"
 import { EstimateSectionCard } from "@/features/estimates/estimate-details/components/estimate-section-card"
@@ -173,9 +175,11 @@ export function EstimateEditorView({
     loading,
     error,
     saving,
+    savingIds,
     applyChange,
     applyWorkCoefficient,
     refetch,
+    getSections,
   } = useProjectEstimateContent(projectId, recordId)
   const [sectionOpen, setSectionOpen] = React.useState(false)
   const [coefficientOpen, setCoefficientOpen] = React.useState(false)
@@ -186,14 +190,44 @@ export function EstimateEditorView({
   const [archiveRequest, setArchiveRequest] = React.useState<EstimateArchiveRequest | null>(null)
   const [workSearch, setWorkSearch] = React.useState("")
   const [materialSearch, setMaterialSearch] = React.useState("")
-  const [, setMessage] = React.useState<string | null>(null)
+  const ensuringRef = useRef(false)
+  const ensurePendingRef = useRef<Promise<string | null> | null>(null)
+  const coefficientTriggered = useRef(false)
+  const workReplacingRef = useRef(false)
 
   const estimateSearch = searchParams.get("q")?.trim() ?? ""
   const searchActive = estimateSearch.length > 0
+  const deferredSearch = useDeferredValue(estimateSearch)
+
+  // Stabilise visibleSections: only recompute when content sections actually change
+  const sectionsRef = useRef(content?.sections)
+  const sectionsForMemo = React.useMemo(() => {
+    const next = content?.sections ?? []
+    const prev = sectionsRef.current
+    // Shallow-comparison of section ids to avoid new array on every render
+    if (
+      prev &&
+      prev.length === next.length &&
+      prev.every((s: ProjectEstimateContentSection, i: number) => s === next[i])
+    ) {
+      return prev
+    }
+    sectionsRef.current = next
+    return next
+  }, [content?.sections])
+
   const visibleSections = React.useMemo(
-    () => filterSections(content?.sections ?? [], estimateSearch),
-    [content?.sections, estimateSearch]
+    () => filterSections(sectionsForMemo, deferredSearch),
+    [sectionsForMemo, deferredSearch]
   )
+
+  const sectionIndexMap = React.useMemo(() => {
+    const map = new Map<string, number>()
+    sectionsForMemo.forEach((s: ProjectEstimateContentSection, i: number) =>
+      map.set(s.id, i),
+    )
+    return map
+  }, [sectionsForMemo])
 
   const workParams = React.useMemo(
     () => ({ q: workSearch, limit: 30, cursor: 0 }),
@@ -215,7 +249,12 @@ export function EstimateEditorView({
   })
 
   React.useEffect(() => {
-    if (searchParams.get("dialog") !== WORK_COEFFICIENT_DIALOG_KEY) return
+    if (searchParams.get("dialog") !== WORK_COEFFICIENT_DIALOG_KEY) {
+      coefficientTriggered.current = false
+      return
+    }
+    if (coefficientTriggered.current) return
+    coefficientTriggered.current = true
 
     setCoefficientOpen(true)
     const params = new URLSearchParams(searchParams.toString())
@@ -255,104 +294,118 @@ export function EstimateEditorView({
     staleTime: 30_000,
   })
 
-  const save = async (input: EstimateContentChangeInput, fallback: string) => {
-    setMessage("Сохраняется")
-    try {
+  const save = useCallback(
+    async (input: EstimateContentChangeInput) => {
       const next = await applyChange(input)
-      setMessage("Сохранено")
+      if (!next?.sections) return null
       return next
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : fallback)
-      throw err
-    }
-  }
+    },
+    [applyChange]
+  )
 
-  const ensureSection = async () => {
-    const existing = content?.sections[0]?.id
-    if (existing) return existing
-
-    const next = await save(
-      { action: "create_section", payload: { title: "Без раздела" } },
-      "Не удалось добавить раздел"
-    )
-    return next.sections[0]?.id ?? null
-  }
-
-  const clearEstimateSearch = () => {
+  const clearEstimateSearch = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete("q")
     const nextSearch = params.toString()
     router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
-  }
+  }, [pathname, router, searchParams])
 
-  const moveSection = async (sectionId: string, direction: MoveDirection) => {
-    if (!content || searchActive) return
-    const next = moveItem(content.sections, sectionId, direction)
-    if (!next) return
+  const ensureSection = useCallback(async () => {
+    const sections = getSections()
+    const existing = sections?.[0]?.id
+    if (existing) return existing
 
-    await save(
-      { action: "reorder_sections", payload: { items: sortPayload(next) } },
-      "Не удалось изменить порядок разделов"
-    )
-  }
+    if (ensuringRef.current && ensurePendingRef.current) {
+      return ensurePendingRef.current
+    }
 
-  const moveWork = async (
-    sectionId: string,
-    workId: string,
-    direction: MoveDirection
-  ) => {
-    if (!content || searchActive) return
-    const section = content.sections.find((item) => item.id === sectionId)
-    if (!section) return
-    const next = moveItem(section.works, workId, direction)
-    if (!next) return
+    ensuringRef.current = true
+    const promise = save({
+      action: "create_section",
+      payload: { title: "Без раздела" },
+    })
+      .then((next) => {
+        const id = next?.sections?.[0]?.id ?? null
+        ensuringRef.current = false
+        ensurePendingRef.current = null
+        return id
+      })
+      .catch(() => {
+        ensuringRef.current = false
+        ensurePendingRef.current = null
+        return null
+      })
 
-    await save(
-      {
+    ensurePendingRef.current = promise
+    return promise
+  }, [getSections, save])
+
+  const moveSection = useCallback(
+    async (sectionId: string, direction: MoveDirection) => {
+      if (!content || searchActive) return
+      const next = moveItem(content.sections, sectionId, direction)
+      if (!next) return
+
+      await save({
+        action: "reorder_sections",
+        payload: { items: sortPayload(next) },
+      })
+    },
+    [content, searchActive, save]
+  )
+
+  const moveWork = useCallback(
+    async (sectionId: string, workId: string, direction: MoveDirection) => {
+      if (!content || searchActive) return
+      const section = content.sections.find((item: ProjectEstimateContentSection) => item.id === sectionId)
+      if (!section) return
+      const next = moveItem(section.works, workId, direction)
+      if (!next) return
+
+      await save({
         action: "reorder_works",
         payload: { sectionId, items: sortPayload(next) },
-      },
-      "Не удалось изменить порядок работ"
-    )
-  }
+      })
+    },
+    [content, searchActive, save]
+  )
 
-  const moveMaterial = async (
-    workId: string,
-    materialId: string,
-    direction: MoveDirection
-  ) => {
-    if (!content || searchActive) return
-    const work = content.sections
-      .flatMap((section) => section.works)
-      .find((item) => item.id === workId)
-    if (!work) return
-    const next = moveItem(work.materials, materialId, direction)
-    if (!next) return
+  const moveMaterial = useCallback(
+    async (workId: string, materialId: string, direction: MoveDirection) => {
+      if (!content || searchActive) return
+      const work = content.sections
+        .flatMap((section: ProjectEstimateContentSection) => section.works)
+        .find((item: ProjectEstimateContentWork) => item.id === workId)
+      if (!work) return
+      const next = moveItem(work.materials, materialId, direction)
+      if (!next) return
 
-    await save(
-      {
+      await save({
         action: "reorder_materials",
         payload: { workId, items: sortPayload(next) },
-      },
-      "Не удалось изменить порядок материалов"
-    )
-  }
-
-  const openWorkDialog = async (sectionId?: string) => {
-    const target = sectionId ?? (await ensureSection())
-    if (target) {
-      setWorkSearch("")
-      setWorkDialog({
-        open: true,
-        mode: "add",
-        sectionId: target,
-        work: null,
-        selected: null,
       })
-    }
-  }
+    },
+    [content, searchActive, save]
+  )
 
-  const openReplaceWorkDialog = (work: ProjectEstimateContentWork) => {
+  const openWorkDialog = useCallback(
+    async (sectionId?: string) => {
+      const target = sectionId ?? (await ensureSection())
+      if (target) {
+        setWorkSearch("")
+        setWorkDialog({
+          open: true,
+          mode: "add",
+          sectionId: target,
+          work: null,
+          selected: null,
+        })
+      }
+    },
+    [ensureSection]
+  )
+
+  const openReplaceWorkDialog = useCallback((work: ProjectEstimateContentWork) => {
     setWorkSearch("")
     setWorkDialog({
       open: true,
@@ -361,58 +414,61 @@ export function EstimateEditorView({
       work,
       selected: null,
     })
-  }
+  }, [])
 
-  const openMaterialDialog = (work: ProjectEstimateContentWork) => {
+  const openMaterialDialog = useCallback((work: ProjectEstimateContentWork) => {
     setMaterialDialog({ open: true, work, selected: null })
-  }
+  }, [])
 
-  const confirmArchive = async () => {
+  const confirmArchive = useCallback(async () => {
     if (!archiveRequest) return
-    await save(archiveRequest.input, archiveRequest.fallback)
+    await save(archiveRequest.input)
     setArchiveRequest(null)
-  }
+  }, [archiveRequest, save])
 
-  const createSection = async (data: { name: string }) => {
-    const title = parseText(data.name)
-    if (!title) return
+  const createSection = useCallback(
+    async (data: { name: string }) => {
+      const title = parseText(data.name)
+      if (!title) return
 
-    await save(
-      { action: "create_section", payload: { title } },
-      "Не удалось добавить раздел"
-    )
-    setSectionOpen(false)
-  }
+      await save({ action: "create_section", payload: { title } })
+      setSectionOpen(false)
+    },
+    [save]
+  )
 
-  const applyCoefficient = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const parsed = Number(coefficientValue.trim().replace(",", "."))
+  const applyCoefficient = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      const parsed = Number(coefficientValue.trim().replace(",", "."))
 
-    if (!Number.isFinite(parsed) || parsed < 0) {
-      setCoefficientError("Введите коэффициент 0 или больше")
-      return
-    }
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        setCoefficientError("Введите коэффициент 0 или больше")
+        return
+      }
 
-    setCoefficientError(null)
+      setCoefficientError(null)
 
-    try {
-      await applyWorkCoefficient(parsed)
-      await coefficientQuery.refetch()
-      setCoefficientOpen(false)
-    } catch (err) {
-      setCoefficientError(
-        err instanceof Error ? err.message : "Не удалось применить коэффициент"
-      )
-    }
-  }
+      try {
+        await applyWorkCoefficient(parsed)
+        await coefficientQuery.refetch()
+        setCoefficientOpen(false)
+      } catch (err) {
+        setCoefficientError(
+          err instanceof Error ? err.message : "Не удалось применить коэффициент"
+        )
+      }
+    },
+    [applyWorkCoefficient, coefficientQuery, coefficientValue]
+  )
 
-  const addDirectoryWork = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!workDialog.sectionId || !workDialog.selected) return
+  const addDirectoryWork = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      if (!workDialog.sectionId || !workDialog.selected) return
 
-    const form = new FormData(event.currentTarget)
-    await save(
-      {
+      const form = new FormData(event.currentTarget)
+      await save({
         action: "add_work_from_directory",
         payload: {
           sectionId: workDialog.sectionId,
@@ -420,37 +476,37 @@ export function EstimateEditorView({
           quantity: parseDecimal(form.get("quantity"), 1),
           price: parseDecimal(form.get("price"), workDialog.selected.price),
         },
-      },
-      "Не удалось добавить работу"
-    )
-    setWorkDialog((current) => ({ ...current, selected: null }))
-  }
+      })
+      setWorkDialog(EMPTY_WORK_DIALOG)
+    },
+    [save, workDialog.sectionId, workDialog.selected]
+  )
 
-  const replaceDirectoryWork = async (selected: ProjectEstimateOptionRow) => {
-    if (!workDialog.work) return
+  const replaceDirectoryWork = useCallback(
+    async (selected: ProjectEstimateOptionRow) => {
+      if (!workDialog.work) return
 
-    await save(
-      {
+      await save({
         action: "update_work",
         payload: {
           workId: workDialog.work.id,
           title: selected.title,
           price: selected.price,
         },
-      },
-      "Не удалось заменить работу"
-    )
-    setWorkDialog(EMPTY_WORK_DIALOG)
-  }
+      })
+      setWorkDialog(EMPTY_WORK_DIALOG)
+    },
+    [save, workDialog.work]
+  )
 
-  const addDirectoryMaterial = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!materialDialog.work || !materialDialog.selected) return
+  const addDirectoryMaterial = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      if (!materialDialog.work || !materialDialog.selected) return
 
-    const form = new FormData(event.currentTarget)
-    const consumption = parseDecimal(form.get("consumption"), undefined) ?? null
-    await save(
-      {
+      const form = new FormData(event.currentTarget)
+      const consumption = parseDecimal(form.get("consumption"), undefined) ?? null
+      await save({
         action: "add_material_from_directory",
         payload: {
           workId: materialDialog.work.id,
@@ -460,11 +516,82 @@ export function EstimateEditorView({
           price: parseDecimal(form.get("price"), materialDialog.selected.price),
           changedField: consumption ? "consumption" : "quantity",
         },
-      },
-      "Не удалось добавить материал"
-    )
-    setMaterialDialog((current) => ({ ...current, selected: null }))
-  }
+      })
+      setMaterialDialog(EMPTY_MATERIAL_DIALOG)
+    },
+    [save, materialDialog.work, materialDialog.selected]
+  )
+
+  const handleSectionOpenChange = useCallback((open: boolean) => {
+    setSectionOpen(open)
+  }, [])
+
+  const handleCoefficientOpenChange = useCallback((open: boolean) => {
+    setCoefficientOpen(open)
+  }, [])
+
+  const handleWorkPickerOpenChange = useCallback((open: boolean) => {
+    if (!open) setWorkDialog(EMPTY_WORK_DIALOG)
+  }, [])
+
+  const handleMaterialPickerOpenChange = useCallback((open: boolean) => {
+    if (!open) setMaterialDialog(EMPTY_MATERIAL_DIALOG)
+  }, [])
+
+  const handleArchiveOpenChange = useCallback((open: boolean) => {
+    if (!open) setArchiveRequest(null)
+  }, [])
+
+  const handleWorkSelect = useCallback(
+    (selected: ProjectEstimateOptionRow) => {
+      setWorkDialog((current) => ({ ...current, selected }))
+      if (workDialog.mode === "replace") {
+        if (workReplacingRef.current) return
+        workReplacingRef.current = true
+        replaceDirectoryWork(selected)
+          .catch((err) => {
+            console.error("Replace work failed:", err)
+          })
+          .finally(() => {
+            workReplacingRef.current = false
+          })
+      }
+    },
+    [workDialog.mode, replaceDirectoryWork]
+  )
+
+  const handleMaterialSelect = useCallback(
+    (selected: ProjectEstimateMaterialOptionRow) =>
+      setMaterialDialog((current) => ({ ...current, selected })),
+    []
+  )
+
+  const contextValue = React.useMemo(
+    () => ({
+      savingIds,
+      reorderDisabled: searchActive,
+      onSave: save,
+      onArchive: setArchiveRequest,
+      onMoveSection: moveSection,
+      onMoveWork: moveWork,
+      onMoveMaterial: moveMaterial,
+      onAddSection: () => setSectionOpen(true),
+      onAddWork: openWorkDialog,
+      onAddMaterial: openMaterialDialog,
+      onReplaceWork: openReplaceWorkDialog,
+    }),
+    [
+      savingIds,
+      searchActive,
+      save,
+      moveSection,
+      moveWork,
+      moveMaterial,
+      openWorkDialog,
+      openMaterialDialog,
+      openReplaceWorkDialog,
+    ]
+  )
 
   if (loading) {
     return <div className="p-4 text-sm text-muted-foreground">Загрузка сметы...</div>
@@ -484,147 +611,123 @@ export function EstimateEditorView({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
-      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border bg-background p-1">
-        {content.sections.length === 0 ? (
-          <EstimateEmptyState onCreateClick={() => setSectionOpen(true)} />
-        ) : visibleSections.length === 0 ? (
-          <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-4 text-center text-sm text-muted-foreground">
-            <p>По смете ничего не найдено.</p>
-            <Button size="sm" variant="outline" onClick={clearEstimateSearch}>
-              Сбросить поиск
-            </Button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {visibleSections.map((section) => {
-              const sectionIndex = content.sections.findIndex((item) => item.id === section.id)
-
-              return (
+    <EstimateEditorContext.Provider value={contextValue}>
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border bg-background p-1">
+          {content.sections.length === 0 ? (
+            <EstimateEmptyState onCreateClick={() => setSectionOpen(true)} />
+          ) : visibleSections.length === 0 ? (
+            <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-4 text-center text-sm text-muted-foreground">
+              <p>По смете ничего не найдено.</p>
+              <Button size="sm" variant="outline" onClick={clearEstimateSearch}>
+                Сбросить поиск
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {visibleSections.map((section) => (
                 <EstimateSectionCard
                   key={section.id}
                   section={section}
-                  sectionIndex={sectionIndex}
+                  sectionIndex={sectionIndexMap.get(section.id) ?? 0}
                   sectionsCount={content.sections.length}
-                  reorderDisabled={searchActive}
-                  saving={saving}
-                  onArchive={setArchiveRequest}
-                  onAddSection={() => setSectionOpen(true)}
-                  onAddWork={openWorkDialog}
-                  onAddMaterial={openMaterialDialog}
-                  onMoveMaterial={moveMaterial}
-                  onMoveSection={moveSection}
-                  onMoveWork={moveWork}
-                  onReplaceWork={openReplaceWorkDialog}
-                  onSave={save}
                 />
-              )
-            })}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-      <CreateSectionDialog
-        open={sectionOpen}
-        onOpenChange={setSectionOpen}
-        onConfirm={createSection}
-      />
-      <EstimateWorkPickerDialog
-        state={workDialog}
-        query={workSearch}
-        saving={saving}
-        options={workOptions.data?.data ?? []}
-        loading={workOptions.isLoading}
-        onQueryChange={setWorkSearch}
-        onOpenChange={(open) => {
-          if (!open) setWorkDialog(EMPTY_WORK_DIALOG)
-        }}
-        onSelect={(selected: ProjectEstimateOptionRow) => {
-          setWorkDialog((current) => ({ ...current, selected }))
-          if (workDialog.mode === "replace") void replaceDirectoryWork(selected)
-        }}
-        onDirectorySubmit={addDirectoryWork}
-      />
-      <EstimateMaterialPickerDialog
-        state={materialDialog}
-        query={materialSearch}
-        saving={saving}
-        options={materialOptions.data?.data ?? []}
-        loading={materialOptions.isLoading}
-        onQueryChange={setMaterialSearch}
-        onOpenChange={(open) => {
-          if (!open) setMaterialDialog(EMPTY_MATERIAL_DIALOG)
-        }}
-        onSelect={(selected: ProjectEstimateMaterialOptionRow) =>
-          setMaterialDialog((current) => ({ ...current, selected }))
-        }
-        onDirectorySubmit={addDirectoryMaterial}
-      />
-      <Dialog open={coefficientOpen} onOpenChange={setCoefficientOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <form className="space-y-4" onSubmit={applyCoefficient}>
+        <CreateSectionDialog
+          open={sectionOpen}
+          onOpenChange={handleSectionOpenChange}
+          onConfirm={createSection}
+        />
+        <EstimateWorkPickerDialog
+          state={workDialog}
+          query={workSearch}
+          saving={saving}
+          options={workOptions.data?.data ?? []}
+          loading={workOptions.isLoading}
+          onQueryChange={setWorkSearch}
+          onOpenChange={handleWorkPickerOpenChange}
+          onSelect={handleWorkSelect}
+          onDirectorySubmit={addDirectoryWork}
+        />
+        <EstimateMaterialPickerDialog
+          state={materialDialog}
+          query={materialSearch}
+          saving={saving}
+          options={materialOptions.data?.data ?? []}
+          loading={materialOptions.isLoading}
+          onQueryChange={setMaterialSearch}
+          onOpenChange={handleMaterialPickerOpenChange}
+          onSelect={handleMaterialSelect}
+          onDirectorySubmit={addDirectoryMaterial}
+        />
+        <Dialog open={coefficientOpen} onOpenChange={handleCoefficientOpenChange}>
+          <DialogContent className="sm:max-w-sm">
+            <form className="space-y-4" onSubmit={applyCoefficient}>
+              <DialogHeader>
+                <DialogTitle>Коэффициент работ</DialogTitle>
+                <DialogDescription>
+                  Коэффициент применяется только к работам. Цена округляется вверх до ближайших 10 ₽.
+                </DialogDescription>
+              </DialogHeader>
+              <Input
+                autoFocus
+                disabled={coefficientQuery.isLoading}
+                inputMode="decimal"
+                onChange={(event) => setCoefficientValue(event.target.value)}
+                placeholder="10"
+                value={coefficientValue}
+              />
+              {coefficientError ? (
+                <p className="text-sm text-destructive">{coefficientError}</p>
+              ) : null}
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCoefficientOpen(false)}
+                >
+                  Отмена
+                </Button>
+                <Button type="submit" disabled={saving || coefficientQuery.isLoading}>
+                  Применить
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={archiveRequest !== null}
+          onOpenChange={handleArchiveOpenChange}
+        >
+          <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle>Коэффициент работ</DialogTitle>
-              <DialogDescription>
-                Коэффициент применяется только к работам. Цена округляется вверх до ближайших 10 ₽.
-              </DialogDescription>
+              <DialogTitle>{archiveRequest?.title}</DialogTitle>
+              <DialogDescription>{archiveRequest?.description}</DialogDescription>
             </DialogHeader>
-            <Input
-              autoFocus
-              disabled={coefficientQuery.isLoading}
-              inputMode="decimal"
-              onChange={(event) => setCoefficientValue(event.target.value)}
-              placeholder="10"
-              value={coefficientValue}
-            />
-            {coefficientError ? (
-              <p className="text-sm text-destructive">{coefficientError}</p>
-            ) : null}
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setCoefficientOpen(false)}
+                onClick={() => setArchiveRequest(null)}
               >
                 Отмена
               </Button>
-              <Button type="submit" disabled={saving || coefficientQuery.isLoading}>
-                Применить
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={saving}
+                onClick={confirmArchive}
+              >
+                Удалить
               </Button>
             </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={archiveRequest !== null}
-        onOpenChange={(open) => {
-          if (!open) setArchiveRequest(null)
-        }}
-      >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{archiveRequest?.title}</DialogTitle>
-            <DialogDescription>{archiveRequest?.description}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setArchiveRequest(null)}
-            >
-              Отмена
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={saving}
-              onClick={confirmArchive}
-            >
-              Удалить
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </EstimateEditorContext.Provider>
   )
 }

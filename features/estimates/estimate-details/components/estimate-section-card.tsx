@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -13,6 +13,7 @@ import { Frame } from "@/components/ui/frame"
 import { Separator } from "@/components/ui/separator"
 import { EstimateSummaryValue } from "@/features/estimates/estimate-details/components/estimate-summary-value"
 import { EstimateWorkCard } from "@/features/estimates/estimate-details/components/estimate-work-card"
+import { useEstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
 import { cn } from "@/lib/utils"
 import {
   CaretDownIcon,
@@ -21,60 +22,50 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@phosphor-icons/react"
-import type { EstimateContentChangeInput } from "@/features/estimates/api/project-estimate-content-client"
-import type { EstimateArchive } from "@/features/estimates/estimate-details/types"
-import type {
-  ProjectEstimateContentSection,
-  ProjectEstimateContentWork,
-} from "@/types/project-estimate-content"
-
-type MoveDirection = "up" | "down"
+import type { ProjectEstimateContentSection } from "@/types/project-estimate-content"
 
 export function EstimateSectionCard({
   section,
   sectionIndex,
   sectionsCount,
-  reorderDisabled,
-  saving,
-  onArchive,
-  onAddSection,
-  onAddWork,
-  onAddMaterial,
-  onMoveMaterial,
-  onMoveSection,
-  onMoveWork,
-  onReplaceWork,
-  onSave,
 }: {
   section: ProjectEstimateContentSection
   sectionIndex: number
   sectionsCount: number
-  reorderDisabled: boolean
-  saving: boolean
-  onArchive: EstimateArchive
-  onAddSection: () => void
-  onAddWork: (sectionId: string) => void
-  onAddMaterial: (work: ProjectEstimateContentWork) => void
-  onMoveMaterial: (workId: string, materialId: string, direction: MoveDirection) => void
-  onMoveSection: (sectionId: string, direction: MoveDirection) => void
-  onMoveWork: (sectionId: string, workId: string, direction: MoveDirection) => void
-  onReplaceWork: (work: ProjectEstimateContentWork) => void
-  onSave: (input: EstimateContentChangeInput, fallback: string) => void
 }) {
+  const {
+    savingIds,
+    reorderDisabled,
+    onArchive,
+    onAddSection,
+    onAddWork,
+    onMoveSection,
+  } = useEstimateEditorContext()
+
   const [expandedSection, setExpandedSection] = useState(true)
   const [expandedWorks, setExpandedWorks] = useState<Set<string>>(
     () => new Set(section.works[0] ? [section.works[0].id] : [])
   )
+  const prevWorkIdsRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
-    setExpandedWorks((current) => {
-      const next = new Set(current)
-      section.works.forEach((work) => next.add(work.id))
-      return next
-    })
+    const currentIds = new Set(section.works.map((w) => w.id))
+    const newIds = new Set(
+      [...currentIds].filter((id) => !prevWorkIdsRef.current.has(id))
+    )
+
+    if (newIds.size > 0) {
+      setExpandedWorks((current) => {
+        const next = new Set(current)
+        newIds.forEach((id) => next.add(id))
+        return next
+      })
+    }
+
+    prevWorkIdsRef.current = currentIds
   }, [section.works])
 
-  const toggleWork = (workId: string) => {
+  const toggleWork = useCallback((workId: string) => {
     setExpandedWorks((current) => {
       const next = new Set(current)
 
@@ -86,9 +77,9 @@ export function EstimateSectionCard({
 
       return next
     })
-  }
+  }, [])
 
-  const archiveSection = () => {
+  const archiveSection = useCallback(() => {
     onArchive({
       input: {
         action: "archive_section",
@@ -96,9 +87,11 @@ export function EstimateSectionCard({
       },
       title: "Удалить раздел?",
       description: "Раздел, его работы и материалы будут убраны из сметы.",
-      fallback: "Не удалось удалить раздел",
     })
-  }
+  }, [onArchive, section.id])
+
+  const moveDisabled = savingIds.has(section.id)
+  const deleteDisabled = savingIds.has(section.id) || savingIds.size > 0
 
   return (
     <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
@@ -137,7 +130,7 @@ export function EstimateSectionCard({
               <ButtonGroup>
                 <Button
                   aria-label="Поднять раздел"
-                  disabled={saving || reorderDisabled || sectionIndex === 0}
+                  disabled={moveDisabled || reorderDisabled || sectionIndex === 0}
                   size="icon-xs"
                   type="button"
                   variant="ghost"
@@ -147,7 +140,7 @@ export function EstimateSectionCard({
                 </Button>
                 <Button
                   aria-label="Опустить раздел"
-                  disabled={saving || reorderDisabled || sectionIndex >= sectionsCount - 1}
+                  disabled={moveDisabled || reorderDisabled || sectionIndex >= sectionsCount - 1}
                   size="icon-xs"
                   type="button"
                   variant="ghost"
@@ -171,17 +164,7 @@ export function EstimateSectionCard({
                   work={work}
                   workIndex={index}
                   worksCount={section.works.length}
-                  reorderDisabled={reorderDisabled}
-                  saving={saving}
-                  onArchive={onArchive}
-                  onAddSection={onAddSection}
-                  onAddWork={() => onAddWork(section.id)}
-                  onAddMaterial={onAddMaterial}
                   onArchiveSection={archiveSection}
-                  onMoveMaterial={onMoveMaterial}
-                  onMoveWork={(workId, direction) => onMoveWork(section.id, workId, direction)}
-                  onReplaceWork={onReplaceWork}
-                  onSave={onSave}
                   onToggle={() => toggleWork(work.id)}
                 />
               ))
@@ -201,7 +184,7 @@ export function EstimateSectionCard({
                       </Button>
                       <Button
                         aria-label="Удалить раздел"
-                        disabled={saving}
+                        disabled={deleteDisabled}
                         size="icon-xs"
                         variant="destructive"
                         onClick={archiveSection}

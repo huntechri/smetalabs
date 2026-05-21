@@ -1,3 +1,10 @@
+export function safeNumber(value: string): number | undefined {
+  const trimmed = value.trim().replace(",", ".")
+  if (!trimmed) return undefined
+  const num = Number(trimmed)
+  return Number.isFinite(num) ? num : undefined
+}
+
 export function parseDecimal(value: FormDataEntryValue | null, fallback?: number) {
   const raw = String(value ?? "").replace(",", ".").trim()
   if (!raw) return fallback

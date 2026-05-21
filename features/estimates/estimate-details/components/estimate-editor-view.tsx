@@ -503,16 +503,22 @@ export function EstimateEditorView({
   const replaceDirectoryWork = useCallback(
     async (selected: ProjectEstimateOptionRow) => {
       if (!workDialog.work) return
-
-      await save({
-        action: "update_work",
-        payload: {
-          workId: workDialog.work.id,
-          title: selected.title,
-          price: selected.price,
-        },
-      })
-      setWorkDialog(EMPTY_WORK_DIALOG)
+      try {
+        await save({
+          action: "update_work",
+          payload: {
+            workId: workDialog.work.id,
+            title: selected.title,
+            price: selected.price,
+          },
+        })
+        setWorkDialog(EMPTY_WORK_DIALOG)
+      } catch (err) {
+        console.error("Replace work failed:", err)
+        // диалог остаётся открытым, пользователь может повторить
+      } finally {
+        workReplacingRef.current = false
+      }
     },
     [save, workDialog.work]
   )
@@ -563,12 +569,6 @@ export function EstimateEditorView({
         if (workReplacingRef.current) return
         workReplacingRef.current = true
         replaceDirectoryWork(selected)
-          .catch((err) => {
-            console.error("Replace work failed:", err)
-          })
-          .finally(() => {
-            workReplacingRef.current = false
-          })
       }
     },
     [workDialog.mode, replaceDirectoryWork]

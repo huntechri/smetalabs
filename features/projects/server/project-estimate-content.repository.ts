@@ -386,14 +386,17 @@ export async function getProjectEstimateContentForWorkspace(
  * Maps RPC jsonb response into ProjectEstimateContentData.
  * Used to eliminate read-after-write for insert/delete RPC operations.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RpcRow = Record<string, any>
+type RpcRowValue = string | number | boolean | null | RpcRowValue[] | { [key: string]: RpcRowValue }
+type RpcRow = Record<string, RpcRowValue>
 
 function mapRpcSectionResponse(json: RpcRow): ProjectEstimateContentResponse['data'] {
   const sectionRaw = json.section as RpcRow | undefined
   const worksRaw = (json.works ?? []) as RpcRow[]
   const materialsRaw = (json.materials ?? []) as RpcRow[]
   const recordRaw = json.record as RpcRow | undefined
+
+  const narrow = (v: RpcRowValue | undefined): string | number | null | undefined =>
+    v === null || v === undefined || typeof v === 'string' || typeof v === 'number' ? v as string | number | null | undefined : undefined
 
   const materialsByWork = new Map<string, ProjectEstimateContentMaterial[]>()
   materialsRaw.forEach((row) => {
@@ -408,13 +411,13 @@ function mapRpcSectionResponse(json: RpcRow): ProjectEstimateContentResponse['da
       title: String(row.title ?? ''),
       unitCode: String(row.unitCode ?? ''),
       unitLabel: String(row.unitLabel ?? ''),
-      quantity: toNumber(row.quantity),
-      consumption: row.consumption === null ? null : toNumber(row.consumption),
-      price: toNumber(row.price),
-      totalAmount: toNumber(row.totalAmount),
+      quantity: toNumber(narrow(row.quantity)),
+      consumption: row.consumption === null ? null : toNumber(narrow(row.consumption)),
+      price: toNumber(narrow(row.price)),
+      totalAmount: toNumber(narrow(row.totalAmount)),
       supplierName: (row.supplierName as string | null) ?? null,
       notes: (row.notes as string | null) ?? null,
-      sortOrder: toNumber(row.sortOrder),
+      sortOrder: toNumber(narrow(row.sortOrder)),
     })
     materialsByWork.set(workId, items)
   })
@@ -423,7 +426,7 @@ function mapRpcSectionResponse(json: RpcRow): ProjectEstimateContentResponse['da
     const rowId = String(row.id ?? '')
     const ms = materialsByWork.get(rowId) ?? []
     const materialsAmount = roundMoney(ms.reduce((sum, m) => sum + m.totalAmount, 0))
-    const totalAmount = toNumber(row.totalAmount)
+    const totalAmount = toNumber(narrow(row.totalAmount))
     return {
       id: rowId,
       sectionId: String(row.sectionId ?? ''),
@@ -432,12 +435,12 @@ function mapRpcSectionResponse(json: RpcRow): ProjectEstimateContentResponse['da
       title: String(row.title ?? ''),
       unitCode: String(row.unitCode ?? ''),
       unitLabel: String(row.unitLabel ?? ''),
-      quantity: toNumber(row.quantity),
-      price: toNumber(row.price),
+      quantity: toNumber(narrow(row.quantity)),
+      price: toNumber(narrow(row.price)),
       totalAmount,
       category: (row.category as string | null) ?? null,
       notes: (row.notes as string | null) ?? null,
-      sortOrder: toNumber(row.sortOrder),
+      sortOrder: toNumber(narrow(row.sortOrder)),
       materialsAmount,
       totalWithMaterialsAmount: roundMoney(totalAmount + materialsAmount),
       materials: ms,
@@ -448,10 +451,10 @@ function mapRpcSectionResponse(json: RpcRow): ProjectEstimateContentResponse['da
     id: String(sectionRaw?.id ?? ''),
     title: String(sectionRaw?.title ?? ''),
     number: String(sectionRaw?.number ?? ''),
-    sortOrder: toNumber(sectionRaw?.sortOrder),
-    worksAmount: toNumber(sectionRaw?.worksAmount),
-    materialsAmount: toNumber(sectionRaw?.materialsAmount),
-    totalAmount: toNumber(sectionRaw?.totalAmount),
+    sortOrder: toNumber(narrow(sectionRaw?.sortOrder)),
+    worksAmount: toNumber(narrow(sectionRaw?.worksAmount)),
+    materialsAmount: toNumber(narrow(sectionRaw?.materialsAmount)),
+    totalAmount: toNumber(narrow(sectionRaw?.totalAmount)),
     works,
   }
 
@@ -462,7 +465,7 @@ function mapRpcSectionResponse(json: RpcRow): ProjectEstimateContentResponse['da
       name: String(recordRaw?.name ?? ''),
       type: String(recordRaw?.type ?? ''),
       status: (recordRaw?.status as 'new' | 'in_progress' | 'completed') ?? 'new',
-      amount: toNumber(recordRaw?.amount),
+      amount: toNumber(narrow(recordRaw?.amount)),
     },
     sections: [section],
     summary: {

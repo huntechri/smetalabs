@@ -5,12 +5,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
-import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatMoney } from "@/lib/formatters"
@@ -27,6 +25,7 @@ export function EstimateMaterialPickerDialog({
   saving,
   options,
   loading,
+  addedCodes,
   onQueryChange,
   onOpenChange,
   onSelect,
@@ -37,32 +36,26 @@ export function EstimateMaterialPickerDialog({
   saving: boolean
   options: ProjectEstimateMaterialOptionRow[]
   loading: boolean
+  addedCodes: Set<string>
   onQueryChange: (value: string) => void
   onOpenChange: (open: boolean) => void
   onSelect: (row: ProjectEstimateMaterialOptionRow) => void
-  onDirectorySubmit: (event: FormEvent<HTMLFormElement>) => void
+  onDirectorySubmit: (quantity: number, consumption: number | null, price: number, changedField: "quantity" | "consumption" | "price") => void
 }) {
   const [searchText, setSearchText] = useState(query)
-  const [quantityDialogOpen, setQuantityDialogOpen] = useState(false)
-  const [quantity, setQuantity] = useState("1")
-  const [consumption, setConsumption] = useState("")
-  const [price, setPrice] = useState("0")
-  const [quantityError, setQuantityError] = useState<string | null>(null)
+
   const normalizedSearch = searchText.trim().replace(/\s+/g, " ")
   const canSearch = query.trim().length >= MATERIAL_SEARCH_MIN_LENGTH
   const visibleOptions = useMemo(() => (canSearch ? options : []), [canSearch, options])
   const showSearchPrompt = !canSearch
   const showEmpty = canSearch && !loading && visibleOptions.length === 0
 
+  const isAdded = (code: string | null) => addedCodes.has(code ?? "")
+
   useEffect(() => {
     if (state.open) return
     setSearchText("")
     onQueryChange("")
-    setQuantityDialogOpen(false)
-    setQuantity("1")
-    setConsumption("")
-    setPrice("0")
-    setQuantityError(null)
   }, [onQueryChange, state.open])
 
   useEffect(() => {
@@ -88,46 +81,11 @@ export function EstimateMaterialPickerDialog({
 
   const handleSelect = (material: ProjectEstimateMaterialOptionRow) => {
     onSelect(material)
-    setQuantity("1")
-    setConsumption("")
-    setPrice(String(material.price))
-    setQuantityError(null)
-    setQuantityDialogOpen(true)
-  }
-
-  const handleQuantitySubmit = (event: FormEvent<HTMLFormElement>) => {
-    const parsedQuantity = Number(quantity.trim().replace(",", "."))
-    const parsedConsumption = consumption.trim()
-      ? Number(consumption.trim().replace(",", "."))
-      : null
-    const parsedPrice = Number(price.trim().replace(",", "."))
-
-    if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
-      event.preventDefault()
-      setQuantityError("Введите количество больше 0")
-      return
-    }
-
-    if (parsedConsumption !== null && (!Number.isFinite(parsedConsumption) || parsedConsumption <= 0)) {
-      event.preventDefault()
-      setQuantityError("Введите корректный расход")
-      return
-    }
-
-    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
-      event.preventDefault()
-      setQuantityError("Введите корректную цену")
-      return
-    }
-
-    setQuantityError(null)
-    onDirectorySubmit(event)
-    setQuantityDialogOpen(false)
+    onDirectorySubmit(0, null, material.price, "quantity")
   }
 
   return (
-    <>
-      <Dialog open={state.open} onOpenChange={onOpenChange}>
+    <Dialog open={state.open} onOpenChange={onOpenChange}>
         <DialogContent className="flex h-[min(720px,calc(100vh-4rem))] max-h-[calc(100vh-4rem)] flex-col overflow-hidden sm:max-w-3xl">
           <DialogHeader className="shrink-0">
             <DialogTitle>Добавить материал из справочника</DialogTitle>
@@ -190,65 +148,20 @@ export function EstimateMaterialPickerDialog({
                   <div className="text-xs text-muted-foreground">{material.unitLabel}</div>
                   <div className="text-xs font-medium tabular-nums">{formatMoney(material.price)}</div>
                   <Button
-                    disabled={saving}
+                    disabled={saving || isAdded(material.code)}
                     onClick={() => handleSelect(material)}
                     size="sm"
                     type="button"
                     variant="outline"
                   >
                     <PlusIcon data-icon="inline-start" />
-                    Добавить
+                    {isAdded(material.code) ? "Добавлено" : "Добавить"}
                   </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={quantityDialogOpen} onOpenChange={setQuantityDialogOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Количество</DialogTitle>
-            <DialogDescription>
-              {state.selected ? state.selected.title : "Введите количество материала"}
-            </DialogDescription>
-          </DialogHeader>
-          <form className="space-y-4" onSubmit={handleQuantitySubmit}>
-            <Input
-              autoFocus
-              inputMode="decimal"
-              name="quantity"
-              onChange={(event) => setQuantity(event.target.value)}
-              placeholder="Количество"
-              value={quantity}
-            />
-            <Input
-              inputMode="decimal"
-              name="consumption"
-              onChange={(event) => setConsumption(event.target.value)}
-              placeholder="Расход"
-              value={consumption}
-            />
-            <Input
-              inputMode="decimal"
-              name="price"
-              onChange={(event) => setPrice(event.target.value)}
-              placeholder="Цена"
-              value={price}
-            />
-            <FieldError>{quantityError}</FieldError>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setQuantityDialogOpen(false)}>
-                Отмена
-              </Button>
-              <Button type="submit" disabled={saving}>
-                Добавить
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </>
+      </DialogContent>
+    </Dialog>
   )
 }

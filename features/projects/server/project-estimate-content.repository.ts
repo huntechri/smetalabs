@@ -5,13 +5,9 @@ import type {
   ProjectEstimateContentResponse,
   ProjectEstimateContentSection,
   ProjectEstimateContentWork,
-  ProjectEstimateMaterialOptionRow,
-  ProjectEstimateOptionRow,
-  ProjectEstimateOptionsResponse,
 } from "@/types/project-estimate-content"
 import type {
   EstimateContentChangeInput,
-  EstimateContentOptionsParams,
 } from "./project-estimate-content.schemas"
 
 type RecordRow = {
@@ -65,29 +61,6 @@ type MaterialRow = {
   supplier_name: string | null
   notes: string | null
   sort_order: number
-}
-
-type DirectoryWorkRow = {
-  id: string
-  code: string | null
-  title: string
-  unit_code: string
-  unit_label: string
-  rate_amount: string | number
-  category: string
-  version: number
-}
-
-type DirectoryMaterialRow = {
-  id: string
-  code: string | null
-  name: string
-  unit_code: string
-  unit_label: string
-  price_amount: string | number
-  category: string
-  supplier_name: string | null
-  version: number
 }
 
 type WorkIdentityRow = {
@@ -409,82 +382,97 @@ export async function getProjectEstimateContentForWorkspace(
   return { data: { record: mapRecord(record), sections, summary } }
 }
 
-export async function listProjectEstimateWorkOptionsForWorkspace(
-  workspaceOwnerId: string,
-  _projectId: string,
-  _recordId: string,
-  params: EstimateContentOptionsParams
-): Promise<ProjectEstimateOptionsResponse<ProjectEstimateOptionRow>> {
-  const limitWithSentinel = params.limit + 1
-  let query = supabase
-    .from("directory_works")
-    .select("id,code,title,unit_code,unit_label,rate_amount,category")
-    .eq("workspace_owner_id", workspaceOwnerId)
-    .eq("status", "active")
-    .is("deleted_at", null)
-    .order("title", { ascending: true })
-    .range(params.cursor, params.cursor + limitWithSentinel - 1)
+/**
+ * Maps RPC jsonb response into ProjectEstimateContentData.
+ * Used to eliminate read-after-write for insert/delete RPC operations.
+ */
+type RpcRowValue = string | number | boolean | null | RpcRowValue[] | { [key: string]: RpcRowValue }
+type RpcRow = Record<string, RpcRowValue>
 
-  if (params.q) query = query.or(`title.ilike.%${params.q}%,code.ilike.%${params.q}%,category.ilike.%${params.q}%`)
+function mapRpcSectionResponse(json: RpcRow): ProjectEstimateContentResponse['data'] {
+  const sectionRaw = json.section as RpcRow | undefined
+  const worksRaw = (json.works ?? []) as RpcRow[]
+  const materialsRaw = (json.materials ?? []) as RpcRow[]
+  const recordRaw = json.record as RpcRow | undefined
 
-  const { data, error } = await query
-  if (error) throw error
+  const narrow = (v: RpcRowValue | undefined): string | number | null | undefined =>
+    v === null || v === undefined || typeof v === 'string' || typeof v === 'number' ? v as string | number | null | undefined : undefined
 
-  const rows = ((data ?? []) as DirectoryWorkRow[]).map((row) => ({
-    id: row.id,
-    code: row.code,
-    title: row.title,
-    unitCode: row.unit_code,
-    unitLabel: row.unit_label,
-    price: toNumber(row.rate_amount),
-    category: row.category,
-  }))
-  const visibleRows = rows.slice(0, params.limit)
-  const hasMore = rows.length > params.limit
+  const materialsByWork = new Map<string, ProjectEstimateContentMaterial[]>()
+  materialsRaw.forEach((row) => {
+    const workId = String(row.workId ?? '')
+    const items = materialsByWork.get(workId) ?? []
+    items.push({
+      id: String(row.id ?? ''),
+      workId,
+      sectionId: String(row.sectionId ?? ''),
+      number: String(row.number ?? ''),
+      code: (row.code as string | null) ?? null,
+      title: String(row.title ?? ''),
+      unitCode: String(row.unitCode ?? ''),
+      unitLabel: String(row.unitLabel ?? ''),
+      quantity: toNumber(narrow(row.quantity)),
+      consumption: row.consumption === null ? null : toNumber(narrow(row.consumption)),
+      price: toNumber(narrow(row.price)),
+      totalAmount: toNumber(narrow(row.totalAmount)),
+      supplierName: (row.supplierName as string | null) ?? null,
+      notes: (row.notes as string | null) ?? null,
+      sortOrder: toNumber(narrow(row.sortOrder)),
+    })
+    materialsByWork.set(workId, items)
+  })
 
-  return {
-    data: visibleRows,
-    meta: { q: params.q, limit: params.limit, cursor: params.cursor, nextCursor: hasMore ? params.cursor + params.limit : null, hasMore },
+  const works: ProjectEstimateContentWork[] = worksRaw.map((row) => {
+    const rowId = String(row.id ?? '')
+    const ms = materialsByWork.get(rowId) ?? []
+    const materialsAmount = roundMoney(ms.reduce((sum, m) => sum + m.totalAmount, 0))
+    const totalAmount = toNumber(narrow(row.totalAmount))
+    return {
+      id: rowId,
+      sectionId: String(row.sectionId ?? ''),
+      number: String(row.number ?? ''),
+      code: (row.code as string | null) ?? null,
+      title: String(row.title ?? ''),
+      unitCode: String(row.unitCode ?? ''),
+      unitLabel: String(row.unitLabel ?? ''),
+      quantity: toNumber(narrow(row.quantity)),
+      price: toNumber(narrow(row.price)),
+      totalAmount,
+      category: (row.category as string | null) ?? null,
+      notes: (row.notes as string | null) ?? null,
+      sortOrder: toNumber(narrow(row.sortOrder)),
+      materialsAmount,
+      totalWithMaterialsAmount: roundMoney(totalAmount + materialsAmount),
+      materials: ms,
+    }
+  })
+
+  const section: ProjectEstimateContentSection = {
+    id: String(sectionRaw?.id ?? ''),
+    title: String(sectionRaw?.title ?? ''),
+    number: String(sectionRaw?.number ?? ''),
+    sortOrder: toNumber(narrow(sectionRaw?.sortOrder)),
+    worksAmount: toNumber(narrow(sectionRaw?.worksAmount)),
+    materialsAmount: toNumber(narrow(sectionRaw?.materialsAmount)),
+    totalAmount: toNumber(narrow(sectionRaw?.totalAmount)),
+    works,
   }
-}
-
-export async function listProjectEstimateMaterialOptionsForWorkspace(
-  workspaceOwnerId: string,
-  _projectId: string,
-  _recordId: string,
-  params: EstimateContentOptionsParams
-): Promise<ProjectEstimateOptionsResponse<ProjectEstimateMaterialOptionRow>> {
-  const limitWithSentinel = params.limit + 1
-  let query = supabase
-    .from("directory_materials")
-    .select("id,code,name,unit_code,unit_label,price_amount,category,supplier_name")
-    .eq("workspace_owner_id", workspaceOwnerId)
-    .eq("status", "active")
-    .is("deleted_at", null)
-    .order("name", { ascending: true })
-    .range(params.cursor, params.cursor + limitWithSentinel - 1)
-
-  if (params.q) query = query.or(`name.ilike.%${params.q}%,code.ilike.%${params.q}%,category.ilike.%${params.q}%,supplier_name.ilike.%${params.q}%`)
-
-  const { data, error } = await query
-  if (error) throw error
-
-  const rows = ((data ?? []) as DirectoryMaterialRow[]).map((row) => ({
-    id: row.id,
-    code: row.code,
-    title: row.name,
-    unitCode: row.unit_code,
-    unitLabel: row.unit_label,
-    price: toNumber(row.price_amount),
-    category: row.category,
-    supplierName: row.supplier_name,
-  }))
-  const visibleRows = rows.slice(0, params.limit)
-  const hasMore = rows.length > params.limit
 
   return {
-    data: visibleRows,
-    meta: { q: params.q, limit: params.limit, cursor: params.cursor, nextCursor: hasMore ? params.cursor + params.limit : null, hasMore },
+    record: {
+      id: String(recordRaw?.id ?? ''),
+      projectId: String(recordRaw?.projectId ?? ''),
+      name: String(recordRaw?.name ?? ''),
+      type: String(recordRaw?.type ?? ''),
+      status: (recordRaw?.status as 'new' | 'in_progress' | 'completed') ?? 'new',
+      amount: toNumber(narrow(recordRaw?.amount)),
+    },
+    sections: [section],
+    summary: {
+      worksAmount: section.worksAmount,
+      materialsAmount: section.materialsAmount,
+      totalAmount: section.totalAmount,
+    },
   }
 }
 
@@ -560,18 +548,18 @@ export async function applyProjectEstimateContentChangeForWorkspace(
   input: EstimateContentChangeInput
 ): Promise<ProjectEstimateContentResponse> {
   await assertRecord(workspaceOwnerId, projectId, recordId)
-  const now = new Date().toISOString()
-
-  // Track affected section for targeted re-read (Opt 1)
-  let affectedSectionId: string | null = null
 
   switch (input.action) {
     case "create_section": {
-      const sortOrder = input.payload.sortOrder ?? (await getNextSortOrder("project_estimate_sections", { workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId }))
-      const number = await getNextNumber("project_estimate_sections", { workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId })
-      const { error } = await supabase.from("project_estimate_sections").insert({ workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId, title: input.payload.title, number, sort_order: sortOrder, created_by: userId, updated_by: userId })
+      const { data: sectionData, error } = await supabase.rpc("create_estimate_section", {
+        p_workspace_owner_id: workspaceOwnerId,
+        p_project_id: projectId,
+        p_estimate_record_id: recordId,
+        p_title: input.payload.title,
+        p_created_by: userId,
+      })
       if (error) throw error
-      break
+      return { data: mapRpcSectionResponse(sectionData), _partial: true } as ProjectEstimateContentResponse & { _partial?: boolean }
     }
     case "update_section": {
       await getSection(workspaceOwnerId, projectId, recordId, input.payload.sectionId)
@@ -583,31 +571,42 @@ export async function applyProjectEstimateContentChangeForWorkspace(
       break
     }
     case "archive_section": {
-      await getSection(workspaceOwnerId, projectId, recordId, input.payload.sectionId)
-      await supabase.from("project_estimate_materials").update({ archived_at: now, updated_by: userId }).eq("workspace_owner_id", workspaceOwnerId).eq("project_id", projectId).eq("estimate_record_id", recordId).eq("section_id", input.payload.sectionId).is("archived_at", null)
-      await supabase.from("project_estimate_works").update({ archived_at: now, updated_by: userId }).eq("workspace_owner_id", workspaceOwnerId).eq("project_id", projectId).eq("estimate_record_id", recordId).eq("section_id", input.payload.sectionId).is("archived_at", null)
-      const { error } = await supabase.from("project_estimate_sections").update({ archived_at: now, updated_by: userId }).eq("workspace_owner_id", workspaceOwnerId).eq("project_id", projectId).eq("estimate_record_id", recordId).eq("id", input.payload.sectionId)
+      const { error } = await supabase.rpc("archive_estimate_section", {
+        p_workspace_owner_id: workspaceOwnerId,
+        p_project_id: projectId,
+        p_estimate_record_id: recordId,
+        p_section_id: input.payload.sectionId,
+        p_updated_by: userId,
+      })
       if (error) throw error
+      // Section deleted — full re-read needed (structure changed)
       break
     }
     case "reorder_sections": {
-      for (const item of input.payload.items) {
-        const { error } = await supabase.from("project_estimate_sections").update({ sort_order: item.sortOrder, updated_by: userId }).eq("workspace_owner_id", workspaceOwnerId).eq("project_id", projectId).eq("estimate_record_id", recordId).eq("id", item.id).is("archived_at", null).is("deleted_at", null)
-        if (error) throw error
-      }
+      const { error } = await supabase.rpc("reorder_estimate_sections", {
+        p_workspace_owner_id: workspaceOwnerId,
+        p_project_id: projectId,
+        p_estimate_record_id: recordId,
+        p_items: input.payload.items,
+        p_updated_by: userId,
+      })
+      if (error) throw error
       break
     }
     case "add_work_from_directory": {
-      await getSection(workspaceOwnerId, projectId, recordId, input.payload.sectionId)
-      const { data, error } = await supabase.from("directory_works").select("id,code,title,unit_code,unit_label,rate_amount,category,version").eq("workspace_owner_id", workspaceOwnerId).eq("id", input.payload.directoryWorkId).eq("status", "active").is("deleted_at", null).maybeSingle()
+      const { data: sectionData, error } = await supabase.rpc("add_work_from_directory_to_estimate", {
+        p_workspace_owner_id: workspaceOwnerId,
+        p_project_id: projectId,
+        p_estimate_record_id: recordId,
+        p_section_id: input.payload.sectionId,
+        p_directory_work_id: input.payload.directoryWorkId,
+        p_quantity: input.payload.quantity,
+        p_price: input.payload.price ?? null,
+        p_created_by: userId,
+      })
       if (error) throw error
-      if (!data) throw new ProjectsApiError("NOT_FOUND", "Работа справочника не найдена", 404)
-      const source = data as DirectoryWorkRow
-      const number = await getNextNumber("project_estimate_works", { workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId, section_id: input.payload.sectionId })
-      const sortOrder = input.payload.sortOrder ?? (await getNextSortOrder("project_estimate_works", { workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId, section_id: input.payload.sectionId }))
-      const { error: insertError } = await supabase.from("project_estimate_works").insert({ workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId, section_id: input.payload.sectionId, directory_work_id: source.id, directory_work_version: source.version, number, code: source.code, title: source.title, unit_code: source.unit_code, unit_label: source.unit_label, quantity: input.payload.quantity, price: input.payload.price ?? toNumber(source.rate_amount), category: source.category, sort_order: sortOrder, created_by: userId, updated_by: userId })
-      if (insertError) throw insertError
-      break
+      if (!sectionData) return { data: null as never, _duplicate: true }
+      return { data: mapRpcSectionResponse(sectionData), _partial: true } as ProjectEstimateContentResponse & { _partial?: boolean }
     }
     case "add_manual_work": {
       await getSection(workspaceOwnerId, projectId, recordId, input.payload.sectionId)
@@ -615,7 +614,14 @@ export async function applyProjectEstimateContentChangeForWorkspace(
       const sortOrder = input.payload.sortOrder ?? (await getNextSortOrder("project_estimate_works", { workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId, section_id: input.payload.sectionId }))
       const { error } = await supabase.from("project_estimate_works").insert({ workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId, section_id: input.payload.sectionId, number, title: input.payload.title, unit_code: input.payload.unitCode, unit_label: input.payload.unitLabel, quantity: input.payload.quantity, price: input.payload.price, category: input.payload.category ?? null, notes: input.payload.notes, sort_order: sortOrder, created_by: userId, updated_by: userId })
       if (error) throw error
-      break
+      {
+        const record = await assertRecord(workspaceOwnerId, projectId, recordId)
+        const section = await getProjectEstimateContentSectionForWorkspace(workspaceOwnerId, projectId, recordId, input.payload.sectionId)
+        return {
+          data: { record: mapRecord(record), sections: [section], summary: { worksAmount: section.worksAmount, materialsAmount: section.materialsAmount, totalAmount: section.totalAmount } },
+          _partial: true,
+        } as ProjectEstimateContentResponse & { _partial?: boolean }
+      }
     }
     case "update_work": {
       const work = await getWork(workspaceOwnerId, projectId, recordId, input.payload.workId)
@@ -635,22 +641,38 @@ export async function applyProjectEstimateContentChangeForWorkspace(
         if (materialMoveError) throw materialMoveError
       }
       if (input.payload.quantity !== undefined) await recalculateMaterialsByWorkQuantity(workspaceOwnerId, projectId, recordId, input.payload.workId, input.payload.quantity, userId)
-      affectedSectionId = nextSectionId
-      break
+      {
+        // Targeted re-read for update_work (non-RPC mutation)
+        const record = await assertRecord(workspaceOwnerId, projectId, recordId)
+        const section = await getProjectEstimateContentSectionForWorkspace(workspaceOwnerId, projectId, recordId, nextSectionId)
+        return {
+          data: { record: mapRecord(record), sections: [section], summary: { worksAmount: section.worksAmount, materialsAmount: section.materialsAmount, totalAmount: section.totalAmount } },
+          _partial: true,
+        } as ProjectEstimateContentResponse & { _partial?: boolean }
+      }
     }
     case "archive_work": {
-      const work = await getWork(workspaceOwnerId, projectId, recordId, input.payload.workId)
-      await supabase.from("project_estimate_materials").update({ archived_at: now, updated_by: userId }).eq("workspace_owner_id", workspaceOwnerId).eq("project_id", projectId).eq("estimate_record_id", recordId).eq("work_id", input.payload.workId).is("archived_at", null)
-      const { error } = await supabase.from("project_estimate_works").update({ archived_at: now, updated_by: userId }).eq("workspace_owner_id", workspaceOwnerId).eq("project_id", projectId).eq("estimate_record_id", recordId).eq("section_id", work.section_id).eq("id", input.payload.workId)
+      const { data: sectionData, error } = await supabase.rpc("archive_estimate_work", {
+        p_workspace_owner_id: workspaceOwnerId,
+        p_project_id: projectId,
+        p_estimate_record_id: recordId,
+        p_work_id: input.payload.workId,
+        p_updated_by: userId,
+      })
       if (error) throw error
-      break
+      return { data: mapRpcSectionResponse(sectionData), _partial: true } as ProjectEstimateContentResponse & { _partial?: boolean }
     }
     case "reorder_works": {
       await getSection(workspaceOwnerId, projectId, recordId, input.payload.sectionId)
-      for (const item of input.payload.items) {
-        const { error } = await supabase.from("project_estimate_works").update({ sort_order: item.sortOrder, updated_by: userId }).eq("workspace_owner_id", workspaceOwnerId).eq("project_id", projectId).eq("estimate_record_id", recordId).eq("section_id", input.payload.sectionId).eq("id", item.id).is("archived_at", null).is("deleted_at", null)
-        if (error) throw error
-      }
+      const { error } = await supabase.rpc("reorder_estimate_works", {
+        p_workspace_owner_id: workspaceOwnerId,
+        p_project_id: projectId,
+        p_estimate_record_id: recordId,
+        p_section_id: input.payload.sectionId,
+        p_items: input.payload.items,
+        p_updated_by: userId,
+      })
+      if (error) throw error
       break
     }
     case "move_work_to_section": {
@@ -665,17 +687,21 @@ export async function applyProjectEstimateContentChangeForWorkspace(
       break
     }
     case "add_material_from_directory": {
-      const work = await getWork(workspaceOwnerId, projectId, recordId, input.payload.workId)
-      const { data, error } = await supabase.from("directory_materials").select("id,code,name,unit_code,unit_label,price_amount,category,supplier_name,version").eq("workspace_owner_id", workspaceOwnerId).eq("id", input.payload.directoryMaterialId).eq("status", "active").is("deleted_at", null).maybeSingle()
+      const { data: sectionData, error } = await supabase.rpc("add_material_from_directory_to_estimate", {
+        p_workspace_owner_id: workspaceOwnerId,
+        p_project_id: projectId,
+        p_estimate_record_id: recordId,
+        p_work_id: input.payload.workId,
+        p_directory_material_id: input.payload.directoryMaterialId,
+        p_quantity: input.payload.quantity ?? 0,
+        p_consumption: input.payload.consumption ?? null,
+        p_price: input.payload.price ?? null,
+        p_created_by: userId,
+        p_changed_field: input.payload.changedField ?? "quantity",
+      })
       if (error) throw error
-      if (!data) throw new ProjectsApiError("NOT_FOUND", "Материал справочника не найден", 404)
-      const source = data as DirectoryMaterialRow
-      const resolved = resolveMaterialQuantity({ workQuantity: toNumber(work.quantity), quantity: input.payload.quantity, consumption: input.payload.consumption, changedField: input.payload.changedField })
-      const number = await getNextNumber("project_estimate_materials", { workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId, work_id: input.payload.workId })
-      const sortOrder = input.payload.sortOrder ?? (await getNextSortOrder("project_estimate_materials", { workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId, work_id: input.payload.workId }))
-      const { error: insertError } = await supabase.from("project_estimate_materials").insert({ workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId, section_id: work.section_id, work_id: work.id, directory_material_id: source.id, directory_material_version: source.version, number, code: source.code, title: source.name, unit_code: source.unit_code, unit_label: source.unit_label, quantity: resolved.quantity, consumption: resolved.consumption, price: input.payload.price ?? toNumber(source.price_amount), supplier_name: source.supplier_name, sort_order: sortOrder, created_by: userId, updated_by: userId })
-      if (insertError) throw insertError
-      break
+      if (!sectionData) return { data: null as never, _duplicate: true }
+      return { data: mapRpcSectionResponse(sectionData), _partial: true } as ProjectEstimateContentResponse & { _partial?: boolean }
     }
     case "add_manual_material": {
       const work = await getWork(workspaceOwnerId, projectId, recordId, input.payload.workId)
@@ -684,7 +710,14 @@ export async function applyProjectEstimateContentChangeForWorkspace(
       const sortOrder = input.payload.sortOrder ?? (await getNextSortOrder("project_estimate_materials", { workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId, work_id: input.payload.workId }))
       const { error } = await supabase.from("project_estimate_materials").insert({ workspace_owner_id: workspaceOwnerId, project_id: projectId, estimate_record_id: recordId, section_id: work.section_id, work_id: work.id, number, title: input.payload.title, unit_code: input.payload.unitCode, unit_label: input.payload.unitLabel, quantity: resolved.quantity, consumption: resolved.consumption, price: input.payload.price, supplier_name: input.payload.supplierName, notes: input.payload.notes, sort_order: sortOrder, created_by: userId, updated_by: userId })
       if (error) throw error
-      break
+      {
+        const record = await assertRecord(workspaceOwnerId, projectId, recordId)
+        const section = await getProjectEstimateContentSectionForWorkspace(workspaceOwnerId, projectId, recordId, work.section_id)
+        return {
+          data: { record: mapRecord(record), sections: [section], summary: { worksAmount: section.worksAmount, materialsAmount: section.materialsAmount, totalAmount: section.totalAmount } },
+          _partial: true,
+        } as ProjectEstimateContentResponse & { _partial?: boolean }
+      }
     }
     case "update_material": {
       const material = await getMaterial(workspaceOwnerId, projectId, recordId, input.payload.materialId)
@@ -705,21 +738,38 @@ export async function applyProjectEstimateContentChangeForWorkspace(
       if (input.payload.sortOrder !== undefined) patch.sort_order = input.payload.sortOrder
       const { error } = await supabase.from("project_estimate_materials").update(patch).eq("workspace_owner_id", workspaceOwnerId).eq("project_id", projectId).eq("estimate_record_id", recordId).eq("id", input.payload.materialId)
       if (error) throw error
-      affectedSectionId = targetWork.section_id
-      break
+      {
+        // Targeted re-read for update_material (non-RPC mutation)
+        const record = await assertRecord(workspaceOwnerId, projectId, recordId)
+        const section = await getProjectEstimateContentSectionForWorkspace(workspaceOwnerId, projectId, recordId, targetWork.section_id)
+        return {
+          data: { record: mapRecord(record), sections: [section], summary: { worksAmount: section.worksAmount, materialsAmount: section.materialsAmount, totalAmount: section.totalAmount } },
+          _partial: true,
+        } as ProjectEstimateContentResponse & { _partial?: boolean }
+      }
     }
     case "archive_material": {
-      await getMaterial(workspaceOwnerId, projectId, recordId, input.payload.materialId)
-      const { error } = await supabase.from("project_estimate_materials").update({ archived_at: now, updated_by: userId }).eq("workspace_owner_id", workspaceOwnerId).eq("project_id", projectId).eq("estimate_record_id", recordId).eq("id", input.payload.materialId)
+      const { data: sectionData, error } = await supabase.rpc("archive_estimate_material", {
+        p_workspace_owner_id: workspaceOwnerId,
+        p_project_id: projectId,
+        p_estimate_record_id: recordId,
+        p_material_id: input.payload.materialId,
+        p_updated_by: userId,
+      })
       if (error) throw error
-      break
+      return { data: mapRpcSectionResponse(sectionData), _partial: true } as ProjectEstimateContentResponse & { _partial?: boolean }
     }
     case "reorder_materials": {
       await getWork(workspaceOwnerId, projectId, recordId, input.payload.workId)
-      for (const item of input.payload.items) {
-        const { error } = await supabase.from("project_estimate_materials").update({ sort_order: item.sortOrder, updated_by: userId }).eq("workspace_owner_id", workspaceOwnerId).eq("project_id", projectId).eq("estimate_record_id", recordId).eq("work_id", input.payload.workId).eq("id", item.id).is("archived_at", null).is("deleted_at", null)
-        if (error) throw error
-      }
+      const { error } = await supabase.rpc("reorder_estimate_materials", {
+        p_workspace_owner_id: workspaceOwnerId,
+        p_project_id: projectId,
+        p_estimate_record_id: recordId,
+        p_work_id: input.payload.workId,
+        p_items: input.payload.items,
+        p_updated_by: userId,
+      })
+      if (error) throw error
       break
     }
     case "move_material_to_work": {
@@ -735,31 +785,6 @@ export async function applyProjectEstimateContentChangeForWorkspace(
       throw new ProjectsApiError("BAD_REQUEST", "Некорректное действие", 400)
   }
 
-  // Opt 1: Targeted re-read for single-section updates (update_material / update_work)
-  // Avoids re-reading all sections/works/materials when only one section changed.
-  if (affectedSectionId) {
-    const record = await assertRecord(workspaceOwnerId, projectId, recordId)
-    const section = await getProjectEstimateContentSectionForWorkspace(
-      workspaceOwnerId,
-      projectId,
-      recordId,
-      affectedSectionId
-    )
-
-    return {
-      data: {
-        record: mapRecord(record),
-        sections: [section],
-        summary: {
-          worksAmount: section.worksAmount,
-          materialsAmount: section.materialsAmount,
-          totalAmount: section.totalAmount,
-        },
-      },
-      // Signal client to merge this section into cached data instead of replacing
-      _partial: true,
-    } as ProjectEstimateContentResponse & { _partial?: boolean }
-  }
-
+  // Full re-read for non-RPC mutations (manual inserts, reorders, move, archive_section)
   return getProjectEstimateContentForWorkspace(workspaceOwnerId, projectId, recordId)
 }

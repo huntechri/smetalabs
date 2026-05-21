@@ -26,7 +26,7 @@ import { EstimateEmptyState } from "@/features/estimates/estimate-details/compon
 import { EstimateMaterialPickerDialog } from "@/features/estimates/estimate-details/components/estimate-material-picker-dialog"
 import { EstimateSectionCard } from "@/features/estimates/estimate-details/components/estimate-section-card"
 import { EstimateWorkPickerDialog } from "@/features/estimates/estimate-details/components/estimate-work-picker-dialog"
-import { parseDecimal, parseText } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
+import { parseText } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
 import type {
   EstimateArchiveRequest,
   MaterialDialogState,
@@ -240,6 +240,27 @@ export function EstimateEditorView({
 
   const canSearchWorks = workSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
   const canSearchMaterials = materialSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
+
+  // Duplicate protection: track already-added directory item codes
+  const addedWorkCodes = React.useMemo(() => {
+    if (!content) return new Set<string>()
+    const codes = new Set<string>()
+    for (const s of content.sections) {
+      for (const w of s.works) {
+        if (w.code) codes.add(w.code)
+      }
+    }
+    return codes
+  }, [content])
+
+  const addedMaterialCodes = React.useMemo(() => {
+    if (!materialDialog.work) return new Set<string>()
+    const codes = new Set<string>()
+    for (const m of materialDialog.work.materials) {
+      if (m.code) codes.add(m.code)
+    }
+    return codes
+  }, [materialDialog.work])
 
   const coefficientQuery = useQuery({
     queryKey: ["project-estimate-work-coefficient", projectId, recordId],
@@ -463,21 +484,18 @@ export function EstimateEditorView({
   )
 
   const addDirectoryWork = useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault()
+    async (quantity: number, price: number) => {
       if (!workDialog.sectionId || !workDialog.selected) return
 
-      const form = new FormData(event.currentTarget)
       await save({
         action: "add_work_from_directory",
         payload: {
           sectionId: workDialog.sectionId,
           directoryWorkId: workDialog.selected.id,
-          quantity: parseDecimal(form.get("quantity"), 1),
-          price: parseDecimal(form.get("price"), workDialog.selected.price),
+          quantity,
+          price,
         },
       })
-      setWorkDialog(EMPTY_WORK_DIALOG)
     },
     [save, workDialog.sectionId, workDialog.selected]
   )
@@ -485,39 +503,41 @@ export function EstimateEditorView({
   const replaceDirectoryWork = useCallback(
     async (selected: ProjectEstimateOptionRow) => {
       if (!workDialog.work) return
-
-      await save({
-        action: "update_work",
-        payload: {
-          workId: workDialog.work.id,
-          title: selected.title,
-          price: selected.price,
-        },
-      })
-      setWorkDialog(EMPTY_WORK_DIALOG)
+      try {
+        await save({
+          action: "update_work",
+          payload: {
+            workId: workDialog.work.id,
+            title: selected.title,
+            price: selected.price,
+          },
+        })
+        setWorkDialog(EMPTY_WORK_DIALOG)
+      } catch (err) {
+        console.error("Replace work failed:", err)
+        // диалог остаётся открытым, пользователь может повторить
+      } finally {
+        workReplacingRef.current = false
+      }
     },
     [save, workDialog.work]
   )
 
   const addDirectoryMaterial = useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault()
+    async (quantity: number, consumption: number | null, price: number, changedField: "quantity" | "consumption" | "price") => {
       if (!materialDialog.work || !materialDialog.selected) return
 
-      const form = new FormData(event.currentTarget)
-      const consumption = parseDecimal(form.get("consumption"), undefined) ?? null
       await save({
         action: "add_material_from_directory",
         payload: {
           workId: materialDialog.work.id,
           directoryMaterialId: materialDialog.selected.id,
-          quantity: parseDecimal(form.get("quantity"), undefined),
+          quantity,
           consumption,
-          price: parseDecimal(form.get("price"), materialDialog.selected.price),
-          changedField: consumption ? "consumption" : "quantity",
+          price,
+          changedField,
         },
       })
-      setMaterialDialog(EMPTY_MATERIAL_DIALOG)
     },
     [save, materialDialog.work, materialDialog.selected]
   )
@@ -549,12 +569,6 @@ export function EstimateEditorView({
         if (workReplacingRef.current) return
         workReplacingRef.current = true
         replaceDirectoryWork(selected)
-          .catch((err) => {
-            console.error("Replace work failed:", err)
-          })
-          .finally(() => {
-            workReplacingRef.current = false
-          })
       }
     },
     [workDialog.mode, replaceDirectoryWork]
@@ -648,6 +662,7 @@ export function EstimateEditorView({
           saving={saving}
           options={workOptions.data?.data ?? []}
           loading={workOptions.isLoading}
+          addedCodes={addedWorkCodes}
           onQueryChange={setWorkSearch}
           onOpenChange={handleWorkPickerOpenChange}
           onSelect={handleWorkSelect}
@@ -659,6 +674,7 @@ export function EstimateEditorView({
           saving={saving}
           options={materialOptions.data?.data ?? []}
           loading={materialOptions.isLoading}
+          addedCodes={addedMaterialCodes}
           onQueryChange={setMaterialSearch}
           onOpenChange={handleMaterialPickerOpenChange}
           onSelect={handleMaterialSelect}

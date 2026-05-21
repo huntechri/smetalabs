@@ -236,6 +236,340 @@ function applyUpdateMaterial(
   }
 }
 
+// ─── helpers ────────────────────────────────────────────────────
+
+let _tempIdCounter = 0
+function nextTempId(): string {
+  return `temp_${Date.now()}_${++_tempIdCounter}`
+}
+
+// ─── archive_section ────────────────────────────────────────────
+
+function applyArchiveSection(
+  data: ProjectEstimateContentData,
+  input: Extract<EstimateContentChangeInput, { action: "archive_section" }>
+): ProjectEstimateContentData {
+  const { sectionId } = input.payload
+  const updatedSections = data.sections.filter((s) => s.id !== sectionId)
+  return {
+    ...data,
+    sections: updatedSections,
+    summary: recalcSummary(updatedSections),
+    record: { ...data.record, amount: recalcRecordAmount(updatedSections) },
+  }
+}
+
+// ─── archive_work ───────────────────────────────────────────────
+
+function applyArchiveWork(
+  data: ProjectEstimateContentData,
+  input: Extract<EstimateContentChangeInput, { action: "archive_work" }>
+): ProjectEstimateContentData | null {
+  const { workId } = input.payload
+
+  let foundSection: ProjectEstimateContentSection | null = null
+  for (const section of data.sections) {
+    if (section.works.some((w) => w.id === workId)) {
+      foundSection = section
+      break
+    }
+  }
+  if (!foundSection) return null
+
+  const updatedSections = data.sections.map((section) => {
+    if (section.id !== foundSection!.id) return section
+    const updatedWorks = section.works.filter((w) => w.id !== workId)
+    return recalcSection({ ...section, works: updatedWorks })
+  })
+
+  return {
+    ...data,
+    sections: updatedSections,
+    summary: recalcSummary(updatedSections),
+    record: { ...data.record, amount: recalcRecordAmount(updatedSections) },
+  }
+}
+
+// ─── archive_material ───────────────────────────────────────────
+
+function applyArchiveMaterial(
+  data: ProjectEstimateContentData,
+  input: Extract<EstimateContentChangeInput, { action: "archive_material" }>
+): ProjectEstimateContentData | null {
+  const { materialId } = input.payload
+
+  let foundSection: ProjectEstimateContentSection | null = null
+  let foundWork: ProjectEstimateContentWork | null = null
+
+  for (const section of data.sections) {
+    for (const work of section.works) {
+      if (work.materials.some((m) => m.id === materialId)) {
+        foundSection = section
+        foundWork = work
+        break
+      }
+    }
+    if (foundWork) break
+  }
+
+  if (!foundWork || !foundSection) return null
+
+  const updatedMaterials = foundWork.materials.filter((m) => m.id !== materialId)
+  const newMaterialsAmount = roundMoney(
+    updatedMaterials.reduce((sum, m) => sum + m.totalAmount, 0)
+  )
+  const newTotalWithMaterials = roundMoney(foundWork.totalAmount + newMaterialsAmount)
+
+  const updatedWork: ProjectEstimateContentWork = {
+    ...foundWork,
+    materialsAmount: newMaterialsAmount,
+    totalWithMaterialsAmount: newTotalWithMaterials,
+    materials: updatedMaterials,
+  }
+
+  const updatedSections = data.sections.map((section) => {
+    if (section.id !== foundSection!.id) return section
+    const updatedWorks = section.works.map((w) =>
+      w.id === foundWork!.id ? updatedWork : w
+    )
+    return recalcSection({ ...section, works: updatedWorks })
+  })
+
+  return {
+    ...data,
+    sections: updatedSections,
+    summary: recalcSummary(updatedSections),
+    record: { ...data.record, amount: recalcRecordAmount(updatedSections) },
+  }
+}
+
+// ─── create_section ─────────────────────────────────────────────
+
+function applyCreateSection(
+  data: ProjectEstimateContentData,
+  input: Extract<EstimateContentChangeInput, { action: "create_section" }>
+): ProjectEstimateContentData {
+  const { title, sortOrder } = input.payload
+  const tempSection = {
+    id: nextTempId(),
+    title,
+    number: "…",
+    sortOrder: sortOrder ?? data.sections.length,
+    worksAmount: 0,
+    materialsAmount: 0,
+    totalAmount: 0,
+    works: [] as ProjectEstimateContentWork[],
+    _optimistic: true,
+  } as ProjectEstimateContentSection & { _optimistic: true }
+
+  const updatedSections = [...data.sections, tempSection]
+  updatedSections.sort((a, b) => a.sortOrder - b.sortOrder)
+
+  return {
+    ...data,
+    sections: updatedSections,
+  }
+}
+
+// ─── add_work_from_directory ────────────────────────────────────
+
+function applyAddWorkFromDirectory(
+  data: ProjectEstimateContentData,
+  input: Extract<EstimateContentChangeInput, { action: "add_work_from_directory" }>
+): ProjectEstimateContentData | null {
+  const { sectionId, quantity, price, sortOrder } = input.payload
+
+  const sectionIndex = data.sections.findIndex((s) => s.id === sectionId)
+  if (sectionIndex === -1) return null
+
+  const section = data.sections[sectionIndex]
+  const qty = quantity ?? 0
+  const prc = price ?? 0
+
+  const tempWork = {
+    id: nextTempId(),
+    sectionId,
+    number: "…",
+    code: null,
+    title: "…",
+    unitCode: "",
+    unitLabel: "",
+    quantity: qty,
+    price: prc,
+    totalAmount: roundMoney(qty * prc),
+    category: null,
+    notes: null,
+    sortOrder: sortOrder ?? section.works.length,
+    materialsAmount: 0,
+    totalWithMaterialsAmount: roundMoney(qty * prc),
+    materials: [] as ProjectEstimateContentMaterial[],
+    _optimistic: true,
+  } as ProjectEstimateContentWork & { _optimistic: true }
+
+  const updatedSections = data.sections.map((s, idx) => {
+    if (idx !== sectionIndex) return s
+    const updatedWorks = [...s.works, tempWork]
+    return recalcSection({ ...s, works: updatedWorks })
+  })
+
+  return {
+    ...data,
+    sections: updatedSections,
+    summary: recalcSummary(updatedSections),
+    record: { ...data.record, amount: recalcRecordAmount(updatedSections) },
+  }
+}
+
+// ─── add_material_from_directory ────────────────────────────────
+
+function applyAddMaterialFromDirectory(
+  data: ProjectEstimateContentData,
+  input: Extract<EstimateContentChangeInput, { action: "add_material_from_directory" }>
+): ProjectEstimateContentData | null {
+  const { workId, quantity, consumption, price, sortOrder } = input.payload
+
+  let foundSection: ProjectEstimateContentSection | null = null
+  let foundWork: ProjectEstimateContentWork | null = null
+
+  for (const section of data.sections) {
+    const work = section.works.find((w) => w.id === workId)
+    if (work) {
+      foundSection = section
+      foundWork = work
+      break
+    }
+  }
+
+  if (!foundWork || !foundSection) return null
+
+  const qty = quantity ?? 0
+  const prc = price ?? 0
+
+  const tempMaterial = {
+    id: nextTempId(),
+    workId,
+    sectionId: foundSection.id,
+    number: "…",
+    code: null,
+    title: "…",
+    unitCode: "",
+    unitLabel: "",
+    quantity: qty,
+    consumption: consumption ?? null,
+    price: prc,
+    totalAmount: roundMoney(qty * prc),
+    supplierName: null,
+    notes: null,
+    sortOrder: sortOrder ?? foundWork.materials.length,
+    _optimistic: true,
+  } as ProjectEstimateContentMaterial & { _optimistic: true }
+
+  const updatedMaterials = [...foundWork.materials, tempMaterial]
+  const newMaterialsAmount = roundMoney(
+    updatedMaterials.reduce((sum, m) => sum + m.totalAmount, 0)
+  )
+  const newTotalWithMaterials = roundMoney(foundWork.totalAmount + newMaterialsAmount)
+
+  const updatedWork: ProjectEstimateContentWork = {
+    ...foundWork,
+    materialsAmount: newMaterialsAmount,
+    totalWithMaterialsAmount: newTotalWithMaterials,
+    materials: updatedMaterials,
+  }
+
+  const updatedSections = data.sections.map((section) => {
+    if (section.id !== foundSection!.id) return section
+    const updatedWorks = section.works.map((w) =>
+      w.id === foundWork!.id ? updatedWork : w
+    )
+    return recalcSection({ ...section, works: updatedWorks })
+  })
+
+  return {
+    ...data,
+    sections: updatedSections,
+    summary: recalcSummary(updatedSections),
+    record: { ...data.record, amount: recalcRecordAmount(updatedSections) },
+  }
+}
+
+// ─── reorder_sections ───────────────────────────────────────────
+
+function applyReorderSections(
+  data: ProjectEstimateContentData,
+  input: Extract<EstimateContentChangeInput, { action: "reorder_sections" }>
+): ProjectEstimateContentData {
+  const { items } = input.payload
+  const sortMap = new Map(items.map((i) => [i.id, i.sortOrder]))
+
+  const updatedSections = data.sections
+    .map((s) => ({
+      ...s,
+      sortOrder: sortMap.has(s.id) ? sortMap.get(s.id)! : s.sortOrder,
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+
+  return {
+    ...data,
+    sections: updatedSections,
+  }
+}
+
+// ─── reorder_works ──────────────────────────────────────────────
+
+function applyReorderWorks(
+  data: ProjectEstimateContentData,
+  input: Extract<EstimateContentChangeInput, { action: "reorder_works" }>
+): ProjectEstimateContentData {
+  const { sectionId, items } = input.payload
+  const sortMap = new Map(items.map((i) => [i.id, i.sortOrder]))
+
+  const updatedSections = data.sections.map((section) => {
+    if (section.id !== sectionId) return section
+    const updatedWorks = section.works
+      .map((w) => ({
+        ...w,
+        sortOrder: sortMap.has(w.id) ? sortMap.get(w.id)! : w.sortOrder,
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+    return { ...section, works: updatedWorks }
+  })
+
+  return {
+    ...data,
+    sections: updatedSections,
+  }
+}
+
+// ─── reorder_materials ──────────────────────────────────────────
+
+function applyReorderMaterials(
+  data: ProjectEstimateContentData,
+  input: Extract<EstimateContentChangeInput, { action: "reorder_materials" }>
+): ProjectEstimateContentData {
+  const { workId, items } = input.payload
+  const sortMap = new Map(items.map((i) => [i.id, i.sortOrder]))
+
+  const updatedSections = data.sections.map((section) => {
+    const updatedWorks = section.works.map((work) => {
+      if (work.id !== workId) return work
+      const updatedMaterials = work.materials
+        .map((m) => ({
+          ...m,
+          sortOrder: sortMap.has(m.id) ? sortMap.get(m.id)! : m.sortOrder,
+        }))
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+      return { ...work, materials: updatedMaterials }
+    })
+    return { ...section, works: updatedWorks }
+  })
+
+  return {
+    ...data,
+    sections: updatedSections,
+  }
+}
+
 // ─── public API ─────────────────────────────────────────────────
 
 /**
@@ -246,6 +580,10 @@ function applyUpdateMaterial(
  * Supported actions:
  * - update_work (quantity/price only, no section move)
  * - update_material
+ * - archive_section / archive_work / archive_material
+ * - create_section
+ * - add_work_from_directory / add_material_from_directory
+ * - reorder_sections / reorder_works / reorder_materials
  */
 export function applyOptimisticChange(
   data: ProjectEstimateContentData | undefined,
@@ -259,6 +597,33 @@ export function applyOptimisticChange(
 
     case "update_material":
       return applyUpdateMaterial(data, input)
+
+    case "archive_section":
+      return applyArchiveSection(data, input)
+
+    case "archive_work":
+      return applyArchiveWork(data, input)
+
+    case "archive_material":
+      return applyArchiveMaterial(data, input)
+
+    case "create_section":
+      return applyCreateSection(data, input)
+
+    case "add_work_from_directory":
+      return applyAddWorkFromDirectory(data, input)
+
+    case "add_material_from_directory":
+      return applyAddMaterialFromDirectory(data, input)
+
+    case "reorder_sections":
+      return applyReorderSections(data, input)
+
+    case "reorder_works":
+      return applyReorderWorks(data, input)
+
+    case "reorder_materials":
+      return applyReorderMaterials(data, input)
 
     default:
       return null

@@ -74,6 +74,12 @@ export type ProjectEstimateContentResponse = {
    * instead of replacing the entire cache.
    */
   _partial?: boolean
+  /**
+   * Internal signal for duplicate insert detection.
+   * When true, the RPC detected a unique constraint violation
+   * and the caller should roll back to the previous snapshot.
+   */
+  _duplicate?: boolean
 }
 
 export type ProjectEstimateOptionRow = {

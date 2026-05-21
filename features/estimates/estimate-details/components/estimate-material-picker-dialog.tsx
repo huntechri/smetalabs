@@ -136,7 +136,7 @@ export function EstimateMaterialPickerDialog({
             ) : null}
 
             {visibleOptions.map((material) => (
-              <Card key={material.id} className="m-2 rounded-md bg-transparent p-0 shadow-none">
+              <Card key={material.id} className="p-2 rounded-md bg-transparent shadow-none">
                 <CardContent className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_80px_120px_auto] sm:items-center">
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium">{material.title}</div>

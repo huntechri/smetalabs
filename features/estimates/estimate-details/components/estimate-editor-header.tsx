@@ -15,22 +15,22 @@ export function EstimateEditorHeader({
   saving: boolean
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-lg font-semibold">{content.record.name}</h1>
+          <h1 className="text-sm font-medium font-heading">{content.record.name}</h1>
           <Badge variant="outline">
             {formatEstimateStatusText(content.record.status)}
           </Badge>
         </div>
-        <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           <span>Работы: {formatMoney(content.summary.worksAmount)}</span>
           <span>Материалы: {formatMoney(content.summary.materialsAmount)}</span>
           <span>Итого: {formatMoney(content.summary.totalAmount)}</span>
           {isFetching ? <span>обновление...</span> : null}
         </div>
       </div>
-      <div className="text-sm text-muted-foreground">
+      <div className="text-xs text-muted-foreground">
         {saving ? "Сохраняется" : message}
       </div>
     </div>

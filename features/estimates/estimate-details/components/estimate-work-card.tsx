@@ -59,13 +59,10 @@ export function EstimateWorkCard({
 
   const updateMaterial = useCallback(
     (materialId: string, payload: { title?: string; quantity?: number; consumption?: number | null; price?: number; changedField?: "quantity" | "consumption" | "price" }) => {
-      onSave(
-        {
-          action: "update_material",
-          payload: { materialId, ...payload },
-        },
-        "Не удалось сохранить изменение"
-      )
+      onSave({
+        action: "update_material",
+        payload: { materialId, ...payload },
+      })
     },
     [onSave]
   )
@@ -79,7 +76,6 @@ export function EstimateWorkCard({
         },
         title: "Удалить работу?",
         description: "Работа и все её материалы будут убраны из сметы.",
-        fallback: "Не удалось удалить работу",
       }),
     [onArchive, work.id]
   )
@@ -88,13 +84,10 @@ export function EstimateWorkCard({
     (value: string) => {
       const num = safeNumber(value)
       if (num === undefined) return
-      onSave(
-        {
-          action: "update_work",
-          payload: { workId: work.id, quantity: num },
-        },
-        "Не удалось сохранить изменение"
-      )
+      onSave({
+        action: "update_work",
+        payload: { workId: work.id, quantity: num },
+      })
     },
     [onSave, work.id]
   )
@@ -103,23 +96,20 @@ export function EstimateWorkCard({
     (value: string) => {
       const num = safeNumber(value)
       if (num === undefined) return
-      onSave(
-        {
-          action: "update_work",
-          payload: { workId: work.id, price: num },
-        },
-        "Не удалось сохранить изменение"
-      )
+      onSave({
+        action: "update_work",
+        payload: { workId: work.id, price: num },
+      })
     },
     [onSave, work.id]
   )
 
   const handleTitleChange = useCallback(
     (title: string) =>
-      onSave(
-        { action: "update_work", payload: { workId: work.id, title } },
-        "Не удалось сохранить изменение"
-      ),
+      onSave({
+        action: "update_work",
+        payload: { workId: work.id, title },
+      }),
     [onSave, work.id]
   )
 
@@ -242,7 +232,6 @@ export function EstimateWorkCard({
                         },
                         title: "Удалить материал?",
                         description: "Материал будет убран из этой работы.",
-                        fallback: "Не удалось удалить материал",
                       })
                     }
                     onChange={(payload) => updateMaterial(material.id, payload)}

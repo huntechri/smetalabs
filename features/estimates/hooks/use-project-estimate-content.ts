@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   applyProjectEstimateContentChange,
@@ -9,6 +9,7 @@ import {
   type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
 import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
+import type { ProjectEstimateContentSection } from "@/types/project-estimate-content"
 
 const ESTIMATE_CONTENT_STALE_TIME_MS = 15_000
 const ESTIMATE_CONTENT_GC_TIME_MS = 5 * 60_000
@@ -56,6 +57,7 @@ function extractItemIds(input: EstimateContentChangeInput): string[] {
 export function useProjectEstimateContent(projectId: string, recordId: string) {
   const queryClient = useQueryClient()
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
+  const sectionsRef = useRef<ProjectEstimateContentSection[] | null>(null)
 
   const contentQuery = useQuery({
     queryKey: projectsQueryKeys.estimateRecordContent(projectId, recordId),
@@ -120,10 +122,19 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
     onSuccess: updateContentCache,
   })
 
+  const content = contentQuery.data?.data ?? null
+
+  // Keep sectionsRef in sync so ensureSection can read it without a content dependency
+  if (content?.sections) {
+    sectionsRef.current = content.sections
+  }
+
+  const getSections = useCallback(() => sectionsRef.current, [])
+
   const isSaving = changeMutation.isPending || coefficientMutation.isPending
 
   return {
-    content: contentQuery.data?.data ?? null,
+    content,
     loading: contentQuery.isLoading,
     isFetching: contentQuery.isFetching,
     error:
@@ -133,6 +144,7 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
       null,
     saving: isSaving,
     savingIds,
+    getSections,
     refetch: async () => {
       await contentQuery.refetch()
     },

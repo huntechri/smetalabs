@@ -179,6 +179,7 @@ export function EstimateEditorView({
     applyChange,
     applyWorkCoefficient,
     refetch,
+    getSections,
   } = useProjectEstimateContent(projectId, recordId)
   const [sectionOpen, setSectionOpen] = React.useState(false)
   const [coefficientOpen, setCoefficientOpen] = React.useState(false)
@@ -192,6 +193,7 @@ export function EstimateEditorView({
   const ensuringRef = useRef(false)
   const ensurePendingRef = useRef<Promise<string | null> | null>(null)
   const coefficientTriggered = useRef(false)
+  const workReplacingRef = useRef(false)
 
   const estimateSearch = searchParams.get("q")?.trim() ?? ""
   const searchActive = estimateSearch.length > 0
@@ -218,6 +220,14 @@ export function EstimateEditorView({
     () => filterSections(sectionsForMemo, deferredSearch),
     [sectionsForMemo, deferredSearch]
   )
+
+  const sectionIndexMap = React.useMemo(() => {
+    const map = new Map<string, number>()
+    sectionsForMemo.forEach((s: ProjectEstimateContentSection, i: number) =>
+      map.set(s.id, i),
+    )
+    return map
+  }, [sectionsForMemo])
 
   const workParams = React.useMemo(
     () => ({ q: workSearch, limit: 30, cursor: 0 }),
@@ -285,14 +295,10 @@ export function EstimateEditorView({
   })
 
   const save = useCallback(
-    async (input: EstimateContentChangeInput, fallback: string) => {
-      try {
-        const next = await applyChange(input)
-        if (!next?.sections) return null
-        return next
-      } catch (err) {
-        throw err
-      }
+    async (input: EstimateContentChangeInput) => {
+      const next = await applyChange(input)
+      if (!next?.sections) return null
+      return next
     },
     [applyChange]
   )
@@ -305,7 +311,8 @@ export function EstimateEditorView({
   }, [pathname, router, searchParams])
 
   const ensureSection = useCallback(async () => {
-    const existing = content?.sections[0]?.id
+    const sections = getSections()
+    const existing = sections?.[0]?.id
     if (existing) return existing
 
     if (ensuringRef.current && ensurePendingRef.current) {
@@ -313,23 +320,25 @@ export function EstimateEditorView({
     }
 
     ensuringRef.current = true
-    const promise = save(
-      { action: "create_section", payload: { title: "Без раздела" } },
-      "Не удалось добавить раздел"
-    ).then((next) => {
-      const id = next?.sections?.[0]?.id ?? null
-      ensuringRef.current = false
-      ensurePendingRef.current = null
-      return id
-    }).catch(() => {
-      ensuringRef.current = false
-      ensurePendingRef.current = null
-      return null
+    const promise = save({
+      action: "create_section",
+      payload: { title: "Без раздела" },
     })
+      .then((next) => {
+        const id = next?.sections?.[0]?.id ?? null
+        ensuringRef.current = false
+        ensurePendingRef.current = null
+        return id
+      })
+      .catch(() => {
+        ensuringRef.current = false
+        ensurePendingRef.current = null
+        return null
+      })
 
     ensurePendingRef.current = promise
     return promise
-  }, [content?.sections, save])
+  }, [getSections, save])
 
   const moveSection = useCallback(
     async (sectionId: string, direction: MoveDirection) => {
@@ -337,10 +346,10 @@ export function EstimateEditorView({
       const next = moveItem(content.sections, sectionId, direction)
       if (!next) return
 
-      await save(
-        { action: "reorder_sections", payload: { items: sortPayload(next) } },
-        "Не удалось изменить порядок разделов"
-      )
+      await save({
+        action: "reorder_sections",
+        payload: { items: sortPayload(next) },
+      })
     },
     [content, searchActive, save]
   )
@@ -353,13 +362,10 @@ export function EstimateEditorView({
       const next = moveItem(section.works, workId, direction)
       if (!next) return
 
-      await save(
-        {
-          action: "reorder_works",
-          payload: { sectionId, items: sortPayload(next) },
-        },
-        "Не удалось изменить порядок работ"
-      )
+      await save({
+        action: "reorder_works",
+        payload: { sectionId, items: sortPayload(next) },
+      })
     },
     [content, searchActive, save]
   )
@@ -374,13 +380,10 @@ export function EstimateEditorView({
       const next = moveItem(work.materials, materialId, direction)
       if (!next) return
 
-      await save(
-        {
-          action: "reorder_materials",
-          payload: { workId, items: sortPayload(next) },
-        },
-        "Не удалось изменить порядок материалов"
-      )
+      await save({
+        action: "reorder_materials",
+        payload: { workId, items: sortPayload(next) },
+      })
     },
     [content, searchActive, save]
   )
@@ -419,7 +422,7 @@ export function EstimateEditorView({
 
   const confirmArchive = useCallback(async () => {
     if (!archiveRequest) return
-    await save(archiveRequest.input, archiveRequest.fallback)
+    await save(archiveRequest.input)
     setArchiveRequest(null)
   }, [archiveRequest, save])
 
@@ -428,10 +431,7 @@ export function EstimateEditorView({
       const title = parseText(data.name)
       if (!title) return
 
-      await save(
-        { action: "create_section", payload: { title } },
-        "Не удалось добавить раздел"
-      )
+      await save({ action: "create_section", payload: { title } })
       setSectionOpen(false)
     },
     [save]
@@ -468,18 +468,15 @@ export function EstimateEditorView({
       if (!workDialog.sectionId || !workDialog.selected) return
 
       const form = new FormData(event.currentTarget)
-      await save(
-        {
-          action: "add_work_from_directory",
-          payload: {
-            sectionId: workDialog.sectionId,
-            directoryWorkId: workDialog.selected.id,
-            quantity: parseDecimal(form.get("quantity"), 1),
-            price: parseDecimal(form.get("price"), workDialog.selected.price),
-          },
+      await save({
+        action: "add_work_from_directory",
+        payload: {
+          sectionId: workDialog.sectionId,
+          directoryWorkId: workDialog.selected.id,
+          quantity: parseDecimal(form.get("quantity"), 1),
+          price: parseDecimal(form.get("price"), workDialog.selected.price),
         },
-        "Не удалось добавить работу"
-      )
+      })
       setWorkDialog(EMPTY_WORK_DIALOG)
     },
     [save, workDialog.sectionId, workDialog.selected]
@@ -489,17 +486,14 @@ export function EstimateEditorView({
     async (selected: ProjectEstimateOptionRow) => {
       if (!workDialog.work) return
 
-      await save(
-        {
-          action: "update_work",
-          payload: {
-            workId: workDialog.work.id,
-            title: selected.title,
-            price: selected.price,
-          },
+      await save({
+        action: "update_work",
+        payload: {
+          workId: workDialog.work.id,
+          title: selected.title,
+          price: selected.price,
         },
-        "Не удалось заменить работу"
-      )
+      })
       setWorkDialog(EMPTY_WORK_DIALOG)
     },
     [save, workDialog.work]
@@ -512,20 +506,17 @@ export function EstimateEditorView({
 
       const form = new FormData(event.currentTarget)
       const consumption = parseDecimal(form.get("consumption"), undefined) ?? null
-      await save(
-        {
-          action: "add_material_from_directory",
-          payload: {
-            workId: materialDialog.work.id,
-            directoryMaterialId: materialDialog.selected.id,
-            quantity: parseDecimal(form.get("quantity"), undefined),
-            consumption,
-            price: parseDecimal(form.get("price"), materialDialog.selected.price),
-            changedField: consumption ? "consumption" : "quantity",
-          },
+      await save({
+        action: "add_material_from_directory",
+        payload: {
+          workId: materialDialog.work.id,
+          directoryMaterialId: materialDialog.selected.id,
+          quantity: parseDecimal(form.get("quantity"), undefined),
+          consumption,
+          price: parseDecimal(form.get("price"), materialDialog.selected.price),
+          changedField: consumption ? "consumption" : "quantity",
         },
-        "Не удалось добавить материал"
-      )
+      })
       setMaterialDialog(EMPTY_MATERIAL_DIALOG)
     },
     [save, materialDialog.work, materialDialog.selected]
@@ -554,7 +545,17 @@ export function EstimateEditorView({
   const handleWorkSelect = useCallback(
     (selected: ProjectEstimateOptionRow) => {
       setWorkDialog((current) => ({ ...current, selected }))
-      if (workDialog.mode === "replace") void replaceDirectoryWork(selected)
+      if (workDialog.mode === "replace") {
+        if (workReplacingRef.current) return
+        workReplacingRef.current = true
+        replaceDirectoryWork(selected)
+          .catch((err) => {
+            console.error("Replace work failed:", err)
+          })
+          .finally(() => {
+            workReplacingRef.current = false
+          })
+      }
     },
     [workDialog.mode, replaceDirectoryWork]
   )
@@ -628,7 +629,7 @@ export function EstimateEditorView({
                 <EstimateSectionCard
                   key={section.id}
                   section={section}
-                  sectionIndex={content.sections.findIndex((item: ProjectEstimateContentSection) => item.id === section.id)}
+                  sectionIndex={sectionIndexMap.get(section.id) ?? 0}
                   sectionsCount={content.sections.length}
                 />
               ))}

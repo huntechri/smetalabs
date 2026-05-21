@@ -12,7 +12,6 @@ export type MoveDirection = "up" | "down"
 
 export type EstimateSave = (
   input: EstimateContentChangeInput,
-  fallback: string,
 ) => Promise<EstimateContentData | null>
 
 export type EstimateEditorContextValue = {

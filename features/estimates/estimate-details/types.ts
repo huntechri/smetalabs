@@ -12,7 +12,6 @@ export type EstimateArchiveRequest = {
   input: EstimateContentChangeInput
   title: string
   description: string
-  fallback: string
 }
 
 export type EstimateArchive = (request: EstimateArchiveRequest) => void

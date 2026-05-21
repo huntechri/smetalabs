@@ -87,11 +87,11 @@ export function EstimateSectionCard({
       },
       title: "Удалить раздел?",
       description: "Раздел, его работы и материалы будут убраны из сметы.",
-      fallback: "Не удалось удалить раздел",
     })
   }, [onArchive, section.id])
 
-  const isDisabled = savingIds.has(section.id) || savingIds.size > 0
+  const moveDisabled = savingIds.has(section.id)
+  const deleteDisabled = savingIds.has(section.id) || savingIds.size > 0
 
   return (
     <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
@@ -130,7 +130,7 @@ export function EstimateSectionCard({
               <ButtonGroup>
                 <Button
                   aria-label="Поднять раздел"
-                  disabled={isDisabled || reorderDisabled || sectionIndex === 0}
+                  disabled={moveDisabled || reorderDisabled || sectionIndex === 0}
                   size="icon-xs"
                   type="button"
                   variant="ghost"
@@ -140,7 +140,7 @@ export function EstimateSectionCard({
                 </Button>
                 <Button
                   aria-label="Опустить раздел"
-                  disabled={isDisabled || reorderDisabled || sectionIndex >= sectionsCount - 1}
+                  disabled={moveDisabled || reorderDisabled || sectionIndex >= sectionsCount - 1}
                   size="icon-xs"
                   type="button"
                   variant="ghost"
@@ -184,7 +184,7 @@ export function EstimateSectionCard({
                       </Button>
                       <Button
                         aria-label="Удалить раздел"
-                        disabled={isDisabled}
+                        disabled={deleteDisabled}
                         size="icon-xs"
                         variant="destructive"
                         onClick={archiveSection}

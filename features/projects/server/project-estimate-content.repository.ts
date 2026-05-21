@@ -323,36 +323,16 @@ async function recalculateMaterialsByWorkQuantity(
   workQuantity: number,
   userId: string
 ) {
-  const { data, error } = await supabase
-    .from("project_estimate_materials")
-    .select("id,consumption")
-    .eq("workspace_owner_id", workspaceOwnerId)
-    .eq("project_id", projectId)
-    .eq("estimate_record_id", recordId)
-    .eq("work_id", workId)
-    .is("archived_at", null)
-    .is("deleted_at", null)
-    .not("consumption", "is", null)
+  const { error } = await supabase.rpc("recalculate_materials_by_work_quantity", {
+    p_workspace_owner_id: workspaceOwnerId,
+    p_project_id: projectId,
+    p_estimate_record_id: recordId,
+    p_work_id: workId,
+    p_work_quantity: workQuantity,
+    p_updated_by: userId,
+  })
 
   if (error) throw error
-
-  for (const row of (data ?? []) as { id: string; consumption: string | number }[]) {
-    const consumption = toNumber(row.consumption)
-    if (consumption <= 0) continue
-
-    const { error: updateError } = await supabase
-      .from("project_estimate_materials")
-      .update({
-        quantity: roundQuantity(workQuantity / consumption),
-        updated_by: userId,
-      })
-      .eq("workspace_owner_id", workspaceOwnerId)
-      .eq("project_id", projectId)
-      .eq("estimate_record_id", recordId)
-      .eq("id", row.id)
-
-    if (updateError) throw updateError
-  }
 }
 
 export async function getProjectEstimateContentForWorkspace(
@@ -508,6 +488,70 @@ export async function listProjectEstimateMaterialOptionsForWorkspace(
   }
 }
 
+/**
+ * Reads a single section with all its works and materials.
+ * Used for targeted re-read after update_material/update_work.
+ */
+async function getProjectEstimateContentSectionForWorkspace(
+  workspaceOwnerId: string,
+  projectId: string,
+  recordId: string,
+  sectionId: string
+): Promise<ProjectEstimateContentSection> {
+  const [{ data: sectionRows, error: sectionError }, { data: workRows, error: workError }, { data: materialRows, error: materialError }] = await Promise.all([
+    supabase
+      .from("project_estimate_sections")
+      .select(SECTION_SELECT)
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .eq("project_id", projectId)
+      .eq("estimate_record_id", recordId)
+      .eq("id", sectionId)
+      .is("archived_at", null)
+      .is("deleted_at", null)
+      .maybeSingle(),
+    supabase
+      .from("project_estimate_works")
+      .select(WORK_SELECT)
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .eq("project_id", projectId)
+      .eq("estimate_record_id", recordId)
+      .eq("section_id", sectionId)
+      .is("archived_at", null)
+      .is("deleted_at", null)
+      .order("sort_order", { ascending: true })
+      .order("id", { ascending: true }),
+    supabase
+      .from("project_estimate_materials")
+      .select(MATERIAL_SELECT)
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .eq("project_id", projectId)
+      .eq("estimate_record_id", recordId)
+      .eq("section_id", sectionId)
+      .is("archived_at", null)
+      .is("deleted_at", null)
+      .order("sort_order", { ascending: true })
+      .order("id", { ascending: true }),
+  ])
+
+  if (sectionError) throw sectionError
+  if (workError) throw workError
+  if (materialError) throw materialError
+  if (!sectionRows) throw new ProjectsApiError("NOT_FOUND", "Раздел не найден", 404)
+
+  const materialsByWork = new Map<string, ProjectEstimateContentMaterial[]>()
+  ;((materialRows ?? []) as MaterialRow[]).forEach((row) => {
+    const items = materialsByWork.get(row.work_id) ?? []
+    items.push(mapMaterial(row))
+    materialsByWork.set(row.work_id, items)
+  })
+
+  const works = ((workRows ?? []) as WorkRow[]).map((row) =>
+    mapWork(row, materialsByWork.get(row.id) ?? [])
+  )
+
+  return mapSection(sectionRows as SectionRow, works)
+}
+
 export async function applyProjectEstimateContentChangeForWorkspace(
   workspaceOwnerId: string,
   userId: string,
@@ -517,6 +561,9 @@ export async function applyProjectEstimateContentChangeForWorkspace(
 ): Promise<ProjectEstimateContentResponse> {
   await assertRecord(workspaceOwnerId, projectId, recordId)
   const now = new Date().toISOString()
+
+  // Track affected section for targeted re-read (Opt 1)
+  let affectedSectionId: string | null = null
 
   switch (input.action) {
     case "create_section": {
@@ -588,6 +635,7 @@ export async function applyProjectEstimateContentChangeForWorkspace(
         if (materialMoveError) throw materialMoveError
       }
       if (input.payload.quantity !== undefined) await recalculateMaterialsByWorkQuantity(workspaceOwnerId, projectId, recordId, input.payload.workId, input.payload.quantity, userId)
+      affectedSectionId = nextSectionId
       break
     }
     case "archive_work": {
@@ -657,6 +705,7 @@ export async function applyProjectEstimateContentChangeForWorkspace(
       if (input.payload.sortOrder !== undefined) patch.sort_order = input.payload.sortOrder
       const { error } = await supabase.from("project_estimate_materials").update(patch).eq("workspace_owner_id", workspaceOwnerId).eq("project_id", projectId).eq("estimate_record_id", recordId).eq("id", input.payload.materialId)
       if (error) throw error
+      affectedSectionId = targetWork.section_id
       break
     }
     case "archive_material": {
@@ -684,6 +733,32 @@ export async function applyProjectEstimateContentChangeForWorkspace(
     }
     default:
       throw new ProjectsApiError("BAD_REQUEST", "Некорректное действие", 400)
+  }
+
+  // Opt 1: Targeted re-read for single-section updates (update_material / update_work)
+  // Avoids re-reading all sections/works/materials when only one section changed.
+  if (affectedSectionId) {
+    const record = await assertRecord(workspaceOwnerId, projectId, recordId)
+    const section = await getProjectEstimateContentSectionForWorkspace(
+      workspaceOwnerId,
+      projectId,
+      recordId,
+      affectedSectionId
+    )
+
+    return {
+      data: {
+        record: mapRecord(record),
+        sections: [section],
+        summary: {
+          worksAmount: section.worksAmount,
+          materialsAmount: section.materialsAmount,
+          totalAmount: section.totalAmount,
+        },
+      },
+      // Signal client to merge this section into cached data instead of replacing
+      _partial: true,
+    } as ProjectEstimateContentResponse & { _partial?: boolean }
   }
 
   return getProjectEstimateContentForWorkspace(workspaceOwnerId, projectId, recordId)

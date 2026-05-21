@@ -68,6 +68,12 @@ export type ProjectEstimateContentResponse = {
     sections: ProjectEstimateContentSection[]
     summary: ProjectEstimateContentSummary
   }
+  /**
+   * Internal signal for targeted re-read optimization.
+   * When true, the client merges this section into cached data
+   * instead of replacing the entire cache.
+   */
+  _partial?: boolean
 }
 
 export type ProjectEstimateOptionRow = {

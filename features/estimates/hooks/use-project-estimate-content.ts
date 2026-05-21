@@ -68,11 +68,62 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
   })
 
   const updateContentCache = useCallback(
-    async (response: Awaited<ReturnType<typeof fetchProjectEstimateContent>>) => {
-      queryClient.setQueryData(
-        projectsQueryKeys.estimateRecordContent(projectId, recordId),
-        response,
-      )
+    async (response: Awaited<ReturnType<typeof fetchProjectEstimateContent>> & { _partial?: boolean }) => {
+      // Opt 1: If this is a partial response (single section update), merge it
+      // into the cached data instead of replacing the entire cache.
+      if (response._partial) {
+        const cached = queryClient.getQueryData<
+          Awaited<ReturnType<typeof fetchProjectEstimateContent>>
+        >(projectsQueryKeys.estimateRecordContent(projectId, recordId))
+
+        if (cached?.data?.sections && response.data?.sections?.[0]) {
+          const updatedSection = response.data.sections[0]
+          const mergedSections = cached.data.sections.map((s) =>
+            s.id === updatedSection.id ? updatedSection : s
+          )
+
+          // If the section is new (not in cache), append it
+          const hasSection = cached.data.sections.some((s) => s.id === updatedSection.id)
+          if (!hasSection) {
+            mergedSections.push(updatedSection)
+          }
+
+          // Recompute summary from merged sections
+          const summary = mergedSections.reduce(
+            (acc, section) => ({
+              worksAmount: Math.round((acc.worksAmount + section.worksAmount) * 100) / 100,
+              materialsAmount: Math.round((acc.materialsAmount + section.materialsAmount) * 100) / 100,
+              totalAmount: Math.round((acc.totalAmount + section.totalAmount) * 100) / 100,
+            }),
+            { worksAmount: 0, materialsAmount: 0, totalAmount: 0 }
+          )
+
+          queryClient.setQueryData(
+            projectsQueryKeys.estimateRecordContent(projectId, recordId),
+            {
+              ...response,
+              _partial: undefined,
+              data: {
+                record: response.data.record,
+                sections: mergedSections,
+                summary,
+              },
+            }
+          )
+        } else {
+          // No cache yet, store as-is
+          queryClient.setQueryData(
+            projectsQueryKeys.estimateRecordContent(projectId, recordId),
+            response,
+          )
+        }
+      } else {
+        queryClient.setQueryData(
+          projectsQueryKeys.estimateRecordContent(projectId, recordId),
+          response,
+        )
+      }
+
       await queryClient.invalidateQueries({
         queryKey: projectsQueryKeys.estimateRecords(projectId),
       })

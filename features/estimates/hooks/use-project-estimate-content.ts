@@ -182,7 +182,7 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
         })
       }
 
-      return { previous }
+      return { previous, ids }
     },
     onError: (_err, _input, context) => {
       // Rollback to previous state on error
@@ -190,12 +190,18 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
         queryClient.setQueryData(contentKey, context.previous)
       }
     },
-    onSettled: () => {
-      setSavingIds((prev) => (prev.size > 0 ? new Set() : prev))
+    onSettled: (_data, _error, _vars, context) => {
+      if (context?.ids?.length) {
+        setSavingIds((prev) => {
+          const next = new Set(prev)
+          for (const id of context.ids) next.delete(id)
+          return next
+        })
+      }
       // Don't invalidate — targeted re-read already updates cache via onSuccess
     },
     onSuccess: (response) => {
-      if ((response as any)._duplicate) {
+      if (response._duplicate) {
         // Rollback optimistic temp item on duplicate
         if (optimisticSnapshotRef.current) {
           queryClient.setQueryData(contentKey, optimisticSnapshotRef.current)

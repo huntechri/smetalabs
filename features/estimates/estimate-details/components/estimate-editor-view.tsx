@@ -21,6 +21,7 @@ import {
   type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
 import { CreateSectionDialog } from "@/features/estimates/estimate-details/components/create-section-dialog"
+import { EstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
 import { EstimateEmptyState } from "@/features/estimates/estimate-details/components/estimate-empty-state"
 import { EstimateMaterialPickerDialog } from "@/features/estimates/estimate-details/components/estimate-material-picker-dialog"
 import { EstimateSectionCard } from "@/features/estimates/estimate-details/components/estimate-section-card"
@@ -174,6 +175,7 @@ export function EstimateEditorView({
     loading,
     error,
     saving,
+    savingIds,
     applyChange,
     applyWorkCoefficient,
     refetch,
@@ -194,9 +196,27 @@ export function EstimateEditorView({
   const estimateSearch = searchParams.get("q")?.trim() ?? ""
   const searchActive = estimateSearch.length > 0
   const deferredSearch = useDeferredValue(estimateSearch)
+
+  // Stabilise visibleSections: only recompute when content sections actually change
+  const sectionsRef = useRef(content?.sections)
+  const sectionsForMemo = React.useMemo(() => {
+    const next = content?.sections ?? []
+    const prev = sectionsRef.current
+    // Shallow-comparison of section ids to avoid new array on every render
+    if (
+      prev &&
+      prev.length === next.length &&
+      prev.every((s: ProjectEstimateContentSection, i: number) => s === next[i])
+    ) {
+      return prev
+    }
+    sectionsRef.current = next
+    return next
+  }, [content?.sections])
+
   const visibleSections = React.useMemo(
-    () => filterSections(content?.sections ?? [], deferredSearch),
-    [content?.sections, deferredSearch]
+    () => filterSections(sectionsForMemo, deferredSearch),
+    [sectionsForMemo, deferredSearch]
   )
 
   const workParams = React.useMemo(
@@ -328,7 +348,7 @@ export function EstimateEditorView({
   const moveWork = useCallback(
     async (sectionId: string, workId: string, direction: MoveDirection) => {
       if (!content || searchActive) return
-      const section = content.sections.find((item) => item.id === sectionId)
+      const section = content.sections.find((item: ProjectEstimateContentSection) => item.id === sectionId)
       if (!section) return
       const next = moveItem(section.works, workId, direction)
       if (!next) return
@@ -348,8 +368,8 @@ export function EstimateEditorView({
     async (workId: string, materialId: string, direction: MoveDirection) => {
       if (!content || searchActive) return
       const work = content.sections
-        .flatMap((section) => section.works)
-        .find((item) => item.id === workId)
+        .flatMap((section: ProjectEstimateContentSection) => section.works)
+        .find((item: ProjectEstimateContentWork) => item.id === workId)
       if (!work) return
       const next = moveItem(work.materials, materialId, direction)
       if (!next) return
@@ -460,7 +480,7 @@ export function EstimateEditorView({
         },
         "Не удалось добавить работу"
       )
-      setWorkDialog((current) => ({ ...current, selected: null }))
+      setWorkDialog(EMPTY_WORK_DIALOG)
     },
     [save, workDialog.sectionId, workDialog.selected]
   )
@@ -506,9 +526,70 @@ export function EstimateEditorView({
         },
         "Не удалось добавить материал"
       )
-      setMaterialDialog((current) => ({ ...current, selected: null }))
+      setMaterialDialog(EMPTY_MATERIAL_DIALOG)
     },
     [save, materialDialog.work, materialDialog.selected]
+  )
+
+  const handleSectionOpenChange = useCallback((open: boolean) => {
+    setSectionOpen(open)
+  }, [])
+
+  const handleCoefficientOpenChange = useCallback((open: boolean) => {
+    setCoefficientOpen(open)
+  }, [])
+
+  const handleWorkPickerOpenChange = useCallback((open: boolean) => {
+    if (!open) setWorkDialog(EMPTY_WORK_DIALOG)
+  }, [])
+
+  const handleMaterialPickerOpenChange = useCallback((open: boolean) => {
+    if (!open) setMaterialDialog(EMPTY_MATERIAL_DIALOG)
+  }, [])
+
+  const handleArchiveOpenChange = useCallback((open: boolean) => {
+    if (!open) setArchiveRequest(null)
+  }, [])
+
+  const handleWorkSelect = useCallback(
+    (selected: ProjectEstimateOptionRow) => {
+      setWorkDialog((current) => ({ ...current, selected }))
+      if (workDialog.mode === "replace") void replaceDirectoryWork(selected)
+    },
+    [workDialog.mode, replaceDirectoryWork]
+  )
+
+  const handleMaterialSelect = useCallback(
+    (selected: ProjectEstimateMaterialOptionRow) =>
+      setMaterialDialog((current) => ({ ...current, selected })),
+    []
+  )
+
+  const contextValue = React.useMemo(
+    () => ({
+      savingIds,
+      reorderDisabled: searchActive,
+      onSave: save,
+      onArchive: setArchiveRequest,
+      onMoveSection: moveSection,
+      onMoveWork: moveWork,
+      onMoveMaterial: moveMaterial,
+      onAddSection: () => setSectionOpen(true),
+      onAddWork: openWorkDialog,
+      onAddMaterial: openMaterialDialog,
+      onReplaceWork: openReplaceWorkDialog,
+    }),
+    [
+      savingIds,
+      searchActive,
+      save,
+      moveSection,
+      moveWork,
+      moveMaterial,
+      openWorkDialog,
+      openMaterialDialog,
+      openReplaceWorkDialog,
+    ]
   )
 
   if (loading) {
@@ -529,147 +610,123 @@ export function EstimateEditorView({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
-      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border bg-background p-1">
-        {content.sections.length === 0 ? (
-          <EstimateEmptyState onCreateClick={() => setSectionOpen(true)} />
-        ) : visibleSections.length === 0 ? (
-          <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-4 text-center text-sm text-muted-foreground">
-            <p>По смете ничего не найдено.</p>
-            <Button size="sm" variant="outline" onClick={clearEstimateSearch}>
-              Сбросить поиск
-            </Button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {visibleSections.map((section) => {
-              const sectionIndex = content.sections.findIndex((item) => item.id === section.id)
-
-              return (
+    <EstimateEditorContext.Provider value={contextValue}>
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border bg-background p-1">
+          {content.sections.length === 0 ? (
+            <EstimateEmptyState onCreateClick={() => setSectionOpen(true)} />
+          ) : visibleSections.length === 0 ? (
+            <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-4 text-center text-sm text-muted-foreground">
+              <p>По смете ничего не найдено.</p>
+              <Button size="sm" variant="outline" onClick={clearEstimateSearch}>
+                Сбросить поиск
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {visibleSections.map((section) => (
                 <EstimateSectionCard
                   key={section.id}
                   section={section}
-                  sectionIndex={sectionIndex}
+                  sectionIndex={content.sections.findIndex((item: ProjectEstimateContentSection) => item.id === section.id)}
                   sectionsCount={content.sections.length}
-                  reorderDisabled={searchActive}
-                  saving={saving}
-                  onArchive={setArchiveRequest}
-                  onAddSection={() => setSectionOpen(true)}
-                  onAddWork={openWorkDialog}
-                  onAddMaterial={openMaterialDialog}
-                  onMoveMaterial={moveMaterial}
-                  onMoveSection={moveSection}
-                  onMoveWork={moveWork}
-                  onReplaceWork={openReplaceWorkDialog}
-                  onSave={save}
                 />
-              )
-            })}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-      <CreateSectionDialog
-        open={sectionOpen}
-        onOpenChange={setSectionOpen}
-        onConfirm={createSection}
-      />
-      <EstimateWorkPickerDialog
-        state={workDialog}
-        query={workSearch}
-        saving={saving}
-        options={workOptions.data?.data ?? []}
-        loading={workOptions.isLoading}
-        onQueryChange={setWorkSearch}
-        onOpenChange={(open) => {
-          if (!open) setWorkDialog(EMPTY_WORK_DIALOG)
-        }}
-        onSelect={(selected: ProjectEstimateOptionRow) => {
-          setWorkDialog((current) => ({ ...current, selected }))
-          if (workDialog.mode === "replace") void replaceDirectoryWork(selected)
-        }}
-        onDirectorySubmit={addDirectoryWork}
-      />
-      <EstimateMaterialPickerDialog
-        state={materialDialog}
-        query={materialSearch}
-        saving={saving}
-        options={materialOptions.data?.data ?? []}
-        loading={materialOptions.isLoading}
-        onQueryChange={setMaterialSearch}
-        onOpenChange={(open) => {
-          if (!open) setMaterialDialog(EMPTY_MATERIAL_DIALOG)
-        }}
-        onSelect={(selected: ProjectEstimateMaterialOptionRow) =>
-          setMaterialDialog((current) => ({ ...current, selected }))
-        }
-        onDirectorySubmit={addDirectoryMaterial}
-      />
-      <Dialog open={coefficientOpen} onOpenChange={setCoefficientOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <form className="space-y-4" onSubmit={applyCoefficient}>
+        <CreateSectionDialog
+          open={sectionOpen}
+          onOpenChange={handleSectionOpenChange}
+          onConfirm={createSection}
+        />
+        <EstimateWorkPickerDialog
+          state={workDialog}
+          query={workSearch}
+          saving={saving}
+          options={workOptions.data?.data ?? []}
+          loading={workOptions.isLoading}
+          onQueryChange={setWorkSearch}
+          onOpenChange={handleWorkPickerOpenChange}
+          onSelect={handleWorkSelect}
+          onDirectorySubmit={addDirectoryWork}
+        />
+        <EstimateMaterialPickerDialog
+          state={materialDialog}
+          query={materialSearch}
+          saving={saving}
+          options={materialOptions.data?.data ?? []}
+          loading={materialOptions.isLoading}
+          onQueryChange={setMaterialSearch}
+          onOpenChange={handleMaterialPickerOpenChange}
+          onSelect={handleMaterialSelect}
+          onDirectorySubmit={addDirectoryMaterial}
+        />
+        <Dialog open={coefficientOpen} onOpenChange={handleCoefficientOpenChange}>
+          <DialogContent className="sm:max-w-sm">
+            <form className="space-y-4" onSubmit={applyCoefficient}>
+              <DialogHeader>
+                <DialogTitle>Коэффициент работ</DialogTitle>
+                <DialogDescription>
+                  Коэффициент применяется только к работам. Цена округляется вверх до ближайших 10 ₽.
+                </DialogDescription>
+              </DialogHeader>
+              <Input
+                autoFocus
+                disabled={coefficientQuery.isLoading}
+                inputMode="decimal"
+                onChange={(event) => setCoefficientValue(event.target.value)}
+                placeholder="10"
+                value={coefficientValue}
+              />
+              {coefficientError ? (
+                <p className="text-sm text-destructive">{coefficientError}</p>
+              ) : null}
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCoefficientOpen(false)}
+                >
+                  Отмена
+                </Button>
+                <Button type="submit" disabled={saving || coefficientQuery.isLoading}>
+                  Применить
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+        <Dialog
+          open={archiveRequest !== null}
+          onOpenChange={handleArchiveOpenChange}
+        >
+          <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle>Коэффициент работ</DialogTitle>
-              <DialogDescription>
-                Коэффициент применяется только к работам. Цена округляется вверх до ближайших 10 ₽.
-              </DialogDescription>
+              <DialogTitle>{archiveRequest?.title}</DialogTitle>
+              <DialogDescription>{archiveRequest?.description}</DialogDescription>
             </DialogHeader>
-            <Input
-              autoFocus
-              disabled={coefficientQuery.isLoading}
-              inputMode="decimal"
-              onChange={(event) => setCoefficientValue(event.target.value)}
-              placeholder="10"
-              value={coefficientValue}
-            />
-            {coefficientError ? (
-              <p className="text-sm text-destructive">{coefficientError}</p>
-            ) : null}
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setCoefficientOpen(false)}
+                onClick={() => setArchiveRequest(null)}
               >
                 Отмена
               </Button>
-              <Button type="submit" disabled={saving || coefficientQuery.isLoading}>
-                Применить
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={saving}
+                onClick={confirmArchive}
+              >
+                Удалить
               </Button>
             </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={archiveRequest !== null}
-        onOpenChange={(open) => {
-          if (!open) setArchiveRequest(null)
-        }}
-      >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{archiveRequest?.title}</DialogTitle>
-            <DialogDescription>{archiveRequest?.description}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setArchiveRequest(null)}
-            >
-              Отмена
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={saving}
-              onClick={confirmArchive}
-            >
-              Удалить
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </EstimateEditorContext.Provider>
   )
 }

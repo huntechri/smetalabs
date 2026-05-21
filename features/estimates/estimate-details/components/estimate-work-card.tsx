@@ -1,5 +1,6 @@
 "use client"
 
+import { useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
@@ -13,6 +14,7 @@ import { Frame } from "@/components/ui/frame"
 import { EstimateMaterialCard } from "@/features/estimates/estimate-details/components/estimate-material-card"
 import { EstimateName } from "@/features/estimates/estimate-details/components/estimate-name"
 import { EstimateWorkNumber } from "@/features/estimates/estimate-details/components/estimate-work-number"
+import { useEstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
 import { formatMoney } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import {
@@ -23,97 +25,136 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@phosphor-icons/react"
-import type { EstimateContentChangeInput } from "@/features/estimates/api/project-estimate-content-client"
-import type {
-  EstimateArchive,
-  MaterialChangePayload,
-} from "@/features/estimates/estimate-details/types"
 import type { ProjectEstimateContentWork } from "@/types/project-estimate-content"
 
-type MoveDirection = "up" | "down"
+function safeNumber(value: string): number | undefined {
+  const trimmed = value.trim().replace(",", ".")
+  if (!trimmed) return undefined
+  const num = Number(trimmed)
+  return Number.isFinite(num) ? num : undefined
+}
 
 export function EstimateWorkCard({
   expanded,
   work,
   workIndex,
   worksCount,
-  reorderDisabled,
-  saving,
-  onArchive,
-  onAddSection,
-  onAddWork,
-  onAddMaterial,
   onArchiveSection,
-  onMoveMaterial,
-  onMoveWork,
-  onReplaceWork,
-  onSave,
   onToggle,
 }: {
   expanded: boolean
   work: ProjectEstimateContentWork
   workIndex: number
   worksCount: number
-  reorderDisabled: boolean
-  saving: boolean
-  onArchive: EstimateArchive
-  onAddSection: () => void
-  onAddWork: () => void
-  onAddMaterial: (work: ProjectEstimateContentWork) => void
   onArchiveSection: () => void
-  onMoveMaterial: (workId: string, materialId: string, direction: MoveDirection) => void
-  onMoveWork: (workId: string, direction: MoveDirection) => void
-  onReplaceWork: (work: ProjectEstimateContentWork) => void
-  onSave: (input: EstimateContentChangeInput, fallback: string) => void
   onToggle: () => void
 }) {
-  const updateMaterial = (materialId: string, payload: MaterialChangePayload) => {
-    onSave(
-      {
-        action: "update_material",
-        payload: { materialId, ...payload },
-      },
-      "Не удалось сохранить изменение"
-    )
-  }
+  const {
+    savingIds,
+    reorderDisabled,
+    onArchive,
+    onAddSection,
+    onAddWork,
+    onAddMaterial,
+    onMoveWork,
+    onReplaceWork,
+    onSave,
+  } = useEstimateEditorContext()
 
-  const archiveWork = () =>
-    onArchive({
-      input: {
-        action: "archive_work",
-        payload: { workId: work.id },
-      },
-      title: "Удалить работу?",
-      description: "Работа и все её материалы будут убраны из сметы.",
-      fallback: "Не удалось удалить работу",
-    })
+  const isDisabled = savingIds.has(work.id)
+
+  const updateMaterial = useCallback(
+    (materialId: string, payload: { title?: string; quantity?: number; consumption?: number | null; price?: number; changedField?: "quantity" | "consumption" | "price" }) => {
+      onSave(
+        {
+          action: "update_material",
+          payload: { materialId, ...payload },
+        },
+        "Не удалось сохранить изменение"
+      )
+    },
+    [onSave]
+  )
+
+  const archiveWork = useCallback(
+    () =>
+      onArchive({
+        input: {
+          action: "archive_work",
+          payload: { workId: work.id },
+        },
+        title: "Удалить работу?",
+        description: "Работа и все её материалы будут убраны из сметы.",
+        fallback: "Не удалось удалить работу",
+      }),
+    [onArchive, work.id]
+  )
+
+  const handleQuantityChange = useCallback(
+    (value: string) => {
+      const num = safeNumber(value)
+      if (num === undefined) return
+      onSave(
+        {
+          action: "update_work",
+          payload: { workId: work.id, quantity: num },
+        },
+        "Не удалось сохранить изменение"
+      )
+    },
+    [onSave, work.id]
+  )
+
+  const handlePriceChange = useCallback(
+    (value: string) => {
+      const num = safeNumber(value)
+      if (num === undefined) return
+      onSave(
+        {
+          action: "update_work",
+          payload: { workId: work.id, price: num },
+        },
+        "Не удалось сохранить изменение"
+      )
+    },
+    [onSave, work.id]
+  )
+
+  const handleTitleChange = useCallback(
+    (title: string) =>
+      onSave(
+        { action: "update_work", payload: { workId: work.id, title } },
+        "Не удалось сохранить изменение"
+      ),
+    [onSave, work.id]
+  )
 
   const actionButtons = (
     <Frame className="shrink-0">
       <ButtonGroup>
         <Button
           aria-label="Поднять работу"
-          disabled={saving || reorderDisabled || workIndex === 0}
+          disabled={isDisabled || reorderDisabled || workIndex === 0}
           size="icon-xs"
           type="button"
           variant="ghost"
-          onClick={() => onMoveWork(work.id, "up")}
+          onClick={() => onMoveWork(work.sectionId, work.id, "up")}
         >
           <CaretUpIcon />
         </Button>
         <Button
           aria-label="Опустить работу"
-          disabled={saving || reorderDisabled || workIndex >= worksCount - 1}
+          disabled={isDisabled || reorderDisabled || workIndex >= worksCount - 1}
           size="icon-xs"
           type="button"
           variant="ghost"
-          onClick={() => onMoveWork(work.id, "down")}
+          onClick={() => onMoveWork(work.sectionId, work.id, "down")}
         >
           <CaretDownIcon />
         </Button>
         <Button
           aria-label="Заменить работу"
-          disabled={saving}
+          disabled={isDisabled}
           size="icon-xs"
           type="button"
           variant="ghost"
@@ -123,7 +164,7 @@ export function EstimateWorkCard({
         </Button>
         <Button
           aria-label="Удалить работу"
-          disabled={saving}
+          disabled={isDisabled}
           size="icon-xs"
           type="button"
           variant="ghost"
@@ -160,44 +201,20 @@ export function EstimateWorkCard({
               <EstimateWorkNumber value={work.number} />
               <div className="ml-auto lg:hidden">{actionButtons}</div>
             </div>
-            <EstimateName
-              onChange={(title) =>
-                onSave(
-                  { action: "update_work", payload: { workId: work.id, title } },
-                  "Не удалось сохранить изменение"
-                )
-              }
-              value={work.title}
-            />
+            <EstimateName onChange={handleTitleChange} value={work.title} />
           </div>
 
           <div className="flex w-full flex-col gap-3 rounded-md border bg-background p-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
             <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-80">
               <EditableBadge
                 label="Кол-во"
-                onChange={(value) =>
-                  onSave(
-                    {
-                      action: "update_work",
-                      payload: { workId: work.id, quantity: Number(value) },
-                    },
-                    "Не удалось сохранить изменение"
-                  )
-                }
+                onChange={handleQuantityChange}
                 suffix={work.unitLabel}
                 value={work.quantity}
               />
               <EditableBadge
                 label="Цена"
-                onChange={(value) =>
-                  onSave(
-                    {
-                      action: "update_work",
-                      payload: { workId: work.id, price: Number(value) },
-                    },
-                    "Не удалось сохранить изменение"
-                  )
-                }
+                onChange={handlePriceChange}
                 value={work.price}
               />
               <Badge
@@ -222,8 +239,6 @@ export function EstimateWorkCard({
                     index={index}
                     material={material}
                     materialsCount={work.materials.length}
-                    reorderDisabled={reorderDisabled}
-                    saving={saving}
                     workNumber={work.number}
                     onArchive={() =>
                       onArchive({
@@ -237,8 +252,6 @@ export function EstimateWorkCard({
                       })
                     }
                     onChange={(payload) => updateMaterial(material.id, payload)}
-                    onMoveNext={() => onMoveMaterial(work.id, material.id, "down")}
-                    onMovePrevious={() => onMoveMaterial(work.id, material.id, "up")}
                   />
                 ))}
               </div>
@@ -250,7 +263,7 @@ export function EstimateWorkCard({
                       <PlusIcon data-icon="inline-start" />
                       Раздел
                     </Button>
-                    <Button size="xs" variant="outline" onClick={onAddWork}>
+                    <Button size="xs" variant="outline" onClick={() => onAddWork(work.sectionId)}>
                       <PlusIcon data-icon="inline-start" />
                       Работа
                     </Button>
@@ -260,7 +273,7 @@ export function EstimateWorkCard({
                     </Button>
                     <Button
                       aria-label="Удалить раздел"
-                      disabled={saving}
+                      disabled={isDisabled}
                       size="icon-xs"
                       variant="destructive"
                       onClick={onArchiveSection}

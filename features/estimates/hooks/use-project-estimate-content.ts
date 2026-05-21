@@ -9,7 +9,11 @@ import {
   type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
 import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
-import type { ProjectEstimateContentSection } from "@/types/project-estimate-content"
+import type {
+  ProjectEstimateContentResponse,
+  ProjectEstimateContentSection,
+} from "@/types/project-estimate-content"
+import { applyOptimisticChange } from "@/features/estimates/estimate-details/lib/optimistic-update"
 
 const ESTIMATE_CONTENT_STALE_TIME_MS = 15_000
 const ESTIMATE_CONTENT_GC_TIME_MS = 5 * 60_000
@@ -59,8 +63,10 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const sectionsRef = useRef<ProjectEstimateContentSection[] | null>(null)
 
+  const contentKey = projectsQueryKeys.estimateRecordContent(projectId, recordId)
+
   const contentQuery = useQuery({
-    queryKey: projectsQueryKeys.estimateRecordContent(projectId, recordId),
+    queryKey: contentKey,
     queryFn: () => fetchProjectEstimateContent({ projectId, recordId }),
     staleTime: ESTIMATE_CONTENT_STALE_TIME_MS,
     gcTime: ESTIMATE_CONTENT_GC_TIME_MS,
@@ -74,7 +80,7 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
       if (response._partial) {
         const cached = queryClient.getQueryData<
           Awaited<ReturnType<typeof fetchProjectEstimateContent>>
-        >(projectsQueryKeys.estimateRecordContent(projectId, recordId))
+        >(contentKey)
 
         if (cached?.data?.sections && response.data?.sections?.[0]) {
           const updatedSection = response.data.sections[0]
@@ -98,43 +104,50 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
             { worksAmount: 0, materialsAmount: 0, totalAmount: 0 }
           )
 
-          queryClient.setQueryData(
-            projectsQueryKeys.estimateRecordContent(projectId, recordId),
-            {
-              ...response,
-              _partial: undefined,
-              data: {
-                record: response.data.record,
-                sections: mergedSections,
-                summary,
-              },
-            }
-          )
+          queryClient.setQueryData(contentKey, {
+            ...response,
+            _partial: undefined,
+            data: {
+              record: response.data.record,
+              sections: mergedSections,
+              summary,
+            },
+          })
         } else {
           // No cache yet, store as-is
-          queryClient.setQueryData(
-            projectsQueryKeys.estimateRecordContent(projectId, recordId),
-            response,
-          )
+          queryClient.setQueryData(contentKey, response)
         }
       } else {
-        queryClient.setQueryData(
-          projectsQueryKeys.estimateRecordContent(projectId, recordId),
-          response,
-        )
+        queryClient.setQueryData(contentKey, response)
       }
 
       await queryClient.invalidateQueries({
         queryKey: projectsQueryKeys.estimateRecords(projectId),
       })
     },
-    [projectId, queryClient, recordId],
+    [contentKey, queryClient, projectId],
   )
 
   const changeMutation = useMutation({
     mutationFn: (input: EstimateContentChangeInput) =>
       applyProjectEstimateContentChange({ projectId, recordId, input }),
-    onMutate: (input) => {
+    onMutate: async (input) => {
+      // 1. Cancel outgoing queries to prevent overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: contentKey })
+
+      // 2. Save snapshot for rollback
+      const previous = queryClient.getQueryData<ProjectEstimateContentResponse>(contentKey)
+
+      // 3. Optimistically update the cache
+      const optimistic = applyOptimisticChange(previous?.data, input)
+      if (optimistic) {
+        queryClient.setQueryData(contentKey, {
+          ...previous,
+          data: optimistic,
+        } as ProjectEstimateContentResponse)
+      }
+
+      // 4. Track saving IDs for per-item loading indicators
       const ids = extractItemIds(input)
       if (ids.length > 0) {
         setSavingIds((prev) => {
@@ -143,16 +156,18 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
           return next
         })
       }
+
+      return { previous }
     },
-    onSettled: (_data, _error, input) => {
-      const ids = extractItemIds(input)
-      if (ids.length > 0) {
-        setSavingIds((prev) => {
-          const next = new Set(prev)
-          for (const id of ids) next.delete(id)
-          return next
-        })
+    onError: (_err, _input, context) => {
+      // Rollback to previous state on error
+      if (context?.previous) {
+        queryClient.setQueryData(contentKey, context.previous)
       }
+    },
+    onSettled: () => {
+      setSavingIds((prev) => (prev.size > 0 ? new Set() : prev))
+      // Don't invalidate — targeted re-read already updates cache via onSuccess
     },
     onSuccess: updateContentCache,
   })

@@ -1,10 +1,10 @@
 # Смета проекта — хранение разделов, работ и материалов
 
-> Last updated: 2026-05-20
+> Last updated: 2026-05-21
 >
-> Status: рабочий слой редактора сметы.
+> Status: рабочий слой редактора сметы с оптимистичными обновлениями.
 >
-> Related issues: #142, #149, #151.
+> Related issues: #142, #149, #151, #163 (optimistic insert/delete).
 
 ## Назначение
 
@@ -248,6 +248,151 @@ project_estimate_materials.sort_order
 ```
 
 Если найден раздел, показывается весь раздел. Если найдена работа, показывается работа с материалами. Если найден материал, показывается его работа и найденный материал. Пустой поиск показывает обычный вид сметы.
+
+## React-архитектура редактора
+
+### EstimateEditorContext
+
+Файл: `features/estimates/estimate-details/components/estimate-editor-context.tsx`
+
+React Context для редактора сметы. Заменяет prop drilling от `EstimateEditorView` через `EstimateSectionCard` → `EstimateWorkCard` → `EstimateMaterialCard` для операций добавления/удаления/перемещения.
+
+Контекст предоставляет:
+
+```txt
+savingIds: Set<string>        — ID строк, которые сейчас сохраняются (per-item, не глобальный boolean)
+onSave: EstimateSave           — функция сохранения (delegate в useMutation)
+onArchive: EstimateArchive     — функция архивации с подтверждением
+onMoveSection / onMoveWork / onMoveMaterial — переупорядочивание
+onAddSection / onAddWork / onAddMaterial / onReplaceWork — открытие диалогов
+```
+
+### Optimistic Updates
+
+Файл: `features/estimates/estimate-details/lib/optimistic-update.ts`
+
+Чистые функции для мгновенного обновления UI-кэша до ответа сервера. Поддерживаемые действия:
+
+```txt
+update_work         — редактирование полей работы (существовало ранее)
+update_material     — редактирование полей материала (существовало ранее)
+archive_section     — удаление раздела (новое)
+archive_work        — удаление работы (новое)
+archive_material    — удаление материала (новое)
+create_section      — создание раздела (новое)
+add_work_from_directory    — добавление работы из справочника (новое)
+add_material_from_directory — добавление материала из справочника (новое)
+reorder_sections    — переупорядочивание разделов (новое)
+reorder_works       — переупорядочивание работ (новое)
+reorder_materials   — переупорядочивание материалов (новое)
+```
+
+Временные ID для оптимистичных элементов генерируются с префиксом `temp_` и флагом `_optimistic: true`. При получении реальных данных от сервера временные элементы заменяются.
+
+### Per-item saving
+
+Вместо глобального `saving: boolean` используется `savingIds: Set<string>`. Каждая строка отслеживает своё состояние сохранения независимо. Это позволяет редактировать несколько строк параллельно без блокировки UI.
+
+## RPC функции для insert/delete
+
+Все операции вставки и удаления вынесены в PostgreSQL RPC функции (SECURITY DEFINER). Клиент вызывает один RPC вместо 5-8 последовательных HTTP-запросов.
+
+### Insert RPC (создание)
+
+| Функция | Назначение | Возврат |
+|---------|-----------|--------|
+| `create_estimate_section` | Создать раздел с авто-нумерацией | `jsonb` — вся секция |
+| `add_work_from_directory_to_estimate` | Добавить работу из справочника | `jsonb` — вся секция (или NULL при дубликате) |
+| `add_material_from_directory_to_estimate` | Добавить материал из справочника с расчётом quantity/consumption | `jsonb` — вся секция (или NULL при дубликате) |
+
+### Archive RPC (удаление)
+
+| Функция | Назначение | Возврат |
+|---------|-----------|--------|
+| `archive_estimate_section` | Архивировать раздел + работы + материалы | `jsonb` — NULL (раздел удалён) |
+| `archive_estimate_work` | Архивировать работу + её материалы | `jsonb` — секция без удалённой работы |
+| `archive_estimate_material` | Архивировать один материал | `jsonb` — секция без удалённого материала |
+
+### Batch Reorder RPC
+
+| Функция | Назначение |
+|---------|-----------|
+| `reorder_estimate_sections` | Массовое обновление sort_order разделов |
+| `reorder_estimate_works` | Массовое обновление sort_order работ |
+| `reorder_estimate_materials` | Массовое обновление sort_order материалов |
+
+Batch-функции заменяют N последовательных UPDATE одним вызовом.
+
+### RPC возвращают jsonb
+
+Каждая insert/delete RPC возвращает `jsonb` с полной секцией (works + materials + section + record). Это исключает дополнительный `getProjectEstimateContentSectionForWorkspace` вызов — клиент получает данные прямо из RPC. Функция `mapRpcSectionResponse` в репозитории преобразует jsonb в TypeScript-типы.
+
+## Targeted re-read паттерн
+
+Вместо полного перечитывания трёх таблиц (sections + works + materials) после каждого изменения, хук `useProjectEstimateContent` использует targeted re-read:
+
+```txt
+1. Клиент отправляет мутацию (RPC или прямой UPDATE)
+2. Сервер возвращает только затронутую секцию с флагом _partial: true
+3. Клиент сливает (merge) полученную секцию в кэш:
+   - Если секция уже есть в кэше → заменить по id
+   - Если секции нет в кэше → добавить (для create_section)
+   - Временные _optimistic элементы удаляются перед слиянием
+```
+
+Полное перечитывание всех данных происходит только для:
+- `archive_section` (структура изменилась — раздел удалён)
+- `reorder_*` операций (перестановка не меняет данные, оптимистичного обновления достаточно)
+- Ручных мутаций без RPC
+
+## Защита от дубликатов
+
+Два уровня защиты от повторного добавления одной и той же позиции справочника:
+
+### Уровень БД: partial unique indexes + ON CONFLICT DO NOTHING
+
+```sql
+-- project_estimate_works: уникальность directory_work_id в рамках сметы
+-- для активных (не archived) строк
+CREATE UNIQUE INDEX uq_estimate_works_directory
+  ON project_estimate_works (estimate_record_id, directory_work_id)
+  WHERE archived_at IS NULL AND directory_work_id IS NOT NULL;
+
+-- project_estimate_materials: уникальность directory_material_id в рамках работы
+CREATE UNIQUE INDEX uq_estimate_materials_directory
+  ON project_estimate_materials (work_id, directory_material_id)
+  WHERE archived_at IS NULL AND directory_material_id IS NOT NULL;
+```
+
+RPC функции используют `ON CONFLICT ... DO NOTHING` с этими индексами. При дубликате возвращается `NULL`, клиент получает `_duplicate: true` и откатывает оптимистичное обновление.
+
+### Уровень UI: disabled кнопка «Добавлено»
+
+Пикеры работ и материалов отслеживают уже добавленные позиции через `addedCodes: Set<string>`. Если позиция с таким `code` уже есть в смете, кнопка показывает «Добавлено» и становится `disabled`. Пользователь не может инициировать дублирующий запрос.
+
+## Оптимизации БД
+
+### recalculateMaterialsByWorkQuantity RPC
+
+Файл: `db/migrations/037_optimize_estimate_editor_performance.sql`
+
+Один SQL-вызов для пересчёта количества всех материалов работы при изменении количества работы. Заменяет N последовательных UPDATE в JavaScript (паттерн N+1).
+
+### recalculate_section_totals: 4→2 subquery
+
+Оптимизирован триггер `recalculate_project_estimate_section_totals`: вместо 4 подзапросов (works_amount, materials_amount, и два SUM для общего итога) теперь 2 подзапроса с локальной арифметикой.
+
+### Убран дубликат recalculate_record_amount
+
+Из `recalculate_project_estimate_section_totals` убран явный вызов `recalculate_record_amount`. Секционный AFTER UPDATE триггер срабатывает на UPDATE секции и сам вызывает пересчёт записи — ровно один раз вместо двух.
+
+### Coefficient caching в prepare_price
+
+Триггер `prepare_price` кэширует коэффициент работ, чтобы избежать повторного SELECT при каскадных обновлениях.
+
+### Fix: consumption optional
+
+Поле `consumption` в Zod-схеме сделано optional (`z.number().optional()`), так как не все материалы используют расход.
 
 ## Действия редактора
 

@@ -4,7 +4,7 @@
 >
 > **Главный принцип:** Максимально использовать то, что дают shadcn/ui и Tailwind из коробки. Никаких лишних абстракций, обёрток, кастомных решений.
 >
-> **Последняя проверка:** 2026-05-19 — актуально. Все 36 компонентов `components/ui/` задокументированы. Добавлен Spinner.
+> **Последняя проверка:** 2026-05-21 — актуально. Все 36 компонентов `components/ui/` задокументированы. Добавлен Spinner и паттерн «Добавлено» для picker-диалогов.
 
 ---
 
@@ -1135,6 +1135,33 @@ aria-expanded:bg-muted
 - Mobile-first адаптивность через Tailwind breakpoints (`sm:`, `md:`, `lg:`).
 - Диалоги подтверждения действий (изменение роли, удаление, сброс пароля, блокировка) следуют паттерну: `Dialog` + `DialogHeader` (Title + Description) + действие + `DialogFooter` (Cancel/Confirm). Кнопка подтверждения использует `variant="destructive"` для необратимых действий (удаление, блокировка) и `variant="default"` для остальных.
 - Композиция без бизнес-логики — все данные через хуки и API (`useWorkspaceMembers` с мутациями).
+
+---
+
+## 6.11 Паттерн: disabled «Добавлено» в picker-диалогах
+
+**Контекст:** Диалоги выбора работ и материалов из справочника (`EstimateWorkPickerDialog`, `EstimateMaterialPickerDialog`).
+
+**Проблема:** Пользователь может попытаться добавить одну и ту же позицию справочника дважды.
+
+**Решение:** Два уровня защиты:
+1. **UI:** Компонент получает `addedCodes: Set<string>` — коды уже добавленных позиций. Если позиция уже есть, кнопка показывает `«Добавлено»` (вместо `«Добавить»`) и становится `disabled`.
+2. **БД:** Partial unique indexes + `ON CONFLICT DO NOTHING` в RPC — если UI-защита обойдена, БД молча игнорирует дубликат.
+
+```tsx
+// ✅ Паттерн в picker-диалоге
+const isAdded = (code: string | null) => addedCodes.has(code ?? "")
+
+<Button
+  disabled={saving || isAdded(work.code)}
+  onClick={() => handleSelect(work)}
+  size="sm"
+  variant="outline"
+>
+  <PlusIcon data-icon="inline-start" />
+  {isAdded(work.code) ? "Добавлено" : "Добавить"}
+</Button>
+```
 
 ---
 

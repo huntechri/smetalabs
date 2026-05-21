@@ -73,7 +73,13 @@ db/
 │   ├── 031_global_purchases_link_indexes.sql
 │   ├── 032_directory_suppliers_foundation.sql
 │   ├── 033_project_estimate_records_foundation.sql
-│   └── 034_project_estimate_content_foundation.sql
+│   ├── 034_project_estimate_content_foundation.sql
+│   ├── 035_project_estimate_work_coefficient.sql
+│   ├── 036_project_estimate_work_coefficient_bulk.sql
+│   ├── 037_optimize_estimate_editor_performance.sql
+│   ├── 039_optimistic_insert_delete_rpc.sql
+│   ├── 040_optimistic_insert_delete_return_section.sql
+│   └── 041_fix_rpc_on_conflict_do_nothing.sql
 └── schema/
     ├── index.ts
     ├── projects.ts
@@ -104,15 +110,42 @@ db/
   → app/api/projects/[id]/estimate-records/** exposes project-scoped estimate-record list/create/update/delete routes
   → features/projects/** owns UI hooks, source-aligned form/toolbar/cards, project overview, repository and service logic
   → docs/projects-architecture.md fixes the current contract
-  → docs/project-estimate-content-architecture.md fixes the estimate content storage contract
+  → docs/project-estimate-content-architecture.md fixes the estimate content storage contract (optimistic updates, RPC, targeted re-read)
   → db/schema/projects.ts and db/migrations/026-028_projects_*.sql provide project storage, helper grants and customer link
   → db/schema/project-estimate-records.ts and db/migrations/033_project_estimate_records_foundation.sql provide estimate-record storage
   → db/schema/project-estimate-content.ts and db/migrations/034_project_estimate_content_foundation.sql provide estimate section/work/material storage
+  → db/migrations/035-037 optimize estimate editor performance (work coefficient, bulk recalculation, trigger cascade)
+  → db/migrations/039-041 provide RPC functions for optimistic insert/delete with jsonb return and duplicate protection
 ```
 
 Projects stay workspace-scoped through `workspace_owner_id`. The project list supports real list data, search, status filtering, create, update and soft archive. Customer selection is linked to active counterparties of type `customer`. Budget and progress are system-managed placeholders in this slice: they are displayed but not entered manually.
 
-The project estimate-record layer stores rows shown in the project estimate table: name, type, status, amount and creation date. It supports list, create by name, rename and soft delete. The estimate-content storage layer extends each record with sections, works and materials. It stores copied work/material values, row order and totals, but still does not include API routes for content editing, UI editor behavior, documents, purchases, execution, import, export or AI behavior.
+The project estimate-record layer stores rows shown in the project estimate table: name, type, status, amount and creation date. It supports list, create by name, rename and soft delete. The estimate-content storage layer extends each record with sections, works and materials. It stores copied work/material values, row order and totals.
+
+### Estimate editor (estimate-details)
+
+```txt
+features/estimates/estimate-details/
+├── components/
+│   ├── estimate-editor-context.tsx        # React Context, замена prop drilling
+│   ├── estimate-editor-view.tsx           # Основной view редактора
+│   ├── estimate-editor-header.tsx         # Заголовок с тулбаром
+│   ├── estimate-section-card.tsx          # Карточка раздела
+│   ├── estimate-work-card.tsx             # Карточка работы
+│   ├── estimate-material-card.tsx         # Карточка материала
+│   ├── estimate-work-picker-dialog.tsx    # Пикер работ из справочника
+│   ├── estimate-material-picker-dialog.tsx # Пикер материалов из справочника
+│   ├── create-section-dialog.tsx          # Диалог создания раздела
+│   ├── estimate-section-dialog.tsx        # Диалог раздела
+│   ├── estimate-empty-state.tsx           # Пустое состояние
+│   ├── estimate-empty-content.tsx         # Пустой контент
+│   └── ... (вспомогательные компоненты)
+├── lib/
+│   ├── optimistic-update.ts              # Оптимистичные обновления кэша (12 действий)
+│   └── estimate-editor-form.ts           # safeNumber, parseDecimal, parseText
+├── hooks/ (использует useProjectEstimateContent из features/estimates/hooks/)
+└── types.ts
+```
 
 ### Global purchases first production slice
 

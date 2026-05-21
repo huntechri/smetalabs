@@ -26,7 +26,7 @@ import { EstimateEmptyState } from "@/features/estimates/estimate-details/compon
 import { EstimateMaterialPickerDialog } from "@/features/estimates/estimate-details/components/estimate-material-picker-dialog"
 import { EstimateSectionCard } from "@/features/estimates/estimate-details/components/estimate-section-card"
 import { EstimateWorkPickerDialog } from "@/features/estimates/estimate-details/components/estimate-work-picker-dialog"
-import { parseDecimal, parseText } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
+import { parseText } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
 import type {
   EstimateArchiveRequest,
   MaterialDialogState,
@@ -463,21 +463,18 @@ export function EstimateEditorView({
   )
 
   const addDirectoryWork = useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault()
+    async (quantity: number, price: number) => {
       if (!workDialog.sectionId || !workDialog.selected) return
 
-      const form = new FormData(event.currentTarget)
       await save({
         action: "add_work_from_directory",
         payload: {
           sectionId: workDialog.sectionId,
           directoryWorkId: workDialog.selected.id,
-          quantity: parseDecimal(form.get("quantity"), 1),
-          price: parseDecimal(form.get("price"), workDialog.selected.price),
+          quantity,
+          price,
         },
       })
-      setWorkDialog(EMPTY_WORK_DIALOG)
     },
     [save, workDialog.sectionId, workDialog.selected]
   )
@@ -500,24 +497,20 @@ export function EstimateEditorView({
   )
 
   const addDirectoryMaterial = useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault()
+    async (quantity: number, consumption: number | null, price: number, changedField: "quantity" | "consumption" | "price") => {
       if (!materialDialog.work || !materialDialog.selected) return
 
-      const form = new FormData(event.currentTarget)
-      const consumption = parseDecimal(form.get("consumption"), undefined) ?? null
       await save({
         action: "add_material_from_directory",
         payload: {
           workId: materialDialog.work.id,
           directoryMaterialId: materialDialog.selected.id,
-          quantity: parseDecimal(form.get("quantity"), undefined),
+          quantity,
           consumption,
-          price: parseDecimal(form.get("price"), materialDialog.selected.price),
-          changedField: consumption ? "consumption" : "quantity",
+          price,
+          changedField,
         },
       })
-      setMaterialDialog(EMPTY_MATERIAL_DIALOG)
     },
     [save, materialDialog.work, materialDialog.selected]
   )

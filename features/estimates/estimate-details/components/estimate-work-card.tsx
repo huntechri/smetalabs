@@ -163,9 +163,9 @@ export function EstimateWorkCard({
   return (
     <Collapsible open={expanded} onOpenChange={onToggle}>
       <div className="border-b last:border-b-0">
-        <div className="m-3 flex flex-col gap-3 rounded-md border bg-background p-3 transition-colors hover:bg-muted/50 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 flex-1 flex-wrap items-start gap-3">
-            <div className="flex w-full items-center gap-3 lg:w-auto">
+        <div className="m-2 flex flex-col gap-2 rounded-md border bg-background p-2 transition-colors hover:bg-muted/50 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 flex-1 flex-wrap items-start gap-2">
+            <div className="flex w-full items-center gap-2 lg:w-auto">
               <CollapsibleTrigger asChild>
                 <button
                   aria-label={expanded ? "Свернуть работу" : "Развернуть работу"}
@@ -188,7 +188,7 @@ export function EstimateWorkCard({
             <EstimateName onChange={handleTitleChange} value={work.title} />
           </div>
 
-          <div className="flex w-full flex-col gap-3 rounded-md border bg-background p-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
+          <div className="flex w-full flex-col gap-2 rounded-md border bg-background p-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
             <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-80">
               <EditableBadge
                 label="Кол-во"
@@ -216,7 +216,7 @@ export function EstimateWorkCard({
         <CollapsibleContent>
           <div className="border-t bg-muted/20 px-4 py-4">
             <div className="rounded-md border bg-background p-3">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
                 {work.materials.map((material, index) => (
                   <EstimateMaterialCard
                     key={material.id}

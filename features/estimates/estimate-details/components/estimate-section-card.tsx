@@ -96,7 +96,7 @@ export function EstimateSectionCard({
   return (
     <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
       <Collapsible open={expandedSection} onOpenChange={setExpandedSection}>
-        <div className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 border-b px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
           <CollapsibleTrigger asChild>
             <button
               className="flex min-w-0 flex-1 items-start gap-3 rounded-md border bg-background p-2 text-left transition-colors hover:bg-muted/50"
@@ -122,7 +122,7 @@ export function EstimateSectionCard({
           </CollapsibleTrigger>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="grid grid-cols-2 gap-3 rounded-md border bg-background p-2 sm:min-w-56">
+            <div className="grid grid-cols-2 gap-2 rounded-md border bg-background p-2 sm:min-w-56">
               <EstimateSummaryValue label="Работы" value={section.worksAmount} />
               <EstimateSummaryValue label="Материалы" value={section.materialsAmount} />
             </div>
@@ -169,7 +169,7 @@ export function EstimateSectionCard({
                 />
               ))
             ) : (
-              <div className="p-4 text-sm text-muted-foreground">
+              <div className="p-4 text-xs text-muted-foreground">
                 <p>В разделе пока нет работ.</p>
                 <div className="mt-3 flex justify-end border-t pt-3">
                   <Frame>

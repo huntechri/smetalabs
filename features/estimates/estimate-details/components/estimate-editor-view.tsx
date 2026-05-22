@@ -608,13 +608,13 @@ export function EstimateEditorView({
   )
 
   if (loading) {
-    return <div className="p-4 text-sm text-muted-foreground">Загрузка сметы...</div>
+    return <div className="p-4 text-xs text-muted-foreground">Загрузка сметы...</div>
   }
 
   if (error || !content) {
     return (
       <div className="flex flex-col gap-3 p-4">
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-xs text-destructive">
           {error ?? "Не удалось загрузить смету"}
         </div>
         <Button className="w-fit" variant="outline" onClick={() => refetch()}>
@@ -627,11 +627,11 @@ export function EstimateEditorView({
   return (
     <EstimateEditorContext.Provider value={contextValue}>
       <div className="flex h-full min-h-0 flex-1 flex-col">
-        <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border bg-background p-1">
+        <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-lg border bg-background p-1">
           {content.sections.length === 0 ? (
             <EstimateEmptyState onCreateClick={() => setSectionOpen(true)} />
           ) : visibleSections.length === 0 ? (
-            <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-4 text-center text-sm text-muted-foreground">
+            <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-4 text-center text-xs text-muted-foreground">
               <p>По смете ничего не найдено.</p>
               <Button size="sm" variant="outline" onClick={clearEstimateSearch}>
                 Сбросить поиск
@@ -698,7 +698,7 @@ export function EstimateEditorView({
                 value={coefficientValue}
               />
               {coefficientError ? (
-                <p className="text-sm text-destructive">{coefficientError}</p>
+                <p className="text-xs text-destructive">{coefficientError}</p>
               ) : null}
               <DialogFooter>
                 <Button

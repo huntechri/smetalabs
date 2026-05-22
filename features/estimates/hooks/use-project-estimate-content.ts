@@ -66,6 +66,14 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
 
   const contentKey = projectsQueryKeys.estimateRecordContent(projectId, recordId)
 
+  const invalidateProjectCaches = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: projectsQueryKeys.lists() }),
+      queryClient.invalidateQueries({ queryKey: projectsQueryKeys.detail(projectId) }),
+      queryClient.invalidateQueries({ queryKey: projectsQueryKeys.estimateRecords(projectId) }),
+    ])
+  }, [queryClient, projectId])
+
   const contentQuery = useQuery({
     queryKey: contentKey,
     queryFn: () => fetchProjectEstimateContent({ projectId, recordId }),
@@ -133,11 +141,9 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
         queryClient.setQueryData(contentKey, response)
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: projectsQueryKeys.estimateRecords(projectId),
-      })
+      await invalidateProjectCaches()
     },
-    [contentKey, queryClient, projectId],
+    [contentKey, invalidateProjectCaches, queryClient],
   )
 
   const changeMutation = useMutation({

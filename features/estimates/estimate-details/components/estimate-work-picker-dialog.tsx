@@ -40,7 +40,7 @@ export function EstimateWorkPickerDialog({
   onQueryChange: (value: string) => void
   onOpenChange: (open: boolean) => void
   onSelect: (row: ProjectEstimateOptionRow) => void
-  onDirectorySubmit: (quantity: number, price: number) => void
+  onDirectorySubmit: (work: ProjectEstimateOptionRow, quantity: number, price: number) => void
 }) {
   const [searchText, setSearchText] = useState(query)
 
@@ -83,7 +83,7 @@ export function EstimateWorkPickerDialog({
   const handleSelect = (work: ProjectEstimateOptionRow) => {
     onSelect(work)
     if (isReplaceMode) return
-    onDirectorySubmit(0, work.price)
+    onDirectorySubmit(work, 0, work.price)
   }
 
   return (

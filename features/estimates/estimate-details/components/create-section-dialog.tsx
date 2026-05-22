@@ -35,26 +35,23 @@ export function CreateSectionDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <form onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Создать новый раздел</DialogTitle>
             <DialogDescription>
               Введите название раздела. Номер будет присвоен автоматически.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Название
-              </Label>
-              <Input
-                id="name"
-                name="name"
-                placeholder="Подготовительные работы"
-                className="col-span-3"
-                required
-              />
-            </div>
+          <div className="grid gap-2">
+            <Label htmlFor="name">Название</Label>
+            <Input
+              id="name"
+              name="name"
+              placeholder="Подготовительные работы"
+              className="w-full"
+              required
+              autoFocus
+            />
           </div>
           <DialogFooter>
             <Button type="submit">Создать</Button>

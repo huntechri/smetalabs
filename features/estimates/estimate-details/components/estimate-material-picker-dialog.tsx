@@ -40,7 +40,7 @@ export function EstimateMaterialPickerDialog({
   onQueryChange: (value: string) => void
   onOpenChange: (open: boolean) => void
   onSelect: (row: ProjectEstimateMaterialOptionRow) => void
-  onDirectorySubmit: (quantity: number, consumption: number | null, price: number, changedField: "quantity" | "consumption" | "price") => void
+  onDirectorySubmit: (material: ProjectEstimateMaterialOptionRow, quantity: number, consumption: number | null, price: number, changedField: "quantity" | "consumption" | "price") => void
 }) {
   const [searchText, setSearchText] = useState(query)
 
@@ -81,7 +81,7 @@ export function EstimateMaterialPickerDialog({
 
   const handleSelect = (material: ProjectEstimateMaterialOptionRow) => {
     onSelect(material)
-    onDirectorySubmit(0, null, material.price, "quantity")
+    onDirectorySubmit(material, 0, null, material.price, "quantity")
   }
 
   return (

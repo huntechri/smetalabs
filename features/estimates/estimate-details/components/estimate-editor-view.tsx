@@ -484,20 +484,20 @@ export function EstimateEditorView({
   )
 
   const addDirectoryWork = useCallback(
-    async (quantity: number, price: number) => {
-      if (!workDialog.sectionId || !workDialog.selected) return
+    async (selected: ProjectEstimateOptionRow, quantity: number, price: number) => {
+      if (!workDialog.sectionId) return
 
       await save({
         action: "add_work_from_directory",
         payload: {
           sectionId: workDialog.sectionId,
-          directoryWorkId: workDialog.selected.id,
+          directoryWorkId: selected.id,
           quantity,
           price,
         },
       })
     },
-    [save, workDialog.sectionId, workDialog.selected]
+    [save, workDialog.sectionId]
   )
 
   const replaceDirectoryWork = useCallback(
@@ -524,14 +524,14 @@ export function EstimateEditorView({
   )
 
   const addDirectoryMaterial = useCallback(
-    async (quantity: number, consumption: number | null, price: number, changedField: "quantity" | "consumption" | "price") => {
-      if (!materialDialog.work || !materialDialog.selected) return
+    async (selected: ProjectEstimateMaterialOptionRow, quantity: number, consumption: number | null, price: number, changedField: "quantity" | "consumption" | "price") => {
+      if (!materialDialog.work) return
 
       await save({
         action: "add_material_from_directory",
         payload: {
           workId: materialDialog.work.id,
-          directoryMaterialId: materialDialog.selected.id,
+          directoryMaterialId: selected.id,
           quantity,
           consumption,
           price,
@@ -539,7 +539,7 @@ export function EstimateEditorView({
         },
       })
     },
-    [save, materialDialog.work, materialDialog.selected]
+    [save, materialDialog.work]
   )
 
   const handleSectionOpenChange = useCallback((open: boolean) => {

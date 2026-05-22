@@ -4,7 +4,7 @@
 >
 > **Главный принцип:** Максимально использовать то, что дают shadcn/ui и Tailwind из коробки. Никаких лишних абстракций, обёрток, кастомных решений.
 >
-> **Последняя проверка:** 2026-05-22 — актуально. Все 36 компонентов `components/ui/` задокументированы. Изменений в UI-компонентах не обнаружено.
+> **Последняя проверка:** 2026-05-22 — актуально. Все 36 компонентов `components/ui/` задокументированы. Изменение: сводные значения в estimate editor мигрировали с кастомного `EstimateSummaryValue` на стандартные Shadcn outline Badges.
 
 ---
 
@@ -1162,6 +1162,38 @@ const isAdded = (code: string | null) => addedCodes.has(code ?? "")
   {isAdded(work.code) ? "Добавлено" : "Добавить"}
 </Button>
 ```
+
+---
+
+## 6.12 Паттерн: сводные/агрегирующие значения через outline Badge
+
+**Контекст:** Карточки разделов сметы показывают сводную информацию (количество работ, материалов, итоговая сумма).
+
+**Проблема:** Ранее использовался кастомный компонент `EstimateSummaryValue`, который дублировал функциональность Badge.
+
+**Решение (2026-05-22, PR #157):** Использовать стандартные Shadcn `Badge` с `variant="outline"` для отображения сводных значений. Никаких кастомных компонентов для простого отображения метрик.
+
+```tsx
+// ✅ Правильно — стандартный outline Badge для сводного значения
+<div className="flex flex-wrap gap-1">
+  <Badge variant="outline" className="text-xs gap-1">
+    <WrenchIcon className="size-3" />
+    {workCount} работ
+  </Badge>
+  <Badge variant="outline" className="text-xs gap-1">
+    <CubeIcon className="size-3" />
+    {materialCount} материалов
+  </Badge>
+  <Badge variant="outline" className="text-xs gap-1">
+    {formatMoney(total)}
+  </Badge>
+</div>
+
+// ❌ Неправильно — кастомный компонент для простого badge
+<EstimateSummaryValue icon={WrenchIcon} label="работ" value={workCount} />
+```
+
+**Принцип:** Любое отображение метрики/сводки, которое по сути является бейджем, должно использовать `<Badge variant="outline">`. Если нужна композиция — собирай из стандартных Badge через flex-wrap.
 
 ---
 

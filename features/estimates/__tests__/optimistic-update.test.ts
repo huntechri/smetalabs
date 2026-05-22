@@ -89,6 +89,24 @@ describe("optimistic-update calculations", () => {
       expect(updatedMaterial.consumption).toBe(0.2)
       expect(updatedMaterial.totalAmount).toBe(20) // 4 * 5 руб
     })
+
+    it("should round material quantity up to integer when work quantity results in a fraction", () => {
+      const data = mockData()
+      // Material consumption is 0.2. Setting work quantity to 3.
+      // 3 * 0.2 = 0.6. Ceiled should be 1.
+      const result = applyOptimisticChange(data, {
+        action: "update_work",
+        payload: {
+          workId: "work-1",
+          quantity: 3,
+        },
+      })
+
+      expect(result).not.toBeNull()
+      const updatedMaterial = result!.sections[0].works[0].materials[0]
+      expect(updatedMaterial.quantity).toBe(1)
+      expect(updatedMaterial.consumption).toBe(0.2)
+    })
   })
 
   describe("update_material", () => {
@@ -128,22 +146,36 @@ describe("optimistic-update calculations", () => {
       expect(updatedMaterial.quantity).toBe(4)
     })
     
-    it("should handle very small decimal consumptions up to 6 decimal places", () => {
+    it("should always round quantity upwards to integers and calculate consumption based on it", () => {
       const data = mockData()
-      const result = applyOptimisticChange(data, {
+      
+      // 1. Quantity 0.208 should round up to 1
+      const result1 = applyOptimisticChange(data, {
         action: "update_material",
         payload: {
           materialId: "material-1",
-          quantity: 0.208, // Дробное количество
+          quantity: 0.208,
           changedField: "quantity",
         },
       })
+      expect(result1).not.toBeNull()
+      const updatedMat1 = result1!.sections[0].works[0].materials[0]
+      expect(updatedMat1.quantity).toBe(1)
+      expect(updatedMat1.consumption).toBe(0.1) // 1 / 10 = 0.1
 
-      expect(result).not.toBeNull()
-      const updatedMaterial = result!.sections[0].works[0].materials[0]
-      expect(updatedMaterial.quantity).toBe(0.208)
-      // Расход: 0.208 / 10 = 0.0208
-      expect(updatedMaterial.consumption).toBe(0.0208)
+      // 2. Quantity 1.2 should round up to 2
+      const result2 = applyOptimisticChange(data, {
+        action: "update_material",
+        payload: {
+          materialId: "material-1",
+          quantity: 1.2,
+          changedField: "quantity",
+        },
+      })
+      expect(result2).not.toBeNull()
+      const updatedMat2 = result2!.sections[0].works[0].materials[0]
+      expect(updatedMat2.quantity).toBe(2)
+      expect(updatedMat2.consumption).toBe(0.2) // 2 / 10 = 0.2
     })
   })
 })

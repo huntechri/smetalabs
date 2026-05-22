@@ -14,7 +14,7 @@ function roundMoney(value: number): number {
 }
 
 function roundQuantity(value: number): number {
-  return Math.round(value * 1000) / 1000
+  return Math.ceil(value)
 }
 
 function roundConsumption(value: number): number {
@@ -45,9 +45,10 @@ function resolveMaterialQuantity(params: {
   }
 
   if (changedField === "quantity") {
+    const resolvedQty = roundQuantity(inputQuantity)
     return {
-      quantity: roundQuantity(inputQuantity),
-      consumption: params.workQuantity > 0 ? roundConsumption(inputQuantity / params.workQuantity) : null,
+      quantity: resolvedQty,
+      consumption: params.workQuantity > 0 ? roundConsumption(resolvedQty / params.workQuantity) : null,
     }
   }
 

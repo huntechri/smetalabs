@@ -68,6 +68,8 @@ const EMPTY_MATERIAL_DIALOG: MaterialDialogState = {
   selected: null,
 }
 
+const EMPTY_SECTIONS: ProjectEstimateContentSection[] = []
+
 const OPTION_SEARCH_MIN_LENGTH = 3
 const WORK_COEFFICIENT_DIALOG_KEY = "work-coefficient"
 const SORT_ORDER_STEP = 1000
@@ -212,8 +214,10 @@ export function EstimateEditorView({
   const searchActive = estimateSearch.length > 0
   const deferredSearch = useDeferredValue(estimateSearch)
 
+
+
   // Stabilise visibleSections: only recompute when content sections actually change
-  const nextSections = content?.sections ?? []
+  const nextSections = content?.sections ?? EMPTY_SECTIONS
   const [sectionsForMemo, setSectionsForMemo] = React.useState(nextSections)
   const [prevSections, setPrevSections] = React.useState(nextSections)
 

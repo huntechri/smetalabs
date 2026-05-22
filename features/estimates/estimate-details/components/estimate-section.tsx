@@ -11,9 +11,9 @@ import { FramedButton } from "@/components/ui/framed-button"
 import { Separator } from "@/components/ui/separator"
 import { stages } from "@/features/estimates/__mocks__/estimates"
 import { useEstimates } from "@/features/estimates/hooks/use-estimates"
+import { formatMoney } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import { EstimateRow } from "./estimate-row"
-import { EstimateSummaryValue } from "./estimate-summary-value"
 import {
   CaretRightIcon,
   PlusIcon,
@@ -61,12 +61,15 @@ export function EstimateSection() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 rounded-md border border-dashed border-orange-300 p-2 sm:min-w-56">
-              <EstimateSummaryValue label="Работы" value={totals.workTotal} />
-              <EstimateSummaryValue
-                label="Материалы"
-                value={totals.materialTotal}
-              />
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="h-auto rounded-md bg-background px-2.5 py-1 text-xs font-medium border border-orange-300/60">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mr-1">Работы:</span>
+                <span className="font-semibold tabular-nums text-foreground">{formatMoney(totals.workTotal)}</span>
+              </Badge>
+              <Badge variant="outline" className="h-auto rounded-md bg-background px-2.5 py-1 text-xs font-medium border border-orange-300/60">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mr-1">Материалы:</span>
+                <span className="font-semibold tabular-nums text-foreground">{formatMoney(totals.materialTotal)}</span>
+              </Badge>
             </div>
           </button>
         </CollapsibleTrigger>

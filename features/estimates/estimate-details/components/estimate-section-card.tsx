@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/collapsible"
 import { Frame } from "@/components/ui/frame"
 import { Separator } from "@/components/ui/separator"
-import { EstimateSummaryValue } from "@/features/estimates/estimate-details/components/estimate-summary-value"
 import { EstimateWorkCard } from "@/features/estimates/estimate-details/components/estimate-work-card"
 import { useEstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
+import { formatMoney } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import {
   CaretDownIcon,
@@ -121,19 +121,15 @@ export function EstimateSectionCard({
           </CollapsibleTrigger>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-4 rounded-md border bg-background px-4 py-2 sm:min-w-56 divide-x divide-border">
-              <EstimateSummaryValue
-                label="Работы"
-                value={section.worksAmount}
-                variant="clean"
-                className="flex-1"
-              />
-              <EstimateSummaryValue
-                label="Материалы"
-                value={section.materialsAmount}
-                variant="clean"
-                className="flex-1 pl-4"
-              />
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="h-auto rounded-md bg-background px-2.5 py-1 text-xs font-medium border border-border">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mr-1">Работы:</span>
+                <span className="font-semibold tabular-nums text-foreground">{formatMoney(section.worksAmount)}</span>
+              </Badge>
+              <Badge variant="outline" className="h-auto rounded-md bg-background px-2.5 py-1 text-xs font-medium border border-border">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mr-1">Материалы:</span>
+                <span className="font-semibold tabular-nums text-foreground">{formatMoney(section.materialsAmount)}</span>
+              </Badge>
             </div>
             <Frame>
               <ButtonGroup>

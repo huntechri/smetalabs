@@ -22,12 +22,12 @@ export function EstimateEmptyState({ onCreateClick }: EstimateEmptyStateProps) {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button onClick={onCreateClick} className="gap-2">
-          <Plus className="size-4" />
+        <Button onClick={onCreateClick}>
+          <Plus data-icon="inline-start" />
           Создать раздел
         </Button>
-        <Button variant="outline" className="gap-2">
-          <FileArrowDown className="size-4" />
+        <Button variant="outline">
+          <FileArrowDown data-icon="inline-start" />
           Импорт
         </Button>
       </EmptyContent>

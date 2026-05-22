@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { useSidebar } from "@/components/ui/sidebar"
 import { List, MoonIcon, SunIcon } from "@phosphor-icons/react"
 import { useTheme } from "next-themes"
+import { NotificationBell } from "@/features/notifications/components/notification-bell"
 
 export function SiteHeader() {
   const { toggleSidebar } = useSidebar()
@@ -44,19 +45,22 @@ export function SiteHeader() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() =>
-            setTheme(resolvedTheme === "dark" ? "light" : "dark")
-          }
-          className="ml-auto"
-        >
-          <SunIcon className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <MoonIcon className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Переключить тему</span>
-        </Button>
+        <div className="ml-auto flex items-center gap-1.5">
+          <NotificationBell />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() =>
+              setTheme(resolvedTheme === "dark" ? "light" : "dark")
+            }
+          >
+            <SunIcon className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <MoonIcon className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Переключить тему</span>
+          </Button>
+        </div>
       </div>
     </header>
   )
 }
+

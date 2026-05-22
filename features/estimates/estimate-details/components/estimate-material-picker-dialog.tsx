@@ -1,6 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -9,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
-import { Input } from "@/components/ui/input"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatMoney } from "@/lib/formatters"
 import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
@@ -43,6 +42,14 @@ export function EstimateMaterialPickerDialog({
   onDirectorySubmit: (material: ProjectEstimateMaterialOptionRow, quantity: number, consumption: number | null, price: number, changedField: "quantity" | "consumption" | "price") => void
 }) {
   const [searchText, setSearchText] = useState(query)
+  const [prevOpen, setPrevOpen] = useState(state.open)
+
+  if (state.open !== prevOpen) {
+    setPrevOpen(state.open)
+    if (!state.open) {
+      setSearchText("")
+    }
+  }
 
   const normalizedSearch = searchText.trim().replace(/\s+/g, " ")
   const canSearch = query.trim().length >= MATERIAL_SEARCH_MIN_LENGTH
@@ -54,7 +61,6 @@ export function EstimateMaterialPickerDialog({
 
   useEffect(() => {
     if (state.open) return
-    setSearchText("")
     onQueryChange("")
   }, [onQueryChange, state.open])
 
@@ -94,21 +100,26 @@ export function EstimateMaterialPickerDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <form className="flex shrink-0 items-center gap-2" onSubmit={handleSearch}>
-            <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
-            <Input
-              aria-label="Поиск материалов"
-              className="h-8"
-              onChange={(event) => setSearchText(event.target.value)}
-              placeholder="Введите минимум 3 символа"
-              value={searchText}
-            />
-            <Button type="submit" variant="outline">
-              Поиск
-            </Button>
+          <form className="shrink-0" onSubmit={handleSearch}>
+            <InputGroup className="h-8">
+              <InputGroupAddon align="inline-start">
+                <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
+              </InputGroupAddon>
+              <InputGroupInput
+                aria-label="Поиск материалов"
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Введите минимум 3 символа"
+                value={searchText}
+              />
+              <InputGroupAddon align="inline-end">
+                <Button size="sm" type="submit" variant="ghost" className="h-6">
+                  Поиск
+                </Button>
+              </InputGroupAddon>
+            </InputGroup>
           </form>
 
-          <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-md border border-border">
+          <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-md border border-border divide-y divide-border">
             {showSearchPrompt ? (
               <Empty className="h-full min-h-80 border-0">
                 <EmptyHeader>
@@ -119,7 +130,7 @@ export function EstimateMaterialPickerDialog({
             ) : null}
 
             {loading && visibleOptions.length === 0 ? (
-              <div className="space-y-2 p-3">
+              <div className="flex flex-col gap-2 p-3">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <Skeleton key={index} className="h-14 w-full rounded-md" />
                 ))}
@@ -136,29 +147,30 @@ export function EstimateMaterialPickerDialog({
             ) : null}
 
             {visibleOptions.map((material) => (
-              <Card key={material.id} className="p-2 rounded-md bg-transparent shadow-none">
-                <CardContent className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_80px_120px_auto] sm:items-center">
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">{material.title}</div>
-                    <div className="truncate text-xs text-muted-foreground">
-                      {material.category}
-                      {material.supplierName ? ` · ${material.supplierName}` : ""}
-                    </div>
+              <div
+                key={material.id}
+                className="grid gap-2 p-3 transition-colors hover:bg-muted/50 sm:grid-cols-[minmax(0,1fr)_80px_120px_auto] sm:items-center"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium">{material.title}</div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {material.category}
+                    {material.supplierName ? ` · ${material.supplierName}` : ""}
                   </div>
-                  <div className="text-xs text-muted-foreground">{material.unitLabel}</div>
-                  <div className="text-xs font-medium tabular-nums">{formatMoney(material.price)}</div>
-                  <Button
-                    disabled={saving || isAdded(material.code)}
-                    onClick={() => handleSelect(material)}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    <PlusIcon data-icon="inline-start" />
-                    {isAdded(material.code) ? "Добавлено" : "Добавить"}
-                  </Button>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="text-xs text-muted-foreground">{material.unitLabel}</div>
+                <div className="text-xs font-medium tabular-nums">{formatMoney(material.price)}</div>
+                <Button
+                  disabled={saving || isAdded(material.code)}
+                  onClick={() => handleSelect(material)}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <PlusIcon data-icon="inline-start" />
+                  {isAdded(material.code) ? "Добавлено" : "Добавить"}
+                </Button>
+              </div>
             ))}
           </div>
       </DialogContent>

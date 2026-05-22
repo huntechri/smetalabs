@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/collapsible"
 import { EditableBadge } from "@/components/ui/editable-badge"
 import { Frame } from "@/components/ui/frame"
+import { Separator } from "@/components/ui/separator"
 import { EstimateMaterialCard } from "@/features/estimates/estimate-details/components/estimate-material-card"
 import { EstimateName } from "@/features/estimates/estimate-details/components/estimate-name"
 import { EstimateWorkNumber } from "@/features/estimates/estimate-details/components/estimate-work-number"
@@ -214,7 +215,8 @@ export function EstimateWorkCard({
         </div>
  
         <CollapsibleContent>
-          <div className="border-t bg-muted/10 p-3">
+          <Separator />
+          <div className="bg-muted/10 p-3">
             {work.materials.length > 0 && (
               <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
                 {work.materials.map((material, index) => (

@@ -1,10 +1,10 @@
 "use client"
 
-import { type FormEvent, useEffect, useMemo, useState } from "react"
+import { type FormEvent, useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
-import { Input } from "@/components/ui/input"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import {
   ExportIcon,
   FileArrowDownIcon,
@@ -64,11 +64,15 @@ export function EstimateTabToolbar() {
   const searchParams = useSearchParams()
   const activeTab = getActiveTab(pathname)
   const actions = tabActions[activeTab]
-  const [search, setSearch] = useState(searchParams.get("q") ?? "")
 
-  useEffect(() => {
-    setSearch(searchParams.get("q") ?? "")
-  }, [searchParams])
+  const q = searchParams.get("q") ?? ""
+  const [prevQ, setPrevQ] = useState(q)
+  const [search, setSearch] = useState(q)
+
+  if (q !== prevQ) {
+    setPrevQ(q)
+    setSearch(q)
+  }
 
   const placeholder = useMemo(() => {
     const labels: Record<string, string> = {
@@ -113,20 +117,23 @@ export function EstimateTabToolbar() {
   return (
     <div className="flex flex-col gap-3 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
       <form className="min-w-0 flex-1" onSubmit={handleSearch}>
-        <div className="flex min-w-0 items-center gap-2">
-          <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
-          <Input
+        <InputGroup className="h-8">
+          <InputGroupAddon align="inline-start">
+            <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
+          </InputGroupAddon>
+          <InputGroupInput
             aria-label={placeholder}
-            className="h-8"
             onChange={(event) => setSearch(event.target.value)}
             placeholder={placeholder}
             value={search}
           />
-          <Button size="sm" type="submit" variant="outline">
-            <MagnifyingGlassIcon className="sm:hidden" data-icon="inline-start" />
-            <span className="hidden sm:inline">Поиск</span>
-          </Button>
-        </div>
+          <InputGroupAddon align="inline-end">
+            <Button size="sm" type="submit" variant="ghost" className="h-6 gap-1">
+              <span className="hidden sm:inline">Поиск</span>
+              <MagnifyingGlassIcon className="sm:hidden" data-icon="inline-start" />
+            </Button>
+          </InputGroupAddon>
+        </InputGroup>
       </form>
 
       <ButtonGroup className="flex-wrap">

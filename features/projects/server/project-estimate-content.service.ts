@@ -25,6 +25,7 @@ function estimateOptionsCacheTag(workspaceOwnerId: string, projectId: string, re
 }
 
 function revalidateEstimateContent(workspaceOwnerId: string, projectId: string) {
+  revalidateTag(projectsCacheTags.list(workspaceOwnerId), "max")
   revalidateTag(estimateRecordsCacheTag(workspaceOwnerId, projectId), "max")
   revalidateTag(projectsCacheTags.detail(workspaceOwnerId, projectId), "max")
 }

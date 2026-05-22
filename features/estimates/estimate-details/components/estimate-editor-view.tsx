@@ -175,6 +175,7 @@ export function EstimateEditorView({
     loading,
     loadError,
     mutationError,
+    clearMutationError,
     saving,
     savingIds,
     applyChange,
@@ -182,6 +183,14 @@ export function EstimateEditorView({
     refetch,
     getSections,
   } = useProjectEstimateContent(projectId, recordId)
+
+  // Auto-dismiss mutation errors after a delay
+  React.useEffect(() => {
+    if (!mutationError) return
+    const timer = setTimeout(() => clearMutationError(), 6000)
+    return () => clearTimeout(timer)
+  }, [mutationError, clearMutationError])
+
   const [sectionOpen, setSectionOpen] = React.useState(false)
   const [coefficientOpen, setCoefficientOpen] = React.useState(false)
   const [coefficientValue, setCoefficientValue] = React.useState("0")

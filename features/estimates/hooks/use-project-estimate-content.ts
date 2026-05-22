@@ -224,7 +224,9 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
         return next
       })
     },
-    onSuccess: updateContentCache,
+    onSuccess: (response) => {
+      updateContentCache(response)
+    },
   })
 
   const content = contentQuery.data?.data ?? null
@@ -243,16 +245,24 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
     coefficientMutation.error?.message ??
     null
 
+  const clearMutationError = useCallback(() => {
+    changeMutation.reset()
+    coefficientMutation.reset()
+  }, [changeMutation, coefficientMutation])
+
   return {
     content,
     loading: contentQuery.isLoading,
     isFetching: contentQuery.isFetching,
     loadError: contentQuery.error?.message ?? null,
     mutationError,
+    clearMutationError,
     saving: isSaving,
     savingIds,
     getSections,
     refetch: async () => {
+      changeMutation.reset()
+      coefficientMutation.reset()
       await contentQuery.refetch()
     },
     applyChange: async (input: EstimateContentChangeInput) => {

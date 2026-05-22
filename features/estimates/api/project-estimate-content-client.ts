@@ -134,18 +134,32 @@ function buildOptionsUrl(
   return search ? `${path}?${search}` : path
 }
 
+const FETCH_RETRY_DELAY_MS = 800
+
 async function fetchJson<T>(url: string, resource: string, init?: RequestInit) {
-  const response = await fetch(url, {
-    credentials: "include",
-    ...init,
-    headers: init?.body
-      ? { "Content-Type": "application/json", ...init.headers }
-      : init?.headers,
-  })
+  const doFetch = async () => {
+    const response = await fetch(url, {
+      credentials: "include",
+      ...init,
+      headers: init?.body
+        ? { "Content-Type": "application/json", ...init.headers }
+        : init?.headers,
+    })
 
-  if (!response.ok) await throwProjectsApiError(response, resource)
+    if (!response.ok) await throwProjectsApiError(response, resource)
 
-  return response.json() as Promise<T>
+    return response.json() as Promise<T>
+  }
+
+  try {
+    return await doFetch()
+  } catch (err) {
+    // Only retry on network errors (TypeError), not on HTTP errors
+    if (!(err instanceof TypeError)) throw err
+
+    await new Promise((resolve) => setTimeout(resolve, FETCH_RETRY_DELAY_MS))
+    return doFetch()
+  }
 }
 
 export function fetchProjectEstimateContent({

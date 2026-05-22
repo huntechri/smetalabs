@@ -174,8 +174,6 @@ export function EstimateEditorView({
     content,
     loading,
     loadError,
-    mutationError,
-    clearMutationError,
     saving,
     savingIds,
     applyChange,
@@ -183,14 +181,6 @@ export function EstimateEditorView({
     refetch,
     getSections,
   } = useProjectEstimateContent(projectId, recordId)
-
-  // Auto-dismiss mutation errors after a delay
-  React.useEffect(() => {
-    if (!mutationError) return
-    const timer = setTimeout(() => clearMutationError(), 6000)
-    return () => clearTimeout(timer)
-  }, [mutationError, clearMutationError])
-
   const [sectionOpen, setSectionOpen] = React.useState(false)
   const [coefficientOpen, setCoefficientOpen] = React.useState(false)
   const [coefficientValue, setCoefficientValue] = React.useState("0")
@@ -617,11 +607,6 @@ export function EstimateEditorView({
   return (
     <EstimateEditorContext.Provider value={contextValue}>
       <div className="flex h-full min-h-0 flex-1 flex-col">
-        {mutationError && (
-          <div className="mx-1 mt-1 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
-            {mutationError}
-          </div>
-        )}
         <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-lg border bg-background p-1">
           {content.sections.length === 0 ? (
             <EstimateEmptyState onCreateClick={() => setSectionOpen(true)} />

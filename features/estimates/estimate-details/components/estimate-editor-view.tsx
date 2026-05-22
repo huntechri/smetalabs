@@ -173,7 +173,8 @@ export function EstimateEditorView({
   const {
     content,
     loading,
-    error,
+    loadError,
+    mutationError,
     saving,
     savingIds,
     applyChange,
@@ -591,11 +592,11 @@ export function EstimateEditorView({
     return <div className="p-4 text-xs text-muted-foreground">Загрузка сметы...</div>
   }
 
-  if (error || !content) {
+  if (!content) {
     return (
       <div className="flex flex-col gap-3 p-4">
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-xs text-destructive">
-          {error ?? "Не удалось загрузить смету"}
+          {loadError ?? "Не удалось загрузить смету"}
         </div>
         <Button className="w-fit" variant="outline" onClick={() => refetch()}>
           Повторить
@@ -607,6 +608,11 @@ export function EstimateEditorView({
   return (
     <EstimateEditorContext.Provider value={contextValue}>
       <div className="flex h-full min-h-0 flex-1 flex-col">
+        {mutationError && (
+          <div className="mx-1 mt-1 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+            {mutationError}
+          </div>
+        )}
         <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-lg border bg-background p-1">
           {content.sections.length === 0 ? (
             <EstimateEmptyState onCreateClick={() => setSectionOpen(true)} />

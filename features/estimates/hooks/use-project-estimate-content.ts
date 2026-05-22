@@ -238,15 +238,17 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
 
   const isSaving = changeMutation.isPending || coefficientMutation.isPending
 
+  const mutationError =
+    changeMutation.error?.message ??
+    coefficientMutation.error?.message ??
+    null
+
   return {
     content,
     loading: contentQuery.isLoading,
     isFetching: contentQuery.isFetching,
-    error:
-      contentQuery.error?.message ??
-      changeMutation.error?.message ??
-      coefficientMutation.error?.message ??
-      null,
+    loadError: contentQuery.error?.message ?? null,
+    mutationError,
     saving: isSaving,
     savingIds,
     getSections,

@@ -391,24 +391,6 @@ export function EstimateEditorView({
     [content, searchActive, save]
   )
 
-  const moveMaterial = useCallback(
-    async (workId: string, materialId: string, direction: MoveDirection) => {
-      if (!content || searchActive) return
-      const work = content.sections
-        .flatMap((section: ProjectEstimateContentSection) => section.works)
-        .find((item: ProjectEstimateContentWork) => item.id === workId)
-      if (!work) return
-      const next = moveItem(work.materials, materialId, direction)
-      if (!next) return
-
-      await save({
-        action: "reorder_materials",
-        payload: { workId, items: sortPayload(next) },
-      })
-    },
-    [content, searchActive, save]
-  )
-
   const openWorkDialog = useCallback(
     async (sectionId?: string) => {
       const target = sectionId ?? (await ensureSection())
@@ -588,7 +570,6 @@ export function EstimateEditorView({
       onArchive: setArchiveRequest,
       onMoveSection: moveSection,
       onMoveWork: moveWork,
-      onMoveMaterial: moveMaterial,
       onAddSection: () => setSectionOpen(true),
       onAddWork: openWorkDialog,
       onAddMaterial: openMaterialDialog,
@@ -600,7 +581,6 @@ export function EstimateEditorView({
       save,
       moveSection,
       moveWork,
-      moveMaterial,
       openWorkDialog,
       openMaterialDialog,
       openReplaceWorkDialog,

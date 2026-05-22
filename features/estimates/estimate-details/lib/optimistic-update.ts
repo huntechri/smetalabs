@@ -541,35 +541,6 @@ function applyReorderWorks(
   }
 }
 
-// ─── reorder_materials ──────────────────────────────────────────
-
-function applyReorderMaterials(
-  data: ProjectEstimateContentData,
-  input: Extract<EstimateContentChangeInput, { action: "reorder_materials" }>
-): ProjectEstimateContentData {
-  const { workId, items } = input.payload
-  const sortMap = new Map(items.map((i) => [i.id, i.sortOrder]))
-
-  const updatedSections = data.sections.map((section) => {
-    const updatedWorks = section.works.map((work) => {
-      if (work.id !== workId) return work
-      const updatedMaterials = work.materials
-        .map((m) => ({
-          ...m,
-          sortOrder: sortMap.has(m.id) ? sortMap.get(m.id)! : m.sortOrder,
-        }))
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-      return { ...work, materials: updatedMaterials }
-    })
-    return { ...section, works: updatedWorks }
-  })
-
-  return {
-    ...data,
-    sections: updatedSections,
-  }
-}
-
 // ─── public API ─────────────────────────────────────────────────
 
 /**
@@ -583,7 +554,7 @@ function applyReorderMaterials(
  * - archive_section / archive_work / archive_material
  * - create_section
  * - add_work_from_directory / add_material_from_directory
- * - reorder_sections / reorder_works / reorder_materials
+ * - reorder_sections / reorder_works
  */
 export function applyOptimisticChange(
   data: ProjectEstimateContentData | undefined,
@@ -621,9 +592,6 @@ export function applyOptimisticChange(
 
     case "reorder_works":
       return applyReorderWorks(data, input)
-
-    case "reorder_materials":
-      return applyReorderMaterials(data, input)
 
     default:
       return null

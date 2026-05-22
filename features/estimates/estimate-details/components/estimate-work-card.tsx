@@ -222,7 +222,6 @@ export function EstimateWorkCard({
                     key={material.id}
                     index={index}
                     material={material}
-                    materialsCount={work.materials.length}
                     workNumber={work.number}
                     onArchive={() =>
                       onArchive({

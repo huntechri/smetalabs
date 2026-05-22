@@ -21,7 +21,6 @@ export type EstimateEditorContextValue = {
   onArchive: EstimateArchive
   onMoveSection: (sectionId: string, direction: MoveDirection) => void
   onMoveWork: (sectionId: string, workId: string, direction: MoveDirection) => void
-  onMoveMaterial: (workId: string, materialId: string, direction: MoveDirection) => void
   onAddSection: () => void
   onAddWork: (sectionId: string) => void
   onAddMaterial: (work: ProjectEstimateContentWork) => void

@@ -759,19 +759,6 @@ export async function applyProjectEstimateContentChangeForWorkspace(
       if (error) throw error
       return { data: mapRpcSectionResponse(sectionData), _partial: true } as ProjectEstimateContentResponse & { _partial?: boolean }
     }
-    case "reorder_materials": {
-      await getWork(workspaceOwnerId, projectId, recordId, input.payload.workId)
-      const { error } = await supabase.rpc("reorder_estimate_materials", {
-        p_workspace_owner_id: workspaceOwnerId,
-        p_project_id: projectId,
-        p_estimate_record_id: recordId,
-        p_work_id: input.payload.workId,
-        p_items: input.payload.items,
-        p_updated_by: userId,
-      })
-      if (error) throw error
-      break
-    }
     case "move_material_to_work": {
       await getMaterial(workspaceOwnerId, projectId, recordId, input.payload.materialId)
       const work = await getWork(workspaceOwnerId, projectId, recordId, input.payload.workId)

@@ -173,13 +173,6 @@ export const estimateContentChangeSchema = z.discriminatedUnion("action", [
     payload: z.object({ materialId: z.string().uuid("Материал не найден") }),
   }),
   z.object({
-    action: z.literal("reorder_materials"),
-    payload: z.object({
-      workId: z.string().uuid("Работа не найдена"),
-      items: z.array(sortItemSchema).min(1, "Нет строк для изменения порядка"),
-    }),
-  }),
-  z.object({
     action: z.literal("move_material_to_work"),
     payload: z.object({
       materialId: z.string().uuid("Материал не найден"),

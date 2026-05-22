@@ -47,7 +47,6 @@ function extractItemIds(input: EstimateContentChangeInput): string[] {
     case "add_manual_material":
       return [input.payload.workId]
     case "reorder_works":
-    case "reorder_materials":
       return input.payload.items.map((item) => item.id)
     case "create_section":
       return []

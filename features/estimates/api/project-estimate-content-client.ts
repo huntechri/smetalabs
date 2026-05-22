@@ -111,7 +111,6 @@ export type EstimateContentChangeInput =
       }
     }
   | { action: "archive_material"; payload: { materialId: string } }
-  | { action: "reorder_materials"; payload: { workId: string; items: SortItem[] } }
   | { action: "move_material_to_work"; payload: { materialId: string; workId: string; sortOrder?: number } }
 
 function appendParam(params: URLSearchParams, key: string, value: string | number | undefined) {

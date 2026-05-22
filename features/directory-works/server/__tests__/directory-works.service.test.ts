@@ -53,6 +53,13 @@ vi.mock("../directory-works-import.repository", () => ({
   applyDirectoryWorkImportJobForWorkspace: mocks.applyImportRepository,
 }))
 
+vi.mock("../directory-works-large-import.repository", () => ({
+  appendDirectoryWorkImportBatchForWorkspace: vi.fn(),
+  applyDirectoryWorkImportBatchForWorkspace: vi.fn(),
+  createChunkedDirectoryWorkImportJobForWorkspace: vi.fn(),
+  getChunkedDirectoryWorkImportJobForWorkspace: vi.fn(async () => null),
+}))
+
 vi.mock("../directory-works.embeddings", () => ({
   enqueueDirectoryWorkEmbedding: mocks.enqueueEmbedding,
   enqueueDirectoryWorkEmbeddings: mocks.enqueueEmbeddings,

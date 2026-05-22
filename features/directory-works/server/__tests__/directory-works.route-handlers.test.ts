@@ -209,12 +209,16 @@ describe("directory works route handlers", () => {
 
   it("applies import jobs and returns service response", async () => {
     const response = await handlers.handleDirectoryWorkImportApplyRequest(
+      request("https://app.test/api/directory-works/import-jobs/22222222-2222-4222-8222-222222222222/apply", {
+        method: "POST",
+      }),
       "22222222-2222-4222-8222-222222222222"
     )
 
     expect(response.status).toBe(200)
     expect(mocks.applyImport).toHaveBeenCalledWith(
-      "22222222-2222-4222-8222-222222222222"
+      "22222222-2222-4222-8222-222222222222",
+      { batchSize: 200 }
     )
   })
 

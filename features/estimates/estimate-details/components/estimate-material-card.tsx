@@ -1,5 +1,5 @@
 "use client"
-
+ 
 import { useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -12,7 +12,7 @@ import { formatConsumption, formatMoney, parseDecimalInput } from "@/lib/formatt
 import { safeNumber } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
 import type { ProjectEstimateContentMaterial } from "@/types/project-estimate-content"
 import type { MaterialChangePayload } from "@/features/estimates/estimate-details/types"
-
+ 
 export function EstimateMaterialCard({
   index,
   material,
@@ -29,9 +29,9 @@ export function EstimateMaterialCard({
   onChange: (payload: MaterialChangePayload) => void
 }) {
   const { savingIds, reorderDisabled, onMoveMaterial } = useEstimateEditorContext()
-
+ 
   const isDisabled = savingIds.has(material.id)
-
+ 
   const handleQuantityChange = useCallback(
     (value: string) => {
       const num = safeNumber(value)
@@ -40,7 +40,7 @@ export function EstimateMaterialCard({
     },
     [onChange]
   )
-
+ 
   const handlePriceChange = useCallback(
     (value: string) => {
       const num = safeNumber(value)
@@ -49,7 +49,7 @@ export function EstimateMaterialCard({
     },
     [onChange]
   )
-
+ 
   const handleConsumptionChange = useCallback(
     (value: string) => {
       onChange({
@@ -59,12 +59,12 @@ export function EstimateMaterialCard({
     },
     [onChange]
   )
-
+ 
   const handleTitleChange = useCallback(
     (title: string) => onChange({ title }),
     [onChange]
   )
-
+ 
   return (
     <Card size="sm" className="min-h-36 gap-2 bg-background shadow-none">
       <CardHeader>
@@ -96,7 +96,7 @@ export function EstimateMaterialCard({
           value={material.title}
         />
       </CardHeader>
-
+ 
       <CardContent>
         <dl className="grid grid-cols-2 gap-2 text-xs/relaxed sm:grid-cols-4">
           <EditableBadge

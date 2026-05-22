@@ -162,8 +162,8 @@ export function EstimateWorkCard({
 
   return (
     <Collapsible open={expanded} onOpenChange={onToggle}>
-      <div className="border-b last:border-b-0">
-        <div className="m-2 flex flex-col gap-2 rounded-md border bg-background p-2 transition-colors hover:bg-muted/50 lg:flex-row lg:items-center lg:justify-between">
+      <div className="overflow-hidden rounded-lg border bg-background">
+        <div className="flex flex-col gap-2 p-3 transition-colors hover:bg-muted/50 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-1 flex-wrap items-start gap-2">
             <div className="flex w-full items-center gap-2 lg:w-auto">
               <CollapsibleTrigger asChild>
@@ -187,7 +187,7 @@ export function EstimateWorkCard({
             </div>
             <EstimateName onChange={handleTitleChange} value={work.title} />
           </div>
-
+ 
           <div className="flex w-full flex-col gap-2 rounded-md border bg-background p-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
             <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-80">
               <EditableBadge
@@ -212,10 +212,10 @@ export function EstimateWorkCard({
             <div className="hidden lg:inline-flex">{actionButtons}</div>
           </div>
         </div>
-
+ 
         <CollapsibleContent>
-          <div className="border-t bg-muted/20 px-4 py-4">
-            <div className="rounded-md border bg-background p-3">
+          <div className="border-t bg-muted/10 p-3">
+            {work.materials.length > 0 && (
               <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
                 {work.materials.map((material, index) => (
                   <EstimateMaterialCard
@@ -238,34 +238,34 @@ export function EstimateWorkCard({
                   />
                 ))}
               </div>
-
-              <div className="mt-3 flex justify-end border-t pt-3">
-                <Frame>
-                  <ButtonGroup>
-                    <Button size="xs" variant="outline" onClick={onAddSection}>
-                      <PlusIcon data-icon="inline-start" />
-                      Раздел
-                    </Button>
-                    <Button size="xs" variant="outline" onClick={() => onAddWork(work.sectionId)}>
-                      <PlusIcon data-icon="inline-start" />
-                      Работа
-                    </Button>
-                    <Button size="xs" variant="outline" onClick={() => onAddMaterial(work)}>
-                      <PlusIcon data-icon="inline-start" />
-                      Материал
-                    </Button>
-                    <Button
-                      aria-label="Удалить раздел"
-                      disabled={isDisabled}
-                      size="icon-xs"
-                      variant="destructive"
-                      onClick={onArchiveSection}
-                    >
-                      <TrashIcon />
-                    </Button>
-                  </ButtonGroup>
-                </Frame>
-              </div>
+            )}
+ 
+            <div className="mt-3 flex justify-end">
+              <Frame>
+                <ButtonGroup>
+                  <Button size="xs" variant="outline" onClick={onAddSection}>
+                    <PlusIcon data-icon="inline-start" />
+                    Раздел
+                  </Button>
+                  <Button size="xs" variant="outline" onClick={() => onAddWork(work.sectionId)}>
+                    <PlusIcon data-icon="inline-start" />
+                    Работа
+                  </Button>
+                  <Button size="xs" variant="outline" onClick={() => onAddMaterial(work)}>
+                    <PlusIcon data-icon="inline-start" />
+                    Материал
+                  </Button>
+                  <Button
+                    aria-label="Удалить раздел"
+                    disabled={isDisabled}
+                    size="icon-xs"
+                    variant="destructive"
+                    onClick={onArchiveSection}
+                  >
+                    <TrashIcon />
+                  </Button>
+                </ButtonGroup>
+              </Frame>
             </div>
           </div>
         </CollapsibleContent>

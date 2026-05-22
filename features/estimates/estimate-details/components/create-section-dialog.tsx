@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Field, FieldLabel, FieldGroup } from "@/components/ui/field"
 
 interface CreateSectionDialogProps {
   open: boolean
@@ -35,24 +35,26 @@ export function CreateSectionDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Создать новый раздел</DialogTitle>
             <DialogDescription>
               Введите название раздела. Номер будет присвоен автоматически.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-2">
-            <Label htmlFor="name">Название</Label>
-            <Input
-              id="name"
-              name="name"
-              placeholder="Подготовительные работы"
-              className="w-full"
-              required
-              autoFocus
-            />
-          </div>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="name">Название</FieldLabel>
+              <Input
+                id="name"
+                name="name"
+                placeholder="Подготовительные работы"
+                className="w-full"
+                required
+                autoFocus
+              />
+            </Field>
+          </FieldGroup>
           <DialogFooter>
             <Button type="submit">Создать</Button>
           </DialogFooter>

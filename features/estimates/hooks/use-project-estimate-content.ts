@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   applyProjectEstimateContentChange,
@@ -47,12 +47,12 @@ function extractItemIds(input: EstimateContentChangeInput): string[] {
     case "add_manual_material":
       return [input.payload.workId]
     case "reorder_works":
-    case "reorder_materials":
       return input.payload.items.map((item) => item.id)
     case "create_section":
       return []
     default: {
       const _exhaustive: never = input
+      void _exhaustive
       return []
     }
   }
@@ -225,33 +225,47 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
         return next
       })
     },
-    onSuccess: updateContentCache,
+    onSuccess: (response) => {
+      updateContentCache(response)
+    },
   })
 
   const content = contentQuery.data?.data ?? null
 
   // Keep sectionsRef in sync so ensureSection can read it without a content dependency
-  if (content?.sections) {
-    sectionsRef.current = content.sections
-  }
+  useEffect(() => {
+    if (content?.sections) {
+      sectionsRef.current = content.sections
+    }
+  }, [content?.sections])
 
   const getSections = useCallback(() => sectionsRef.current, [])
 
   const isSaving = changeMutation.isPending || coefficientMutation.isPending
 
+  const mutationError =
+    changeMutation.error?.message ??
+    coefficientMutation.error?.message ??
+    null
+
+  const clearMutationError = useCallback(() => {
+    changeMutation.reset()
+    coefficientMutation.reset()
+  }, [changeMutation, coefficientMutation])
+
   return {
     content,
     loading: contentQuery.isLoading,
     isFetching: contentQuery.isFetching,
-    error:
-      contentQuery.error?.message ??
-      changeMutation.error?.message ??
-      coefficientMutation.error?.message ??
-      null,
+    loadError: contentQuery.error?.message ?? null,
+    mutationError,
+    clearMutationError,
     saving: isSaving,
     savingIds,
     getSections,
     refetch: async () => {
+      changeMutation.reset()
+      coefficientMutation.reset()
       await contentQuery.refetch()
     },
     applyChange: async (input: EstimateContentChangeInput) => {

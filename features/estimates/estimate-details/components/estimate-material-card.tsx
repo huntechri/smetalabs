@@ -16,19 +16,17 @@ import type { MaterialChangePayload } from "@/features/estimates/estimate-detail
 export function EstimateMaterialCard({
   index,
   material,
-  materialsCount,
   workNumber,
   onArchive,
   onChange,
 }: {
   index: number
   material: ProjectEstimateContentMaterial
-  materialsCount: number
   workNumber: string
   onArchive: () => void
   onChange: (payload: MaterialChangePayload) => void
 }) {
-  const { savingIds, reorderDisabled, onMoveMaterial } = useEstimateEditorContext()
+  const { savingIds } = useEstimateEditorContext()
  
   const isDisabled = savingIds.has(material.id)
  
@@ -79,16 +77,21 @@ export function EstimateMaterialCard({
               <Frame>
                 <Badge variant="secondary">{material.unitLabel}</Badge>
               </Frame>
+              {material.imageUrl && (
+                <Frame className="p-0.5">
+                  <img
+                    src={material.imageUrl}
+                    alt={material.title}
+                    className="size-6 rounded-sm object-cover"
+                  />
+                </Frame>
+              )}
             </div>
           </div>
           <EstimateMaterialActions
             disabled={isDisabled}
-            moveDownDisabled={reorderDisabled || index >= materialsCount - 1}
-            moveUpDisabled={reorderDisabled || index === 0}
             title={material.title}
             onArchive={onArchive}
-            onMoveDown={() => onMoveMaterial(material.workId, material.id, "down")}
-            onMoveUp={() => onMoveMaterial(material.workId, material.id, "up")}
           />
         </div>
         <EstimateMaterialName

@@ -105,7 +105,7 @@ export function EstimateSectionCard({
               <CaretRightIcon
                 weight="bold"
                 className={cn(
-                  "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:text-foreground",
+                  "size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:text-foreground",
                   expandedSection && "rotate-90"
                 )}
               />
@@ -176,7 +176,8 @@ export function EstimateSectionCard({
             ) : (
               <div className="p-4 text-xs text-muted-foreground">
                 <p>В разделе пока нет работ.</p>
-                <div className="mt-3 flex justify-end border-t pt-3">
+                <Separator className="mt-3" />
+                <div className="mt-3 flex justify-end">
                   <Frame>
                     <ButtonGroup>
                       <Button size="xs" variant="outline" onClick={onAddSection}>

@@ -4,6 +4,19 @@ import * as React from "react"
 import { useCallback, useDeferredValue, useRef } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -54,6 +67,8 @@ const EMPTY_MATERIAL_DIALOG: MaterialDialogState = {
   work: null,
   selected: null,
 }
+
+const EMPTY_SECTIONS: ProjectEstimateContentSection[] = []
 
 const OPTION_SEARCH_MIN_LENGTH = 3
 const WORK_COEFFICIENT_DIALOG_KEY = "work-coefficient"
@@ -173,7 +188,9 @@ export function EstimateEditorView({
   const {
     content,
     loading,
-    error,
+    loadError,
+    mutationError,
+    clearMutationError,
     saving,
     savingIds,
     applyChange,
@@ -199,22 +216,22 @@ export function EstimateEditorView({
   const searchActive = estimateSearch.length > 0
   const deferredSearch = useDeferredValue(estimateSearch)
 
+
+
   // Stabilise visibleSections: only recompute when content sections actually change
-  const sectionsRef = useRef(content?.sections)
-  const sectionsForMemo = React.useMemo(() => {
-    const next = content?.sections ?? []
-    const prev = sectionsRef.current
-    // Shallow-comparison of section ids to avoid new array on every render
-    if (
-      prev &&
-      prev.length === next.length &&
-      prev.every((s: ProjectEstimateContentSection, i: number) => s === next[i])
-    ) {
-      return prev
+  const nextSections = content?.sections ?? EMPTY_SECTIONS
+  const [sectionsForMemo, setSectionsForMemo] = React.useState(nextSections)
+  const [prevSections, setPrevSections] = React.useState(nextSections)
+
+  if (nextSections !== prevSections) {
+    setPrevSections(nextSections)
+    const isSame =
+      nextSections.length === sectionsForMemo.length &&
+      nextSections.every((s, i) => s === sectionsForMemo[i])
+    if (!isSame) {
+      setSectionsForMemo(nextSections)
     }
-    sectionsRef.current = next
-    return next
-  }, [content?.sections])
+  }
 
   const visibleSections = React.useMemo(
     () => filterSections(sectionsForMemo, deferredSearch),
@@ -284,12 +301,17 @@ export function EstimateEditorView({
     router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
   }, [pathname, router, searchParams])
 
-  React.useEffect(() => {
-    if (!coefficientOpen) return
-    const nextValue = coefficientQuery.data?.data.coefficientPercent
-    if (nextValue === undefined) return
-    setCoefficientValue(formatCoefficientInput(nextValue))
-  }, [coefficientOpen, coefficientQuery.data?.data.coefficientPercent])
+  const nextValue = coefficientQuery.data?.data.coefficientPercent
+  const [prevCoefficientOpen, setPrevCoefficientOpen] = React.useState(coefficientOpen)
+  const [prevNextValue, setPrevNextValue] = React.useState(nextValue)
+
+  if (coefficientOpen !== prevCoefficientOpen || nextValue !== prevNextValue) {
+    setPrevCoefficientOpen(coefficientOpen)
+    setPrevNextValue(nextValue)
+    if (coefficientOpen && nextValue !== undefined) {
+      setCoefficientValue(formatCoefficientInput(nextValue))
+    }
+  }
 
   const workOptions = useQuery({
     queryKey: projectsQueryKeys.estimateWorkOptions(projectId, recordId, workParams),
@@ -386,24 +408,6 @@ export function EstimateEditorView({
       await save({
         action: "reorder_works",
         payload: { sectionId, items: sortPayload(next) },
-      })
-    },
-    [content, searchActive, save]
-  )
-
-  const moveMaterial = useCallback(
-    async (workId: string, materialId: string, direction: MoveDirection) => {
-      if (!content || searchActive) return
-      const work = content.sections
-        .flatMap((section: ProjectEstimateContentSection) => section.works)
-        .find((item: ProjectEstimateContentWork) => item.id === workId)
-      if (!work) return
-      const next = moveItem(work.materials, materialId, direction)
-      if (!next) return
-
-      await save({
-        action: "reorder_materials",
-        payload: { workId, items: sortPayload(next) },
       })
     },
     [content, searchActive, save]
@@ -588,7 +592,6 @@ export function EstimateEditorView({
       onArchive: setArchiveRequest,
       onMoveSection: moveSection,
       onMoveWork: moveWork,
-      onMoveMaterial: moveMaterial,
       onAddSection: () => setSectionOpen(true),
       onAddWork: openWorkDialog,
       onAddMaterial: openMaterialDialog,
@@ -600,7 +603,6 @@ export function EstimateEditorView({
       save,
       moveSection,
       moveWork,
-      moveMaterial,
       openWorkDialog,
       openMaterialDialog,
       openReplaceWorkDialog,
@@ -608,15 +610,22 @@ export function EstimateEditorView({
   )
 
   if (loading) {
-    return <div className="p-4 text-xs text-muted-foreground">Загрузка сметы...</div>
+    return (
+      <div className="flex flex-col gap-4 p-4">
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    )
   }
 
-  if (error || !content) {
+  if (!content) {
     return (
       <div className="flex flex-col gap-3 p-4">
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-xs text-destructive">
-          {error ?? "Не удалось загрузить смету"}
-        </div>
+        <Alert variant="destructive">
+          <AlertTitle>Ошибка</AlertTitle>
+          <AlertDescription>{loadError ?? "Не удалось загрузить смету"}</AlertDescription>
+        </Alert>
         <Button className="w-fit" variant="outline" onClick={() => refetch()}>
           Повторить
         </Button>
@@ -627,6 +636,12 @@ export function EstimateEditorView({
   return (
     <EstimateEditorContext.Provider value={contextValue}>
       <div className="flex h-full min-h-0 flex-1 flex-col">
+        {mutationError && (
+          <Alert variant="destructive" className="mx-1 mt-1">
+            <AlertTitle>Ошибка сохранения</AlertTitle>
+            <AlertDescription>{mutationError}</AlertDescription>
+          </Alert>
+        )}
         <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-lg border bg-background p-1">
           {content.sections.length === 0 ? (
             <EstimateEmptyState onCreateClick={() => setSectionOpen(true)} />
@@ -682,21 +697,25 @@ export function EstimateEditorView({
         />
         <Dialog open={coefficientOpen} onOpenChange={handleCoefficientOpenChange}>
           <DialogContent className="sm:max-w-sm">
-            <form className="space-y-4" onSubmit={applyCoefficient}>
+            <form className="flex flex-col gap-4" onSubmit={applyCoefficient}>
               <DialogHeader>
                 <DialogTitle>Коэффициент работ</DialogTitle>
                 <DialogDescription>
                   Коэффициент применяется только к работам. Цена округляется вверх до ближайших 10 ₽.
                 </DialogDescription>
               </DialogHeader>
-              <Input
-                autoFocus
-                disabled={coefficientQuery.isLoading}
-                inputMode="decimal"
-                onChange={(event) => setCoefficientValue(event.target.value)}
-                placeholder="10"
-                value={coefficientValue}
-              />
+              <Field>
+                <FieldLabel htmlFor="coefficient">Коэффициент (%)</FieldLabel>
+                <Input
+                  id="coefficient"
+                  autoFocus
+                  disabled={coefficientQuery.isLoading}
+                  inputMode="decimal"
+                  onChange={(event) => setCoefficientValue(event.target.value)}
+                  placeholder="10"
+                  value={coefficientValue}
+                />
+              </Field>
               {coefficientError ? (
                 <p className="text-xs text-destructive">{coefficientError}</p>
               ) : null}
@@ -715,34 +734,32 @@ export function EstimateEditorView({
             </form>
           </DialogContent>
         </Dialog>
-        <Dialog
+        <AlertDialog
           open={archiveRequest !== null}
           onOpenChange={handleArchiveOpenChange}
         >
-          <DialogContent className="sm:max-w-sm">
-            <DialogHeader>
-              <DialogTitle>{archiveRequest?.title}</DialogTitle>
-              <DialogDescription>{archiveRequest?.description}</DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
+          <AlertDialogContent className="sm:max-w-sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>{archiveRequest?.title}</AlertDialogTitle>
+              <AlertDialogDescription>{archiveRequest?.description}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                disabled={saving}
                 onClick={() => setArchiveRequest(null)}
               >
                 Отмена
-              </Button>
-              <Button
-                type="button"
+              </AlertDialogCancel>
+              <AlertDialogAction
                 variant="destructive"
                 disabled={saving}
                 onClick={confirmArchive}
               >
                 Удалить
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </EstimateEditorContext.Provider>
   )

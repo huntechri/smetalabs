@@ -61,6 +61,7 @@ type MaterialRow = {
   supplier_name: string | null
   notes: string | null
   sort_order: number
+  directory_materials?: any
 }
 
 type WorkIdentityRow = {
@@ -81,7 +82,7 @@ type MaterialIdentityRow = {
 const RECORD_SELECT = "id,project_id,name,type,status,amount"
 const SECTION_SELECT = "id,title,number,sort_order,works_amount,materials_amount,total_amount"
 const WORK_SELECT = "id,section_id,number,code,title,unit_code,unit_label,quantity,price,total_amount,category,notes,sort_order"
-const MATERIAL_SELECT = "id,work_id,section_id,number,code,title,unit_code,unit_label,quantity,consumption,price,total_amount,supplier_name,notes,sort_order"
+const MATERIAL_SELECT = "id,work_id,section_id,number,code,title,unit_code,unit_label,quantity,consumption,price,total_amount,supplier_name,notes,sort_order,directory_material_id,directory_materials(image_url)"
 
 function toNumber(value: string | number | null | undefined) {
   const parsed = typeof value === "number" ? value : Number(value ?? 0)
@@ -93,7 +94,11 @@ function roundMoney(value: number) {
 }
 
 function roundQuantity(value: number) {
-  return Math.round(value * 1000) / 1000
+  return Math.ceil(value)
+}
+
+function roundConsumption(value: number) {
+  return Math.round(value * 1000000) / 1000000
 }
 
 function mapRecord(row: RecordRow) {
@@ -108,6 +113,15 @@ function mapRecord(row: RecordRow) {
 }
 
 function mapMaterial(row: MaterialRow): ProjectEstimateContentMaterial {
+  let imageUrl: string | null = null
+  if (row.directory_materials) {
+    if (Array.isArray(row.directory_materials)) {
+      imageUrl = row.directory_materials[0]?.image_url ?? null
+    } else {
+      imageUrl = row.directory_materials.image_url ?? null
+    }
+  }
+
   return {
     id: row.id,
     workId: row.work_id,
@@ -123,6 +137,7 @@ function mapMaterial(row: MaterialRow): ProjectEstimateContentMaterial {
     totalAmount: toNumber(row.total_amount),
     supplierName: row.supplier_name,
     notes: row.notes,
+    imageUrl,
     sortOrder: row.sort_order,
   }
 }
@@ -270,15 +285,16 @@ function resolveMaterialQuantity(params: {
 
   if ((changedField === "consumption" || changedField === "workQuantity") && nextConsumption !== null) {
     return {
-      quantity: roundQuantity(params.workQuantity / nextConsumption),
+      quantity: roundQuantity(params.workQuantity * nextConsumption),
       consumption: nextConsumption,
     }
   }
 
   if (changedField === "quantity") {
+    const resolvedQty = roundQuantity(inputQuantity)
     return {
-      quantity: roundQuantity(inputQuantity),
-      consumption: inputQuantity > 0 ? roundQuantity(params.workQuantity / inputQuantity) : null,
+      quantity: resolvedQty,
+      consumption: params.workQuantity > 0 ? roundConsumption(resolvedQty / params.workQuantity) : null,
     }
   }
 
@@ -417,6 +433,7 @@ function mapRpcSectionResponse(json: RpcRow): ProjectEstimateContentResponse['da
       totalAmount: toNumber(narrow(row.totalAmount)),
       supplierName: (row.supplierName as string | null) ?? null,
       notes: (row.notes as string | null) ?? null,
+      imageUrl: (row.imageUrl as string | null) ?? null,
       sortOrder: toNumber(narrow(row.sortOrder)),
     })
     materialsByWork.set(workId, items)
@@ -758,19 +775,6 @@ export async function applyProjectEstimateContentChangeForWorkspace(
       })
       if (error) throw error
       return { data: mapRpcSectionResponse(sectionData), _partial: true } as ProjectEstimateContentResponse & { _partial?: boolean }
-    }
-    case "reorder_materials": {
-      await getWork(workspaceOwnerId, projectId, recordId, input.payload.workId)
-      const { error } = await supabase.rpc("reorder_estimate_materials", {
-        p_workspace_owner_id: workspaceOwnerId,
-        p_project_id: projectId,
-        p_estimate_record_id: recordId,
-        p_work_id: input.payload.workId,
-        p_items: input.payload.items,
-        p_updated_by: userId,
-      })
-      if (error) throw error
-      break
     }
     case "move_material_to_work": {
       await getMaterial(workspaceOwnerId, projectId, recordId, input.payload.materialId)

@@ -9,12 +9,12 @@ export function formatMoney(value: number) {
 }
 
 export function formatConsumption(value: number) {
-  if (value > 0 && value < 0.001) {
-    return "0,001"
+  if (value > 0 && value < 0.000001) {
+    return "0,000001"
   }
 
   return new Intl.NumberFormat("ru-RU", {
-    maximumFractionDigits: 3,
+    maximumFractionDigits: 6,
     minimumFractionDigits: 0,
   }).format(value)
 }

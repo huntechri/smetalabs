@@ -14,7 +14,11 @@ function roundMoney(value: number): number {
 }
 
 function roundQuantity(value: number): number {
-  return Math.round(value * 1000) / 1000
+  return Math.ceil(value)
+}
+
+function roundConsumption(value: number): number {
+  return Math.round(value * 1000000) / 1000000
 }
 
 function resolveMaterialQuantity(params: {
@@ -35,15 +39,16 @@ function resolveMaterialQuantity(params: {
     nextConsumption !== null
   ) {
     return {
-      quantity: roundQuantity(params.workQuantity / nextConsumption),
+      quantity: roundQuantity(params.workQuantity * nextConsumption),
       consumption: nextConsumption,
     }
   }
 
   if (changedField === "quantity") {
+    const resolvedQty = roundQuantity(inputQuantity)
     return {
-      quantity: roundQuantity(inputQuantity),
-      consumption: inputQuantity > 0 ? roundQuantity(params.workQuantity / inputQuantity) : null,
+      quantity: resolvedQty,
+      consumption: params.workQuantity > 0 ? roundConsumption(resolvedQty / params.workQuantity) : null,
     }
   }
 
@@ -113,10 +118,10 @@ function applyUpdateWork(
   const newPrice = price !== undefined ? price : foundWork.price
   const newTotalAmount = roundMoney(newQuantity * newPrice)
 
-  // Recalculate materials whose consumption > 0
+  // Recalculate materials whose consumption is not null
   const updatedMaterials: ProjectEstimateContentMaterial[] = foundWork.materials.map((m) => {
-    if (m.consumption !== null && m.consumption > 0) {
-      const newMatQuantity = roundQuantity(newQuantity / m.consumption)
+    if (m.consumption !== null) {
+      const newMatQuantity = roundQuantity(newQuantity * m.consumption)
       const newMatTotalAmount = roundMoney(newMatQuantity * m.price)
       return { ...m, quantity: newMatQuantity, totalAmount: newMatTotalAmount }
     }
@@ -541,35 +546,6 @@ function applyReorderWorks(
   }
 }
 
-// ─── reorder_materials ──────────────────────────────────────────
-
-function applyReorderMaterials(
-  data: ProjectEstimateContentData,
-  input: Extract<EstimateContentChangeInput, { action: "reorder_materials" }>
-): ProjectEstimateContentData {
-  const { workId, items } = input.payload
-  const sortMap = new Map(items.map((i) => [i.id, i.sortOrder]))
-
-  const updatedSections = data.sections.map((section) => {
-    const updatedWorks = section.works.map((work) => {
-      if (work.id !== workId) return work
-      const updatedMaterials = work.materials
-        .map((m) => ({
-          ...m,
-          sortOrder: sortMap.has(m.id) ? sortMap.get(m.id)! : m.sortOrder,
-        }))
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-      return { ...work, materials: updatedMaterials }
-    })
-    return { ...section, works: updatedWorks }
-  })
-
-  return {
-    ...data,
-    sections: updatedSections,
-  }
-}
-
 // ─── public API ─────────────────────────────────────────────────
 
 /**
@@ -583,7 +559,7 @@ function applyReorderMaterials(
  * - archive_section / archive_work / archive_material
  * - create_section
  * - add_work_from_directory / add_material_from_directory
- * - reorder_sections / reorder_works / reorder_materials
+ * - reorder_sections / reorder_works
  */
 export function applyOptimisticChange(
   data: ProjectEstimateContentData | undefined,
@@ -621,9 +597,6 @@ export function applyOptimisticChange(
 
     case "reorder_works":
       return applyReorderWorks(data, input)
-
-    case "reorder_materials":
-      return applyReorderMaterials(data, input)
 
     default:
       return null

@@ -272,7 +272,6 @@ features/estimates/estimate-details/components/
 ├── estimate-editor-view.tsx           # Основной view
 ├── estimate-editor-header.tsx         # Заголовок с тулбаром
 ├── estimate-section-card.tsx          # Карточка раздела
-├── estimate-section.tsx               # Компактный раздел
 ├── estimate-section-dialog.tsx        # Диалог раздела
 ├── create-section-dialog.tsx          # Создание раздела
 ├── estimate-work-card.tsx             # Карточка работы
@@ -283,13 +282,11 @@ features/estimates/estimate-details/components/
 ├── estimate-material-picker-dialog.tsx # Пикер материалов из справочника
 ├── estimate-material-actions.tsx      # Действия над материалом
 ├── estimate-material-name.tsx         # Наименование материала
-├── estimate-row.tsx                   # Строка (work/material)
 ├── estimate-metric-group.tsx          # Группа метрик
 ├── estimate-name.tsx                  # Наименование позиции
 ├── estimate-value.tsx                 # Значение (ед. изм, цена, сумма)
 ├── estimate-empty-state.tsx           # Пустое состояние
 ├── estimate-empty-content.tsx         # Пустой контент секции
-├── estimate-debug-material-card.tsx   # Debug-карточка материала
 └── estimate-tabs/
     ├── estimate-tab-placeholder.tsx   # Плейсхолдер таба
     └── estimate-tab-toolbar.tsx       # Тулбар таба

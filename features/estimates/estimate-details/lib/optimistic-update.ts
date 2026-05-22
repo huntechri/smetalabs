@@ -17,6 +17,10 @@ function roundQuantity(value: number): number {
   return Math.round(value * 1000) / 1000
 }
 
+function roundConsumption(value: number): number {
+  return Math.round(value * 1000000) / 1000000
+}
+
 function resolveMaterialQuantity(params: {
   workQuantity: number
   currentQuantity: number
@@ -35,7 +39,7 @@ function resolveMaterialQuantity(params: {
     nextConsumption !== null
   ) {
     return {
-      quantity: roundQuantity(params.workQuantity / nextConsumption),
+      quantity: roundQuantity(params.workQuantity * nextConsumption),
       consumption: nextConsumption,
     }
   }
@@ -43,7 +47,7 @@ function resolveMaterialQuantity(params: {
   if (changedField === "quantity") {
     return {
       quantity: roundQuantity(inputQuantity),
-      consumption: inputQuantity > 0 ? roundQuantity(params.workQuantity / inputQuantity) : null,
+      consumption: params.workQuantity > 0 ? roundConsumption(inputQuantity / params.workQuantity) : null,
     }
   }
 
@@ -113,10 +117,10 @@ function applyUpdateWork(
   const newPrice = price !== undefined ? price : foundWork.price
   const newTotalAmount = roundMoney(newQuantity * newPrice)
 
-  // Recalculate materials whose consumption > 0
+  // Recalculate materials whose consumption is not null
   const updatedMaterials: ProjectEstimateContentMaterial[] = foundWork.materials.map((m) => {
-    if (m.consumption !== null && m.consumption > 0) {
-      const newMatQuantity = roundQuantity(newQuantity / m.consumption)
+    if (m.consumption !== null) {
+      const newMatQuantity = roundQuantity(newQuantity * m.consumption)
       const newMatTotalAmount = roundMoney(newMatQuantity * m.price)
       return { ...m, quantity: newMatQuantity, totalAmount: newMatTotalAmount }
     }

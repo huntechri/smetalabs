@@ -97,6 +97,10 @@ function roundQuantity(value: number) {
   return Math.round(value * 1000) / 1000
 }
 
+function roundConsumption(value: number) {
+  return Math.round(value * 1000000) / 1000000
+}
+
 function mapRecord(row: RecordRow) {
   return {
     id: row.id,
@@ -281,7 +285,7 @@ function resolveMaterialQuantity(params: {
 
   if ((changedField === "consumption" || changedField === "workQuantity") && nextConsumption !== null) {
     return {
-      quantity: roundQuantity(params.workQuantity / nextConsumption),
+      quantity: roundQuantity(params.workQuantity * nextConsumption),
       consumption: nextConsumption,
     }
   }
@@ -289,7 +293,7 @@ function resolveMaterialQuantity(params: {
   if (changedField === "quantity") {
     return {
       quantity: roundQuantity(inputQuantity),
-      consumption: inputQuantity > 0 ? roundQuantity(params.workQuantity / inputQuantity) : null,
+      consumption: params.workQuantity > 0 ? roundConsumption(inputQuantity / params.workQuantity) : null,
     }
   }
 

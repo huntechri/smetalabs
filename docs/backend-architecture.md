@@ -1821,6 +1821,7 @@ permissions.id           ◀── role_permissions.permission_id
 - **[directory-works-architecture.md](./directory-works-architecture.md)** — справочник работ: канонический контракт каталога (DB, search, CRUD, import/export, embeddings, кэширование, observability).
 - **[global-purchases-architecture.md](./global-purchases-architecture.md)** — глобальные закупки: первый рабочий слой с импортом CSV, экспортом XLSX, группировкой строк и material-picker.
 - **[projects-architecture.md](./projects-architecture.md)** — проекты: базовый список объектов рабочей области с реальными данными, CRUD, фильтрацией и архивированием.
+- **[project-estimate-content-architecture.md](./project-estimate-content-architecture.md)** — слой контента сметы: разделы, работы и материалы с оптимистичными обновлениями, RPC-функциями и targeted re-read.
 
 ---
 

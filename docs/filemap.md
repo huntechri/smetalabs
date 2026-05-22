@@ -159,3 +159,136 @@ features/estimates/estimate-details/
 ```
 
 Global purchases stay workspace-scoped through `workspace_owner_id`. The first version opens on today's date by default, supports real list data, text search, project filtering, date filtering, grouped rows by object, material-based create, material replacement, fact quantity/price edits, row date/object edits and soft archive. Project selection is linked to active non-archived projects. Material adding uses the materials catalog as source but queries only a lightweight material-picker endpoint. Supplier selection, import, export, AI behavior, warehouse logic, payments and manual plan editing remain outside this slice.
+
+### Directory modules (spravochniki)
+
+```txt
+features/directory-materials/       # Справочник материалов: CRUD, search, AI-search, import/export, categories
+features/directory-works/           # Справочник работ: CRUD, search, AI-search, import/export, categories, ordering
+features/directory-suppliers/       # Справочник поставщиков: CRUD, search, archive
+features/directory-counterparties/  # Справочник контрагентов: CRUD, search, archive, bank/passport details
+features/directories/               # Общие компоненты тулбаров справочников
+```
+
+All four directories are real (no mocks): each has its own DB schema in `db/schema/`, migrations, full API routes, feature slice with `api/`, `server/` (repository + service + schemas + route-handlers), `hooks/`, `components/`, and `types.ts`. Materials and works additionally support CSV import with batch processing, XLSX export, AI semantic search (embeddings via Supabase Edge Function), and large-catalog optimizations.
+
+### Workspace settings (team management)
+
+```txt
+features/workspace-settings/        # Управление командой workspace
+├── api/                            # TanStack Query клиенты и query keys
+├── components/                     # 16 UI компонентов (members, invitations, domains, dialogs, cards)
+├── hooks/                          # useWorkspaceMembers, useInvitations, useDomains, etc.
+├── __mocks__/                      # workspace-settings (legacy mock, tests only)
+└── types.ts
+```
+
+Real data via `app/api/team/**` routes + `workspace_members`, `workspace_invitations`, `workspace_allowed_domains` tables. Supports invite by email, invite link, domain allowlist, role change, suspend, remove, password reset, ownership transfer (planned).
+
+### Account settings
+
+```txt
+features/account-settings/          # Настройки профиля и workspace
+├── api/                            # TanStack Query клиенты
+├── components/                     # Карточки: profile, workspace, notifications, preferences, security, sensitive-actions
+├── hooks/                          # useAccountSettings, useUpdateProfile, etc.
+├── server/                         # Server Actions + repository + service + schemas
+├── __mocks__/
+└── types.ts
+```
+
+Real data via `GET /api/settings` (merges `profiles` + `user_settings` JSONB) + server actions per subdocument. Dangerous actions (leave, transfer, deactivate) return 501 — UI shows disabled "скоро" buttons.
+
+### Access control (RBAC)
+
+```txt
+features/access-control/            # Матрица ролей и разрешений
+├── api/                            # TanStack Query клиент
+├── components/                     # PermissionsMatrix, toolbar, skeleton, error
+├── hooks/                          # useAccessControl, usePermissionMatrixState
+├── lib/                            # buildPermissionMatrix, permissionGroups
+├── __mocks__/
+└── types.ts
+```
+
+Real data via `GET /api/access-control/roles` — returns roles, permissions, and role_permissions matrix. Save button disabled until persistence exists. 5 roles × 19 permissions × 5 groups.
+
+### Dashboard
+
+```txt
+features/dashboard/                 # Дашборд: chart-area, data-table, section-cards
+app/(main)/dashboard/               # Страница + data.json (mock stats)
+```
+
+Dashboard page renders section-cards with real project data. Chart components use Recharts with `--chart-1…5` tokens. Stats aggregation API routes planned.
+
+### Auth
+
+```txt
+features/auth/                      # Формы: login, signup, forgot-password, set-password, invite-password
+app/(auth)/                         # Route group: login, signup, forgot-password, set-password pages
+app/auth/callback/                  # OTP/OAuth callback handler
+lib/auth/                           # actions, activity, invitations, permissions, team
+proxy.ts                            # Next.js 16 middleware proxy (Supabase SSR session refresh)
+```
+
+Supabase Auth with email/password. OAuth providers hidden until wired. Invitation flow: invite email → set-password → accept invitation via `lib/auth/invitations.ts`.
+
+### Navigation shell
+
+```txt
+features/app-sidebar.tsx            # Основной sidebar приложения
+features/nav-main.tsx               # Главное меню
+features/nav-projects.tsx           # Список проектов в sidebar
+features/nav-secondary.tsx          # Вторичное меню (настройки)
+features/nav-user.tsx               # Меню пользователя
+features/site-header.tsx            # Site header (public pages)
+features/search-form.tsx            # Форма поиска в sidebar
+components/nav-documents.tsx        # Навигация по документам сметы
+```
+
+### Purchases and Execution tabs (estimate sub-pages)
+
+```txt
+features/purchases/                 # Закупки внутри сметы (estimate sub-tab)
+features/execution/                 # Выполнение внутри сметы (estimate sub-tab)
+app/(main)/projects/[projectId]/estimates/[estimateId]/
+├── purchases/page.tsx              # Вкладка «Закупки»
+├── execution/page.tsx              # Вкладка «Выполнение»
+├── finances/page.tsx               # Вкладка «Финансы»
+├── documents/page.tsx              # Вкладка «Документы»
+└── layout.tsx                      # Sub-layout с estimate-navigation-tabs
+```
+
+Purchases and execution use estimate-scoped tables (`purchases`, `executions`). Currently use `__mocks__/` — migration to real data planned in phase 4. Finances and documents are placeholder pages.
+
+### Estimate editor — component inventory
+
+```txt
+features/estimates/estimate-details/components/
+├── estimate-editor-context.tsx        # React Context
+├── estimate-editor-view.tsx           # Основной view
+├── estimate-editor-header.tsx         # Заголовок с тулбаром
+├── estimate-section-card.tsx          # Карточка раздела
+├── estimate-section.tsx               # Компактный раздел
+├── estimate-section-dialog.tsx        # Диалог раздела
+├── create-section-dialog.tsx          # Создание раздела
+├── estimate-work-card.tsx             # Карточка работы
+├── estimate-work-picker-dialog.tsx    # Пикер работ из справочника
+├── estimate-work-actions.tsx          # Действия над работой
+├── estimate-work-number.tsx           # Номер работы
+├── estimate-material-card.tsx         # Карточка материала
+├── estimate-material-picker-dialog.tsx # Пикер материалов из справочника
+├── estimate-material-actions.tsx      # Действия над материалом
+├── estimate-material-name.tsx         # Наименование материала
+├── estimate-row.tsx                   # Строка (work/material)
+├── estimate-metric-group.tsx          # Группа метрик
+├── estimate-name.tsx                  # Наименование позиции
+├── estimate-value.tsx                 # Значение (ед. изм, цена, сумма)
+├── estimate-summary-value.tsx         # Итоговое значение
+├── estimate-empty-state.tsx           # Пустое состояние
+├── estimate-empty-content.tsx         # Пустой контент секции
+├── estimate-debug-material-card.tsx   # Debug-карточка материала
+└── estimate-tabs/
+    ├── estimate-tab-placeholder.tsx   # Плейсхолдер таба
+    └── estimate-tab-toolbar.tsx       # Тулбар таба

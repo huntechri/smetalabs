@@ -188,7 +188,7 @@ export function EstimateWorkCard({
             <EstimateName onChange={handleTitleChange} value={work.title} />
           </div>
  
-          <div className="flex w-full flex-col gap-2 rounded-md border bg-background p-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
+          <div className="flex w-full flex-col gap-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
             <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-80">
               <EditableBadge
                 label="Кол-во"
@@ -240,7 +240,7 @@ export function EstimateWorkCard({
               </div>
             )}
  
-            <div className="mt-3 flex justify-end">
+            <div className={cn("flex justify-end", work.materials.length > 0 && "mt-3")}>
               <Frame>
                 <ButtonGroup>
                   <Button size="xs" variant="outline" onClick={onAddSection}>

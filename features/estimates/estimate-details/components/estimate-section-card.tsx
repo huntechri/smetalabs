@@ -155,7 +155,7 @@ export function EstimateSectionCard({
 
         <CollapsibleContent>
           <Separator />
-          <div className={cn("flex flex-col", section.works.length && "bg-muted/20 p-3 gap-3")}>
+          <div className={cn("flex flex-col", section.works.length && "bg-muted/20 px-3 py-2 gap-3")}>
             {section.works.length ? (
               section.works.map((work, index) => (
                 <EstimateWorkCard

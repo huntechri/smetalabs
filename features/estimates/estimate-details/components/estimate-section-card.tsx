@@ -96,35 +96,44 @@ export function EstimateSectionCard({
   return (
     <section className="flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
       <Collapsible open={expandedSection} onOpenChange={setExpandedSection}>
-        <div className="flex flex-col gap-4 border-b px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 border-b bg-muted/45 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <CollapsibleTrigger asChild>
             <button
-              className="flex min-w-0 flex-1 items-start gap-3 rounded-md border bg-background p-2 text-left transition-colors hover:bg-muted/50"
+              className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-primary group"
               type="button"
             >
-              <Frame>
-                <CaretRightIcon
-                  weight="bold"
-                  className={cn(
-                    "shrink-0 transition-transform",
-                    expandedSection && "rotate-90"
-                  )}
-                />
-              </Frame>
-              <div className="flex min-w-0 flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Frame>
-                    <Badge>{`Раздел ${section.number}: ${section.title}`}</Badge>
-                  </Frame>
-                </div>
+              <CaretRightIcon
+                weight="bold"
+                className={cn(
+                  "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:text-foreground",
+                  expandedSection && "rotate-90"
+                )}
+              />
+              <div className="flex min-w-0 items-center gap-2">
+                <Badge className="rounded-md font-semibold shrink-0">
+                  Раздел {section.number}
+                </Badge>
+                <span className="text-sm font-semibold tracking-tight text-foreground truncate">
+                  {section.title}
+                </span>
               </div>
             </button>
           </CollapsibleTrigger>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="grid grid-cols-2 gap-2 rounded-md border bg-background p-2 sm:min-w-56">
-              <EstimateSummaryValue label="Работы" value={section.worksAmount} />
-              <EstimateSummaryValue label="Материалы" value={section.materialsAmount} />
+            <div className="flex items-center gap-4 rounded-md border bg-background px-4 py-2 sm:min-w-56 divide-x divide-border">
+              <EstimateSummaryValue
+                label="Работы"
+                value={section.worksAmount}
+                variant="clean"
+                className="flex-1"
+              />
+              <EstimateSummaryValue
+                label="Материалы"
+                value={section.materialsAmount}
+                variant="clean"
+                className="flex-1 pl-4"
+              />
             </div>
             <Frame>
               <ButtonGroup>

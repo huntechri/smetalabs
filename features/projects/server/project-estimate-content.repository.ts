@@ -61,6 +61,7 @@ type MaterialRow = {
   supplier_name: string | null
   notes: string | null
   sort_order: number
+  directory_materials?: any
 }
 
 type WorkIdentityRow = {
@@ -81,7 +82,7 @@ type MaterialIdentityRow = {
 const RECORD_SELECT = "id,project_id,name,type,status,amount"
 const SECTION_SELECT = "id,title,number,sort_order,works_amount,materials_amount,total_amount"
 const WORK_SELECT = "id,section_id,number,code,title,unit_code,unit_label,quantity,price,total_amount,category,notes,sort_order"
-const MATERIAL_SELECT = "id,work_id,section_id,number,code,title,unit_code,unit_label,quantity,consumption,price,total_amount,supplier_name,notes,sort_order"
+const MATERIAL_SELECT = "id,work_id,section_id,number,code,title,unit_code,unit_label,quantity,consumption,price,total_amount,supplier_name,notes,sort_order,directory_material_id,directory_materials(image_url)"
 
 function toNumber(value: string | number | null | undefined) {
   const parsed = typeof value === "number" ? value : Number(value ?? 0)
@@ -108,6 +109,15 @@ function mapRecord(row: RecordRow) {
 }
 
 function mapMaterial(row: MaterialRow): ProjectEstimateContentMaterial {
+  let imageUrl: string | null = null
+  if (row.directory_materials) {
+    if (Array.isArray(row.directory_materials)) {
+      imageUrl = row.directory_materials[0]?.image_url ?? null
+    } else {
+      imageUrl = row.directory_materials.image_url ?? null
+    }
+  }
+
   return {
     id: row.id,
     workId: row.work_id,
@@ -123,6 +133,7 @@ function mapMaterial(row: MaterialRow): ProjectEstimateContentMaterial {
     totalAmount: toNumber(row.total_amount),
     supplierName: row.supplier_name,
     notes: row.notes,
+    imageUrl,
     sortOrder: row.sort_order,
   }
 }
@@ -417,6 +428,7 @@ function mapRpcSectionResponse(json: RpcRow): ProjectEstimateContentResponse['da
       totalAmount: toNumber(narrow(row.totalAmount)),
       supplierName: (row.supplierName as string | null) ?? null,
       notes: (row.notes as string | null) ?? null,
+      imageUrl: (row.imageUrl as string | null) ?? null,
       sortOrder: toNumber(narrow(row.sortOrder)),
     })
     materialsByWork.set(workId, items)

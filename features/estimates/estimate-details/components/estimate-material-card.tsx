@@ -77,6 +77,15 @@ export function EstimateMaterialCard({
               <Frame>
                 <Badge variant="secondary">{material.unitLabel}</Badge>
               </Frame>
+              {material.imageUrl && (
+                <Frame className="p-0.5">
+                  <img
+                    src={material.imageUrl}
+                    alt={material.title}
+                    className="size-6 rounded-sm object-cover"
+                  />
+                </Frame>
+              )}
             </div>
           </div>
           <EstimateMaterialActions

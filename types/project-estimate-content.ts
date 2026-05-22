@@ -23,6 +23,7 @@ export type ProjectEstimateContentMaterial = {
   totalAmount: number
   supplierName: string | null
   notes: string | null
+  imageUrl?: string | null
   sortOrder: number
 }
 

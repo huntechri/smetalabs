@@ -189,6 +189,8 @@ export function EstimateEditorView({
     content,
     loading,
     loadError,
+    mutationError,
+    clearMutationError,
     saving,
     savingIds,
     applyChange,

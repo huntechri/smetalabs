@@ -124,15 +124,17 @@ The project estimate-record layer stores rows shown in the project estimate tabl
 
 ### Estimate editor (estimate-details)
 
+> **Обновление 2026-05-22 (PR #157):** Улучшена визуальная иерархия и вложенность — section header без nested borders, улучшенная типографика, переработан layout work/material карточек. Сводные значения секций используют стандартные Shadcn outline Badges вместо кастомного `estimate-summary-value.tsx` (удалён). Диалоги picker-ов (work/material) исправлены от 1-click багов дублирования.
+
 ```txt
 features/estimates/estimate-details/
 ├── components/
 │   ├── estimate-editor-context.tsx        # React Context, замена prop drilling
 │   ├── estimate-editor-view.tsx           # Основной view редактора
 │   ├── estimate-editor-header.tsx         # Заголовок с тулбаром
-│   ├── estimate-section-card.tsx          # Карточка раздела
-│   ├── estimate-work-card.tsx             # Карточка работы
-│   ├── estimate-material-card.tsx         # Карточка материала
+│   ├── estimate-section-card.tsx          # Карточка раздела (header без nested borders)
+│   ├── estimate-work-card.tsx             # Карточка работы (layout v2)
+│   ├── estimate-material-card.tsx         # Карточка материала (layout v2)
 │   ├── estimate-work-picker-dialog.tsx    # Пикер работ из справочника
 │   ├── estimate-material-picker-dialog.tsx # Пикер материалов из справочника
 │   ├── create-section-dialog.tsx          # Диалог создания раздела
@@ -285,7 +287,6 @@ features/estimates/estimate-details/components/
 ├── estimate-metric-group.tsx          # Группа метрик
 ├── estimate-name.tsx                  # Наименование позиции
 ├── estimate-value.tsx                 # Значение (ед. изм, цена, сумма)
-├── estimate-summary-value.tsx         # Итоговое значение
 ├── estimate-empty-state.tsx           # Пустое состояние
 ├── estimate-empty-content.tsx         # Пустой контент секции
 ├── estimate-debug-material-card.tsx   # Debug-карточка материала

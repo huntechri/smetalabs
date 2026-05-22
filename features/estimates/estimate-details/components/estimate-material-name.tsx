@@ -8,8 +8,8 @@ export function EstimateMaterialName({
   value: string
 }) {
   return (
-    <label className="block min-w-0 rounded-md border bg-background p-2">
-      <span className="mb-1 block text-xs text-muted-foreground uppercase">
+    <label className="flex min-w-0 flex-col gap-1.5">
+      <span className="text-xs text-muted-foreground uppercase">
         Наименование
       </span>
       <Textarea

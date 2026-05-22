@@ -8,8 +8,8 @@ export function EstimateName({
   value: string
 }) {
   return (
-    <label className="min-w-48 flex-1 rounded-md border bg-background p-2">
-      <span className="mb-1 block text-xs text-muted-foreground uppercase">
+    <label className="flex min-w-48 flex-1 flex-col gap-1.5">
+      <span className="text-xs text-muted-foreground uppercase">
         Наименование
       </span>
       <Textarea

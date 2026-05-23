@@ -38,6 +38,8 @@ db/
 ├── index.ts                # Supabase service-role client wrapper for checked server code
 ├── seed.ts
 ├── seed-settings.ts
+├── scripts/
+│   └── seed-directory-works-load-test.sql
 ├── migrations/
 │   ├── 002_rls_policies.sql
 │   ├── 003_workspace_tables.sql
@@ -79,7 +81,11 @@ db/
 │   ├── 037_optimize_estimate_editor_performance.sql
 │   ├── 039_optimistic_insert_delete_rpc.sql
 │   ├── 040_optimistic_insert_delete_return_section.sql
-│   └── 041_fix_rpc_on_conflict_do_nothing.sql
+│   ├── 041_fix_rpc_on_conflict_do_nothing.sql
+│   ├── 042_estimate_materials_image_url_rpc.sql
+│   ├── 042_notifications_foundation.sql
+│   ├── 043_estimate_materials_classical_consumption.sql
+│   └── 044_estimate_materials_ceil_quantity.sql
 └── schema/
     ├── index.ts
     ├── projects.ts
@@ -95,7 +101,8 @@ db/
     ├── user-settings.ts
     ├── workspace-allowed-domains.ts
     ├── workspace-invitations.ts
-    └── workspace-members.ts
+    ├── workspace-members.ts
+    └── notifications.ts
 ```
 
 ---
@@ -224,6 +231,21 @@ app/(main)/dashboard/               # Страница + data.json (mock stats)
 
 Dashboard page renders section-cards with real project data. Chart components use Recharts with `--chart-1…5` tokens. Stats aggregation API routes planned.
 
+### Notifications
+
+```txt
+features/notifications/             # In-app уведомления: bell, list, archive, read
+├── api/                            # TanStack Query клиент и query keys
+├── components/                     # NotificationBell, NotificationItem, NotificationList
+├── hooks/                          # useNotifications
+└── server/                         # Repository + service
+app/api/notifications/              # GET (list), POST (mark-read), archive routes
+db/schema/notifications.ts          # Таблица notifications (recipient, actor, workspace, type, data)
+db/migrations/042_notifications_foundation.sql
+```
+
+Real data: таблица `notifications` хранит in-app уведомления с FK на profiles. API отдаёт уведомления текущего пользователя с пагинацией и поддержкой mark-read/archive. `NotificationBell` показывает счётчик непрочитанных уведомлений в header.
+
 ### Auth
 
 ```txt
@@ -266,27 +288,30 @@ Purchases and execution use estimate-scoped tables (`purchases`, `executions`). 
 
 ### Estimate editor — component inventory
 
+> **Обновление 2026-05-23:** Инвентарь синхронизирован с актуальным деревом. Удалены несуществующие файлы (estimate-editor-header, estimate-section-dialog, estimate-empty-content, estimate-work-actions, estimate-metric-group, estimate-value).
+
 ```txt
-features/estimates/estimate-details/components/
-├── estimate-editor-context.tsx        # React Context
-├── estimate-editor-view.tsx           # Основной view
-├── estimate-editor-header.tsx         # Заголовок с тулбаром
-├── estimate-section-card.tsx          # Карточка раздела
-├── estimate-section-dialog.tsx        # Диалог раздела
-├── create-section-dialog.tsx          # Создание раздела
-├── estimate-work-card.tsx             # Карточка работы
-├── estimate-work-picker-dialog.tsx    # Пикер работ из справочника
-├── estimate-work-actions.tsx          # Действия над работой
-├── estimate-work-number.tsx           # Номер работы
-├── estimate-material-card.tsx         # Карточка материала
-├── estimate-material-picker-dialog.tsx # Пикер материалов из справочника
-├── estimate-material-actions.tsx      # Действия над материалом
-├── estimate-material-name.tsx         # Наименование материала
-├── estimate-metric-group.tsx          # Группа метрик
-├── estimate-name.tsx                  # Наименование позиции
-├── estimate-value.tsx                 # Значение (ед. изм, цена, сумма)
-├── estimate-empty-state.tsx           # Пустое состояние
-├── estimate-empty-content.tsx         # Пустой контент секции
-└── estimate-tabs/
-    ├── estimate-tab-placeholder.tsx   # Плейсхолдер таба
-    └── estimate-tab-toolbar.tsx       # Тулбар таба
+features/estimates/estimate-details/
+├── components/
+│   ├── estimate-editor-context.tsx        # React Context, замена prop drilling
+│   ├── estimate-editor-view.tsx           # Основной view редактора
+│   ├── estimate-section-card.tsx          # Карточка раздела
+│   ├── estimate-work-card.tsx             # Карточка работы
+│   ├── estimate-material-card.tsx         # Карточка материала
+│   ├── estimate-work-picker-dialog.tsx    # Пикер работ из справочника
+│   ├── estimate-material-picker-dialog.tsx # Пикер материалов из справочника
+│   ├── create-section-dialog.tsx          # Диалог создания раздела
+│   ├── estimate-empty-state.tsx           # Пустое состояние
+│   ├── estimate-material-actions.tsx      # Действия над материалом
+│   ├── estimate-material-name.tsx         # Наименование материала
+│   ├── estimate-name.tsx                  # Наименование позиции
+│   └── estimate-work-number.tsx           # Номер работы
+├── lib/
+│   ├── optimistic-update.ts              # Оптимистичные обновления кэша
+│   └── estimate-editor-form.ts           # safeNumber, parseDecimal, parseText
+└── types.ts
+features/estimates/estimate-tabs/
+└── components/
+    ├── estimate-tab-placeholder.tsx       # Плейсхолдер таба
+    └── estimate-tab-toolbar.tsx           # Тулбар таба
+```

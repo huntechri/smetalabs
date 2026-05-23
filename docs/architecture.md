@@ -1,500 +1,436 @@
-# SmetaLabs — Architecture Guide
+# Архитектура SmetaLab
 
-> Last updated: 2026-05-14
+> 2026-05-22 | production
 >
-> Scope: production-facing architecture rules for the current Next.js 16 + Supabase Auth/Postgres + Drizzle + TanStack Query + shadcn/ui codebase.
-
-This document is the architectural contract for where code belongs and how new features should be added. For the compact directory map, see [`docs/filemap.md`](./filemap.md). For visual/design rules, see [`docs/design-system.md`](./design-system.md). For `/settings/account` behavior, see [`docs/account-settings.md`](./account-settings.md). For the production works catalog, see [`docs/directory-works-architecture.md`](./directory-works-architecture.md).
+> Корневой архитектурный документ. Описывает стек, слои, маршрутизацию, аутентификацию, RBAC и структуру данных.
 
 ---
 
-## 1. Core stack
+## Стек технологий
 
-| Area | Current choice |
-|---|---|
-| Framework | Next.js 16.1, App Router |
-| Runtime UI | React 19 |
-| UI primitives | shadcn/ui primitives in `components/ui/` |
-| Styling | Tailwind CSS v4, semantic CSS variables in `app/globals.css` |
-| Language | TypeScript 5.9 |
-| Auth | Supabase Auth with `@supabase/ssr` |
-| Database | Supabase PostgreSQL through Drizzle ORM |
-| Server state | TanStack Query v5, feature-owned query-key factories |
-| Validation | Zod at API/server-action boundaries |
-| RBAC | `roles`, `permissions`, `role_permissions`, workspace membership/invitations |
-| Search | PostgreSQL full-text/trigram search; pgvector for directory works AI search |
-| Tests | Vitest scripts are present in `package.json` |
-| Package manager | pnpm |
-| Deployment | Vercel with guarded preview-build configuration |
+| Категория | Технология | Версия | Назначение |
+|---|---|---|---|
+| Фреймворк | Next.js (App Router) | 16.1.7 | SSR, маршрутизация, Server Actions |
+| Язык | TypeScript | 5.9.3 | Типизация |
+| Аутентификация | Supabase Auth (`@supabase/ssr`) | 0.10.3 | Сессии, OAuth, куки-мидлвара |
+| База данных | PostgreSQL (Supabase) | 17.6 | Хранилище |
+| Клиент БД | `@supabase/supabase-js` | 2.105.4 | Прямые запросы к БД (без ORM) |
+| UI-компоненты | shadcn/ui (radix-mira) | 4.7.0 | Примитивы дизайн-системы |
+| Стили | Tailwind CSS | 4.2.1 | Utility-first CSS |
+| Таблицы | `@tanstack/react-table` | 8.21.3 | Headless-таблицы |
+| Графики | Recharts | 3.8.0 | Интерактивные графики |
+| Drag & Drop | `@dnd-kit` | 6.3.1 | Сортировка и перетаскивание |
+| Валидация | Zod | 4.4.3 | Схемы валидации форм и API |
+| Пакетный менеджер | pnpm | — | Управление зависимостями |
 
-The project is not frontend-only. Auth, RBAC, workspace/team management, account settings, Drizzle schema, SQL migrations, route handlers, server actions, directory works backend/search/import/export/AI search and performance hardening are already present.
-
----
-
-## 2. Layer model
-
-### `app/` — routing, shells, route handlers, server actions
-
-`app/` owns URL structure and request boundaries. Keep it thin.
-
-Allowed here:
-
-- route pages and layouts;
-- route handlers under `app/api/**`;
-- server actions under `app/actions/**`;
-- composition of feature-level screens.
-
-Avoid here:
-
-- large reusable UI blocks;
-- business-specific widgets that can live in `features/**`;
-- direct database logic inside UI pages;
-- workspace/permission decisions based on client-provided owner or role fields.
-
-### `features/` — feature UI, client orchestration and domain boundaries
-
-`features/<feature>/` owns domain-specific UI, hooks, API adapters, query keys and feature-local server modules.
-
-Use this layer for:
-
-- forms, tables, cards and screens specific to one product feature;
-- feature hooks such as filtering/search/view state;
-- feature-local `api/` clients and query-key factories for API routes/server action wrappers;
-- TanStack Query hooks for server state (`useQuery`/`useMutation`), with invalidation owned by the feature hook;
-- feature-local `server/` modules when `app/actions/*` or `app/api/**` delegates domain logic into the feature boundary;
-- fallback mocks only while backend integration is explicitly incomplete.
-
-Do not put shadcn primitives here. Import primitives from `@/components/ui/*`.
-
-### `components/ui/` — design-system primitives only
-
-This folder is reserved for shadcn/ui primitives and project-approved primitive extensions.
-
-Rules:
-
-- no business logic;
-- no imports from `app/**`;
-- no feature-specific labels, API calls or domain state;
-- prefer composition in `features/**` over creating wrappers here.
-
-### `components/` — cross-app non-feature infrastructure
-
-Use this only for app-wide building blocks such as providers, theme infrastructure or truly generic shared components.
-
-Current examples:
-
-- `components/query-provider.tsx` — TanStack Query app provider;
-- `components/theme-provider.tsx` — app theme infrastructure.
-
-### `lib/` — shared server/client infrastructure
-
-Current important areas:
-
-- `lib/supabase/client.ts` — browser Supabase client;
-- `lib/supabase/server.ts` — server Supabase client;
-- `lib/supabase/proxy.ts` — session refresh, route protection and workspace activity touch logic;
-- `lib/auth/**` — auth/RBAC/workspace helpers;
-- `lib/utils.ts` — low-level utility helpers.
-
-Do not place feature UI in `lib/`.
-
-### `db/` — database schema, migrations and seed data
-
-`db/` owns Drizzle schema and database initialization.
-
-Rules:
-
-- schema definitions stay in `db/schema/**`;
-- SQL migrations stay in `db/migrations/**`;
-- seed scripts stay in `db/seed*.ts`;
-- UI must not import directly from migrations or seed scripts.
-
-### `types/` — shared domain types
-
-Use `types/` for cross-feature TypeScript types that are consumed from more than one feature. If a type is private to one feature, keep it inside that feature.
+**Что НЕ используется:**
+- ❌ Drizzle ORM — запросы напрямую через `@supabase/supabase-js`
+- ❌ TanStack Query — нет React Query слоя
+- ❌ Prisma — не используется
 
 ---
 
-## 3. Routing contract
+## Слоевая модель
 
-Current high-level route groups:
+```
+app/           ─ Роутинг App Router, page.tsx (композиция), layout.tsx (общий UI)
+  │
+  ├─ features/ ─ Бизнес-фичи: компоненты, хуки, моки, поддомены
+  │
+  ├─ components/ui/ ─ shadcn/ui примитивы (НЕ ТРОГАТЬ без веской причины)
+  │
+  ├─ components/     ─ Инфраструктурные компоненты уровня приложения
+  │
+  ├─ hooks/          ─ Общие React-хуки (use-mobile)
+  │
+  ├─ lib/            ─ Чистые утилиты (без React), валидаторы, Supabase-клиенты
+  │
+  ├─ types/          ─ Общие TypeScript-типы и интерфейсы
+  │
+  └─ middleware.ts   ─ Next.js middleware (аутентификация через Supabase)
+```
 
-```txt
+**Правило зависимости:** `app/` → `features/` → `lib/` + `types/` + `hooks/`. Нижние слои не импортируют верхние.
+
+---
+
+## Структура feature-модуля
+
+Каждый бизнес-домен — папка в `features/`. Структура (на примере `purchases`):
+
+```
+features/purchases/
+├── __mocks__/                         # Тестовые данные (этап вёрстки, удаляются с БД)
+│   └── purchases.ts
+├── components/                        # UI верхнего уровня (обёртки, view-компоненты)
+│   └── purchases-view.tsx
+├── hooks/                             # Хуки фичи (useState, useMemo)
+│   └── use-purchases.ts
+├── purchase-details/                  # Поддомен (если фича большая)
+│   └── components/
+│       ├── purchase-section.tsx       # Композиция: хук → map → Row
+│       ├── purchase-row.tsx           # Строка: имя + метрики
+│       ├── purchase-name.tsx          # Атомарный UI: название
+│       ├── purchase-value.tsx         # Атомарный UI: бейдж
+│       └── purchase-metric-group.tsx  # Атомарный UI: группа метрик
+```
+
+**Правила:**
+- **Один компонент = один файл**, именованный экспорт
+- Компоненты — только JSX + пропсы, без бизнес-логики
+- Хуки — на своём уровне, отдельно от компонентов
+- Моки — временные, удаляются с появлением БД
+
+### Существующие фичи (2026-05-22)
+
+| Фича | Директория | Поддомены | Статус |
+|---|---|---|---|
+| Аутентификация | `features/auth/` | `components/` | ✅ |
+| Дашборд | `features/dashboard/` | — | ✅ |
+| Проекты | `features/projects/` | `components/` | ✅ |
+| Сметы | `features/estimates/` | `estimate-details/`, `estimate-tabs/` | ✅ |
+| Закупки | `features/purchases/` | `purchase-details/` | ✅ |
+| Выполнение | `features/execution/` | `execution-details/` | ✅ |
+| Глобальные закупки | `features/global-purchases/` | `global-purchases-details/` | ✅ |
+| Справочник материалов | `features/directory-materials/` | `directory-materials-details/` | ✅ |
+| Справочник работ | `features/directory-works/` | `directory-works-details/` | ✅ |
+| Справочник поставщиков | `features/directory-suppliers/` | `directory-suppliers-details/` | ✅ |
+| Справочник контрагентов | `features/directory-counterparties/` | `directory-counterparties-details/` | ✅ |
+| Справочники (общее) | `features/directories/` | `components/` | ✅ |
+
+---
+
+## Маршрутизация
+
+### App Router (Next.js 16)
+
+Используются Route Groups для разделения зон с разными layout'ами:
+
+| Route Group | Назначение | Layout |
+|---|---|---|
+| `(auth)/` | Авторизация, без sidebar | Центрирование формы |
+| `(main)/` | Основной интерфейс | Sidebar + Header |
+| `/admin` | Админ-панель | Отдельный layout (без группы) |
+| `/api` | API-роуты | Без layout |
+
+### Дерево маршрутов
+
+```
 app/
-├── (auth)/        # public auth pages: login, signup, forgot-password, set-password
-├── (main)/        # protected app shell with sidebar/header
-├── admin/         # admin area
-├── auth/          # callback endpoints for Supabase email/OAuth flows
-├── actions/       # server actions
-└── api/           # REST-style route handlers
+├── layout.tsx                              # Корневой layout (шрифты, ThemeProvider)
+├── page.tsx                                # Редирект на /dashboard
+│
+├── (auth)/                                 # Route Group: авторизация
+│   ├── layout.tsx                          # Центрирование (без sidebar)
+│   ├── login/page.tsx                      # /login
+│   ├── singup/page.tsx                     # /singup
+│   └── forgot-password/page.tsx            # /forgot-password
+│
+├── (main)/                                 # Route Group: основной интерфейс
+│   ├── layout.tsx                          # SidebarProvider + AppSidebar + SiteHeader
+│   ├── dashboard/page.tsx                  # /dashboard
+│   ├── projects/                           # Проекты
+│   │   ├── page.tsx                        # /projects — список
+│   │   └── [projectId]/                    # /projects/:id
+│   │       ├── page.tsx                    # Детали проекта
+│   │       └── estimates/
+│   │           └── [estimateId]/           # /projects/:id/estimates/:eid
+│   │               ├── layout.tsx          # Табы навигации + тулбар
+│   │               ├── page.tsx            # Вкладка «Состав»
+│   │               ├── documents/page.tsx  # Вкладка «Документы»
+│   │               ├── execution/page.tsx  # Вкладка «Выполнение»
+│   │               ├── finances/page.tsx   # Вкладка «Финансы»
+│   │               └── purchases/page.tsx  # Вкладка «Закупки»
+│   ├── directories/                        # Справочники
+│   │   ├── counterparties/page.tsx         # /directories/counterparties
+│   │   ├── materials/page.tsx              # /directories/materials
+│   │   ├── suppliers/page.tsx              # /directories/suppliers
+│   │   └── works/page.tsx                  # /directories/works
+│   ├── procurements/page.tsx               # /procurements — глобальные закупки
+│   ├── team/page.tsx                       # /team — команда
+│   └── templates/                          # Шаблоны смет
+│       ├── page.tsx                        # /templates — список
+│       └── [templateId]/page.tsx           # /templates/:id
+│
+├── admin/page.tsx                          # /admin
+│
+└── api/                                    # REST API (внешние потребители)
+    └── team/
+        ├── members/route.ts                # GET/POST/DELETE /api/team/members
+        └── roles/route.ts                  # GET/POST /api/team/roles
 ```
 
-### Auth routes
+### Динамические маршруты
 
-`app/(auth)/**` renders public auth screens without the main sidebar.
-
-Current pages:
-
-- `/login`
-- `/signup`
-- `/forgot-password`
-- `/set-password`
-
-`/set-password` is used after invited-user and reset-password flows. The page updates the password through the browser Supabase client after a valid Auth session exists.
-
-### Main app routes
-
-`app/(main)/**` renders the authenticated SaaS shell.
-
-Current areas:
-
-- `/dashboard`
-- `/projects`
-- `/projects/[projectId]`
-- `/projects/[projectId]/estimates/[estimateId]`
-- `/directories/*`
-- `/directories/works`
-- `/procurements`
-- `/team`
-- `/templates`
-- `/settings/account`
-- `/settings/access`
-
-`/settings/account` owns authenticated account profile, workspace display/editing rules, account-level notification preferences, security actions and any explicitly disabled future account controls. Its current behavior contract is documented in [`docs/account-settings.md`](./account-settings.md). User-visible controls on this route must not imply functionality that is not wired to backend/runtime behavior.
-
-`/team` owns team management only: workspace/team summary, members, manual email invites, pending invitations and role reference/management. It must not render catch-all workspace settings controls such as invite links, allowed-domain auto-join policy, workspace ownership transfer or danger-zone actions until those controls have a dedicated workspace/security settings route and production-safe backend contract.
-
-`/directories/works` owns the production works catalog UI. It must use the `features/directory-works/**` boundary and the workspace-scoped `app/api/directory-works/**` route handlers for reads, search, manual CRUD, import/export and AI search.
-
-### Auth callback route
-
-`app/auth/callback/route.ts` handles Supabase callback patterns such as `token_hash` and `code`. It should not hard-code dashboard redirects when a validated `next` value is present.
-
-Do not use this route for generic page rendering. It is a request boundary.
-
-### Directory works API routes
-
-Current directory works routes are workspace-scoped and server-authoritative:
-
-```txt
-GET    /api/directory-works
-POST   /api/directory-works
-GET    /api/directory-works/search
-GET    /api/directory-works/categories
-GET    /api/directory-works/:id
-PATCH  /api/directory-works/:id
-DELETE /api/directory-works/:id
-POST   /api/directory-works/import-jobs
-GET    /api/directory-works/import-jobs/:id
-POST   /api/directory-works/import-jobs/:id/apply
-GET    /api/directory-works/export
-POST   /api/directory-works/ai-search
-POST   /api/directory-works/embeddings/process
-```
-
-These routes must resolve the current workspace server-side. Clients must never pass `workspace_owner_id` as an authority source.
+| URL | Файл |
+|---|---|
+| `/projects` | `(main)/projects/page.tsx` |
+| `/projects/42` | `(main)/projects/[projectId]/page.tsx` |
+| `/projects/42/estimates/7` | `(main)/projects/[projectId]/estimates/[estimateId]/page.tsx` |
 
 ---
 
-## 4. Auth and invite flow
+## Аутентификация
 
-The expected invite flow is:
+### Поток аутентификации
 
-```txt
-Admin sends invite
-  ↓
-App calls Supabase admin invite with redirectTo = current origin + /auth/callback
-  ↓
-Supabase invite email template builds /auth/callback?token_hash=...&type=invite&next=/set-password
-  ↓
-User opens invite link
-  ↓
-app/auth/callback verifies token_hash and creates an invite session
-  ↓
-App lands on /set-password
-  ↓
-User sets password through supabase.auth.updateUser({ password })
-  ↓
-App accepts the pending workspace invitation
-  ↓
-App redirects to /dashboard
+```
+Пользователь входит через login-form.tsx
+  │
+  ├─ supabase.auth.signInWithPassword()
+  │
+  ├─ Supabase устанавливает сессионные куки (sb-*-auth-token)
+  │
+  ├─ middleware.ts перехватывает каждый запрос:
+  │   ├─ createServerClient с куками из request
+  │   ├─ supabase.auth.getUser() — проверка сессии
+  │   ├─ Публичные пути (/auth, /api, /_next, /favicon.ico) — без проверки
+  │   ├─ Защищённые пути — если нет user → редирект на /auth/login
+  │   └─ Авто-рефреш сессии (если истекла)
+  │
+  └─ При выходе: supabase.auth.signOut() → удаление кук
 ```
 
-Important rules:
+### Ключевые файлы аутентификации
 
-- App code must pass `redirectTo` as the current request origin plus `/auth/callback`; do not pass `/set-password` directly from invite endpoints.
-- The Supabase invite email template must append `token_hash`, `type=invite` and `next=/set-password` to `{{ .RedirectTo }}`.
-- `/set-password` must be allowed by `lib/supabase/proxy.ts`; otherwise the app may redirect to `/login` before the browser client finishes processing the invite session.
-- Supabase Redirect URLs must include the exact production, preview and local callback targets used by the app.
-- Old invite links are one-time links. Do not debug current behavior with already-opened links.
-- Repeated invite tests on the same email may reuse an existing Auth user whose metadata points to an older invitation. `acceptInvitationIfPresent()` must therefore prefer metadata when valid, but fall back to the latest pending invitation for the authenticated email.
+| Файл | Назначение |
+|---|---|
+| `middleware.ts` | Guardian всех запросов: проверка сессии, защита роутов |
+| `lib/supabase/server.ts` | Серверный клиент (Server Components, Route Handlers) — читает куки |
+| `lib/supabase/client.ts` | Браузерный клиент (Client Components) — `createBrowserClient` |
+| `lib/supabase/admin.ts` | Админ-клиент (service_role key, ТОЛЬКО сервер) |
+| `lib/supabase/middleware.ts` | Реэкспорт `createClient` из `server.ts` |
 
-Required Supabase invite email template shape:
+### Supabase клиенты
 
-```html
-<h2>Вы приглашены в SmetaLab</h2>
+```typescript
+// lib/supabase/server.ts — для Server Components / Route Handlers
+export async function createClient()         // ← анонимный ключ + куки
 
-<p>Вас пригласили присоединиться к рабочей области SmetaLab.</p>
+// lib/supabase/client.ts — для Client Components ("use client")
+export function createClient()               // ← анонимный ключ (env NEXT_PUBLIC_)
 
-<p>
-  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=invite&next=/set-password">
-    Принять приглашение
-  </a>
-</p>
-
-<p>Если вы не ожидали это письмо, просто проигнорируйте его.</p>
+// lib/supabase/admin.ts — для seed-скриптов и админ-операций
+export function createAdminClient()          // ← service_role key (НЕ В БРАУЗЕР)
 ```
 
-Recommended Supabase Redirect URLs:
+**Важно:** callback/confirm/verify маршруты (`/auth/callback`) в коде отсутствуют. Регистрация/вход — исключительно через `@supabase/ssr` с куки-мидлварой (password-based auth).
 
-```txt
-https://smetalabs.vercel.app/auth/callback
-https://smetalabs.vercel.app/**
-https://smetalabs-git-*-smetalabs.vercel.app/auth/callback
-https://smetalabs-git-*-smetalabs.vercel.app/**
-http://localhost:3000/auth/callback
-http://localhost:3000/**
+### Защищённые роуты (middleware.ts)
+
+```typescript
+// Все пути по умолчанию защищены, кроме:
+const publicPaths = ['/auth', '/api', '/_next', '/favicon.ico']
+const isLanding = pathname === '/'
+```
+
+Любой непубличный путь без активной сессии → `302 Redirect → /auth/login?redirect=<original>`.
+
+---
+
+## RBAC (Role-Based Access Control)
+
+### Модель
+
+```
+roles                    permissions              role_permissions
+┌──────────┐            ┌──────────────────┐     ┌─────────────────┐
+│ id (PK)  │            │ id (PK)          │     │ role_id (FK)    │
+│ name ◄───┼────────────┼── key (UNIQUE)   │─────┼── permission_id │
+│ label    │            │ label            │     └─────────────────┘
+│ locked   │            │ group_name       │
+│ desc     │            │ desc             │     user_roles
+└──────────┘            └──────────────────┘     ┌─────────────────┐
+                                                 │ user_id (FK)    │
+┌──────────────────┐                             │ role_id (FK)    │
+│ profiles (auth)  │                             │ assigned_by     │
+│ id ← auth.users  │─────────────────────────────│ created_at      │
+└──────────────────┘                             └─────────────────┘
+```
+
+### Роли (5 предустановленных, поле `locked`)
+
+| Роль | locked | Описание |
+|---|---|---|
+| `owner` | true | Владелец workspace, все права |
+| `admin` | true | Администратор, все кроме billing.manage |
+| `manager` | true | Менеджер: CRUD смет/проектов/закупок, чтение команды |
+| `estimator` | false | Сметчик: CRUD смет, чтение проектов/закупок |
+| `viewer` | false | Наблюдатель: только чтение |
+
+### Права (PermissionKey, 19 штук)
+
+| Группа | Ключи |
+|---|---|
+| `billing` | `billing.read`, `billing.manage` |
+| `estimates` | `estimates.read`, `estimates.create`, `estimates.update`, `estimates.delete` |
+| `projects` | `projects.read`, `projects.create`, `projects.update`, `projects.delete` |
+| `purchases` | `purchases.read`, `purchases.create`, `purchases.update`, `purchases.delete` |
+| `team` | `team.read`, `team.create`, `team.update`, `team.delete`, `team.manage` |
+
+### Матрица (ROLE_PERMISSION_MATRIX в types/roles.ts)
+
+```typescript
+owner:    [...все 19 прав, включая billing.manage]
+admin:    [...все 18 прав, кроме billing.manage]
+manager:  [estimates.*, projects.*, purchases.*, team.read]
+estimator: [estimates.*, projects.read, purchases.read]
+viewer:   [billing.read, estimates.read, projects.read, purchases.read, team.read]
+```
+
+### Проверка прав (lib/auth/permissions.ts)
+
+```typescript
+// Основные функции
+getUserRoles(): Promise<RoleName[]>              // Роли текущего пользователя
+getUserPermissions(): Promise<PermissionKey[]>   // Развёрнутые из ролей права
+hasPermission(key): Promise<boolean>              // Одно право
+hasAnyPermission(keys): Promise<boolean>          // Хотя бы одно
+hasAllPermissions(keys): Promise<boolean>         // Все права
+requirePermission(key): Promise<void>             // Guard (throws)
+requireAnyPermission(keys): Promise<void>         // Guard (throws)
+
+// Семантические хелперы
+canManageProjects(): Promise<boolean>
+canManageEstimates(): Promise<boolean>
+canManageTeam(): Promise<boolean>
+canViewBilling(): Promise<boolean>
+isAuthenticated(): Promise<boolean>
+requireAuth(): Promise<void>
+```
+
+### Использование в API (пример)
+
+```typescript
+// app/api/team/members/route.ts
+export async function POST(request: Request) {
+  const canManage = await canManageTeam()
+  if (!canManage) {
+    return NextResponse.json({ error: { code: 'FORBIDDEN' } }, { status: 403 })
+  }
+  // ...
+}
 ```
 
 ---
 
-## 5. API and server action rules
+## Работа с данными
 
-Use `app/api/**/route.ts` when:
+### Прямой доступ к Supabase (без ORM)
 
-- the client needs JSON via fetch;
-- there is a REST-style collection/member endpoint;
-- the route is consumed by multiple components;
-- the route is a read/search/export/import/processor boundary.
+Проект использует `@supabase/supabase-js` напрямую: запросы строятся через `supabase.from('table').select(...).eq(...)`.
 
-Use `app/actions/**` when:
+**Нет** слоя Drizzle ORM, Prisma или абстрактного `lib/db/queries/`. Запросы к БД выполняются в Route Handlers через `createClient()` из `lib/supabase/server`.
 
-- the mutation is tied to a server action form or page-level server workflow;
-- the action should revalidate paths directly;
-- it does not need a public JSON endpoint.
+### API Routes (текущие)
 
-Both patterns must validate input with schemas or explicit checks.
+```
+app/api/
+└── team/
+    ├── members/route.ts    # GET (список участников), POST (назначить роль), DELETE (снять роль)
+    └── roles/route.ts      # GET (список ролей с правами), POST (создать роль)
+```
 
-Account settings use both patterns deliberately: `app/api/settings/route.ts` is the read boundary, while `app/actions/settings.ts` delegates mutations/security actions into `features/account-settings/server/**`. Keep this split unless there is a clear reason to move a specific operation.
+### Валидация (Zod)
 
-Directory works uses API routes for read/search/CRUD/import/export/AI search because the feature is table/search-heavy and client state is coordinated through TanStack Query hooks.
+`lib/validators/team.ts` — схемы для операций с ролями:
+
+```typescript
+AssignRoleSchema    // { user_id, role_id }
+CreateRoleSchema    // { name, label, description?, permission_ids? }
+RemoveRoleSchema    // { user_id, role_id }
+```
+
+### RLS (Row-Level Security)
+
+Все таблицы в БД имеют `rls_enabled: true`. Политики определены в Supabase-миграциях (миграции 002, 004, 005, 006, 007, 008, 014). Доступ к данным ограничен через `workspace_owner_id` и ролевые проверки.
 
 ---
 
-## 6. Data flow patterns
+## Миграции БД (Supabase)
 
-### Read flow
+Миграции управляются через Supabase CLI. В репозитории нет локальной директории `db/migrations/` — миграции хранятся и применяются на стороне Supabase. Всего 57 миграций (от `002_rls_policies` до `049_fix_material_add_response_work_totals`).
 
-```txt
-Page/layout
-  → feature component
-  → feature hook or API route
-  → feature server/service/repository boundary when needed
-  → lib/auth or db layer
-  → Supabase/Postgres
-```
+### Основные группы миграций
 
-### Mutation flow
+| Группа | Диапазон версий | Содержание |
+|---|---|---|
+| Аутентификация и workspace | 002–008 | RLS, профили, приглашения, ownership |
+| Справочник работ | 009–019a | Таблицы, импорт, AI-поиск, embeddings |
+| Справочник материалов | 020–025 | Таблицы, импорт, AI-поиск |
+| Справочник поставщиков | 019 (slug 019_directory_suppliers_foundation) | Таблицы |
+| Справочник контрагентов | 024–025 | Таблицы, grants |
+| Проекты | 026–028 | Таблицы, grants, связь с контрагентами |
+| Глобальные закупки | 029–031 | Таблицы, индексы |
+| Сметные записи | 033–038 | Estimate records, works, materials, коэффициенты |
+| Операции со сметами | 039–041 | RPC для секций/работ/материалов, реордеринг |
+| Уведомления | 042 | `notifications` таблица |
+| Материалы смет | 042–049 | image_url, ceil, расчёты, фиксы |
 
-```txt
-Client form/action
-  → server action or app/api route
-  → schema validation
-  → permission check
-  → DB/Auth mutation
-  → targeted revalidation/invalidation
-  → UI refresh
-```
+### Таблицы БД (всего 24 в public-схеме)
 
-### Permission flow
+**Ядро (аутентификация/workspace):**
+`profiles`, `roles`, `permissions`, `role_permissions`, `user_roles`, `user_settings`, `workspace_members`, `workspace_invitations`, `workspace_allowed_domains`
 
-Every workspace/team/directory mutation must check the current user first. Do not trust client-provided role, owner or workspace fields.
+**Справочники:**
+`directory_works`, `directory_materials`, `directory_suppliers`, `directory_counterparties`
 
-Common helpers live in `lib/auth/**`.
+**Вспомогательные справочников:**
+`work_aliases`, `work_keywords`, `directory_work_import_jobs`, `directory_work_import_rows`, `directory_work_embeddings`, `directory_material_import_jobs`, `directory_material_import_rows`, `directory_material_embeddings`
 
-### Account settings behavior discipline
-
-Account settings controls must be one of three states:
-
-- real: wired to backend/runtime behavior and safe to use;
-- read-only: displays authoritative data without pretending it can mutate it;
-- future: disabled with explicit copy and no successful mutation path.
-
-Do not show fake counters, stale JSONB-derived security values, or enabled save buttons for controls that do not change runtime behavior.
-
-### Staged RBAC and permission matrix strategy
-
-The current stage is role-based workspace access, not fully editable permission-based authorization.
-
-Until the core business modules are stable, runtime access control must stay coarse-grained and predictable:
-
-- `owner` and `admin` manage workspace/team operations;
-- `manager` can read workspace/team data where explicitly allowed and can write directory works where the feature contract allows it;
-- `estimator` and `viewer` receive restricted access;
-- tenant boundaries are resolved through workspace membership, not client-provided workspace IDs.
-
-The `roles`, `permissions` and `role_permissions` tables are the target permission matrix model. At the current stage they may be used for display, seed data and future architecture alignment, but they must not be exposed as a user-editable source of truth until all sensitive runtime paths enforce permission keys consistently.
-
-Do not enable a "Save permissions" UI while changes in `role_permissions` are not enforced by all relevant server actions, API routes and database policies. A writable matrix without full runtime enforcement creates false-success and weakens the security model.
-
-When new features are added, define future permission keys while implementing the feature, using this shape:
-
-```txt
-<resource>.<action>
-```
-
-Examples:
-
-```txt
-projects.read
-projects.create
-projects.update
-projects.delete
-estimates.read
-estimates.create
-estimates.update
-estimates.delete
-team.read
-team.manage
-directoryWorks.read
-directoryWorks.manage
-billing.read
-billing.manage
-```
-
-The target permission-based stage may be implemented after the main feature modules stabilize. That stage requires:
-
-- a single `hasWorkspacePermission` / `requireWorkspacePermission` helper;
-- permission checks in every sensitive server action and API route;
-- transactional updates for `role_permissions`;
-- RLS policies or Postgres security-definer helpers aligned with backend authorization;
-- smoke tests for admin, manager, estimator and viewer behavior.
-
-Some safety invariants must remain outside the editable matrix and cannot be disabled by configuration:
-
-- the workspace owner always retains control;
-- the last owner/admin cannot be removed or downgraded;
-- `SUPABASE_SERVICE_ROLE_KEY` is server-only;
-- tenant isolation is always enforced through workspace membership;
-- billing and security-critical operations require explicit backend checks even if a permission row is misconfigured.
+**Бизнес-домен:**
+`projects`, `global_purchases`, `project_estimate_records`, `project_estimate_sections`, `project_estimate_works`, `project_estimate_materials`, `notifications`
 
 ---
 
-## 7. Directory works production boundary
+## Утилиты (lib/)
 
-The works catalog is no longer only a UI/mock or documentation contract. Epic #64 phases #65-#71 are represented in the codebase:
+| Файл | Назначение |
+|---|---|
+| `utils.ts` | `cn()` — мёрдж Tailwind-классов (clsx + tailwind-merge) |
+| `formatters.ts` | `formatMoney(value)` — форматирование валюты `
+{:.highlight}
+₽, разряды` |
+| `calculations.ts` | `getTotal(quantity, price)` — умножение |
+| `auth/permissions.ts` | Все функции проверки прав (11 экспортов) |
+| `supabase/server.ts` | Серверный Supabase-клиент с куками |
+| `supabase/client.ts` | Браузерный Supabase-клиент |
+| `supabase/middleware.ts` | Реэкспорт `createClient` из `server.ts` |
+| `supabase/admin.ts` | Админ-клиент с service_role ключом |
+| `validators/team.ts` | Zod-схемы: AssignRole, CreateRole, RemoveRole |
 
-```txt
-#65 contract/documentation
-#66 DB foundation
-#67 read API and regular search
-#68 UI backend integration and manual CRUD
-#69 import/export staging flow
-#70 embeddings and AI/hybrid search
-#71 cache/indexing/performance hardening
+---
+
+## Компонентная модель
+
+### Именование и экспорты
+
+| Тип | Регистр | Экспорт | Пример |
+|---|---|---|---|
+| Feature-компонент | PascalCase | Именованный | `export function ProjectCard()` |
+| Страница page.tsx | — | default | `export default function Page()` |
+| Layout | — | default | `export default function MainLayout()` |
+| Хук | camelCase/kebab-case | Именованный | `usePurchases`, `use-mobile` |
+| Утилита | camelCase | Именованный | `formatMoney`, `getTotal` |
+| Тип | PascalCase | Именованный | `PermissionKey`, `TeamMember` |
+
+### Размещение компонентов
+
+```
+components/ui/          ← shadcn/ui (НЕ ТРОГАТЬ)
+components/             ← Инфраструктурные: theme-provider.tsx
+features/{domain}/      ← Бизнес-компоненты
 ```
 
-Current ownership:
+### Поток данных в фиче (на примере purchases)
 
-```txt
-/directories/works
-  → app/(main)/directories/works/page.tsx
-  → features/directory-works/components/directory-works-view.tsx
-  → features/directory-works/hooks/**
-  → features/directory-works/api/**
-  → app/api/directory-works/**
-  → features/directory-works/server/**
-  → db/schema/directory-works.ts + db/migrations/010-013
 ```
-
-Rules:
-
-- tenant boundary is `workspace_owner_id = workspace_members.owner_id`;
-- API routes resolve the workspace server-side through auth helpers;
-- reads exclude `deleted_at` and default to active works unless explicitly scoped otherwise;
-- manual delete is a soft archive, not physical deletion;
-- import uses staging jobs/rows before canonical writes;
-- embedding generation is asynchronous through a process endpoint and never runs inside CRUD/import transactions;
-- server cache tags and TanStack Query keys must stay aligned with `docs/directory-works-architecture.md`;
-- mutation/import/embedding paths must invalidate targeted list/detail/category/AI-search keys, not globally refetch the app.
-
----
-
-## 8. UI architecture rules
-
-- Use `components/ui/**` primitives directly.
-- Put feature-specific UI in `features/<feature>/components/**`.
-- Put feature-specific hooks in `features/<feature>/hooks/**`.
-- Put feature-specific server-state clients/query keys in `features/<feature>/api/**`.
-- Do not duplicate generic table/dialog/form primitives unless the pattern is proven reusable across features.
-- Avoid global wrappers unless they are app-wide infrastructure.
-- Keep visual decisions aligned with `docs/design-system.md`.
-
----
-
-## 9. Deployment and preview-build guard
-
-Vercel deployment is configured through `vercel.json` and `scripts/vercel-ignore-build.mjs`.
-
-Current rule:
-
-- primary branches `master` and `main` are allowed to build;
-- non-primary branches are ignored by the ignore command;
-- `feature/*`, `feature-*`, `codex-*`, `agent-*` and `internal-*` are disabled through Vercel git deployment settings.
-
-Do not rely on every pushed branch producing a preview deployment. When a task requires preview QA, confirm the branch naming/deployment rules before assuming a Vercel URL will exist.
-
----
-
-## 10. Adding a new feature
-
-For a new feature named `reports`:
-
-```txt
-app/(main)/reports/page.tsx
-features/reports/components/reports-view.tsx
-features/reports/hooks/use-reports.ts
-features/reports/api/reports-client.ts       # if client fetch/query state is required
-features/reports/api/reports-query-keys.ts   # if TanStack Query is used
-features/reports/server/reports.service.ts   # if domain server logic is needed
-features/reports/types.ts                    # only if private to the feature
-app/api/reports/route.ts                     # only if JSON/API boundary is required
-types/report.ts                             # only if shared across features
+page.tsx
+  └─→ <PurchasesView />
+        └─→ <PurchaseSection />
+              ├─→ usePurchases()        ← хук (состояние)
+              └─→ <PurchaseRow /> (×N)
+                    ├─→ <PurchaseName />
+                    └─→ <PurchaseMetricGroup />
+                          └─→ <PurchaseValue /> (×N)
 ```
-
-Do not put `reports-view.tsx` in `components/ui/`. It is not a primitive.
-
----
-
-## 11. Documentation maintenance rule
-
-When a PR changes routing, auth flow, folder ownership, public feature structure, database schema, migrations, cache strategy, deployment behavior, or user-visible account/settings behavior, update at least one of:
-
-- `docs/architecture.md`
-- `docs/backend-architecture.md`
-- `docs/filemap.md`
-- `docs/design-system.md`
-- `docs/account-settings.md`
-- `docs/directory-works-architecture.md`
-- `README.md`
-
-A route, folder, account-settings behavior, public feature, DB schema, cache contract or deployment behavior change without docs is considered incomplete.
-
-Do not create duplicate documentation files for the same concern. Update the canonical existing document.
-
----
-
-## 12. Validation and checks
-
-Current package scripts define these repository-level checks:
-
-```txt
-pnpm typecheck
-pnpm lint
-pnpm build
-pnpm test
-pnpm test:watch
-pnpm test:coverage
-```
-
-PR descriptions must distinguish between checks actually run and checks still required. Historical lint debt or unavailable local dependency installs must be stated explicitly rather than reported as passing.

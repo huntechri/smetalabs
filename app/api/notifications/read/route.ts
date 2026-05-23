@@ -30,6 +30,10 @@ export async function POST(request: NextRequest) {
     })
   } catch (err) {
     console.error("[POST /api/notifications/read]", err)
-    return jsonError("INTERNAL_ERROR", "Ошибка при обновлении статуса прочтения", 500)
+    return jsonError(
+      "INTERNAL_ERROR",
+      "Ошибка при обновлении статуса прочтения",
+      500
+    )
   }
 }

@@ -52,6 +52,7 @@ export function useWorkspaceMembers() {
     suspendMember: (userId: string, suspend: boolean) =>
       suspendMemberMutation.mutateAsync({ userId, suspend }),
     removeMember: (userId: string) => removeMemberMutation.mutateAsync(userId),
-    resetPassword: (userId: string) => resetPasswordMutation.mutateAsync(userId),
+    resetPassword: (userId: string) =>
+      resetPasswordMutation.mutateAsync(userId),
   }
 }

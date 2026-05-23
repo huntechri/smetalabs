@@ -36,13 +36,18 @@ function getNumberParam(searchParams: ReadonlySearchParams, key: string) {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
 }
 
-function getSortParam(searchParams: ReadonlySearchParams): DirectorySuppliersSort | undefined {
+function getSortParam(
+  searchParams: ReadonlySearchParams
+): DirectorySuppliersSort | undefined {
   const sort = searchParams.get("sort")
-  if (sort === "relevance" || sort === "updated_desc" || sort === "name_asc") return sort
+  if (sort === "relevance" || sort === "updated_desc" || sort === "name_asc")
+    return sort
   return undefined
 }
 
-function getListParams(searchParams: ReadonlySearchParams): DirectorySuppliersListParams {
+function getListParams(
+  searchParams: ReadonlySearchParams
+): DirectorySuppliersListParams {
   return {
     q: getStringParam(searchParams, "q"),
     status: searchParams.get("status") === "archived" ? "archived" : "active",
@@ -67,14 +72,18 @@ export function useDirectorySuppliers() {
   })
 
   const invalidateSuppliers = async () => {
-    await queryClient.invalidateQueries({ queryKey: directorySuppliersQueryKeys.all })
+    await queryClient.invalidateQueries({
+      queryKey: directorySuppliersQueryKeys.all,
+    })
   }
 
   const createMutation = useMutation({
     mutationFn: createDirectorySupplier,
     onSuccess: async (response) => {
       await invalidateSuppliers()
-      await queryClient.invalidateQueries({ queryKey: directorySuppliersQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directorySuppliersQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -82,7 +91,9 @@ export function useDirectorySuppliers() {
     mutationFn: updateDirectorySupplier,
     onSuccess: async (response) => {
       await invalidateSuppliers()
-      await queryClient.invalidateQueries({ queryKey: directorySuppliersQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directorySuppliersQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -90,7 +101,9 @@ export function useDirectorySuppliers() {
     mutationFn: archiveDirectorySupplier,
     onSuccess: async (response) => {
       await invalidateSuppliers()
-      await queryClient.invalidateQueries({ queryKey: directorySuppliersQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directorySuppliersQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -117,7 +130,10 @@ export function useDirectorySuppliers() {
       const response = await createMutation.mutateAsync(input)
       return response.data
     },
-    updateSupplier: async (id: string, input: DirectorySupplierMutationInput) => {
+    updateSupplier: async (
+      id: string,
+      input: DirectorySupplierMutationInput
+    ) => {
       const response = await updateMutation.mutateAsync({ id, input })
       return response.data
     },

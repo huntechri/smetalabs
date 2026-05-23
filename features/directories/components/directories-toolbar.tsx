@@ -73,7 +73,10 @@ export function DirectoriesToolbar({
               value={search}
             />
             <Button type="submit" variant="outline">
-              <MagnifyingGlassIcon className="sm:hidden" data-icon="inline-start" />
+              <MagnifyingGlassIcon
+                className="sm:hidden"
+                data-icon="inline-start"
+              />
               <span className="hidden sm:inline">Поиск</span>
             </Button>
           </div>

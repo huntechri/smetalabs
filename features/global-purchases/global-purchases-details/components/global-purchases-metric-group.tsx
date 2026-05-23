@@ -10,9 +10,7 @@ export function GlobalPurchasesMetricGroup({
       <div className="text-xs font-semibold text-muted-foreground uppercase">
         {title}
       </div>
-      <div className="flex min-w-0 flex-wrap gap-1.5">
-        {children}
-      </div>
+      <div className="flex min-w-0 flex-wrap gap-1.5">{children}</div>
     </div>
   )
 }

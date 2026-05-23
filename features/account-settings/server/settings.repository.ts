@@ -58,7 +58,9 @@ export async function getProfileSettingsSource(userId: string) {
 export async function getUserSettingsSource(userId: string) {
   const { data, error } = await supabase
     .from("user_settings")
-    .select("profile, workspace, preferences, notifications, security, updated_at")
+    .select(
+      "profile, workspace, preferences, notifications, security, updated_at"
+    )
     .eq("user_id", userId)
     .single()
 

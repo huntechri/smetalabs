@@ -89,7 +89,9 @@ export const directoryMaterials = pgTable(
     unitCode: text("unit_code").notNull(),
     unitLabel: text("unit_label").notNull(),
     priceAmount: numeric("price_amount", { precision: 12, scale: 2 }).notNull(),
-    currencyCode: varchar("currency_code", { length: 3 }).notNull().default("RUB"),
+    currencyCode: varchar("currency_code", { length: 3 })
+      .notNull()
+      .default("RUB"),
     category: text("category").notNull(),
     subcategory: text("subcategory"),
     code: text("code"),
@@ -97,8 +99,14 @@ export const directoryMaterials = pgTable(
     supplierId: uuid("supplier_id"),
     imageUrl: text("image_url"),
     description: text("description"),
-    aliases: text("aliases").array().notNull().default(sql`'{}'::text[]`),
-    keywords: text("keywords").array().notNull().default(sql`'{}'::text[]`),
+    aliases: text("aliases")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    keywords: text("keywords")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     sourceName: text("source_name"),
     sourceExternalRowKey: text("source_external_row_key"),
     dedupeFingerprint: text("dedupe_fingerprint").notNull(),
@@ -164,11 +172,26 @@ export const directoryMaterials = pgTable(
       t.workspaceOwnerId,
       t.updatedAt
     ),
-    check("chk_directory_materials_name_not_empty", sql`btrim(${t.name}) <> ''`),
-    check("chk_directory_materials_unit_code_not_empty", sql`btrim(${t.unitCode}) <> ''`),
-    check("chk_directory_materials_unit_label_not_empty", sql`btrim(${t.unitLabel}) <> ''`),
-    check("chk_directory_materials_category_not_empty", sql`btrim(${t.category}) <> ''`),
-    check("chk_directory_materials_price_non_negative", sql`${t.priceAmount} >= 0`),
+    check(
+      "chk_directory_materials_name_not_empty",
+      sql`btrim(${t.name}) <> ''`
+    ),
+    check(
+      "chk_directory_materials_unit_code_not_empty",
+      sql`btrim(${t.unitCode}) <> ''`
+    ),
+    check(
+      "chk_directory_materials_unit_label_not_empty",
+      sql`btrim(${t.unitLabel}) <> ''`
+    ),
+    check(
+      "chk_directory_materials_category_not_empty",
+      sql`btrim(${t.category}) <> ''`
+    ),
+    check(
+      "chk_directory_materials_price_non_negative",
+      sql`${t.priceAmount} >= 0`
+    ),
     check("chk_directory_materials_version_positive", sql`${t.version} > 0`),
     check(
       "chk_directory_materials_currency_uppercase",
@@ -206,7 +229,10 @@ export const directoryMaterialEmbeddings = pgTable(
     foreignKey({
       name: "fk_directory_material_embeddings_material_workspace",
       columns: [t.materialId, t.workspaceOwnerId],
-      foreignColumns: [directoryMaterials.id, directoryMaterials.workspaceOwnerId],
+      foreignColumns: [
+        directoryMaterials.id,
+        directoryMaterials.workspaceOwnerId,
+      ],
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
@@ -227,9 +253,18 @@ export const directoryMaterialEmbeddings = pgTable(
     index("idx_directory_material_embeddings_ready_model")
       .on(t.workspaceOwnerId, t.modelName, t.dimensions, t.status, t.updatedAt)
       .where(sql`${t.status} = 'ready'`),
-    check("chk_directory_material_embeddings_model_name_not_empty", sql`btrim(${t.modelName}) <> ''`),
-    check("chk_directory_material_embeddings_dimensions_positive", sql`${t.dimensions} > 0`),
-    check("chk_directory_material_embeddings_content_hash_not_empty", sql`btrim(${t.contentHash}) <> ''`),
+    check(
+      "chk_directory_material_embeddings_model_name_not_empty",
+      sql`btrim(${t.modelName}) <> ''`
+    ),
+    check(
+      "chk_directory_material_embeddings_dimensions_positive",
+      sql`${t.dimensions} > 0`
+    ),
+    check(
+      "chk_directory_material_embeddings_content_hash_not_empty",
+      sql`btrim(${t.contentHash}) <> ''`
+    ),
     check(
       "chk_directory_material_embeddings_input_not_empty",
       sql`btrim(${t.embeddingInputText}) <> ''`
@@ -263,8 +298,14 @@ export const directoryMaterialImportJobs = pgTable(
     conflictRows: integer("conflict_rows").notNull().default(0),
     appliedRows: integer("applied_rows").notNull().default(0),
     skippedRows: integer("skipped_rows").notNull().default(0),
-    options: jsonb("options").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
-    summary: jsonb("summary").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    options: jsonb("options")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    summary: jsonb("summary")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     lastError: text("last_error"),
     startedAt: timestamp("started_at", { withTimezone: true }),
     completedAt: timestamp("completed_at", { withTimezone: true }),
@@ -305,25 +346,43 @@ export const directoryMaterialImportRows = pgTable(
       .references(() => profiles.id, { onDelete: "cascade" }),
     jobId: uuid("job_id").notNull(),
     rowNumber: integer("row_number").notNull(),
-    rawData: jsonb("raw_data").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
-    normalizedData: jsonb("normalized_data").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+    rawData: jsonb("raw_data")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    normalizedData: jsonb("normalized_data")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
     status: directoryMaterialImportRowStatusEnum("status")
       .notNull()
       .default("pending"),
     action: directoryMaterialImportRowActionEnum("action"),
-    errorMessages: jsonb("error_messages").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
-    warningMessages: jsonb("warning_messages").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
-    duplicateMaterialId: uuid("duplicate_material_id").references(() => directoryMaterials.id, {
-      onDelete: "set null",
-    }),
+    errorMessages: jsonb("error_messages")
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    warningMessages: jsonb("warning_messages")
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    duplicateMaterialId: uuid("duplicate_material_id").references(
+      () => directoryMaterials.id,
+      {
+        onDelete: "set null",
+      }
+    ),
     conflictMaterialIds: uuid("conflict_material_ids")
       .array()
       .notNull()
       .default(sql`'{}'::uuid[]`),
     dedupeFingerprint: text("dedupe_fingerprint"),
-    appliedMaterialId: uuid("applied_material_id").references(() => directoryMaterials.id, {
-      onDelete: "set null",
-    }),
+    appliedMaterialId: uuid("applied_material_id").references(
+      () => directoryMaterials.id,
+      {
+        onDelete: "set null",
+      }
+    ),
     appliedAt: timestamp("applied_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -354,7 +413,10 @@ export const directoryMaterialImportRows = pgTable(
     index("idx_directory_material_import_rows_workspace_dedupe")
       .on(t.workspaceOwnerId, t.dedupeFingerprint)
       .where(sql`${t.dedupeFingerprint} IS NOT NULL`),
-    check("chk_directory_material_import_rows_row_number_positive", sql`${t.rowNumber} > 0`),
+    check(
+      "chk_directory_material_import_rows_row_number_positive",
+      sql`${t.rowNumber} > 0`
+    ),
     check(
       "chk_directory_material_import_rows_error_messages_array",
       sql`jsonb_typeof(${t.errorMessages}) = 'array'`

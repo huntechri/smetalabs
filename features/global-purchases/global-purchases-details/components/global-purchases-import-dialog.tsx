@@ -11,7 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
@@ -58,10 +63,13 @@ export function GlobalPurchasesImportDialog({
   const [result, setResult] = useState<string | null>(null)
 
   const previewRows = useMemo(
-    () => (fileText ? buildGlobalPurchasesImportPreviewRows(fileText, projects) : []),
+    () =>
+      fileText ? buildGlobalPurchasesImportPreviewRows(fileText, projects) : [],
     [fileText, projects]
   )
-  const validRows = previewRows.filter((row) => row.status === "valid" && row.input)
+  const validRows = previewRows.filter(
+    (row) => row.status === "valid" && row.input
+  )
   const errorRows = previewRows.filter((row) => row.status === "error")
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -98,7 +106,9 @@ export function GlobalPurchasesImportDialog({
       }
       setResult(`Импортировано строк: ${applied}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Не удалось импортировать закупки")
+      setError(
+        err instanceof Error ? err.message : "Не удалось импортировать закупки"
+      )
     } finally {
       setImporting(false)
     }
@@ -119,22 +129,36 @@ export function GlobalPurchasesImportDialog({
         <DialogHeader className="shrink-0">
           <DialogTitle>Импорт закупок</DialogTitle>
           <DialogDescription>
-            Скачайте шаблон, заполните CSV и загрузите файл обратно. Строки с ошибками не будут импортированы.
+            Скачайте шаблон, заполните CSV и загрузите файл обратно. Строки с
+            ошибками не будут импортированы.
           </DialogDescription>
         </DialogHeader>
 
         <div className="shrink-0 space-y-2">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Input accept=".csv,text/csv" type="file" onChange={handleFileChange} />
-            <Button type="button" variant="outline" onClick={downloadImportTemplate}>
+            <Input
+              accept=".csv,text/csv"
+              type="file"
+              onChange={handleFileChange}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={downloadImportTemplate}
+            >
               Скачать шаблон
             </Button>
           </div>
           <div className="text-xs text-muted-foreground">
-            Колонки: {GLOBAL_PURCHASES_IMPORT_REQUIRED_COLUMNS}. {fileName ? `Файл: ${fileName}` : "Файл ещё не выбран"}
+            Колонки: {GLOBAL_PURCHASES_IMPORT_REQUIRED_COLUMNS}.{" "}
+            {fileName ? `Файл: ${fileName}` : "Файл ещё не выбран"}
           </div>
           <FieldError>{error}</FieldError>
-          {result ? <div className="rounded-md border border-border bg-muted p-2 text-xs">{result}</div> : null}
+          {result ? (
+            <div className="rounded-md border border-border bg-muted p-2 text-xs">
+              {result}
+            </div>
+          ) : null}
         </div>
 
         <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-md border border-border">
@@ -142,27 +166,50 @@ export function GlobalPurchasesImportDialog({
             <Empty className="h-full min-h-80 border-0">
               <EmptyHeader>
                 <EmptyTitle>Нет строк для предпросмотра</EmptyTitle>
-                <EmptyDescription>Скачайте шаблон, заполните его и выберите CSV-файл с закупками.</EmptyDescription>
+                <EmptyDescription>
+                  Скачайте шаблон, заполните его и выберите CSV-файл с
+                  закупками.
+                </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : null}
 
           {previewRows.map((row) => {
-            const sourceTitle = pickGlobalPurchasesImportValue(row.source, ["Наименование", "Название", "Материал", "title"])
+            const sourceTitle = pickGlobalPurchasesImportValue(row.source, [
+              "Наименование",
+              "Название",
+              "Материал",
+              "title",
+            ])
             return (
-              <Card key={row.index} className="m-2 rounded-md bg-transparent p-0 shadow-none">
+              <Card
+                key={row.index}
+                className="m-2 rounded-md bg-transparent p-0 shadow-none"
+              >
                 <CardContent className="grid gap-2 p-3 sm:grid-cols-[80px_minmax(0,1fr)_160px] sm:items-center">
-                  <div className="text-xs text-muted-foreground">Строка {row.index}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Строка {row.index}
+                  </div>
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium">
                       {(row.input?.title ?? sourceTitle) || "—"}
                     </div>
                     <div className="truncate text-xs text-muted-foreground">
-                      {row.input ? `${row.input.factQuantity ?? ""} ${row.input.unit} × ${row.input.factPrice ?? ""}` : row.errors.join("; ")}
+                      {row.input
+                        ? `${row.input.factQuantity ?? ""} ${row.input.unit} × ${row.input.factPrice ?? ""}`
+                        : row.errors.join("; ")}
                     </div>
                   </div>
-                  <div className={row.status === "valid" ? "text-xs text-muted-foreground" : "text-xs text-destructive"}>
-                    {row.status === "valid" ? "Готово к импорту" : row.errors.join("; ")}
+                  <div
+                    className={
+                      row.status === "valid"
+                        ? "text-xs text-muted-foreground"
+                        : "text-xs text-destructive"
+                    }
+                  >
+                    {row.status === "valid"
+                      ? "Готово к импорту"
+                      : row.errors.join("; ")}
                   </div>
                 </CardContent>
               </Card>
@@ -174,10 +221,19 @@ export function GlobalPurchasesImportDialog({
           <div className="mr-auto text-xs text-muted-foreground">
             Корректных: {validRows.length}. С ошибками: {errorRows.length}.
           </div>
-          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={importing}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={importing}
+          >
             Закрыть
           </Button>
-          <Button type="button" onClick={handleApply} disabled={saving || importing || validRows.length === 0}>
+          <Button
+            type="button"
+            onClick={handleApply}
+            disabled={saving || importing || validRows.length === 0}
+          >
             Импортировать
           </Button>
         </DialogFooter>

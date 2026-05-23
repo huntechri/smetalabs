@@ -46,7 +46,8 @@ export async function requireProjectsReadContext(): Promise<ProjectsContext> {
       workspaceOwnerId,
       cacheTags: {
         list: projectsCacheTags.list(workspaceOwnerId),
-        detail: (projectId: string) => projectsCacheTags.detail(workspaceOwnerId, projectId),
+        detail: (projectId: string) =>
+          projectsCacheTags.detail(workspaceOwnerId, projectId),
       },
     }
   } catch (err) {
@@ -62,7 +63,11 @@ export async function requireProjectsWriteContext(): Promise<ProjectsContext> {
   const role = await getWorkspaceRole(context.userId, context.workspaceOwnerId)
 
   if (!role || !WRITE_ROLES.has(role)) {
-    throw new ProjectsApiError("FORBIDDEN", "Недостаточно прав для изменения проектов", 403)
+    throw new ProjectsApiError(
+      "FORBIDDEN",
+      "Недостаточно прав для изменения проектов",
+      403
+    )
   }
 
   return context
@@ -76,12 +81,18 @@ function revalidateProjectTags(context: ProjectsContext, projectId?: string) {
 export async function listProjects(params: ProjectsListParams) {
   const context = await requireProjectsReadContext()
   const normalizedParams = normalizeProjectsListParams(params)
-  const cacheKey = stableHash({ workspaceOwnerId: context.workspaceOwnerId, normalizedParams })
+  const cacheKey = stableHash({
+    workspaceOwnerId: context.workspaceOwnerId,
+    normalizedParams,
+  })
 
   return unstable_cache(
     () => listProjectsForWorkspace(context.workspaceOwnerId, normalizedParams),
     ["projects:list", cacheKey],
-    { revalidate: LIST_CACHE_REVALIDATE_SECONDS, tags: [context.cacheTags.list] }
+    {
+      revalidate: LIST_CACHE_REVALIDATE_SECONDS,
+      tags: [context.cacheTags.list],
+    }
   )()
 }
 
@@ -97,12 +108,19 @@ export async function getProject(id: string) {
   )()
 
   if (!project) throw new ProjectsApiError("NOT_FOUND", "Проект не найден", 404)
-  return { data: project, meta: { cacheTag: context.cacheTags.detail(project.id) } }
+  return {
+    data: project,
+    meta: { cacheTag: context.cacheTags.detail(project.id) },
+  }
 }
 
 export async function createProject(input: ProjectMutationInput) {
   const context = await requireProjectsWriteContext()
-  const project = await createProjectForWorkspace(context.workspaceOwnerId, context.userId, input)
+  const project = await createProjectForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    input
+  )
 
   revalidateProjectTags(context, project.id)
   return { data: project }
@@ -123,7 +141,11 @@ export async function updateProject(id: string, input: ProjectMutationInput) {
 
 export async function archiveProject(id: string) {
   const context = await requireProjectsWriteContext()
-  const project = await archiveProjectForWorkspace(context.workspaceOwnerId, context.userId, id)
+  const project = await archiveProjectForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id
+  )
 
   revalidateProjectTags(context, project.id)
   return { data: project }

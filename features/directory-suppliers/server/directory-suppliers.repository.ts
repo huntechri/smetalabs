@@ -29,7 +29,8 @@ type DirectorySupplierDbRow = {
   updated_at: string
 }
 
-const SUPPLIER_SELECT = "id,name,normalized_name,legal_status,color,inn,phone,email,address,notes,status,version,created_at,updated_at"
+const SUPPLIER_SELECT =
+  "id,name,normalized_name,legal_status,color,inn,phone,email,address,notes,status,version,created_at,updated_at"
 const DEFAULT_COLOR = "#64748B"
 const MAX_SEARCH_TOKENS = 8
 
@@ -52,7 +53,9 @@ function toNullableString(value: string | null | undefined) {
   return value && value.trim() ? value.trim().replace(/\s+/g, " ") : null
 }
 
-function mapDirectorySupplierRow(row: DirectorySupplierDbRow): DirectorySupplier {
+function mapDirectorySupplierRow(
+  row: DirectorySupplierDbRow
+): DirectorySupplier {
   return {
     id: row.id,
     name: row.name,
@@ -73,10 +76,9 @@ function mapDirectorySupplierRow(row: DirectorySupplierDbRow): DirectorySupplier
   }
 }
 
-function applyDirectorySupplierFilters<T extends { or: (filters: string) => T }>(
-  query: T,
-  params: NormalizedListParams
-) {
+function applyDirectorySupplierFilters<
+  T extends { or: (filters: string) => T },
+>(query: T, params: NormalizedListParams) {
   let scoped = query
 
   if (params.q) {
@@ -98,15 +100,18 @@ function applyDirectorySupplierFilters<T extends { or: (filters: string) => T }>
   return scoped
 }
 
-function applyDirectorySupplierSort<T extends { order: (column: string, options?: { ascending?: boolean }) => T }>(
-  query: T,
-  params: NormalizedListParams
-) {
+function applyDirectorySupplierSort<
+  T extends { order: (column: string, options?: { ascending?: boolean }) => T },
+>(query: T, params: NormalizedListParams) {
   if (params.sort === "name_asc") {
-    return query.order("normalized_name", { ascending: true }).order("id", { ascending: true })
+    return query
+      .order("normalized_name", { ascending: true })
+      .order("id", { ascending: true })
   }
 
-  return query.order("updated_at", { ascending: false }).order("id", { ascending: true })
+  return query
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: true })
 }
 
 async function assertDirectorySupplierUniqueFields(
@@ -128,7 +133,11 @@ async function assertDirectorySupplierUniqueFields(
     const { data, error } = await query
     if (error) throw error
     if ((data ?? []).length > 0) {
-      throw new DirectorySuppliersApiError("BAD_REQUEST", "Поставщик с таким ИНН уже существует", 400)
+      throw new DirectorySuppliersApiError(
+        "BAD_REQUEST",
+        "Поставщик с таким ИНН уже существует",
+        400
+      )
     }
   }
 }
@@ -229,9 +238,16 @@ export async function createDirectorySupplierForWorkspace(
 
   if (error) throw error
 
-  const supplier = await getDirectorySupplierForWorkspace(workspaceOwnerId, data.id)
+  const supplier = await getDirectorySupplierForWorkspace(
+    workspaceOwnerId,
+    data.id
+  )
   if (!supplier) {
-    throw new DirectorySuppliersApiError("INTERNAL_ERROR", "Созданный поставщик не найден", 500)
+    throw new DirectorySuppliersApiError(
+      "INTERNAL_ERROR",
+      "Созданный поставщик не найден",
+      500
+    )
   }
 
   return supplier
@@ -244,7 +260,12 @@ export async function updateDirectorySupplierForWorkspace(
   input: DirectorySupplierMutationInput
 ): Promise<DirectorySupplier> {
   const existing = await getDirectorySupplierForWorkspace(workspaceOwnerId, id)
-  if (!existing) throw new DirectorySuppliersApiError("NOT_FOUND", "Поставщик не найден", 404)
+  if (!existing)
+    throw new DirectorySuppliersApiError(
+      "NOT_FOUND",
+      "Поставщик не найден",
+      404
+    )
 
   await assertDirectorySupplierUniqueFields(workspaceOwnerId, input, id)
 
@@ -262,7 +283,11 @@ export async function updateDirectorySupplierForWorkspace(
 
   const supplier = await getDirectorySupplierForWorkspace(workspaceOwnerId, id)
   if (!supplier) {
-    throw new DirectorySuppliersApiError("INTERNAL_ERROR", "Обновлённый поставщик не найден", 500)
+    throw new DirectorySuppliersApiError(
+      "INTERNAL_ERROR",
+      "Обновлённый поставщик не найден",
+      500
+    )
   }
 
   return supplier
@@ -274,7 +299,12 @@ export async function archiveDirectorySupplierForWorkspace(
   id: string
 ): Promise<DirectorySupplier> {
   const existing = await getDirectorySupplierForWorkspace(workspaceOwnerId, id)
-  if (!existing) throw new DirectorySuppliersApiError("NOT_FOUND", "Поставщик не найден", 404)
+  if (!existing)
+    throw new DirectorySuppliersApiError(
+      "NOT_FOUND",
+      "Поставщик не найден",
+      404
+    )
 
   const { error } = await supabase
     .from("directory_suppliers")
@@ -292,7 +322,11 @@ export async function archiveDirectorySupplierForWorkspace(
 
   const supplier = await getDirectorySupplierForWorkspace(workspaceOwnerId, id)
   if (!supplier) {
-    throw new DirectorySuppliersApiError("INTERNAL_ERROR", "Архивированный поставщик не найден", 500)
+    throw new DirectorySuppliersApiError(
+      "INTERNAL_ERROR",
+      "Архивированный поставщик не найден",
+      500
+    )
   }
 
   return supplier

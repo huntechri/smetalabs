@@ -56,8 +56,12 @@ type DirectoryMaterialsContext = {
   }
 }
 
-type ImportApplyWithAiIds = Awaited<ReturnType<typeof applyDirectoryMaterialImportJobForWorkspace>> & {
-  data: Awaited<ReturnType<typeof applyDirectoryMaterialImportJobForWorkspace>>["data"] & {
+type ImportApplyWithAiIds = Awaited<
+  ReturnType<typeof applyDirectoryMaterialImportJobForWorkspace>
+> & {
+  data: Awaited<
+    ReturnType<typeof applyDirectoryMaterialImportJobForWorkspace>
+  >["data"] & {
     appliedMaterialIds?: string[]
   }
 }
@@ -78,7 +82,11 @@ export async function requireDirectoryMaterialsReadContext(): Promise<DirectoryM
   const { data, error } = await client.auth.getUser()
 
   if (error || !data.user) {
-    throw new DirectoryMaterialsApiError("UNAUTHORIZED", "Требуется аутентификация", 401)
+    throw new DirectoryMaterialsApiError(
+      "UNAUTHORIZED",
+      "Требуется аутентификация",
+      401
+    )
   }
 
   try {
@@ -89,14 +97,21 @@ export async function requireDirectoryMaterialsReadContext(): Promise<DirectoryM
       cacheTags: {
         list: directoryMaterialsCacheTags.list(workspaceOwnerId),
         categories: directoryMaterialsCacheTags.categories(workspaceOwnerId),
-        detail: (materialId: string) => directoryMaterialsCacheTags.detail(workspaceOwnerId, materialId),
-        importJob: (jobId: string) => directoryMaterialsCacheTags.importJob(workspaceOwnerId, jobId),
-        aiSearchIndex: directoryMaterialsCacheTags.aiSearchIndex(workspaceOwnerId),
+        detail: (materialId: string) =>
+          directoryMaterialsCacheTags.detail(workspaceOwnerId, materialId),
+        importJob: (jobId: string) =>
+          directoryMaterialsCacheTags.importJob(workspaceOwnerId, jobId),
+        aiSearchIndex:
+          directoryMaterialsCacheTags.aiSearchIndex(workspaceOwnerId),
       },
     }
   } catch (err) {
     if (err instanceof Error && err.message === "WORKSPACE_MEMBER_REQUIRED") {
-      throw new DirectoryMaterialsApiError("FORBIDDEN", "Нет доступа к workspace", 403)
+      throw new DirectoryMaterialsApiError(
+        "FORBIDDEN",
+        "Нет доступа к workspace",
+        403
+      )
     }
     throw err
   }
@@ -107,32 +122,54 @@ export async function requireDirectoryMaterialsWriteContext(): Promise<Directory
   const role = await getWorkspaceRole(context.userId, context.workspaceOwnerId)
 
   if (!role || !WRITE_ROLES.has(role)) {
-    throw new DirectoryMaterialsApiError("FORBIDDEN", "Недостаточно прав для изменения справочника материалов", 403)
+    throw new DirectoryMaterialsApiError(
+      "FORBIDDEN",
+      "Недостаточно прав для изменения справочника материалов",
+      403
+    )
   }
 
   return context
 }
 
-function revalidateDirectoryMaterialTags(context: DirectoryMaterialsContext, materialId?: string) {
+function revalidateDirectoryMaterialTags(
+  context: DirectoryMaterialsContext,
+  materialId?: string
+) {
   revalidateTag(context.cacheTags.list, "max")
   revalidateTag(context.cacheTags.categories, "max")
   revalidateTag(context.cacheTags.aiSearchIndex, "max")
   if (materialId) revalidateTag(context.cacheTags.detail(materialId), "max")
 }
 
-function revalidateImportTags(context: DirectoryMaterialsContext, jobId: string) {
+function revalidateImportTags(
+  context: DirectoryMaterialsContext,
+  jobId: string
+) {
   revalidateTag(context.cacheTags.importJob(jobId), "max")
 }
 
-export async function listDirectoryMaterials(params: DirectoryMaterialsListParams) {
+export async function listDirectoryMaterials(
+  params: DirectoryMaterialsListParams
+) {
   const context = await requireDirectoryMaterialsReadContext()
   const normalizedParams = normalizeDirectoryMaterialsListParams(params)
-  const cacheKey = stableHash({ workspaceOwnerId: context.workspaceOwnerId, normalizedParams })
+  const cacheKey = stableHash({
+    workspaceOwnerId: context.workspaceOwnerId,
+    normalizedParams,
+  })
 
   return unstable_cache(
-    () => listDirectoryMaterialsForWorkspace(context.workspaceOwnerId, normalizedParams),
+    () =>
+      listDirectoryMaterialsForWorkspace(
+        context.workspaceOwnerId,
+        normalizedParams
+      ),
     ["directory-materials:list", cacheKey],
-    { revalidate: LIST_CACHE_REVALIDATE_SECONDS, tags: [context.cacheTags.list] }
+    {
+      revalidate: LIST_CACHE_REVALIDATE_SECONDS,
+      tags: [context.cacheTags.list],
+    }
   )()
 }
 
@@ -141,65 +178,126 @@ export async function getDirectoryMaterial(id: string) {
   const material = await unstable_cache(
     () => getDirectoryMaterialForWorkspace(context.workspaceOwnerId, id),
     ["directory-materials:detail", context.workspaceOwnerId, id],
-    { revalidate: DETAIL_CACHE_REVALIDATE_SECONDS, tags: [context.cacheTags.detail(id), context.cacheTags.list] }
+    {
+      revalidate: DETAIL_CACHE_REVALIDATE_SECONDS,
+      tags: [context.cacheTags.detail(id), context.cacheTags.list],
+    }
   )()
 
-  if (!material) throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
-  return { data: material, meta: { cacheTag: context.cacheTags.detail(material.id) } }
+  if (!material)
+    throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
+  return {
+    data: material,
+    meta: { cacheTag: context.cacheTags.detail(material.id) },
+  }
 }
 
-export async function createDirectoryMaterial(input: DirectoryMaterialMutationInput) {
+export async function createDirectoryMaterial(
+  input: DirectoryMaterialMutationInput
+) {
   const context = await requireDirectoryMaterialsWriteContext()
-  const material = await createDirectoryMaterialForWorkspace(context.workspaceOwnerId, context.userId, input)
+  const material = await createDirectoryMaterialForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    input
+  )
 
-  await enqueueDirectoryMaterialEmbeddingForWorkspace(context.workspaceOwnerId, material.id)
+  await enqueueDirectoryMaterialEmbeddingForWorkspace(
+    context.workspaceOwnerId,
+    material.id
+  )
   revalidateDirectoryMaterialTags(context, material.id)
   return { data: material }
 }
 
-export async function updateDirectoryMaterial(id: string, input: DirectoryMaterialMutationInput) {
+export async function updateDirectoryMaterial(
+  id: string,
+  input: DirectoryMaterialMutationInput
+) {
   const context = await requireDirectoryMaterialsWriteContext()
-  const material = await updateDirectoryMaterialForWorkspace(context.workspaceOwnerId, context.userId, id, input)
+  const material = await updateDirectoryMaterialForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id,
+    input
+  )
 
-  await enqueueDirectoryMaterialEmbeddingForWorkspace(context.workspaceOwnerId, material.id)
+  await enqueueDirectoryMaterialEmbeddingForWorkspace(
+    context.workspaceOwnerId,
+    material.id
+  )
   revalidateDirectoryMaterialTags(context, material.id)
   return { data: material }
 }
 
 export async function archiveDirectoryMaterial(id: string) {
   const context = await requireDirectoryMaterialsWriteContext()
-  const material = await archiveDirectoryMaterialForWorkspace(context.workspaceOwnerId, context.userId, id)
+  const material = await archiveDirectoryMaterialForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id
+  )
 
   revalidateDirectoryMaterialTags(context, material.id)
   return { data: material }
 }
 
-export async function getDirectoryMaterialsCategories(params: DirectoryMaterialsCategoriesParams = {}) {
+export async function getDirectoryMaterialsCategories(
+  params: DirectoryMaterialsCategoriesParams = {}
+) {
   const context = await requireDirectoryMaterialsReadContext()
   const normalizedParams = normalizeDirectoryMaterialsCategoriesParams(params)
-  const cacheKey = stableHash({ workspaceOwnerId: context.workspaceOwnerId, normalizedParams })
+  const cacheKey = stableHash({
+    workspaceOwnerId: context.workspaceOwnerId,
+    normalizedParams,
+  })
 
   return unstable_cache(
-    () => getDirectoryMaterialCategoriesForWorkspace(context.workspaceOwnerId, normalizedParams),
+    () =>
+      getDirectoryMaterialCategoriesForWorkspace(
+        context.workspaceOwnerId,
+        normalizedParams
+      ),
     ["directory-materials:categories", cacheKey],
-    { revalidate: CATEGORIES_CACHE_REVALIDATE_SECONDS, tags: [context.cacheTags.categories, context.cacheTags.list] }
+    {
+      revalidate: CATEGORIES_CACHE_REVALIDATE_SECONDS,
+      tags: [context.cacheTags.categories, context.cacheTags.list],
+    }
   )()
 }
 
-export async function createDirectoryMaterialImportJob(input: DirectoryMaterialImportCreateInput) {
+export async function createDirectoryMaterialImportJob(
+  input: DirectoryMaterialImportCreateInput
+) {
   const context = await requireDirectoryMaterialsWriteContext()
   const rows = input.rows ?? []
-  const response = rows.length > 0
-    ? await createDirectoryMaterialImportJobForWorkspace(context.workspaceOwnerId, context.userId, { ...input, rows })
-    : await createChunkedDirectoryMaterialImportJobForWorkspace(context.workspaceOwnerId, context.userId, input)
+  const response =
+    rows.length > 0
+      ? await createDirectoryMaterialImportJobForWorkspace(
+          context.workspaceOwnerId,
+          context.userId,
+          { ...input, rows }
+        )
+      : await createChunkedDirectoryMaterialImportJobForWorkspace(
+          context.workspaceOwnerId,
+          context.userId,
+          input
+        )
 
   revalidateImportTags(context, response.data.job.id)
   return response
 }
 
-export async function appendDirectoryMaterialImportBatch(id: string, input: DirectoryMaterialImportBatchInput) {
+export async function appendDirectoryMaterialImportBatch(
+  id: string,
+  input: DirectoryMaterialImportBatchInput
+) {
   const context = await requireDirectoryMaterialsWriteContext()
-  const response = await appendDirectoryMaterialImportBatchForWorkspace(context.workspaceOwnerId, id, input)
+  const response = await appendDirectoryMaterialImportBatchForWorkspace(
+    context.workspaceOwnerId,
+    id,
+    input
+  )
 
   revalidateImportTags(context, response.data.job.id)
   return response
@@ -208,22 +306,49 @@ export async function appendDirectoryMaterialImportBatch(id: string, input: Dire
 export async function getDirectoryMaterialImportJob(id: string) {
   const context = await requireDirectoryMaterialsReadContext()
   const response =
-    (await getChunkedDirectoryMaterialImportJobForWorkspace(context.workspaceOwnerId, id)) ??
-    (await getDirectoryMaterialImportJobForWorkspace(context.workspaceOwnerId, id))
+    (await getChunkedDirectoryMaterialImportJobForWorkspace(
+      context.workspaceOwnerId,
+      id
+    )) ??
+    (await getDirectoryMaterialImportJobForWorkspace(
+      context.workspaceOwnerId,
+      id
+    ))
 
-  if (!response) throw new DirectoryMaterialsApiError("NOT_FOUND", "Import job материалов не найден", 404)
+  if (!response)
+    throw new DirectoryMaterialsApiError(
+      "NOT_FOUND",
+      "Import job материалов не найден",
+      404
+    )
   return response
 }
 
-export async function applyDirectoryMaterialImportJob(id: string, input: DirectoryMaterialImportApplyInput = {}) {
+export async function applyDirectoryMaterialImportJob(
+  id: string,
+  input: DirectoryMaterialImportApplyInput = {}
+) {
   const context = await requireDirectoryMaterialsWriteContext()
-  const current = await getChunkedDirectoryMaterialImportJobForWorkspace(context.workspaceOwnerId, id)
-  const isChunked = current?.job.summary?.importMode === "chunked" || current?.job.status === "applying"
+  const current = await getChunkedDirectoryMaterialImportJobForWorkspace(
+    context.workspaceOwnerId,
+    id
+  )
+  const isChunked =
+    current?.job.summary?.importMode === "chunked" ||
+    current?.job.status === "applying"
 
   if (isChunked) {
-    const response = await applyDirectoryMaterialImportBatchForWorkspace(context.workspaceOwnerId, context.userId, id, input)
+    const response = await applyDirectoryMaterialImportBatchForWorkspace(
+      context.workspaceOwnerId,
+      context.userId,
+      id,
+      input
+    )
     for (const materialId of response.data.appliedMaterialIds ?? []) {
-      await enqueueDirectoryMaterialEmbeddingForWorkspace(context.workspaceOwnerId, materialId)
+      await enqueueDirectoryMaterialEmbeddingForWorkspace(
+        context.workspaceOwnerId,
+        materialId
+      )
     }
     revalidateDirectoryMaterialTags(context)
     revalidateImportTags(context, response.data.job.id)
@@ -237,7 +362,10 @@ export async function applyDirectoryMaterialImportJob(id: string, input: Directo
   )) as ImportApplyWithAiIds
 
   for (const materialId of response.data.appliedMaterialIds ?? []) {
-    await enqueueDirectoryMaterialEmbeddingForWorkspace(context.workspaceOwnerId, materialId)
+    await enqueueDirectoryMaterialEmbeddingForWorkspace(
+      context.workspaceOwnerId,
+      materialId
+    )
   }
 
   revalidateDirectoryMaterialTags(context)
@@ -245,9 +373,14 @@ export async function applyDirectoryMaterialImportJob(id: string, input: Directo
   return response
 }
 
-export async function processDirectoryMaterialEmbeddings(input: { limit?: number }) {
+export async function processDirectoryMaterialEmbeddings(input: {
+  limit?: number
+}) {
   const context = await requireDirectoryMaterialsWriteContext()
-  const response = await processDirectoryMaterialEmbeddingsForWorkspace(context.workspaceOwnerId, input.limit)
+  const response = await processDirectoryMaterialEmbeddingsForWorkspace(
+    context.workspaceOwnerId,
+    input.limit
+  )
 
   revalidateTag(context.cacheTags.aiSearchIndex, "max")
   return response
@@ -274,13 +407,16 @@ async function getDirectoryMaterialsForExport(
   let hasMore = true
 
   while (hasMore && materials.length < MAX_EXPORT_ROWS) {
-    const response = await listDirectoryMaterialsForWorkspace(workspaceOwnerId, {
-      ...params,
-      status: params.status ?? "active",
-      sort: params.sort ?? "updated_desc",
-      limit: EXPORT_BATCH_LIMIT,
-      cursor,
-    })
+    const response = await listDirectoryMaterialsForWorkspace(
+      workspaceOwnerId,
+      {
+        ...params,
+        status: params.status ?? "active",
+        sort: params.sort ?? "updated_desc",
+        limit: EXPORT_BATCH_LIMIT,
+        cursor,
+      }
+    )
 
     materials.push(...response.data)
     hasMore = response.meta.hasMore
@@ -290,9 +426,15 @@ async function getDirectoryMaterialsForExport(
   return materials.slice(0, MAX_EXPORT_ROWS)
 }
 
-export async function exportDirectoryMaterials(format: DirectoryMaterialsExportFormat, params: DirectoryMaterialsListParams) {
+export async function exportDirectoryMaterials(
+  format: DirectoryMaterialsExportFormat,
+  params: DirectoryMaterialsListParams
+) {
   const context = await requireDirectoryMaterialsReadContext()
-  const materials = await getDirectoryMaterialsForExport(context.workspaceOwnerId, params)
+  const materials = await getDirectoryMaterialsForExport(
+    context.workspaceOwnerId,
+    params
+  )
 
   return buildDirectoryMaterialsExportFile(materials, format)
 }

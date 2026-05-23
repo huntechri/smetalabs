@@ -1,1 +1,2 @@
-export const DIRECTORY_COUNTERPARTIES_CREATE_EVENT = "directory-counterparties:create"
+export const DIRECTORY_COUNTERPARTIES_CREATE_EVENT =
+  "directory-counterparties:create"

@@ -26,7 +26,12 @@ type GlobalPurchaseDbRow = {
   project_id: string | null
   project_title: string | null
   purchase_date: string | null
-  status: "planned" | "ordered" | "partially_received" | "received" | "cancelled"
+  status:
+    | "planned"
+    | "ordered"
+    | "partially_received"
+    | "received"
+    | "cancelled"
   notes: string | null
   created_by: string | null
   updated_by: string | null
@@ -65,7 +70,8 @@ const GLOBAL_PURCHASE_SELECT = [
   "updated_at",
 ].join(",")
 
-const MATERIAL_OPTION_SELECT = "id,name,unit_code,unit_label,price_amount,category"
+const MATERIAL_OPTION_SELECT =
+  "id,name,unit_code,unit_label,price_amount,category"
 const MAX_SEARCH_TOKENS = 8
 
 function normalizeSearch(value: string) {
@@ -146,7 +152,9 @@ function mapGlobalPurchaseRow(row: GlobalPurchaseDbRow): GlobalPurchaseRow {
   }
 }
 
-function mapMaterialOption(row: MaterialOptionDbRow): GlobalPurchaseMaterialOption {
+function mapMaterialOption(
+  row: MaterialOptionDbRow
+): GlobalPurchaseMaterialOption {
   return {
     id: row.id,
     title: row.name,
@@ -204,14 +212,23 @@ function applyGlobalPurchaseFilters<
 }
 
 function applyGlobalPurchaseSort<
-  T extends { order: (column: string, options?: { ascending?: boolean; nullsFirst?: boolean }) => T },
+  T extends {
+    order: (
+      column: string,
+      options?: { ascending?: boolean; nullsFirst?: boolean }
+    ) => T
+  },
 >(query: T, params: NormalizedListParams) {
   if (params.sort === "title_asc") {
-    return query.order("normalized_title", { ascending: true }).order("id", { ascending: true })
+    return query
+      .order("normalized_title", { ascending: true })
+      .order("id", { ascending: true })
   }
 
   if (params.sort === "updated_desc") {
-    return query.order("updated_at", { ascending: false }).order("id", { ascending: true })
+    return query
+      .order("updated_at", { ascending: false })
+      .order("id", { ascending: true })
   }
 
   return query
@@ -237,7 +254,12 @@ async function getProjectSnapshotForWorkspace(
     .maybeSingle()
 
   if (error) throw error
-  if (!data) throw new GlobalPurchasesApiError("BAD_REQUEST", "Выбранный объект не найден", 400)
+  if (!data)
+    throw new GlobalPurchasesApiError(
+      "BAD_REQUEST",
+      "Выбранный объект не найден",
+      400
+    )
 
   return data as ProjectSnapshotRow
 }
@@ -247,7 +269,10 @@ async function toGlobalPurchaseMutationRow(
   userId: string,
   input: GlobalPurchaseMutationInput
 ) {
-  const project = await getProjectSnapshotForWorkspace(workspaceOwnerId, input.projectId)
+  const project = await getProjectSnapshotForWorkspace(
+    workspaceOwnerId,
+    input.projectId
+  )
 
   if (input.supplierId) {
     throw new GlobalPurchasesApiError(
@@ -332,11 +357,17 @@ export async function searchGlobalPurchaseMaterialOptionsForWorkspace(
   for (const token of tokens) {
     const q = escapeLike(token)
     query = query.or(
-      [`normalized_name.ilike.%${q}%`, `search_text.ilike.%${q}%`, `code.ilike.%${q}%`].join(",")
+      [
+        `normalized_name.ilike.%${q}%`,
+        `search_text.ilike.%${q}%`,
+        `code.ilike.%${q}%`,
+      ].join(",")
     )
   }
 
-  const { data, error } = await query.order("normalized_name", { ascending: true })
+  const { data, error } = await query.order("normalized_name", {
+    ascending: true,
+  })
   if (error) throw error
 
   return ((data ?? []) as MaterialOptionDbRow[]).map(mapMaterialOption)
@@ -401,7 +432,8 @@ export async function updateGlobalPurchaseForWorkspace(
     .single()
 
   if (error) {
-    if (error.code === "PGRST116") throw new GlobalPurchasesApiError("NOT_FOUND", "Закупка не найдена", 404)
+    if (error.code === "PGRST116")
+      throw new GlobalPurchasesApiError("NOT_FOUND", "Закупка не найдена", 404)
     throw error
   }
 
@@ -427,7 +459,8 @@ export async function archiveGlobalPurchaseForWorkspace(
     .single()
 
   if (error) {
-    if (error.code === "PGRST116") throw new GlobalPurchasesApiError("NOT_FOUND", "Закупка не найдена", 404)
+    if (error.code === "PGRST116")
+      throw new GlobalPurchasesApiError("NOT_FOUND", "Закупка не найдена", 404)
     throw error
   }
 

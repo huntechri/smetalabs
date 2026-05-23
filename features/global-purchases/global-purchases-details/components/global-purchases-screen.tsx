@@ -9,8 +9,13 @@ import { GlobalPurchasesView } from "./global-purchases-view"
 
 export function GlobalPurchasesScreen() {
   const projectsQuery = useQuery({
-    queryKey: projectsQueryKeys.list({ status: "all", limit: 100, sort: "title_asc" }),
-    queryFn: () => fetchProjects({ status: "all", limit: 100, sort: "title_asc" }),
+    queryKey: projectsQueryKeys.list({
+      status: "all",
+      limit: 100,
+      sort: "title_asc",
+    }),
+    queryFn: () =>
+      fetchProjects({ status: "all", limit: 100, sort: "title_asc" }),
     staleTime: 30_000,
   })
 
@@ -21,7 +26,10 @@ export function GlobalPurchasesScreen() {
       <Suspense fallback={null}>
         <GlobalPurchasesToolbar projects={projects} />
       </Suspense>
-      <GlobalPurchasesView projects={projects} projectsLoading={projectsQuery.isLoading} />
+      <GlobalPurchasesView
+        projects={projects}
+        projectsLoading={projectsQuery.isLoading}
+      />
     </>
   )
 }

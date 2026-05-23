@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js"
 
 /**
  * Supabase-клиент с SERVICE_ROLE_KEY для серверных запросов.

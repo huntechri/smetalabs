@@ -88,7 +88,9 @@ export function DirectoryWorksSection() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [editingWork, setEditingWork] = useState<DirectoryWork | null>(null)
-  const [insertAfterWork, setInsertAfterWork] = useState<DirectoryWork | null>(null)
+  const [insertAfterWork, setInsertAfterWork] = useState<DirectoryWork | null>(
+    null
+  )
 
   useEffect(() => {
     const handleCreate = () => {
@@ -101,7 +103,9 @@ export function DirectoryWorksSection() {
       const currentParams = Object.fromEntries(
         new URLSearchParams(window.location.search)
       ) as DirectoryWorksListParams
-      window.location.assign(buildDirectoryWorksExportHref("csv", currentParams))
+      window.location.assign(
+        buildDirectoryWorksExportHref("csv", currentParams)
+      )
     }
 
     window.addEventListener(DIRECTORY_WORKS_CREATE_EVENT, handleCreate)
@@ -142,7 +146,9 @@ export function DirectoryWorksSection() {
   const currentLimit = params.limit ?? meta?.limit ?? DEFAULT_LIMIT
   const pageStart = works.length > 0 ? currentCursor + 1 : 0
   const pageEnd = currentCursor + works.length
-  const totalLabel = meta?.hasMore ? `минимум ${meta.total}` : String(meta?.total ?? works.length)
+  const totalLabel = meta?.hasMore
+    ? `минимум ${meta.total}`
+    : String(meta?.total ?? works.length)
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
   const showSkeletonRows = loading || isFetching
@@ -159,7 +165,8 @@ export function DirectoryWorksSection() {
           {showSkeletonRows ? <DirectoryWorksRowsSkeleton /> : null}
           {!showSkeletonRows && works.length === 0 ? (
             <div className="p-4 text-xs/relaxed text-muted-foreground">
-              Работы не найдены. Добавьте первую работу вручную или измените поиск.
+              Работы не найдены. Добавьте первую работу вручную или измените
+              поиск.
             </div>
           ) : null}
           {!showSkeletonRows
@@ -177,10 +184,28 @@ export function DirectoryWorksSection() {
         </div>
         {meta ? (
           <div className="flex flex-col gap-3 border-t border-border p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div>
+            <div>
+              Показано {pageStart}–{pageEnd}. Всего: {totalLabel}
+            </div>
             <div className="flex gap-2">
-              <Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button>
-              <Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={currentCursor === 0 || loading || isFetching}
+                onClick={() => setCursor(previousCursor)}
+              >
+                Назад
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={!meta.hasMore || loading || isFetching}
+                onClick={() => setCursor(nextCursor)}
+              >
+                Вперёд
+              </Button>
             </div>
           </div>
         ) : null}
@@ -197,7 +222,11 @@ export function DirectoryWorksSection() {
         work={editingWork}
         onSubmit={async (input) => {
           if (editingWork) await updateWork(editingWork.id, input)
-          else await createWork({ ...input, insertAfterWorkId: insertAfterWork?.id ?? null })
+          else
+            await createWork({
+              ...input,
+              insertAfterWorkId: insertAfterWork?.id ?? null,
+            })
           setDialogOpen(false)
           setEditingWork(null)
           setInsertAfterWork(null)

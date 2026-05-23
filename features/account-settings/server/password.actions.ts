@@ -21,7 +21,9 @@ export async function sendOwnPasswordResetEmailAction() {
   })
 
   if (error) {
-    throw new Error(`Ошибка отправки ссылки для сброса пароля: ${error.message}`)
+    throw new Error(
+      `Ошибка отправки ссылки для сброса пароля: ${error.message}`
+    )
   }
 
   return {

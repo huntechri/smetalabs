@@ -36,10 +36,20 @@ export function GlobalPurchaseArchiveDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button type="button" variant="outline" disabled={saving} onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={saving}
+            onClick={() => onOpenChange(false)}
+          >
             Отмена
           </Button>
-          <Button type="button" variant="destructive" disabled={saving} onClick={onConfirm}>
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={saving}
+            onClick={onConfirm}
+          >
             Удалить
           </Button>
         </DialogFooter>

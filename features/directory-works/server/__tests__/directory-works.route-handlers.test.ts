@@ -202,16 +202,20 @@ describe("directory works route handlers", () => {
     await expect(response.json()).resolves.toEqual({
       error: {
         code: "IMPORT_JOB_CREATE_FAILED",
-        message: "Не удалось создать импорт. Проверьте файл и попробуйте снова.",
+        message:
+          "Не удалось создать импорт. Проверьте файл и попробуйте снова.",
       },
     })
   })
 
   it("applies import jobs and returns service response", async () => {
     const response = await handlers.handleDirectoryWorkImportApplyRequest(
-      request("https://app.test/api/directory-works/import-jobs/22222222-2222-4222-8222-222222222222/apply", {
-        method: "POST",
-      }),
+      request(
+        "https://app.test/api/directory-works/import-jobs/22222222-2222-4222-8222-222222222222/apply",
+        {
+          method: "POST",
+        }
+      ),
       "22222222-2222-4222-8222-222222222222"
     )
 

@@ -24,9 +24,14 @@ const ALL_CATEGORIES_VALUE = "__all_categories__"
 const ALL_SUBCATEGORIES_VALUE = "__all_subcategories__"
 const ALL_SUPPLIERS_VALUE = "__all_suppliers__"
 const FILTER_CONTENT_CLASS = "max-h-72 max-w-[calc(100vw-2rem)]"
-const FILTER_ITEM_CLASS = "max-w-[calc(100vw-4rem)] truncate pr-8 whitespace-nowrap"
+const FILTER_ITEM_CLASS =
+  "max-w-[calc(100vw-4rem)] truncate pr-8 whitespace-nowrap"
 
-function setOptionalParam(params: URLSearchParams, key: string, value: string | null) {
+function setOptionalParam(
+  params: URLSearchParams,
+  key: string,
+  value: string | null
+) {
   if (value) {
     params.set(key, value)
   } else {
@@ -61,7 +66,9 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
     [categories, selectedCategory]
   )
   const subcategories = selectedCategoryOption?.subcategories ?? []
-  const hasActiveFilter = Boolean(selectedCategory || selectedSubcategory || selectedSupplier)
+  const hasActiveFilter = Boolean(
+    selectedCategory || selectedSubcategory || selectedSupplier
+  )
   const loading = categoriesLoading || scopedLoading
   const error = categoriesError ?? scopedError
 
@@ -123,11 +130,18 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
             <SelectValue placeholder="Все категории" />
           </SelectTrigger>
           <SelectContent align="end" className={FILTER_CONTENT_CLASS}>
-            <SelectItem className={FILTER_ITEM_CLASS} value={ALL_CATEGORIES_VALUE}>
+            <SelectItem
+              className={FILTER_ITEM_CLASS}
+              value={ALL_CATEGORIES_VALUE}
+            >
               Все категории
             </SelectItem>
             {categories.map((item) => (
-              <SelectItem className={FILTER_ITEM_CLASS} key={item.category} value={item.category}>
+              <SelectItem
+                className={FILTER_ITEM_CLASS}
+                key={item.category}
+                value={item.category}
+              >
                 {item.category} · {item.total}
               </SelectItem>
             ))}
@@ -143,11 +157,18 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
             <SelectValue placeholder="Все подкатегории" />
           </SelectTrigger>
           <SelectContent align="end" className={FILTER_CONTENT_CLASS}>
-            <SelectItem className={FILTER_ITEM_CLASS} value={ALL_SUBCATEGORIES_VALUE}>
+            <SelectItem
+              className={FILTER_ITEM_CLASS}
+              value={ALL_SUBCATEGORIES_VALUE}
+            >
               Все подкатегории
             </SelectItem>
             {subcategories.map((item) => (
-              <SelectItem className={FILTER_ITEM_CLASS} key={item.name} value={item.name}>
+              <SelectItem
+                className={FILTER_ITEM_CLASS}
+                key={item.name}
+                value={item.name}
+              >
                 {item.name} · {item.total}
               </SelectItem>
             ))}
@@ -163,11 +184,18 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
             <SelectValue placeholder="Все поставщики" />
           </SelectTrigger>
           <SelectContent align="end" className={FILTER_CONTENT_CLASS}>
-            <SelectItem className={FILTER_ITEM_CLASS} value={ALL_SUPPLIERS_VALUE}>
+            <SelectItem
+              className={FILTER_ITEM_CLASS}
+              value={ALL_SUPPLIERS_VALUE}
+            >
               Все поставщики
             </SelectItem>
             {suppliers.map((item) => (
-              <SelectItem className={FILTER_ITEM_CLASS} key={item.name} value={item.name}>
+              <SelectItem
+                className={FILTER_ITEM_CLASS}
+                key={item.name}
+                value={item.name}
+              >
                 {item.name} · {item.total}
               </SelectItem>
             ))}

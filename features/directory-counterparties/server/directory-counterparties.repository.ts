@@ -8,9 +8,15 @@ import type {
 } from "../types"
 
 type NormalizedListParams = Required<
-  Pick<DirectoryCounterpartiesListParams, "status" | "limit" | "cursor" | "sort">
+  Pick<
+    DirectoryCounterpartiesListParams,
+    "status" | "limit" | "cursor" | "sort"
+  >
 > &
-  Omit<DirectoryCounterpartiesListParams, "status" | "limit" | "cursor" | "sort">
+  Omit<
+    DirectoryCounterpartiesListParams,
+    "status" | "limit" | "cursor" | "sort"
+  >
 
 type DirectoryCounterpartyDbRow = {
   id: string
@@ -99,7 +105,9 @@ function toIdRow(data: unknown) {
   return data as DirectoryCounterpartyIdRow
 }
 
-function mapDirectoryCounterpartyRow(row: DirectoryCounterpartyDbRow): DirectoryCounterparty {
+function mapDirectoryCounterpartyRow(
+  row: DirectoryCounterpartyDbRow
+): DirectoryCounterparty {
   return {
     id: row.id,
     name: row.name,
@@ -133,10 +141,9 @@ function mapDirectoryCounterpartyRow(row: DirectoryCounterpartyDbRow): Directory
   }
 }
 
-function applyDirectoryCounterpartyFilters<T extends { or: (filters: string) => T }>(
-  query: T,
-  params: NormalizedListParams
-) {
+function applyDirectoryCounterpartyFilters<
+  T extends { or: (filters: string) => T },
+>(query: T, params: NormalizedListParams) {
   let scoped = query
 
   if (params.q) {
@@ -162,15 +169,18 @@ function applyDirectoryCounterpartyFilters<T extends { or: (filters: string) => 
   return scoped
 }
 
-function applyDirectoryCounterpartySort<T extends { order: (column: string, options?: { ascending?: boolean }) => T }>(
-  query: T,
-  params: NormalizedListParams
-) {
+function applyDirectoryCounterpartySort<
+  T extends { order: (column: string, options?: { ascending?: boolean }) => T },
+>(query: T, params: NormalizedListParams) {
   if (params.sort === "name_asc") {
-    return query.order("normalized_name", { ascending: true }).order("id", { ascending: true })
+    return query
+      .order("normalized_name", { ascending: true })
+      .order("id", { ascending: true })
   }
 
-  return query.order("updated_at", { ascending: false }).order("id", { ascending: true })
+  return query
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: true })
 }
 
 async function assertDirectoryCounterpartyUniqueFields(
@@ -194,7 +204,11 @@ async function assertDirectoryCounterpartyUniqueFields(
   const { data, error } = await query
   if (error) throw error
   if ((data ?? []).length > 0) {
-    throw new DirectoryCounterpartiesApiError("BAD_REQUEST", "Контрагент с таким ИНН уже существует", 400)
+    throw new DirectoryCounterpartiesApiError(
+      "BAD_REQUEST",
+      "Контрагент с таким ИНН уже существует",
+      400
+    )
   }
 }
 
@@ -218,12 +232,24 @@ function toCounterpartyMutationRow(
     bik: isJuridical ? toNullableString(input.bik) : null,
     corr_account: isJuridical ? toNullableString(input.corrAccount) : null,
     account_number: isJuridical ? toNullableString(input.accountNumber) : null,
-    passport_series: isJuridical ? null : toNullableString(input.passportSeries),
-    passport_number: isJuridical ? null : toNullableString(input.passportNumber),
-    passport_issued_by: isJuridical ? null : toNullableString(input.passportIssuedBy),
-    passport_issue_date: isJuridical ? null : toNullableString(input.passportIssueDate),
-    passport_department_code: isJuridical ? null : toNullableString(input.passportDepartmentCode),
-    registration_address: isJuridical ? null : toNullableString(input.registrationAddress),
+    passport_series: isJuridical
+      ? null
+      : toNullableString(input.passportSeries),
+    passport_number: isJuridical
+      ? null
+      : toNullableString(input.passportNumber),
+    passport_issued_by: isJuridical
+      ? null
+      : toNullableString(input.passportIssuedBy),
+    passport_issue_date: isJuridical
+      ? null
+      : toNullableString(input.passportIssueDate),
+    passport_department_code: isJuridical
+      ? null
+      : toNullableString(input.passportDepartmentCode),
+    registration_address: isJuridical
+      ? null
+      : toNullableString(input.registrationAddress),
     search_text: "pending",
     updated_by: userId,
   }
@@ -306,9 +332,16 @@ export async function createDirectoryCounterpartyForWorkspace(
   if (error) throw error
 
   const created = toIdRow(data)
-  const counterparty = await getDirectoryCounterpartyForWorkspace(workspaceOwnerId, created.id)
+  const counterparty = await getDirectoryCounterpartyForWorkspace(
+    workspaceOwnerId,
+    created.id
+  )
   if (!counterparty) {
-    throw new DirectoryCounterpartiesApiError("INTERNAL_ERROR", "Созданный контрагент не найден", 500)
+    throw new DirectoryCounterpartiesApiError(
+      "INTERNAL_ERROR",
+      "Созданный контрагент не найден",
+      500
+    )
   }
 
   return counterparty
@@ -320,23 +353,41 @@ export async function updateDirectoryCounterpartyForWorkspace(
   id: string,
   input: DirectoryCounterpartyMutationInput
 ): Promise<DirectoryCounterparty> {
-  const existing = await getDirectoryCounterpartyForWorkspace(workspaceOwnerId, id)
-  if (!existing) throw new DirectoryCounterpartiesApiError("NOT_FOUND", "Контрагент не найден", 404)
+  const existing = await getDirectoryCounterpartyForWorkspace(
+    workspaceOwnerId,
+    id
+  )
+  if (!existing)
+    throw new DirectoryCounterpartiesApiError(
+      "NOT_FOUND",
+      "Контрагент не найден",
+      404
+    )
 
   await assertDirectoryCounterpartyUniqueFields(workspaceOwnerId, input, id)
 
   const { error } = await supabase
     .from("directory_counterparties")
-    .update({ ...toCounterpartyMutationRow(workspaceOwnerId, userId, input), version: existing.version + 1 })
+    .update({
+      ...toCounterpartyMutationRow(workspaceOwnerId, userId, input),
+      version: existing.version + 1,
+    })
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
     .is("deleted_at", null)
 
   if (error) throw error
 
-  const counterparty = await getDirectoryCounterpartyForWorkspace(workspaceOwnerId, id)
+  const counterparty = await getDirectoryCounterpartyForWorkspace(
+    workspaceOwnerId,
+    id
+  )
   if (!counterparty) {
-    throw new DirectoryCounterpartiesApiError("INTERNAL_ERROR", "Обновлённый контрагент не найден", 500)
+    throw new DirectoryCounterpartiesApiError(
+      "INTERNAL_ERROR",
+      "Обновлённый контрагент не найден",
+      500
+    )
   }
 
   return counterparty
@@ -347,8 +398,16 @@ export async function archiveDirectoryCounterpartyForWorkspace(
   userId: string,
   id: string
 ): Promise<DirectoryCounterparty> {
-  const existing = await getDirectoryCounterpartyForWorkspace(workspaceOwnerId, id)
-  if (!existing) throw new DirectoryCounterpartiesApiError("NOT_FOUND", "Контрагент не найден", 404)
+  const existing = await getDirectoryCounterpartyForWorkspace(
+    workspaceOwnerId,
+    id
+  )
+  if (!existing)
+    throw new DirectoryCounterpartiesApiError(
+      "NOT_FOUND",
+      "Контрагент не найден",
+      404
+    )
 
   const { error } = await supabase
     .from("directory_counterparties")
@@ -364,9 +423,16 @@ export async function archiveDirectoryCounterpartyForWorkspace(
 
   if (error) throw error
 
-  const counterparty = await getDirectoryCounterpartyForWorkspace(workspaceOwnerId, id)
+  const counterparty = await getDirectoryCounterpartyForWorkspace(
+    workspaceOwnerId,
+    id
+  )
   if (!counterparty) {
-    throw new DirectoryCounterpartiesApiError("INTERNAL_ERROR", "Архивированный контрагент не найден", 500)
+    throw new DirectoryCounterpartiesApiError(
+      "INTERNAL_ERROR",
+      "Архивированный контрагент не найден",
+      500
+    )
   }
 
   return counterparty

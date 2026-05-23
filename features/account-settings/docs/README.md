@@ -1,193 +1,109 @@
 # Настройки аккаунта (Account Settings)
 
-> Статус: production (backend) + not implemented (frontend) | 2026-05-22
+> 2026-05-23 · статус: полностью реализован (бэкенд API и интерактивный фронтенд настроек профиля, воркспейса, предпочтений, уведомлений и безопасности).
+
+---
 
 ## Назначение
 
-Управление персональными настройками пользователя: профиль, workspace, уведомления,
-безопасность. Данные хранятся в JSONB-колонках таблицы `user_settings`.
+Модуль предназначен для управления персональными настройками пользователя: его профилем, рабочим пространством (workspace), предпочтениями отображения интерфейса, настройками уведомлений и параметрами безопасности. Данные настроек пользователя хранятся в JSONB-колонках таблицы `user_settings`.
 
-**Маршрут (планируемый):** `/settings` или `/account/settings`
-**Фича-директория:** `features/account-settings/` (не создана)
+**Маршрут:** `/settings/account`
+**Фича-директория:** `features/account-settings/`
 
-## Структура модуля (реальные файлы)
+---
 
-**Feature-директория `features/account-settings/` не существует.** Ниже — существующие
-файлы, реализующие функциональность настроек:
-
-```
-lib/auth/
-└── permissions.ts                  # isAuthenticated(), requireAuth() — гварды для страниц настроек
-
-lib/supabase/
-├── server.ts                       # Серверный клиент (createClient) — чтение/запись user_settings
-└── admin.ts                        # Админ-клиент (не для пользовательских настроек)
-
-middleware.ts                       # Защита роутов (все кроме /auth, /api, /_next)
-
-types/
-└── roles.ts                        # RoleName, PermissionKey, TeamMember (связанные типы)
-```
-
-**Не созданы (требуются для фичи):**
-- `features/account-settings/components/` — UI-компоненты
-- `features/account-settings/hooks/` — хуки (useAccountSettings, useUpdateProfile)
-- `app/(main)/settings/page.tsx` — страница настроек
-- `app/api/settings/route.ts` — API для сохранения настроек
-- `lib/validators/settings.ts` — Zod-схемы валидации
-
-## Данные (таблицы, типы)
-
-### Таблица БД: `user_settings` (public)
-
-| Колонка | Тип | Примечание |
-|---|---|---|
-| `user_id` | uuid PK | FK → `profiles.id` |
-| `profile` | jsonb | `'{}'` — настройки профиля (имя, аватар, телефон, должность) |
-| `workspace` | jsonb | `'{}'` — настройки workspace (название, логотип) |
-| `preferences` | jsonb | `'{}'` — пользовательские предпочтения (тема, язык, формат дат) |
-| `notifications` | jsonb | `'{}'` — настройки уведомлений |
-| `security` | jsonb | `'{}'` — настройки безопасности (2FA и т.д.) |
-| `created_at` | timestamptz | `now()` |
-| `updated_at` | timestamptz | `now()` |
-
-**Записей в БД:** 3 (на 2026-05-22).
-
-### Связанная таблица: `profiles`
-
-| Колонка | Тип | Примечание |
-|---|---|---|
-| `id` | uuid PK | FK → `auth.users.id` |
-| `full_name` | text nullable | Отображаемое имя |
-| `avatar_url` | text nullable | URL аватара |
-| `workspace_name` | text nullable | Название workspace |
-| `workspace_logo` | text nullable | URL логотипа workspace |
-| `phone` | text nullable | Телефон |
-| `position` | text nullable | Должность |
-
-**Архитектурное решение:** `profiles` хранит денормализованные данные пользователя
-для быстрых JOIN-запросов, `user_settings` — JSONB-корзина для гибких настроек
-без изменения схемы.
-
-### Структура JSONB (планируемая)
-
-```typescript
-// profile: настройки профиля
-{
-  full_name?: string
-  avatar_url?: string
-  phone?: string
-  position?: string
-}
-
-// workspace: настройки workspace
-{
-  workspace_name?: string
-  workspace_logo?: string
-}
-
-// preferences: пользовательские предпочтения
-{
-  theme?: "light" | "dark" | "system"
-  language?: string
-  date_format?: string
-  currency?: string
-}
-
-// notifications: настройки уведомлений
-{
-  email_notifications?: boolean
-  push_notifications?: boolean
-  mention_notifications?: boolean
-}
-
-// security: настройки безопасности
-{
-  two_factor_enabled?: boolean
-  session_timeout_minutes?: number
-}
-```
-
-## API (эндпоинты, Server Actions)
-
-**API-эндпоинты и Server Actions для настроек НЕ реализованы.**
-
-### Требуемые эндпоинты
-
-| Метод | Путь | Назначение | RBAC |
-|---|---|---|---|
-| `GET` | `/api/settings` | Получить настройки текущего пользователя | `isAuthenticated()` |
-| `PATCH` | `/api/settings` | Обновить настройки (частичное) | `isAuthenticated()` |
-| `POST` | `/api/settings/avatar` | Загрузить аватар (Supabase Storage) | `isAuthenticated()` |
-
-### Планируемая структура ответа
-
-```json
-// GET /api/settings → 200
-{
-  "data": {
-    "profile": { "full_name": "...", "phone": "...", "position": "..." },
-    "workspace": { "workspace_name": "...", "workspace_logo": "..." },
-    "preferences": { "theme": "dark", "language": "ru" },
-    "notifications": { "email_notifications": true },
-    "security": { "two_factor_enabled": false }
-  }
-}
-
-// PATCH /api/settings → 200
-// Body: { "profile": { "phone": "+7..." }, "preferences": { "theme": "light" } }
-// Ответ: обновлённый объект data
-```
-
-### Проверка прав
-
-Все эндпоинты настроек требуют только аутентификации (`isAuthenticated()`).
-Специфичные RBAC-проверки не требуются — пользователь управляет только своими настройками.
-
-Гвард:
-```typescript
-import { requireAuth } from '@/lib/auth/permissions'
-// В начале каждого handler'а:
-await requireAuth()
-```
-
-## Компоненты
-
-**Не реализованы.** Планируемая структура (по аналогии с существующими фичами):
+## Структура модуля
 
 ```
 features/account-settings/
+├── api/
+│   ├── account-settings-client.ts          # API-клиент запросов к API настроек
+│   └── account-settings-query-keys.ts      # Ключи кэширования React Query
 ├── components/
-│   └── account-settings-view.tsx           # Layout-обёртка
-├── account-settings-details/
-│   └── components/
-│       ├── account-settings-section.tsx     # Секция (табы или аккордеон)
-│       ├── profile-settings-form.tsx        # Форма профиля (имя, телефон, должность)
-│       ├── workspace-settings-form.tsx      # Форма workspace (название, логотип)
-│       ├── preferences-form.tsx             # Предпочтения (тема, язык)
-│       ├── notifications-form.tsx           # Настройки уведомлений
-│       └── security-settings-form.tsx       # Безопасность (2FA, сессии)
+│   ├── account-settings-view.tsx           # Основное представление (сетка карточек настроек)
+│   ├── profile-settings-card.tsx           # Карточка настроек профиля (ФИО, телефон, должность)
+│   ├── workspace-settings-card.tsx         # Карточка настроек воркспейса (имя, логотип)
+│   ├── preferences-settings-card.tsx        # Карточка предпочтений (тема, язык, формат дат)
+│   ├── notification-settings-card.tsx     # Настройки почтовых и in-app уведомлений
+│   ├── security-settings-card.tsx          # Смена пароля и управление сессиями
+│   └── sensitive-actions-card.tsx          # Удаление аккаунта / воркспейса (опасные действия)
 ├── hooks/
-│   └── use-account-settings.ts             # Хук получения и мутации настроек
-└── validators/
-    └── account-settings.ts                 # Zod-схемы для каждой JSONB-секции
+│   └── use-account-settings.ts             # React Query хук работы с настройками
+├── server/
+│   ├── settings.repository.ts              # Доступ к БД через Drizzle ORM
+│   ├── settings.service.ts                 # Сервис работы с настройками аккаунта
+│   ├── schemas.ts                          # Схемы Zod-валидации полей настроек
+│   ├── profile.actions.ts                  # Серверные экшены обновления профиля
+│   ├── workspace.actions.ts                # Серверные экшены обновления воркспейса
+│   ├── preferences.actions.ts              # Серверные экшены обновления предпочтений
+│   ├── notifications.actions.ts            # Серверные экшены обновления уведомлений
+│   ├── password.actions.ts                 # Серверные экшены смены пароля
+│   └── dangerous.actions.ts                # Серверные экшены для сброса данных, удаления аккаунта
+└── types.ts                                # Типы полей настроек
 ```
 
-## Tenant boundary
+### Связанные файлы за пределами модуля:
+- `app/(main)/settings/account/page.tsx` — страница настроек аккаунта (рендерит `AccountSettingsView`).
+- `app/api/settings/route.ts` — Route Handler запросов настроек.
 
-Настройки привязаны к конкретному пользователю (`user_id` PK → `profiles.id`).
-Изоляция: пользователь видит и редактирует только свои настройки. RLS на таблице
-`user_settings` ограничивает доступ по `auth.uid() = user_id`.
+---
 
-Поле `workspace` в настройках не пересекается с таблицами workspace (это
-персональные настройки отображения workspace, а не управление участниками).
+## Данные
 
-## Текущие ограничения
+### Таблица БД: `user_settings`
 
-- **Frontend полностью отсутствует.** Нет ни одной страницы, компонента или хука для настроек.
-- **API не реализован.** Нет Route Handler'ов в `app/api/settings/`.
-- **JSONB-структура не типизирована.** Нет TypeScript-типов для секций настроек.
-- **Нет валидации.** Zod-схемы не созданы — `lib/validators/settings.ts` не существует.
-- **Загрузка аватара не реализована.** Требуется интеграция с Supabase Storage.
-- **Нет миграций для `user_settings`** в последних версиях (таблица создана в ранних миграциях 002–008).
-- **Нет синхронизации** между `profiles.full_name` и `user_settings.profile.full_name` (денормализация может расходиться).
+| Колонка | Тип | Примечание |
+|---|---|---|
+| `user_id` | uuid PK | Идентификатор пользователя (FK → `profiles.id`) |
+| `profile` | jsonb | Настройки профиля (full_name, phone, position) |
+| `workspace` | jsonb | Настройки workspace (workspace_name, workspace_logo) |
+| `preferences` | jsonb | Предпочтения интерфейса (theme, language, date_format) |
+| `notifications` | jsonb | Настройки уведомлений (email/push/mention) |
+| `security` | jsonb | Параметры безопасности |
+| `created_at` / `updated_at` | timestamptz | Аудит времени |
+
+---
+
+## API (Next.js Route Handlers)
+
+Запросы к настройкам аккаунта обрабатываются в `app/api/settings/route.ts`:
+
+- `GET /api/settings` — Получить текущие настройки авторизованного пользователя.
+- `PATCH /api/settings` — Обновить разделы настроек (профиль, предпочтения, уведомления, воркспейс).
+
+Мутации изменения пароля, сброса данных и удаления аккаунта выполняются через соответствующие Server Actions в `features/account-settings/server/`.
+
+---
+
+## Компоненты UI
+
+### 1. `ProfileSettingsCard`
+Редактирование ФИО, телефона и должности. Настройки сохраняются мгновенно при отправке формы.
+
+### 2. `WorkspaceSettingsCard`
+Управление названием компании/воркспейса и загрузка логотипа организации.
+
+### 3. `PreferencesSettingsCard`
+Выбор цветовой темы (светлая/тёмная/системная) с интеграцией Next Themes, выбор языка интерфейса и форматов дат.
+
+### 4. `NotificationSettingsCard`
+Управление подписками на почтовые уведомления об обновлениях в проектах, сметах, приглашениях в команду и финансах.
+
+### 5. `SecuritySettingsCard`
+Форма смены пароля пользователя с проверкой сложности пароля и подтверждением старого пароля.
+
+### 6. `SensitiveActionsCard`
+Зона опасных операций: сброс данных проекта, удаление текущего воркспейса или полное удаление аккаунта пользователя с проверкой пароля.
+
+---
+
+## Текущее состояние
+
+| Задача | Статус | Комментарий |
+|---|---|---|
+| **БД-схема и RLS** | ✅ Готова | Таблица `user_settings` с RLS по `user_id`. |
+| **API Route Handler** | ✅ Готов | Обработчик `app/api/settings/route.ts` работает с сессией. |
+| **Клиентский хук** | ✅ Готов | `useAccountSettings` интегрирован с React Query. |
+| **Интерфейс настроек** | ✅ Готов | Все формы настроек профиля, темы, уведомлений и пароля работают. |
+| **Опасные действия** | ✅ Готовы | Внедрена модальная верификация для удаления аккаунта/данных. |

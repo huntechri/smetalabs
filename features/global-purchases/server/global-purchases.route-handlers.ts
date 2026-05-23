@@ -29,13 +29,22 @@ async function readJsonBody(request: NextRequest) {
   try {
     return await request.json()
   } catch {
-    throw new GlobalPurchasesApiError("BAD_REQUEST", "Некорректное тело запроса", 400)
+    throw new GlobalPurchasesApiError(
+      "BAD_REQUEST",
+      "Некорректное тело запроса",
+      400
+    )
   }
 }
 
-export function handleGlobalPurchasesRouteError(err: unknown, routeLabel: string) {
-  if (err instanceof GlobalPurchasesApiError) return jsonError(err.code, err.message, err.status)
-  if (err instanceof ZodError) return jsonError("BAD_REQUEST", getZodMessage(err), 400)
+export function handleGlobalPurchasesRouteError(
+  err: unknown,
+  routeLabel: string
+) {
+  if (err instanceof GlobalPurchasesApiError)
+    return jsonError(err.code, err.message, err.status)
+  if (err instanceof ZodError)
+    return jsonError("BAD_REQUEST", getZodMessage(err), 400)
 
   console.error(routeLabel, err)
   return jsonError("INTERNAL_ERROR", "Ошибка раздела закупок", 500)
@@ -53,7 +62,9 @@ export async function handleGlobalPurchasesListRequest(request: NextRequest) {
 
 export async function handleGlobalPurchasesExportRequest(request: NextRequest) {
   try {
-    const { format, params } = parseGlobalPurchasesExportParams(request.nextUrl.searchParams)
+    const { format, params } = parseGlobalPurchasesExportParams(
+      request.nextUrl.searchParams
+    )
     const file = await exportGlobalPurchases(format, params)
     const date = new Date().toISOString().slice(0, 10)
 
@@ -65,16 +76,26 @@ export async function handleGlobalPurchasesExportRequest(request: NextRequest) {
       },
     })
   } catch (err) {
-    return handleGlobalPurchasesRouteError(err, "[GET /api/global-purchases/export]")
+    return handleGlobalPurchasesRouteError(
+      err,
+      "[GET /api/global-purchases/export]"
+    )
   }
 }
 
-export async function handleGlobalPurchaseMaterialOptionsRequest(request: NextRequest) {
+export async function handleGlobalPurchaseMaterialOptionsRequest(
+  request: NextRequest
+) {
   try {
-    const response = await searchGlobalPurchaseMaterialOptions(request.nextUrl.searchParams.get("q") ?? "")
+    const response = await searchGlobalPurchaseMaterialOptions(
+      request.nextUrl.searchParams.get("q") ?? ""
+    )
     return NextResponse.json(response)
   } catch (err) {
-    return handleGlobalPurchasesRouteError(err, "[GET /api/global-purchases/material-options]")
+    return handleGlobalPurchasesRouteError(
+      err,
+      "[GET /api/global-purchases/material-options]"
+    )
   }
 }
 
@@ -95,11 +116,17 @@ export async function handleGlobalPurchaseDetailRequest(id: string) {
     const response = await getGlobalPurchase(purchaseId)
     return NextResponse.json(response)
   } catch (err) {
-    return handleGlobalPurchasesRouteError(err, "[GET /api/global-purchases/[id]]")
+    return handleGlobalPurchasesRouteError(
+      err,
+      "[GET /api/global-purchases/[id]]"
+    )
   }
 }
 
-export async function handleGlobalPurchaseUpdateRequest(request: NextRequest, id: string) {
+export async function handleGlobalPurchaseUpdateRequest(
+  request: NextRequest,
+  id: string
+) {
   try {
     const purchaseId = parseGlobalPurchaseId(id)
     const body = await readJsonBody(request)
@@ -107,7 +134,10 @@ export async function handleGlobalPurchaseUpdateRequest(request: NextRequest, id
     const response = await updateGlobalPurchase(purchaseId, input)
     return NextResponse.json(response)
   } catch (err) {
-    return handleGlobalPurchasesRouteError(err, "[PATCH /api/global-purchases/[id]]")
+    return handleGlobalPurchasesRouteError(
+      err,
+      "[PATCH /api/global-purchases/[id]]"
+    )
   }
 }
 
@@ -117,6 +147,9 @@ export async function handleGlobalPurchaseArchiveRequest(id: string) {
     const response = await archiveGlobalPurchase(purchaseId)
     return NextResponse.json(response)
   } catch (err) {
-    return handleGlobalPurchasesRouteError(err, "[DELETE /api/global-purchases/[id]]")
+    return handleGlobalPurchasesRouteError(
+      err,
+      "[DELETE /api/global-purchases/[id]]"
+    )
   }
 }

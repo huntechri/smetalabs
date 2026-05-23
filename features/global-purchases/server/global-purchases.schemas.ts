@@ -13,7 +13,12 @@ const GLOBAL_PURCHASE_STATUSES = [
   "received",
   "cancelled",
 ] as const
-const GLOBAL_PURCHASE_SORTS = ["relevance", "updated_desc", "title_asc", "project_asc"] as const
+const GLOBAL_PURCHASE_SORTS = [
+  "relevance",
+  "updated_desc",
+  "title_asc",
+  "project_asc",
+] as const
 const GLOBAL_PURCHASE_EXPORT_FORMATS = ["xlsx"] as const
 
 function getTodayIsoDate() {
@@ -50,10 +55,17 @@ function nonNegativeNumber(message: string) {
 
 function nullableNonNegativeNumber(message: string) {
   return z
-    .preprocess((value) => {
-      if (value === "" || value === null || value === undefined) return null
-      return value
-    }, z.coerce.number({ error: message }).finite(message).min(0, message).nullable())
+    .preprocess(
+      (value) => {
+        if (value === "" || value === null || value === undefined) return null
+        return value
+      },
+      z.coerce
+        .number({ error: message })
+        .finite(message)
+        .min(0, message)
+        .nullable()
+    )
     .optional()
 }
 
@@ -68,10 +80,18 @@ const globalPurchaseMutationSchema = z.object({
     .trim()
     .min(1, "Единица измерения обязательна")
     .max(80, "Единица измерения слишком длинная"),
-  planQuantity: nonNegativeNumber("Плановое количество должно быть неотрицательным числом"),
-  planPrice: nonNegativeNumber("Плановая цена должна быть неотрицательным числом"),
-  factQuantity: nullableNonNegativeNumber("Фактическое количество должно быть неотрицательным числом"),
-  factPrice: nullableNonNegativeNumber("Фактическая цена должна быть неотрицательным числом"),
+  planQuantity: nonNegativeNumber(
+    "Плановое количество должно быть неотрицательным числом"
+  ),
+  planPrice: nonNegativeNumber(
+    "Плановая цена должна быть неотрицательным числом"
+  ),
+  factQuantity: nullableNonNegativeNumber(
+    "Фактическое количество должно быть неотрицательным числом"
+  ),
+  factPrice: nullableNonNegativeNumber(
+    "Фактическая цена должна быть неотрицательным числом"
+  ),
   supplierId: nullableUuid("Некорректный поставщик"),
   projectId: nullableUuid("Некорректный объект"),
   purchaseDate: nullableText(30),
@@ -79,7 +99,9 @@ const globalPurchaseMutationSchema = z.object({
   notes: nullableText(1000),
 })
 
-const globalPurchaseIdSchema = z.string().uuid("Некорректный идентификатор закупки")
+const globalPurchaseIdSchema = z
+  .string()
+  .uuid("Некорректный идентификатор закупки")
 
 function getStringParam(params: URLSearchParams, key: string) {
   const value = params.get(key)?.trim()
@@ -100,7 +122,8 @@ function getNumberParam(params: URLSearchParams, key: string) {
 
 function getStatusParam(params: URLSearchParams) {
   const status = params.get("status")
-  return status === "all" || GLOBAL_PURCHASE_STATUSES.includes(status as GlobalPurchaseStatus)
+  return status === "all" ||
+    GLOBAL_PURCHASE_STATUSES.includes(status as GlobalPurchaseStatus)
     ? (status as GlobalPurchaseStatus | "all")
     : "all"
 }
@@ -112,7 +135,9 @@ function getSortParam(params: URLSearchParams) {
     : undefined
 }
 
-export function parseGlobalPurchasesListParams(params: URLSearchParams): GlobalPurchasesListParams {
+export function parseGlobalPurchasesListParams(
+  params: URLSearchParams
+): GlobalPurchasesListParams {
   return {
     q: getStringParam(params, "q"),
     status: getStatusParam(params),
@@ -131,7 +156,9 @@ export function parseGlobalPurchasesExportParams(params: URLSearchParams): {
 } {
   const format = params.get("format")
   return {
-    format: GLOBAL_PURCHASE_EXPORT_FORMATS.includes(format as GlobalPurchasesExportFormat)
+    format: GLOBAL_PURCHASE_EXPORT_FORMATS.includes(
+      format as GlobalPurchasesExportFormat
+    )
       ? (format as GlobalPurchasesExportFormat)
       : "xlsx",
     params: {
@@ -145,7 +172,9 @@ export function parseGlobalPurchasesExportParams(params: URLSearchParams): {
   }
 }
 
-export function normalizeGlobalPurchasesListParams(params: GlobalPurchasesListParams) {
+export function normalizeGlobalPurchasesListParams(
+  params: GlobalPurchasesListParams
+) {
   const limit = Math.min(Math.max(params.limit ?? 50, 1), 100)
   const cursor = Math.max(params.cursor ?? 0, 0)
 

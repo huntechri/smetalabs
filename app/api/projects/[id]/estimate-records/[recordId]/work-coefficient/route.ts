@@ -64,7 +64,9 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json({
       data: {
-        coefficientPercent: toNumber((data as RecordCoefficientRow).works_coefficient_percent),
+        coefficientPercent: toNumber(
+          (data as RecordCoefficientRow).works_coefficient_percent
+        ),
       },
     })
   } catch (err) {
@@ -83,13 +85,16 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     const body = bodySchema.parse(await readJsonBody(request))
     const context = await requireProjectsWriteContext()
 
-    const { error } = await supabase.rpc("apply_project_estimate_work_coefficient", {
-      p_workspace_owner_id: context.workspaceOwnerId,
-      p_project_id: projectId,
-      p_estimate_record_id: estimateRecordId,
-      p_coefficient_percent: body.coefficientPercent,
-      p_updated_by: context.userId,
-    })
+    const { error } = await supabase.rpc(
+      "apply_project_estimate_work_coefficient",
+      {
+        p_workspace_owner_id: context.workspaceOwnerId,
+        p_project_id: projectId,
+        p_estimate_record_id: estimateRecordId,
+        p_coefficient_percent: body.coefficientPercent,
+        p_updated_by: context.userId,
+      }
+    )
 
     if (error?.message?.includes("PROJECT_ESTIMATE_RECORD_NOT_FOUND")) {
       throw new ProjectsApiError("NOT_FOUND", "Смета не найдена", 404)

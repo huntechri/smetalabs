@@ -31,8 +31,11 @@ function resolveMaterialQuantity(params: {
 }): { quantity: number; consumption: number | null } {
   const changedField = params.changedField ?? "quantity"
   const nextConsumption =
-    params.consumption !== undefined ? params.consumption : params.currentConsumption
-  const inputQuantity = params.quantity !== undefined ? params.quantity : params.currentQuantity
+    params.consumption !== undefined
+      ? params.consumption
+      : params.currentConsumption
+  const inputQuantity =
+    params.quantity !== undefined ? params.quantity : params.currentQuantity
 
   if (
     (changedField === "consumption" || changedField === "workQuantity") &&
@@ -48,7 +51,10 @@ function resolveMaterialQuantity(params: {
     const resolvedQty = roundQuantity(inputQuantity)
     return {
       quantity: resolvedQty,
-      consumption: params.workQuantity > 0 ? roundConsumption(resolvedQty / params.workQuantity) : null,
+      consumption:
+        params.workQuantity > 0
+          ? roundConsumption(resolvedQty / params.workQuantity)
+          : null,
     }
   }
 
@@ -58,8 +64,12 @@ function resolveMaterialQuantity(params: {
   }
 }
 
-function recalcSection(section: ProjectEstimateContentSection): ProjectEstimateContentSection {
-  const worksAmount = roundMoney(section.works.reduce((sum, w) => sum + w.totalAmount, 0))
+function recalcSection(
+  section: ProjectEstimateContentSection
+): ProjectEstimateContentSection {
+  const worksAmount = roundMoney(
+    section.works.reduce((sum, w) => sum + w.totalAmount, 0)
+  )
   const materialsAmount = roundMoney(
     section.works.reduce((sum, w) => sum + w.materialsAmount, 0)
   )
@@ -119,19 +129,26 @@ function applyUpdateWork(
   const newTotalAmount = roundMoney(newQuantity * newPrice)
 
   // Recalculate materials whose consumption is not null
-  const updatedMaterials: ProjectEstimateContentMaterial[] = foundWork.materials.map((m) => {
-    if (m.consumption !== null) {
-      const newMatQuantity = roundQuantity(newQuantity * m.consumption)
-      const newMatTotalAmount = roundMoney(newMatQuantity * m.price)
-      return { ...m, quantity: newMatQuantity, totalAmount: newMatTotalAmount }
-    }
-    return m
-  })
+  const updatedMaterials: ProjectEstimateContentMaterial[] =
+    foundWork.materials.map((m) => {
+      if (m.consumption !== null) {
+        const newMatQuantity = roundQuantity(newQuantity * m.consumption)
+        const newMatTotalAmount = roundMoney(newMatQuantity * m.price)
+        return {
+          ...m,
+          quantity: newMatQuantity,
+          totalAmount: newMatTotalAmount,
+        }
+      }
+      return m
+    })
 
   const newMaterialsAmount = roundMoney(
     updatedMaterials.reduce((sum, m) => sum + m.totalAmount, 0)
   )
-  const newTotalWithMaterialsAmount = roundMoney(newTotalAmount + newMaterialsAmount)
+  const newTotalWithMaterialsAmount = roundMoney(
+    newTotalAmount + newMaterialsAmount
+  )
 
   const updatedWork: ProjectEstimateContentWork = {
     ...foundWork,
@@ -147,7 +164,9 @@ function applyUpdateWork(
   const updatedSections = data.sections.map((section) => {
     if (section.id !== foundSection!.id) return section
 
-    const updatedWorks = section.works.map((w) => (w.id === workId ? updatedWork : w))
+    const updatedWorks = section.works.map((w) =>
+      w.id === workId ? updatedWork : w
+    )
     return recalcSection({ ...section, works: updatedWorks })
   })
 
@@ -165,7 +184,8 @@ function applyUpdateMaterial(
   data: ProjectEstimateContentData,
   input: Extract<EstimateContentChangeInput, { action: "update_material" }>
 ): ProjectEstimateContentData | null {
-  const { materialId, quantity, consumption, price, changedField } = input.payload
+  const { materialId, quantity, consumption, price, changedField } =
+    input.payload
 
   // Find material, its work, and section
   let foundSection: ProjectEstimateContentSection | null = null
@@ -319,11 +339,15 @@ function applyArchiveMaterial(
 
   if (!foundWork || !foundSection) return null
 
-  const updatedMaterials = foundWork.materials.filter((m) => m.id !== materialId)
+  const updatedMaterials = foundWork.materials.filter(
+    (m) => m.id !== materialId
+  )
   const newMaterialsAmount = roundMoney(
     updatedMaterials.reduce((sum, m) => sum + m.totalAmount, 0)
   )
-  const newTotalWithMaterials = roundMoney(foundWork.totalAmount + newMaterialsAmount)
+  const newTotalWithMaterials = roundMoney(
+    foundWork.totalAmount + newMaterialsAmount
+  )
 
   const updatedWork: ProjectEstimateContentWork = {
     ...foundWork,
@@ -380,7 +404,10 @@ function applyCreateSection(
 
 function applyAddWorkFromDirectory(
   data: ProjectEstimateContentData,
-  input: Extract<EstimateContentChangeInput, { action: "add_work_from_directory" }>
+  input: Extract<
+    EstimateContentChangeInput,
+    { action: "add_work_from_directory" }
+  >
 ): ProjectEstimateContentData | null {
   const { sectionId, quantity, price, sortOrder } = input.payload
 
@@ -429,7 +456,10 @@ function applyAddWorkFromDirectory(
 
 function applyAddMaterialFromDirectory(
   data: ProjectEstimateContentData,
-  input: Extract<EstimateContentChangeInput, { action: "add_material_from_directory" }>
+  input: Extract<
+    EstimateContentChangeInput,
+    { action: "add_material_from_directory" }
+  >
 ): ProjectEstimateContentData | null {
   const { workId, quantity, consumption, price, sortOrder } = input.payload
 
@@ -473,7 +503,9 @@ function applyAddMaterialFromDirectory(
   const newMaterialsAmount = roundMoney(
     updatedMaterials.reduce((sum, m) => sum + m.totalAmount, 0)
   )
-  const newTotalWithMaterials = roundMoney(foundWork.totalAmount + newMaterialsAmount)
+  const newTotalWithMaterials = roundMoney(
+    foundWork.totalAmount + newMaterialsAmount
+  )
 
   const updatedWork: ProjectEstimateContentWork = {
     ...foundWork,

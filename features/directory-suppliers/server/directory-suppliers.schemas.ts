@@ -22,9 +22,13 @@ const requiredTrimmedString = (maxLength: number, message: string) =>
     return value.trim().replace(/\s+/g, " ")
   }, z.string().min(1, message).max(maxLength))
 
-const directorySupplierStatusSchema = z.enum(["active", "archived"]).default("active")
+const directorySupplierStatusSchema = z
+  .enum(["active", "archived"])
+  .default("active")
 const directorySupplierLegalStatusSchema = z.enum(["juridical", "individual"])
-const directorySuppliersSortSchema = z.enum(["relevance", "updated_desc", "name_asc"]).default("relevance")
+const directorySuppliersSortSchema = z
+  .enum(["relevance", "updated_desc", "name_asc"])
+  .default("relevance")
 const directorySuppliersCursorSchema = z.preprocess((value) => {
   if (value === undefined || value === null || value === "") return 0
   return Number(value)
@@ -34,12 +38,19 @@ const directorySuppliersLimitSchema = z.preprocess((value) => {
   return Number(value)
 }, z.number().int().min(1).max(100).default(50))
 
-const colorSchema = z.preprocess((value) => {
-  if (value === null) return null
-  if (typeof value !== "string") return "#64748B"
-  const trimmed = value.trim()
-  return trimmed || "#64748B"
-}, z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Цвет должен быть в формате HEX").nullable().optional())
+const colorSchema = z.preprocess(
+  (value) => {
+    if (value === null) return null
+    if (typeof value !== "string") return "#64748B"
+    const trimmed = value.trim()
+    return trimmed || "#64748B"
+  },
+  z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, "Цвет должен быть в формате HEX")
+    .nullable()
+    .optional()
+)
 
 export const directorySuppliersListQuerySchema = z.object({
   q: optionalTrimmedString(240),
@@ -49,22 +60,26 @@ export const directorySuppliersListQuerySchema = z.object({
   sort: directorySuppliersSortSchema,
 })
 
-export const directorySupplierMutationSchema = z.object({
-  name: requiredTrimmedString(240, "Название поставщика обязательно"),
-  legalStatus: directorySupplierLegalStatusSchema,
-  color: colorSchema,
-  inn: nullableTrimmedString(32),
-  phone: nullableTrimmedString(64),
-  email: nullableTrimmedString(160),
-  address: nullableTrimmedString(500),
-  notes: nullableTrimmedString(2000),
-}).strict()
+export const directorySupplierMutationSchema = z
+  .object({
+    name: requiredTrimmedString(240, "Название поставщика обязательно"),
+    legalStatus: directorySupplierLegalStatusSchema,
+    color: colorSchema,
+    inn: nullableTrimmedString(32),
+    phone: nullableTrimmedString(64),
+    email: nullableTrimmedString(160),
+    address: nullableTrimmedString(500),
+    notes: nullableTrimmedString(2000),
+  })
+  .strict()
 
 export const directorySupplierIdSchema = z.string().uuid()
 
 export function normalizeDirectorySuppliersListParams(
   params: DirectorySuppliersListParams
-): Required<Pick<DirectorySuppliersListParams, "status" | "limit" | "cursor" | "sort">> &
+): Required<
+  Pick<DirectorySuppliersListParams, "status" | "limit" | "cursor" | "sort">
+> &
   Omit<DirectorySuppliersListParams, "status" | "limit" | "cursor" | "sort"> {
   return {
     ...params,
@@ -75,7 +90,9 @@ export function normalizeDirectorySuppliersListParams(
   }
 }
 
-export function parseDirectorySuppliersListParams(searchParams: URLSearchParams) {
+export function parseDirectorySuppliersListParams(
+  searchParams: URLSearchParams
+) {
   return normalizeDirectorySuppliersListParams(
     directorySuppliersListQuerySchema.parse(Object.fromEntries(searchParams))
   )

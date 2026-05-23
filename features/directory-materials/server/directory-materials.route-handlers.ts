@@ -37,7 +37,11 @@ async function readJsonBody(request: NextRequest) {
   try {
     return await request.json()
   } catch {
-    throw new DirectoryMaterialsApiError("BAD_REQUEST", "Некорректное тело запроса", 400)
+    throw new DirectoryMaterialsApiError(
+      "BAD_REQUEST",
+      "Некорректное тело запроса",
+      400
+    )
   }
 }
 
@@ -48,36 +52,57 @@ async function readOptionalJsonBody(request: NextRequest) {
   try {
     return JSON.parse(text)
   } catch {
-    throw new DirectoryMaterialsApiError("BAD_REQUEST", "Некорректное тело запроса", 400)
+    throw new DirectoryMaterialsApiError(
+      "BAD_REQUEST",
+      "Некорректное тело запроса",
+      400
+    )
   }
 }
 
-export function handleDirectoryMaterialsRouteError(err: unknown, routeLabel: string) {
-  if (err instanceof DirectoryMaterialsApiError) return jsonError(err.code, err.message, err.status)
-  if (err instanceof ZodError) return jsonError("BAD_REQUEST", getZodMessage(err), 400)
+export function handleDirectoryMaterialsRouteError(
+  err: unknown,
+  routeLabel: string
+) {
+  if (err instanceof DirectoryMaterialsApiError)
+    return jsonError(err.code, err.message, err.status)
+  if (err instanceof ZodError)
+    return jsonError("BAD_REQUEST", getZodMessage(err), 400)
 
   console.error(routeLabel, err)
   return jsonError("INTERNAL_ERROR", "Ошибка справочника материалов", 500)
 }
 
-export async function handleDirectoryMaterialsListRequest(request: NextRequest) {
+export async function handleDirectoryMaterialsListRequest(
+  request: NextRequest
+) {
   try {
-    const params = parseDirectoryMaterialsListParams(request.nextUrl.searchParams)
+    const params = parseDirectoryMaterialsListParams(
+      request.nextUrl.searchParams
+    )
     const response = await listDirectoryMaterials(params)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryMaterialsRouteError(err, "[GET /api/directory-materials]")
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[GET /api/directory-materials]"
+    )
   }
 }
 
-export async function handleDirectoryMaterialCreateRequest(request: NextRequest) {
+export async function handleDirectoryMaterialCreateRequest(
+  request: NextRequest
+) {
   try {
     const body = await readJsonBody(request)
     const input = parseDirectoryMaterialMutationBody(body)
     const response = await createDirectoryMaterial(input)
     return NextResponse.json(response, { status: 201 })
   } catch (err) {
-    return handleDirectoryMaterialsRouteError(err, "[POST /api/directory-materials]")
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[POST /api/directory-materials]"
+    )
   }
 }
 
@@ -87,11 +112,17 @@ export async function handleDirectoryMaterialDetailRequest(id: string) {
     const response = await getDirectoryMaterial(materialId)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryMaterialsRouteError(err, "[GET /api/directory-materials/[id]]")
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[GET /api/directory-materials/[id]]"
+    )
   }
 }
 
-export async function handleDirectoryMaterialUpdateRequest(request: NextRequest, id: string) {
+export async function handleDirectoryMaterialUpdateRequest(
+  request: NextRequest,
+  id: string
+) {
   try {
     const materialId = parseDirectoryMaterialId(id)
     const body = await readJsonBody(request)
@@ -99,7 +130,10 @@ export async function handleDirectoryMaterialUpdateRequest(request: NextRequest,
     const response = await updateDirectoryMaterial(materialId, input)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryMaterialsRouteError(err, "[PATCH /api/directory-materials/[id]]")
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[PATCH /api/directory-materials/[id]]"
+    )
   }
 }
 
@@ -109,28 +143,43 @@ export async function handleDirectoryMaterialArchiveRequest(id: string) {
     const response = await archiveDirectoryMaterial(materialId)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryMaterialsRouteError(err, "[DELETE /api/directory-materials/[id]]")
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[DELETE /api/directory-materials/[id]]"
+    )
   }
 }
 
-export async function handleDirectoryMaterialsCategoriesRequest(request: NextRequest) {
+export async function handleDirectoryMaterialsCategoriesRequest(
+  request: NextRequest
+) {
   try {
-    const params = parseDirectoryMaterialsCategoriesParams(request.nextUrl.searchParams)
+    const params = parseDirectoryMaterialsCategoriesParams(
+      request.nextUrl.searchParams
+    )
     const response = await getDirectoryMaterialsCategories(params)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryMaterialsRouteError(err, "[GET /api/directory-materials/categories]")
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[GET /api/directory-materials/categories]"
+    )
   }
 }
 
-export async function handleDirectoryMaterialImportCreateRequest(request: NextRequest) {
+export async function handleDirectoryMaterialImportCreateRequest(
+  request: NextRequest
+) {
   try {
     const body = await readJsonBody(request)
     const input = parseDirectoryMaterialImportCreateBody(body)
     const response = await createDirectoryMaterialImportJob(input)
     return NextResponse.json(response, { status: 201 })
   } catch (err) {
-    return handleDirectoryMaterialsRouteError(err, "[POST /api/directory-materials/import-jobs]")
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[POST /api/directory-materials/import-jobs]"
+    )
   }
 }
 
@@ -140,11 +189,17 @@ export async function handleDirectoryMaterialImportDetailRequest(id: string) {
     const response = await getDirectoryMaterialImportJob(jobId)
     return NextResponse.json({ data: response })
   } catch (err) {
-    return handleDirectoryMaterialsRouteError(err, "[GET /api/directory-materials/import-jobs/[id]]")
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[GET /api/directory-materials/import-jobs/[id]]"
+    )
   }
 }
 
-export async function handleDirectoryMaterialImportBatchRequest(request: NextRequest, id: string) {
+export async function handleDirectoryMaterialImportBatchRequest(
+  request: NextRequest,
+  id: string
+) {
   try {
     const jobId = parseDirectoryMaterialId(id)
     const body = await readJsonBody(request)
@@ -152,11 +207,17 @@ export async function handleDirectoryMaterialImportBatchRequest(request: NextReq
     const response = await appendDirectoryMaterialImportBatch(jobId, input)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryMaterialsRouteError(err, "[POST /api/directory-materials/import-jobs/[id]/batches]")
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[POST /api/directory-materials/import-jobs/[id]/batches]"
+    )
   }
 }
 
-export async function handleDirectoryMaterialImportApplyRequest(request: NextRequest, id: string) {
+export async function handleDirectoryMaterialImportApplyRequest(
+  request: NextRequest,
+  id: string
+) {
   try {
     const jobId = parseDirectoryMaterialId(id)
     const body = await readOptionalJsonBody(request)
@@ -164,13 +225,20 @@ export async function handleDirectoryMaterialImportApplyRequest(request: NextReq
     const response = await applyDirectoryMaterialImportJob(jobId, input)
     return NextResponse.json(response)
   } catch (err) {
-    return handleDirectoryMaterialsRouteError(err, "[POST /api/directory-materials/import-jobs/[id]/apply]")
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[POST /api/directory-materials/import-jobs/[id]/apply]"
+    )
   }
 }
 
-export async function handleDirectoryMaterialsExportRequest(request: NextRequest) {
+export async function handleDirectoryMaterialsExportRequest(
+  request: NextRequest
+) {
   try {
-    const { format, params } = parseDirectoryMaterialsExportParams(request.nextUrl.searchParams)
+    const { format, params } = parseDirectoryMaterialsExportParams(
+      request.nextUrl.searchParams
+    )
     const file = await exportDirectoryMaterials(format, params)
     const date = new Date().toISOString().slice(0, 10)
 
@@ -182,6 +250,9 @@ export async function handleDirectoryMaterialsExportRequest(request: NextRequest
       },
     })
   } catch (err) {
-    return handleDirectoryMaterialsRouteError(err, "[GET /api/directory-materials/export]")
+    return handleDirectoryMaterialsRouteError(
+      err,
+      "[GET /api/directory-materials/export]"
+    )
   }
 }

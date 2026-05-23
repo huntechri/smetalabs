@@ -95,7 +95,10 @@ export async function GET() {
       .single()
 
     if (wpErr && wpErr.code !== "PGRST116") {
-      console.error("[GET /api/settings] workspace profile query failed:", wpErr)
+      console.error(
+        "[GET /api/settings] workspace profile query failed:",
+        wpErr
+      )
     } else {
       workspaceProfileData = wpData
     }
@@ -132,10 +135,7 @@ export async function GET() {
         .eq("user_id", ownerId)
         .single()
 
-    if (
-      workspaceSettingsError &&
-      workspaceSettingsError.code !== "PGRST116"
-    ) {
+    if (workspaceSettingsError && workspaceSettingsError.code !== "PGRST116") {
       console.error(
         "[GET /api/settings] workspace settings query failed:",
         workspaceSettingsError
@@ -167,7 +167,8 @@ export async function GET() {
       workspaceName: workspaceProfileData?.workspace_name ?? "",
       companyLegalName: workspaceSettings?.workspace?.companyLegalName ?? "",
       companyType: workspaceSettings?.workspace?.companyType ?? "",
-      registrationNumber: workspaceSettings?.workspace?.registrationNumber ?? "",
+      registrationNumber:
+        workspaceSettings?.workspace?.registrationNumber ?? "",
       taxNumber: workspaceSettings?.workspace?.taxNumber ?? "",
       legalAddress: workspaceSettings?.workspace?.legalAddress ?? "",
       billingEmail: workspaceSettings?.workspace?.billingEmail ?? "",

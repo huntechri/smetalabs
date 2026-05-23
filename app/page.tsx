@@ -4,9 +4,17 @@ import { Button } from "@/components/ui/button"
 const estimateLinks = [
   { emoji: "📊", label: "Смета", href: "/projects/1/estimates/1" },
   { emoji: "🛒", label: "Закупки", href: "/projects/1/estimates/1/purchases" },
-  { emoji: "⚙️", label: "Исполнение", href: "/projects/1/estimates/1/execution" },
+  {
+    emoji: "⚙️",
+    label: "Исполнение",
+    href: "/projects/1/estimates/1/execution",
+  },
   { emoji: "💰", label: "Финансы", href: "/projects/1/estimates/1/finances" },
-  { emoji: "📄", label: "Документы", href: "/projects/1/estimates/1/documents" },
+  {
+    emoji: "📄",
+    label: "Документы",
+    href: "/projects/1/estimates/1/documents",
+  },
 ]
 
 const pageLinks = [
@@ -21,7 +29,9 @@ const pageLinks = [
 export default function Page() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-8 p-8">
-      <h1 className="text-2xl font-semibold tracking-tight">🧭 Навигация разработчика</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">
+        🧭 Навигация разработчика
+      </h1>
 
       {/* 🔐 Auth Debug */}
       <div className="flex items-center gap-3 rounded-xl border border-dashed border-amber-400/50 bg-amber-400/5 px-6 py-4">

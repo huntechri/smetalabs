@@ -20,7 +20,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { parseCsvFileInBatches, type CsvImportBatch } from "@/features/directories/lib/csv-import-batches"
+import {
+  parseCsvFileInBatches,
+  type CsvImportBatch,
+} from "@/features/directories/lib/csv-import-batches"
 import type {
   DirectoryMaterialImportApplyInput,
   DirectoryMaterialImportApplyResponse,
@@ -92,7 +95,9 @@ function formatBytes(bytes: number | null | undefined) {
 }
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Не удалось выполнить импорт материалов"
+  return error instanceof Error
+    ? error.message
+    : "Не удалось выполнить импорт материалов"
 }
 
 export function DirectoryMaterialImportDialog({
@@ -106,13 +111,23 @@ export function DirectoryMaterialImportDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
   importing: boolean
-  onCreateJob: (input: DirectoryMaterialImportCreateInput) => Promise<DirectoryMaterialImportPreviewResponse["data"]>
-  onAppendBatch: (id: string, input: DirectoryMaterialImportBatchInput) => Promise<DirectoryMaterialImportPreviewResponse["data"]>
-  onApplyJob: (id: string, input?: DirectoryMaterialImportApplyInput) => Promise<DirectoryMaterialImportApplyResponse["data"]>
+  onCreateJob: (
+    input: DirectoryMaterialImportCreateInput
+  ) => Promise<DirectoryMaterialImportPreviewResponse["data"]>
+  onAppendBatch: (
+    id: string,
+    input: DirectoryMaterialImportBatchInput
+  ) => Promise<DirectoryMaterialImportPreviewResponse["data"]>
+  onApplyJob: (
+    id: string,
+    input?: DirectoryMaterialImportApplyInput
+  ) => Promise<DirectoryMaterialImportApplyResponse["data"]>
 }) {
   const [file, setFile] = useState<File | null>(null)
   const [sourceName, setSourceName] = useState("")
-  const [preview, setPreview] = useState<DirectoryMaterialImportPreviewResponse["data"] | null>(null)
+  const [preview, setPreview] = useState<
+    DirectoryMaterialImportPreviewResponse["data"] | null
+  >(null)
   const [progress, setProgress] = useState("")
   const [error, setError] = useState<string | null>(null)
 
@@ -133,10 +148,16 @@ export function DirectoryMaterialImportDialog({
     setError(null)
   }
 
-  const sendBatch = async (jobId: string, batch: CsvImportBatch, isLastBatch: boolean) => {
+  const sendBatch = async (
+    jobId: string,
+    batch: CsvImportBatch,
+    isLastBatch: boolean
+  ) => {
     const nextPreview = await onAppendBatch(jobId, { ...batch, isLastBatch })
     setPreview(nextPreview)
-    setProgress(`Загружено строк: ${nextPreview.job.totalRows}. Пакет ${batch.batchNumber}.`)
+    setProgress(
+      `Загружено строк: ${nextPreview.job.totalRows}. Пакет ${batch.batchNumber}.`
+    )
     return nextPreview
   }
 
@@ -164,9 +185,13 @@ export function DirectoryMaterialImportDialog({
         file,
         headerAliases: HEADER_ALIASES,
         batchSize: IMPORT_BATCH_SIZE,
-        onProgress: ({ rowsRead, batchesRead }) => setProgress(`Прочитано строк: ${rowsRead}. Подготовлено пакетов: ${batchesRead}.`),
+        onProgress: ({ rowsRead, batchesRead }) =>
+          setProgress(
+            `Прочитано строк: ${rowsRead}. Подготовлено пакетов: ${batchesRead}.`
+          ),
       })) {
-        if (pendingBatch) latestPreview = await sendBatch(jobData.job.id, pendingBatch, false)
+        if (pendingBatch)
+          latestPreview = await sendBatch(jobData.job.id, pendingBatch, false)
         pendingBatch = batch
       }
 
@@ -178,7 +203,9 @@ export function DirectoryMaterialImportDialog({
 
       latestPreview = await sendBatch(jobData.job.id, pendingBatch, true)
       setPreview(latestPreview)
-      setProgress(`Загрузка завершена. Всего строк: ${latestPreview.job.totalRows}.`)
+      setProgress(
+        `Загрузка завершена. Всего строк: ${latestPreview.job.totalRows}.`
+      )
     } catch (err) {
       setError(getErrorMessage(err))
     }
@@ -192,7 +219,9 @@ export function DirectoryMaterialImportDialog({
       let hasMore = true
       let appliedTotal = preview.job.appliedRows
       while (hasMore) {
-        const response = await onApplyJob(preview.job.id, { batchSize: APPLY_BATCH_SIZE })
+        const response = await onApplyJob(preview.job.id, {
+          batchSize: APPLY_BATCH_SIZE,
+        })
         hasMore = Boolean(response.hasMore)
         appliedTotal = response.job.appliedRows
         setProgress(`Применено строк: ${appliedTotal}.`)
@@ -204,7 +233,8 @@ export function DirectoryMaterialImportDialog({
   }
 
   const rows = preview?.rows ?? []
-  const hasApplyableRows = preview !== null && preview.job.validRows + preview.job.warningRows > 0
+  const hasApplyableRows =
+    preview !== null && preview.job.validRows + preview.job.warningRows > 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -212,7 +242,8 @@ export function DirectoryMaterialImportDialog({
         <DialogHeader>
           <DialogTitle>Импорт материалов</DialogTitle>
           <DialogDescription>
-            Загрузите CSV с колонками name, unit, price, category и дополнительными полями. Большие файлы отправляются частями.
+            Загрузите CSV с колонками name, unit, price, category и
+            дополнительными полями. Большие файлы отправляются частями.
           </DialogDescription>
         </DialogHeader>
 
@@ -220,16 +251,33 @@ export function DirectoryMaterialImportDialog({
           <div className="grid gap-3 sm:grid-cols-[1fr_240px]">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="directory-material-import-file">CSV-файл</Label>
-              <Input accept=".csv,text/csv" id="directory-material-import-file" onChange={handleFileChange} type="file" />
+              <Input
+                accept=".csv,text/csv"
+                id="directory-material-import-file"
+                onChange={handleFileChange}
+                type="file"
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="directory-material-import-source">Источник</Label>
-              <Input id="directory-material-import-source" maxLength={120} onChange={(event) => setSourceName(event.target.value)} placeholder="Например: прайс поставщика" value={sourceName} />
+              <Input
+                id="directory-material-import-source"
+                maxLength={120}
+                onChange={(event) => setSourceName(event.target.value)}
+                placeholder="Например: прайс поставщика"
+                value={sourceName}
+              />
             </div>
           </div>
 
-          {file ? <p className="text-xs/relaxed text-muted-foreground">Выбран файл: {file.name}, {formatBytes(file.size)}</p> : null}
-          {progress ? <p className="text-xs/relaxed text-muted-foreground">{progress}</p> : null}
+          {file ? (
+            <p className="text-xs/relaxed text-muted-foreground">
+              Выбран файл: {file.name}, {formatBytes(file.size)}
+            </p>
+          ) : null}
+          {progress ? (
+            <p className="text-xs/relaxed text-muted-foreground">{progress}</p>
+          ) : null}
 
           {preview ? (
             <div className="grid gap-3 rounded-md border border-border p-3">
@@ -254,33 +302,74 @@ export function DirectoryMaterialImportDialog({
                   </TableHeader>
                   <TableBody>
                     {rows.slice(0, 50).map((row) => {
-                      const normalized = row.normalizedData as Record<string, unknown>
-                      const messages = [...row.errorMessages, ...row.warningMessages]
+                      const normalized = row.normalizedData as Record<
+                        string,
+                        unknown
+                      >
+                      const messages = [
+                        ...row.errorMessages,
+                        ...row.warningMessages,
+                      ]
                       return (
                         <TableRow key={row.id}>
                           <TableCell>{row.rowNumber}</TableCell>
                           <TableCell>{STATUS_LABELS[row.status]}</TableCell>
-                          <TableCell>{String(normalized.name ?? "—")}</TableCell>
-                          <TableCell>{String(normalized.unit ?? "—")}</TableCell>
-                          <TableCell>{String(normalized.price ?? "—")}</TableCell>
-                          <TableCell className="text-muted-foreground">{messages.length > 0 ? messages.join("; ") : "—"}</TableCell>
+                          <TableCell>
+                            {String(normalized.name ?? "—")}
+                          </TableCell>
+                          <TableCell>
+                            {String(normalized.unit ?? "—")}
+                          </TableCell>
+                          <TableCell>
+                            {String(normalized.price ?? "—")}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {messages.length > 0 ? messages.join("; ") : "—"}
+                          </TableCell>
                         </TableRow>
                       )
                     })}
                   </TableBody>
                 </Table>
               </div>
-              {preview.job.totalRows > rows.length ? <p className="text-xs/relaxed text-muted-foreground">В preview показаны первые {rows.length} строк из {preview.job.totalRows}.</p> : null}
+              {preview.job.totalRows > rows.length ? (
+                <p className="text-xs/relaxed text-muted-foreground">
+                  В preview показаны первые {rows.length} строк из{" "}
+                  {preview.job.totalRows}.
+                </p>
+              ) : null}
             </div>
           ) : null}
 
-          {error ? <p className="text-xs/relaxed text-destructive">{error}</p> : null}
+          {error ? (
+            <p className="text-xs/relaxed text-destructive">{error}</p>
+          ) : null}
         </div>
 
         <DialogFooter showCloseButton={false}>
-          <Button disabled={importing} onClick={() => onOpenChange(false)} type="button" variant="outline">Отмена</Button>
-          <Button disabled={importing || !file} onClick={handleCreatePreview} type="button" variant="outline">{importing ? "Обработка..." : "Создать preview"}</Button>
-          <Button disabled={importing || !hasApplyableRows} onClick={handleApply} type="button">{importing ? "Применение..." : "Применить импорт"}</Button>
+          <Button
+            disabled={importing}
+            onClick={() => onOpenChange(false)}
+            type="button"
+            variant="outline"
+          >
+            Отмена
+          </Button>
+          <Button
+            disabled={importing || !file}
+            onClick={handleCreatePreview}
+            type="button"
+            variant="outline"
+          >
+            {importing ? "Обработка..." : "Создать preview"}
+          </Button>
+          <Button
+            disabled={importing || !hasApplyableRows}
+            onClick={handleApply}
+            type="button"
+          >
+            {importing ? "Применение..." : "Применить импорт"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

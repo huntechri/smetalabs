@@ -82,7 +82,7 @@ describe("optimistic-update calculations", () => {
       expect(result).not.toBeNull()
       const updatedWork = result!.sections[0].works[0]
       expect(updatedWork.quantity).toBe(20)
-      
+
       const updatedMaterial = updatedWork.materials[0]
       // По классической формуле: 20 (работа) * 0.2 (расход) = 4
       expect(updatedMaterial.quantity).toBe(4)
@@ -145,10 +145,10 @@ describe("optimistic-update calculations", () => {
       // По классической формуле: 10 (работа) * 0.4 (расход) = 4
       expect(updatedMaterial.quantity).toBe(4)
     })
-    
+
     it("should always round quantity upwards to integers and calculate consumption based on it", () => {
       const data = mockData()
-      
+
       // 1. Quantity 0.208 should round up to 1
       const result1 = applyOptimisticChange(data, {
         action: "update_material",

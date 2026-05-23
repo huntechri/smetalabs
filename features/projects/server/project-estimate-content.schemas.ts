@@ -1,10 +1,18 @@
 import { z } from "zod"
 
-export const estimateContentProjectIdSchema = z.string().uuid("Некорректный идентификатор проекта")
-export const estimateContentRecordIdSchema = z.string().uuid("Некорректный идентификатор сметы")
+export const estimateContentProjectIdSchema = z
+  .string()
+  .uuid("Некорректный идентификатор проекта")
+export const estimateContentRecordIdSchema = z
+  .string()
+  .uuid("Некорректный идентификатор сметы")
 
 const trimmedTextSchema = (message: string, max = 300) =>
-  z.string({ error: message }).trim().min(1, message).max(max, "Слишком длинное значение")
+  z
+    .string({ error: message })
+    .trim()
+    .min(1, message)
+    .max(max, "Слишком длинное значение")
 
 const nullableTrimmedTextSchema = z
   .string()
@@ -35,7 +43,10 @@ const optionalPositiveConsumptionSchema = z
 
 const sortItemSchema = z.object({
   id: z.string().uuid("Некорректный идентификатор строки"),
-  sortOrder: z.coerce.number().int("Некорректный порядок").min(0, "Порядок не может быть меньше 0"),
+  sortOrder: z.coerce
+    .number()
+    .int("Некорректный порядок")
+    .min(0, "Порядок не может быть меньше 0"),
 })
 
 const baseSectionSchema = z.object({
@@ -73,7 +84,9 @@ export const estimateContentChangeSchema = z.discriminatedUnion("action", [
   }),
   z.object({
     action: z.literal("reorder_sections"),
-    payload: z.object({ items: z.array(sortItemSchema).min(1, "Нет строк для изменения порядка") }),
+    payload: z.object({
+      items: z.array(sortItemSchema).min(1, "Нет строк для изменения порядка"),
+    }),
   }),
   z.object({
     action: z.literal("add_work_from_directory"),
@@ -92,7 +105,9 @@ export const estimateContentChangeSchema = z.discriminatedUnion("action", [
       title: trimmedTextSchema("Название работы обязательно"),
       quantity: quantitySchema.default(0),
       price: moneySchema.default(0),
-      category: trimmedTextSchema("Категория работы обязательна", 200).optional().nullable(),
+      category: trimmedTextSchema("Категория работы обязательна", 200)
+        .optional()
+        .nullable(),
       notes: nullableTrimmedTextSchema,
       sortOrder: z.coerce.number().int().min(0).optional(),
     }),
@@ -137,7 +152,10 @@ export const estimateContentChangeSchema = z.discriminatedUnion("action", [
       consumption: optionalPositiveConsumptionSchema.optional(),
       price: moneySchema.optional(),
       sortOrder: z.coerce.number().int().min(0).optional(),
-      changedField: z.enum(["quantity", "consumption", "price"]).optional().default("quantity"),
+      changedField: z
+        .enum(["quantity", "consumption", "price"])
+        .optional()
+        .default("quantity"),
     }),
   }),
   z.object({
@@ -151,7 +169,10 @@ export const estimateContentChangeSchema = z.discriminatedUnion("action", [
       supplierName: nullableTrimmedTextSchema,
       notes: nullableTrimmedTextSchema,
       sortOrder: z.coerce.number().int().min(0).optional(),
-      changedField: z.enum(["quantity", "consumption", "price"]).optional().default("quantity"),
+      changedField: z
+        .enum(["quantity", "consumption", "price"])
+        .optional()
+        .default("quantity"),
     }),
   }),
   z.object({
@@ -165,7 +186,10 @@ export const estimateContentChangeSchema = z.discriminatedUnion("action", [
       price: moneySchema.optional(),
       notes: nullableTrimmedTextSchema,
       sortOrder: z.coerce.number().int().min(0).optional(),
-      changedField: z.enum(["quantity", "consumption", "price", "workQuantity"]).optional().default("quantity"),
+      changedField: z
+        .enum(["quantity", "consumption", "price", "workQuantity"])
+        .optional()
+        .default("quantity"),
     }),
   }),
   z.object({
@@ -182,8 +206,12 @@ export const estimateContentChangeSchema = z.discriminatedUnion("action", [
   }),
 ])
 
-export type EstimateContentChangeInput = z.infer<typeof estimateContentChangeSchema>
-export type EstimateContentOptionsParams = z.infer<typeof estimateContentOptionsParamsSchema>
+export type EstimateContentChangeInput = z.infer<
+  typeof estimateContentChangeSchema
+>
+export type EstimateContentOptionsParams = z.infer<
+  typeof estimateContentOptionsParamsSchema
+>
 
 export function parseEstimateContentProjectId(value: string) {
   return estimateContentProjectIdSchema.parse(value)

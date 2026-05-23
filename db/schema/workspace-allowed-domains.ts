@@ -1,4 +1,11 @@
-import { pgTable, uuid, text, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  uniqueIndex,
+  index,
+} from "drizzle-orm/pg-core"
 import { profiles } from "./profiles"
 
 /**
@@ -17,12 +24,18 @@ export const workspaceAllowedDomains = pgTable(
     addedBy: uuid("added_by")
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
-    addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    addedAt: timestamp("added_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (t) => [
-    uniqueIndex("uq_workspace_allowed_domains_domain_owner")
-      .on(t.domain, t.ownerId),
+    uniqueIndex("uq_workspace_allowed_domains_domain_owner").on(
+      t.domain,
+      t.ownerId
+    ),
     index("idx_workspace_allowed_domains_owner_id").on(t.ownerId),
     index("idx_workspace_allowed_domains_added_by").on(t.addedBy),
   ]

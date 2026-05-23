@@ -1,3 +1,7 @@
-export default function TemplateDetailsPage({ params }: { params: { templateId: string } }) {
-  return null;
+export default function TemplateDetailsPage({
+  params,
+}: {
+  params: { templateId: string }
+}) {
+  return null
 }

@@ -11,5 +11,9 @@ export function useUpdatePermissionMatrix() {
     throw new Error("Сохранение матрицы прав пока не подключено")
   }
 
-  return { updatePermissionMatrix, loading: false, error: null as string | null }
+  return {
+    updatePermissionMatrix,
+    loading: false,
+    error: null as string | null,
+  }
 }

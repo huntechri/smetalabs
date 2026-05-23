@@ -81,7 +81,6 @@ export function ProfileSettingsCard({
     }
   }, [profile])
 
-
   const handleSave = async () => {
     const updated = await updateProfile({
       displayName,

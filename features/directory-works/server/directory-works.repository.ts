@@ -77,8 +77,14 @@ function toMutationRow(
   }
 }
 
-function mapDirectoryWorkMutationError(error: { code?: string; message?: string }) {
-  if (error.code === "23505" && error.message?.includes("DIRECTORY_WORK_CODE_DUPLICATE")) {
+function mapDirectoryWorkMutationError(error: {
+  code?: string
+  message?: string
+}) {
+  if (
+    error.code === "23505" &&
+    error.message?.includes("DIRECTORY_WORK_CODE_DUPLICATE")
+  ) {
     return new DirectoryWorksApiError(
       "BAD_REQUEST",
       "Работа с таким кодом уже существует",
@@ -86,7 +92,10 @@ function mapDirectoryWorkMutationError(error: { code?: string; message?: string 
     )
   }
 
-  if (error.code === "23505" && error.message?.includes("DIRECTORY_WORK_SOURCE_DUPLICATE")) {
+  if (
+    error.code === "23505" &&
+    error.message?.includes("DIRECTORY_WORK_SOURCE_DUPLICATE")
+  ) {
     return new DirectoryWorksApiError(
       "BAD_REQUEST",
       "Работа с таким внешним идентификатором уже существует",
@@ -243,25 +252,28 @@ export async function updateDirectoryWorkForWorkspace(
   id: string,
   input: DirectoryWorkMutationInput
 ): Promise<DirectoryWork> {
-  const { data, error } = await supabase.rpc("update_directory_work_with_embedding", {
-    p_workspace_owner_id: workspaceOwnerId,
-    p_user_id: userId,
-    p_id: id,
-    p_title: input.title,
-    p_unit: input.unit,
-    p_rate: input.rate,
-    p_category: input.category,
-    p_subcategory: input.subcategory ?? null,
-    p_code: input.code ?? null,
-    p_description: input.description ?? null,
-    p_included_operations: input.includedOperations ?? null,
-    p_excluded_operations: input.excludedOperations ?? null,
-    p_source_name: input.sourceName ?? null,
-    p_source_external_row_key: input.sourceExternalRowKey ?? null,
-    p_currency_code: input.currencyCode ?? "RUB",
-    p_price_kind: input.priceKind ?? "base",
-    p_enqueue_embedding: true,
-  })
+  const { data, error } = await supabase.rpc(
+    "update_directory_work_with_embedding",
+    {
+      p_workspace_owner_id: workspaceOwnerId,
+      p_user_id: userId,
+      p_id: id,
+      p_title: input.title,
+      p_unit: input.unit,
+      p_rate: input.rate,
+      p_category: input.category,
+      p_subcategory: input.subcategory ?? null,
+      p_code: input.code ?? null,
+      p_description: input.description ?? null,
+      p_included_operations: input.includedOperations ?? null,
+      p_excluded_operations: input.excludedOperations ?? null,
+      p_source_name: input.sourceName ?? null,
+      p_source_external_row_key: input.sourceExternalRowKey ?? null,
+      p_currency_code: input.currencyCode ?? "RUB",
+      p_price_kind: input.priceKind ?? "base",
+      p_enqueue_embedding: true,
+    }
+  )
 
   if (error) throw mapDirectoryWorkMutationError(error)
 

@@ -1,5 +1,9 @@
 import { z } from "zod"
-import type { ProjectStatus, ProjectsListParams, ProjectsSort } from "@/types/project"
+import type {
+  ProjectStatus,
+  ProjectsListParams,
+  ProjectsSort,
+} from "@/types/project"
 
 const PROJECT_STATUSES = ["new", "in_progress", "completed"] as const
 const PROJECT_SORTS = ["relevance", "updated_desc", "title_asc"] as const
@@ -48,7 +52,9 @@ function getNumberParam(params: URLSearchParams, key: string) {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
 }
 
-export function parseProjectsListParams(params: URLSearchParams): ProjectsListParams {
+export function parseProjectsListParams(
+  params: URLSearchParams
+): ProjectsListParams {
   const status = params.get("status")
   const sort = params.get("sort")
 
@@ -60,7 +66,9 @@ export function parseProjectsListParams(params: URLSearchParams): ProjectsListPa
         : "all",
     limit: getNumberParam(params, "limit"),
     cursor: getNumberParam(params, "cursor"),
-    sort: PROJECT_SORTS.includes(sort as ProjectsSort) ? (sort as ProjectsSort) : undefined,
+    sort: PROJECT_SORTS.includes(sort as ProjectsSort)
+      ? (sort as ProjectsSort)
+      : undefined,
   }
 }
 

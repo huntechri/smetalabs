@@ -42,7 +42,9 @@ async function fetchJson<T>(url: string, resource: string, init?: RequestInit) {
   return response.json() as Promise<T>
 }
 
-export function fetchDirectorySuppliers(params: DirectorySuppliersListParams = {}) {
+export function fetchDirectorySuppliers(
+  params: DirectorySuppliersListParams = {}
+) {
   return fetchJson<DirectorySuppliersListResponse>(
     buildListUrl("/api/directory-suppliers", params),
     "справочника поставщиков"

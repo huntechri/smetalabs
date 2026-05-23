@@ -129,7 +129,9 @@ export function archiveDirectoryWork(id: string) {
   )
 }
 
-export function createDirectoryWorkImportJob(input: DirectoryWorkImportCreateInput) {
+export function createDirectoryWorkImportJob(
+  input: DirectoryWorkImportCreateInput
+) {
   return fetchJson<DirectoryWorkImportPreviewResponse>(
     "/api/directory-works/import-jobs",
     "импорта работ",

@@ -67,7 +67,12 @@ function formatDateRange(start?: string | null, end?: string | null): string {
   return start || end || ""
 }
 
-export function ProjectCard({ project, disabled, onEdit, onArchive }: ProjectCardProps) {
+export function ProjectCard({
+  project,
+  disabled,
+  onEdit,
+  onArchive,
+}: ProjectCardProps) {
   const statusCfg = STATUS_CONFIG[project.status]
 
   return (
@@ -99,9 +104,9 @@ export function ProjectCard({ project, disabled, onEdit, onArchive }: ProjectCar
       </CardHeader>
 
       <CardContent>
-        <div className="grid grid-cols-1 gap-3 min-w-0 @xs:grid-cols-2">
-          <div className="rounded-lg border bg-muted/20 p-3 min-w-0">
-            <div className="flex flex-col w-full">
+        <div className="grid min-w-0 grid-cols-1 gap-3 @xs:grid-cols-2">
+          <div className="min-w-0 rounded-lg border bg-muted/20 p-3">
+            <div className="flex w-full flex-col">
               <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
                 <CurrencyRub className="size-3 shrink-0" />
                 <span>Бюджет</span>
@@ -112,8 +117,8 @@ export function ProjectCard({ project, disabled, onEdit, onArchive }: ProjectCar
             </div>
           </div>
 
-          <div className="rounded-lg border bg-muted/20 p-3 min-w-0">
-            <div className="flex flex-col w-full">
+          <div className="min-w-0 rounded-lg border bg-muted/20 p-3">
+            <div className="flex w-full flex-col">
               <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
                 <CalendarBlank className="size-3 shrink-0" />
                 <span>Сроки</span>
@@ -124,8 +129,8 @@ export function ProjectCard({ project, disabled, onEdit, onArchive }: ProjectCar
             </div>
           </div>
 
-          <div className="col-span-1 rounded-lg border bg-muted/20 p-3 min-w-0 @xs:col-span-2">
-            <div className="flex flex-col w-full">
+          <div className="col-span-1 min-w-0 rounded-lg border bg-muted/20 p-3 @xs:col-span-2">
+            <div className="flex w-full flex-col">
               <div className="mb-1 text-[0.625rem] text-muted-foreground">
                 Прогресс
               </div>
@@ -150,11 +155,21 @@ export function ProjectCard({ project, disabled, onEdit, onArchive }: ProjectCar
           <Button asChild size="xs" variant="outline">
             <Link href={`/projects/${project.id}`}>Открыть</Link>
           </Button>
-          <Button disabled={disabled} variant="outline" size="xs" onClick={() => onEdit(project)}>
+          <Button
+            disabled={disabled}
+            variant="outline"
+            size="xs"
+            onClick={() => onEdit(project)}
+          >
             <NotePencil data-icon="inline-start" />
             Ред.
           </Button>
-          <Button disabled={disabled} variant="destructive" size="xs" onClick={() => onArchive(project)}>
+          <Button
+            disabled={disabled}
+            variant="destructive"
+            size="xs"
+            onClick={() => onArchive(project)}
+          >
             <Trash data-icon="inline-start" />
             Архивировать
           </Button>

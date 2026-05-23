@@ -1,21 +1,21 @@
 # Общая инфраструктура справочников (directories)
 
-> 2026-05-22 · статус: production
+> 2026-05-23 · статус: полностью реализована (инфраструктура тулбаров, интеграция фильтрации категорий и событий создания/импорта/экспорта).
 
 ---
 
 ## 1. Назначение
 
-Модуль `directories` предоставляет **общие компоненты тулбаров** для всех справочников системы. Он не содержит бизнес-логики конкретных справочников — только переиспользуемую инфраструктуру поиска и кнопок действий.
+Модуль `directories` предоставляет **общие компоненты тулбаров** для всех справочников системы. Он не содержит бизнес-логики конкретных справочников — только переиспользуемую инфраструктуру поиска, категориальной фильтрации и кнопок действий.
 
 Ключевая идея: каждый справочник (контрагенты, материалы, поставщики, работы) получает одинаковый тулбар с поиском и набором действий, специфичным для этого справочника.
 
 ### Что даёт модуль
 
-- Единый компонент `DirectoriesToolbar` с полем поиска и группой кнопок действий
-- Синхронизация поискового запроса с URL-параметром `?q=`
-- Типизированный интерфейс `DirectoryAction` для описания кнопок
-- Отдельные компоненты-обёртки для каждого справочника, передающие свои `actions`
+- Единый компонент `DirectoriesToolbar` с полем поиска и группой кнопок действий.
+- Синхронизация поискового запроса с URL-параметром `?q=`.
+- Типизированный интерфейс `DirectoryAction` для описания кнопок (поддержка `onClick`, иконок, кастомных вариантов кнопок).
+- Отдельные компоненты-обёртки для каждого справочника, передающие свои `actions` и фильтры по категориям.
 
 ### Важное разграничение
 
@@ -36,14 +36,12 @@
 ```
 features/directories/
 └── components/
-    ├── directories-toolbar.tsx        # Базовый компонент тулбара (search + actions)
+    ├── directories-toolbar.tsx        # Базовый компонент тулбара (search + actions + children)
     ├── counterparties-toolbar.tsx     # Тулбар справочника контрагентов
-    ├── materials-toolbar.tsx          # Тулбар справочника материалов
+    ├── materials-toolbar.tsx          # Тулбар справочника материалов с поддержкой категориального фильтра
     ├── suppliers-toolbar.tsx          # Тулбар справочника поставщиков
-    └── works-toolbar.tsx              # Тулбар справочника работ
+    └── works-toolbar.tsx              # Тулбар справочника работ с поддержкой категориального фильтра
 ```
-
-Модуль не содержит хуков, моков, API-роутов или подпапок — только 5 компонентов.
 
 ---
 
@@ -60,129 +58,42 @@ export type DirectoryAction = {
   label: string                                          // Текст кнопки
   icon: React.ReactNode                                  // Иконка (Phosphor)
   variant?: React.ComponentProps<typeof Button>["variant"] // Вариант кнопки (default: outline)
+  hideLabel?: boolean                                    // Скрыть подпись
   onClick?: () => void                                   // Обработчик клика
+  title?: string                                         // Всплывающая подсказка
 }
 
 export type DirectoriesToolbarProps = {
   searchPlaceholder: string    // Placeholder поля поиска
   searchAriaLabel: string      // aria-label для поля поиска
   actions: DirectoryAction[]   // Список кнопок действий
-}
-```
-
-**Состав тулбара:**
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│ [🔍 Поиск...                    ] [Поиск] │ [➕ Добавить] [...]   │
-│  ← форма поиска →                          ← ButtonGroup действий →
-└──────────────────────────────────────────────────────────────────┘
-```
-
-- **Форма поиска** (рамка `border-sky-400`): поле ввода + кнопка «Поиск». На мобильных — только иконка `MagnifyingGlassIcon`, на `sm+` — текст «Поиск».
-- **Группа действий** (рамка `border-teal-400`): `ButtonGroup` с `flex-wrap`, каждая кнопка рендерится из массива `actions`.
-- **Адаптивность**: на `@4xl/main` тулбар переходит из вертикального в горизонтальный layout (`flex-col → flex-row`).
-
-**Логика поиска:**
-
-```typescript
-// Синхронизация с URL
-const searchParams = useSearchParams()
-const [search, setSearch] = useState(searchParams.get("q") ?? "")
-
-// Обновление при изменении URL-параметров
-useEffect(() => {
-  setSearch(searchParams.get("q") ?? "")
-}, [searchParams])
-
-// Сабмит формы → router.replace с ?q= или без
-const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault()
-  const params = new URLSearchParams(searchParams.toString())
-  const query = search.trim()
-  if (query) params.set("q", query)
-  else params.delete("q")
-  router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
+  children?: React.ReactNode   // Дополнительный контент (например, фильтр категорий)
 }
 ```
 
 ### 3.2 `CounterpartiesToolbar` — тулбар контрагентов
 
 **Файл:** `features/directories/components/counterparties-toolbar.tsx`
-
-```tsx
-export function CounterpartiesToolbar() {
-  const [dialogOpen, setDialogOpen] = useState(false)
-
-  return (
-    <Suspense fallback={null}>
-      <DirectoriesToolbar
-        searchPlaceholder="Поиск контрагентов"
-        searchAriaLabel="Поиск контрагентов"
-        actions={[
-          {
-            label: "Добавить",
-            icon: <PlusIcon data-icon="inline-start" />,
-            onClick: () => setDialogOpen(true),
-          },
-        ]}
-      />
-      <DirectoryCounterpartiesCreateDialog open={dialogOpen} onOpenChange={setDialogOpen} />
-    </Suspense>
-  )
-}
-```
-
-**Особенности:**
-- Одна кнопка «Добавить» — открывает диалог создания контрагента
-- Диалог `DirectoryCounterpartiesCreateDialog` рендерится здесь же (управление `open`/`onOpenChange`)
-- Обёрнут в `<Suspense>` из-за использования `useSearchParams()` (требование Next.js App Router)
+Содержит кнопку «Добавить», открывающую диалог создания контрагента `DirectoryCounterpartiesCreateDialog`.
 
 ### 3.3 `MaterialsToolbar` — тулбар материалов
 
 **Файл:** `features/directories/components/materials-toolbar.tsx`
-
-```tsx
-const materialsActions = [
-  { label: "Добавить", icon: <PlusIcon data-icon="inline-start" /> },
-  { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
-  { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
-]
-
-export function MaterialsToolbar() {
-  return (
-    <Suspense fallback={null}>
-      <DirectoriesToolbar
-        searchPlaceholder="Поиск материалов"
-        searchAriaLabel="Поиск материалов"
-        actions={materialsActions}
-      />
-    </Suspense>
-  )
-}
-```
-
-**Особенности:**
-- Три кнопки: Добавить, Импорт, Экспорт
-- Кнопки **не имеют обработчиков `onClick`** — на момент 2026-05-22 импорт/экспорт материалов не реализован (кнопки-заглушки)
+Предоставляет кнопки:
+- **Фильтр** — переключает отображение компонента категорий `DirectoryMaterialsCategoryFilter`.
+- **Добавить** — триггерит событие создания нового материала.
+- **Импорт** — открывает пошаговый мастер импорта CSV.
+- **Экспорт** — экспортирует справочник в XLSX.
 
 ### 3.4 `SuppliersToolbar` — тулбар поставщиков
 
 **Файл:** `features/directories/components/suppliers-toolbar.tsx`
-
-Идентичен `CounterpartiesToolbar` по структуре:
-- Одна кнопка «Добавить»
-- Открывает `DirectorySuppliersCreateDialog`
-- Placeholder: «Поиск поставщиков»
+Предоставляет кнопку создания поставщика с модальным диалогом `DirectorySuppliersCreateDialog`.
 
 ### 3.5 `WorksToolbar` — тулбар работ
 
 **Файл:** `features/directories/components/works-toolbar.tsx`
-
-Идентичен `MaterialsToolbar` по структуре:
-- Три кнопки: Добавить, Импорт, Экспорт
-- Placeholder: «Поиск работ»
-- Кнопки импорта/экспорта без обработчиков (заглушки)
+Аналогичен тулбару материалов: содержит фильтр категорий `DirectoryWorksCategoryFilter`, кнопки добавления, импорта и экспорта работ справочника.
 
 ---
 
@@ -198,35 +109,18 @@ export function MaterialsToolbar() {
                     searchPlaceholder="..."
                     searchAriaLabel="..."
                     actions={[...]}
-                  />
+                  >
+                     <CategoryFilter />
+                  </DirectoriesToolbar>
 ```
 
-Тулбар размещается **над таблицей/списком** справочника и управляет:
-- **Поиском** — через `?q=` в URL (серверная фильтрация)
-- **Действиями** — создание, импорт, экспорт
-
 ---
 
-## 5. Зависимости
+## 5. Текущее состояние
 
-| Зависимость | Использование |
-|---|---|
-| `@/components/ui/button` | Кнопки действий |
-| `@/components/ui/button-group` | Группировка кнопок |
-| `@/components/ui/input` | Поле поиска |
-| `@phosphor-icons/react` | Иконки (MagnifyingGlass, Plus, FileArrowDown, Export) |
-| `next/navigation` | `usePathname`, `useRouter`, `useSearchParams` для синхронизации с URL |
-| `features/directory-counterparties/` | Диалог создания контрагента |
-| `features/directory-suppliers/` | Диалог создания поставщика |
-
----
-
-## 6. Текущие ограничения
-
-| Ограничение | Детали |
-|---|---|
-| **Нет обработчиков импорта/экспорта** | Кнопки «Импорт» и «Экспорт» в `MaterialsToolbar` и `WorksToolbar` — визуальные заглушки без `onClick` |
-| **Только поиск синхронизирован с URL** | Фильтры (если появятся) не синхронизированы — паттерн есть только для `?q=` |
-| **Нет компонента для `DirectoryToolbar` без поиска** | Все справочники получают поле поиска; если какому-то справочнику поиск не нужен — придётся создавать отдельный компонент |
-| **Suspense required** | Каждый тулбар обязан быть обёрнут в `<Suspense>` из-за `useSearchParams()` — иначе Next.js выбрасывает ошибку при рендеринге |
-| **Нет shared-состояния** | Каждый тулбар управляет своим `dialogOpen` локально — нет общей логики для диалогов создания |
+| Задача | Статус | Комментарий |
+|---|---|---|
+| **Универсальный Toolbar** | ✅ Готов | Обеспечивает единый интерфейс поиска и кнопок действий. |
+| **Связь с URL** | ✅ Готова | Поиск `?q=` синхронизирован с параметрами адресной строки. |
+| **Интеграция событий** | ✅ Готова | Кнопки добавления, импорта и экспорта связаны с соответствующими обработчиками через глобальные шины событий/клиентские хелперы. |
+| **Фильтры категорий** | ✅ Готовы | Внедрена поддержка выпадающих панелей категориальных фильтров. |

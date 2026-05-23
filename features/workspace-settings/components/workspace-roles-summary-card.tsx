@@ -40,11 +40,11 @@ export function WorkspaceRolesSummaryCard() {
         {roles.map((role) => (
           <div
             key={role}
-            className="rounded-lg border border-dashed border-border/50 p-3 space-y-1.5"
+            className="space-y-1.5 rounded-lg border border-dashed border-border/50 p-3"
           >
             <Badge
               variant="secondary"
-              className={`font-medium text-xs ${roleColors[role]}`}
+              className={`text-xs font-medium ${roleColors[role]}`}
             >
               {ROLE_LABELS[role]}
             </Badge>

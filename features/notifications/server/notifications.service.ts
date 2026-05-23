@@ -1,5 +1,9 @@
 import { supabase } from "@/db"
-import { insertNotification, type InsertNotificationParams, type DbNotification } from "./notifications.repository"
+import {
+  insertNotification,
+  type InsertNotificationParams,
+  type DbNotification,
+} from "./notifications.repository"
 
 // Типы настроек из user_settings.notifications
 export interface UserNotificationPreferences {
@@ -12,7 +16,10 @@ export interface UserNotificationPreferences {
 }
 
 // Карта соответствия типов событий и ключей настроек пользователя
-const EVENT_TYPE_TO_PREFERENCE_KEY: Record<string, keyof UserNotificationPreferences> = {
+const EVENT_TYPE_TO_PREFERENCE_KEY: Record<
+  string,
+  keyof UserNotificationPreferences
+> = {
   // Уведомления проектов
   project_created: "projectUpdates",
   project_updated: "projectUpdates",
@@ -57,7 +64,10 @@ async function checkUserPreference(
       .maybeSingle()
 
     if (error) {
-      console.error("[NotificationsService] Error loading user preferences:", error)
+      console.error(
+        "[NotificationsService] Error loading user preferences:",
+        error
+      )
       return true // В случае ошибки разрешаем
     }
 
@@ -71,7 +81,10 @@ async function checkUserPreference(
     // Если настройка явно задана, возвращаем её значение. Если нет — разрешаем по умолчанию.
     return isEnabled !== false
   } catch (err) {
-    console.error("[NotificationsService] Exception in checkUserPreference:", err)
+    console.error(
+      "[NotificationsService] Exception in checkUserPreference:",
+      err
+    )
     return true
   }
 }
@@ -91,7 +104,9 @@ export interface EmailTransporter {
 // Простейший консольный логгер писем (в продакшене заменяется на Resend/SendGrid)
 const consoleEmailTransporter: EmailTransporter = {
   async sendEmail({ to, title, body, link }) {
-    console.log(`\n========================================\n[EMAIL SENDER] Sending mail to: ${to}\nSubject: ${title}\nBody: ${body}\nLink: ${link || "None"}\n========================================\n`)
+    console.log(
+      `\n========================================\n[EMAIL SENDER] Sending mail to: ${to}\nSubject: ${title}\nBody: ${body}\nLink: ${link || "None"}\n========================================\n`
+    )
   },
 }
 
@@ -112,7 +127,16 @@ export class NotificationsService {
   async dispatchNotification(
     params: InsertNotificationParams
   ): Promise<DbNotification | null> {
-    const { recipientId, workspaceOwnerId, actorId, type, title, body, link, metadata } = params
+    const {
+      recipientId,
+      workspaceOwnerId,
+      actorId,
+      type,
+      title,
+      body,
+      link,
+      metadata,
+    } = params
 
     // 1. Проверяем настройки получателя
     const isEnabled = await checkUserPreference(recipientId, type)
@@ -136,25 +160,38 @@ export class NotificationsService {
         link,
         metadata,
       })
-      console.log(`[NotificationsService] In-app notification created: ${dbRecord.id}`)
+      console.log(
+        `[NotificationsService] In-app notification created: ${dbRecord.id}`
+      )
     } catch (err) {
-      console.error("[NotificationsService] Error writing notification to DB:", err)
+      console.error(
+        "[NotificationsService] Error writing notification to DB:",
+        err
+      )
       return null
     }
 
     // 3. Отправка email уведомления (если тип события предполагает email)
     // Для простоты отправляем email для критических событий (приглашения, одобрения смет, биллинг)
     // или если настройки пользователя разрешают.
-    const shouldSendEmail = ["team_invitation_created", "billing_limit_reached", "estimate_approved"].includes(type)
+    const shouldSendEmail = [
+      "team_invitation_created",
+      "billing_limit_reached",
+      "estimate_approved",
+    ].includes(type)
 
     if (shouldSendEmail) {
       try {
         // Мы вытаскиваем email из auth.users. Поскольку у нас бэкенд,
         // мы можем сделать служебный запрос в auth.admin.getUserById().
-        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(recipientId)
-        
+        const { data: authUser, error: authError } =
+          await supabase.auth.admin.getUserById(recipientId)
+
         if (authError) {
-          console.error(`[NotificationsService] Error fetching user auth data:`, authError)
+          console.error(
+            `[NotificationsService] Error fetching user auth data:`,
+            authError
+          )
         }
 
         const email = authUser?.user?.email
@@ -167,7 +204,9 @@ export class NotificationsService {
             link,
           })
         } else {
-          console.warn(`[NotificationsService] Email for user ${recipientId} not found, skipping email dispatch.`)
+          console.warn(
+            `[NotificationsService] Email for user ${recipientId} not found, skipping email dispatch.`
+          )
         }
       } catch (emailErr) {
         console.error("[NotificationsService] Error sending email:", emailErr)

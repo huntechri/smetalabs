@@ -59,7 +59,16 @@ export function EstimateWorkCard({
   const isDisabled = savingIds.has(work.id)
 
   const updateMaterial = useCallback(
-    (materialId: string, payload: { title?: string; quantity?: number; consumption?: number | null; price?: number; changedField?: "quantity" | "consumption" | "price" }) => {
+    (
+      materialId: string,
+      payload: {
+        title?: string
+        quantity?: number
+        consumption?: number | null
+        price?: number
+        changedField?: "quantity" | "consumption" | "price"
+      }
+    ) => {
       onSave({
         action: "update_material",
         payload: { materialId, ...payload },
@@ -129,7 +138,9 @@ export function EstimateWorkCard({
         </Button>
         <Button
           aria-label="Опустить работу"
-          disabled={isDisabled || reorderDisabled || workIndex >= worksCount - 1}
+          disabled={
+            isDisabled || reorderDisabled || workIndex >= worksCount - 1
+          }
           size="icon-xs"
           type="button"
           variant="ghost"
@@ -169,7 +180,9 @@ export function EstimateWorkCard({
             <div className="flex w-full items-center gap-2 lg:w-auto">
               <CollapsibleTrigger asChild>
                 <button
-                  aria-label={expanded ? "Свернуть работу" : "Развернуть работу"}
+                  aria-label={
+                    expanded ? "Свернуть работу" : "Развернуть работу"
+                  }
                   type="button"
                 >
                   <Frame>
@@ -188,7 +201,7 @@ export function EstimateWorkCard({
             </div>
             <EstimateName onChange={handleTitleChange} value={work.title} />
           </div>
- 
+
           <div className="flex w-full flex-col gap-2 lg:w-auto lg:flex-row lg:items-center lg:justify-end">
             <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-80">
               <EditableBadge
@@ -213,7 +226,7 @@ export function EstimateWorkCard({
             <div className="hidden lg:inline-flex">{actionButtons}</div>
           </div>
         </div>
- 
+
         <CollapsibleContent>
           <Separator />
           <div className="bg-muted/10 p-3">
@@ -240,19 +253,32 @@ export function EstimateWorkCard({
                 ))}
               </div>
             )}
- 
-            <div className={cn("flex justify-end", work.materials.length > 0 && "mt-3")}>
+
+            <div
+              className={cn(
+                "flex justify-end",
+                work.materials.length > 0 && "mt-3"
+              )}
+            >
               <Frame>
                 <ButtonGroup>
                   <Button size="xs" variant="outline" onClick={onAddSection}>
                     <PlusIcon data-icon="inline-start" />
                     Раздел
                   </Button>
-                  <Button size="xs" variant="outline" onClick={() => onAddWork(work.sectionId)}>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    onClick={() => onAddWork(work.sectionId)}
+                  >
                     <PlusIcon data-icon="inline-start" />
                     Работа
                   </Button>
-                  <Button size="xs" variant="outline" onClick={() => onAddMaterial(work)}>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    onClick={() => onAddMaterial(work)}
+                  >
                     <PlusIcon data-icon="inline-start" />
                     Материал
                   </Button>

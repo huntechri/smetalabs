@@ -10,7 +10,7 @@ export function GlobalPurchasesName({
       <span className="mb-1 block text-xs text-muted-foreground uppercase">
         Наименование
       </span>
-      <div className="break-words text-sm font-medium leading-snug">
+      <div className="text-sm leading-snug font-medium break-words">
         {value}
       </div>
       <span className="mt-1 inline-block text-xs text-muted-foreground">

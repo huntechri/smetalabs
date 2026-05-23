@@ -15,7 +15,11 @@ import { useDirectoryWorkCategories } from "../hooks/use-directory-work-categori
 const ALL_CATEGORIES_VALUE = "__all_categories__"
 const ALL_SUBCATEGORIES_VALUE = "__all_subcategories__"
 
-function setOptionalParam(params: URLSearchParams, key: string, value: string | null) {
+function setOptionalParam(
+  params: URLSearchParams,
+  key: string,
+  value: string | null
+) {
   if (value) {
     params.set(key, value)
   } else {
@@ -73,7 +77,9 @@ export function DirectoryWorksCategoryFilter({ open }: { open: boolean }) {
     <div className="rounded-lg border border-border bg-card/60 p-2 shadow-sm">
       <div className="flex flex-col gap-2 @3xl/main:flex-row @3xl/main:items-center">
         <div className="min-w-0 flex-1">
-          <p className="text-xs/relaxed font-medium text-foreground">Фильтр по разделам</p>
+          <p className="text-xs/relaxed font-medium text-foreground">
+            Фильтр по разделам
+          </p>
           <p className="text-xs/relaxed text-muted-foreground">
             Показывает работы только из выбранного раздела или подраздела.
           </p>
@@ -107,7 +113,9 @@ export function DirectoryWorksCategoryFilter({ open }: { open: boolean }) {
               <SelectValue placeholder="Все подразделы" />
             </SelectTrigger>
             <SelectContent align="end">
-              <SelectItem value={ALL_SUBCATEGORIES_VALUE}>Все подразделы</SelectItem>
+              <SelectItem value={ALL_SUBCATEGORIES_VALUE}>
+                Все подразделы
+              </SelectItem>
               {subcategories.map((item) => (
                 <SelectItem key={item.name} value={item.name}>
                   {item.name} · {item.total}
@@ -128,7 +136,9 @@ export function DirectoryWorksCategoryFilter({ open }: { open: boolean }) {
       </div>
 
       {error ? (
-        <p className="mt-2 text-xs/relaxed text-destructive">Не удалось загрузить разделы: {error}</p>
+        <p className="mt-2 text-xs/relaxed text-destructive">
+          Не удалось загрузить разделы: {error}
+        </p>
       ) : null}
     </div>
   )

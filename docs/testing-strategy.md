@@ -1,106 +1,69 @@
 # Стратегия тестирования
 
-> 2026-05-22
+> **Последняя проверка:** 2026-05-23
+>
+> **Статус:** В проекте настроен тестовый фреймворк на базе **Vitest** и **React Testing Library**. Написаны тесты для API-клиентов, мапперов, схем валидации, сервисных функций и UI-компонентов в ключевых модулях (сметы, справочники, управление доступом, настройки команды).
 
-## Текущее состояние
+---
 
-**Тестовый фреймворк не настроен.** В проекте отсутствуют:
+## 1. Текущее состояние
 
-- `vitest.config.ts` / `jest.config.ts` — нет конфигурации тестового раннера
-- `*.test.ts` / `*.spec.ts` — нет ни одного тестового файла
-- Скрипты `test` / `test:watch` — не добавлены в `package.json`
-
-Доступные скрипты проверки качества (из `package.json`):
+Для запуска и отслеживания качества тестов настроены следующие скрипты в `package.json`:
 
 ```bash
-pnpm lint        # ESLint — статический анализ
-pnpm format      # Prettier — форматирование
-pnpm typecheck   # TypeScript — проверка типов (tsc --noEmit)
+pnpm test          # Запуск тестов в однократном режиме (vitest run)
+pnpm test:watch    # Запуск тестов в интерактивном режиме
+pnpm test:coverage # Сбор и отображение покрытия тестами (vitest run --coverage)
 ```
 
-## План внедрения
+Конфигурационный файл `vitest.config.ts` использует окружение `jsdom` для имитации браузерного API и настроен для разрешения путей с алиасом `@/`.
 
-### Уровень 1: TypeScript (✅ реализовано)
+---
 
-`tsconfig.json` включает `"strict": true` — строгая типизация на уровне компиляции. Все файлы проходят проверку через `pnpm typecheck`.
+## 2. Покрытие тестами по модулям
 
-### Уровень 2: Unit-тесты (🔜 планируется)
+Тесты распределены по директориям соответствующих модулей в папках `__tests__/`:
 
-**Рекомендуемый стек:** Vitest + React Testing Library
+### 2.1 Управление доступом (`access-control`)
+- **API-клиенты:** `access-control-client.test.ts`
+- **Компоненты UI:** `permissions-matrix-toolbar.test.tsx`
+- **Хуки состояния:** `use-permission-matrix-state.test.tsx`
+- **Бизнес-логика:** `build-permission-matrix.test.ts`
 
-```bash
-pnpm add -D vitest @testing-library/react @testing-library/jest-dom
-```
+### 2.2 Настройки аккаунта (`account-settings`)
+- **API-клиенты:** `settings-client.test.ts`
+- **Компоненты UI:** `account-settings-disabled-contracts.test.tsx`
 
-**Структура тестов:**
-```
-features/<module>/
-  __tests__/
-    ComponentName.test.tsx    # Тесты компонентов
-    hooks.test.ts             # Тесты хуков
-  __mocks__/                  # MSW-моки (уже существуют)
-```
+### 2.3 Справочник работ (`directory-works`)
+- **API и мапперы:** `directory-works-client.test.ts`, `directory-works-mappers.test.ts`, `directory-works-query-keys.test.ts`
+- **Серверная логика:** `directory-works.route-handlers.test.ts`, `directory-works.schemas.test.ts`, `directory-works.service.test.ts`
 
-**Конфигурация `vitest.config.ts`:**
-```ts
-import { defineConfig } from 'vitest/config'
-import path from 'path'
+### 2.4 Сметы (`estimates`)
+- **Логика обновлений:** `optimistic-update.test.ts` (проверка логики оптимистичных обновлений сметной сетки на клиенте).
 
-export default defineConfig({
-  test: {
-    environment: 'jsdom',
-    globals: true,
-  },
-  resolve: {
-    alias: { '@': path.resolve(__dirname, '.') },
-  },
-})
-```
+### 2.5 Настройки воркспейса (`workspace-settings`)
+- **API-клиенты:** `team-client.test.ts`
 
-**Скрипты в `package.json`:**
-```json
-{
-  "test": "vitest run",
-  "test:watch": "vitest",
-  "test:coverage": "vitest run --coverage"
-}
-```
+---
 
-### Уровень 3: Интеграционные тесты (🔜 планируется)
+## 3. Уровни тестирования
 
-- Тесты API-роутов (Next.js Route Handlers) + Supabase
-- Тесты взаимодействия между модулями
-- Возможный инструмент: MSW для мокирования Supabase-запросов
+### Уровень 1: TypeScript (Статический анализ)
+В проекте настроена строгая проверка типов. Скрипт `pnpm typecheck` запускает `tsc --noEmit` для верификации типов по всей кодовой базе.
 
-### Уровень 4: E2E-тесты (🔜 планируется)
+### Уровень 2: Unit-тесты
+- **Тесты функций (pure functions):** мапперы, расчёты, построители матриц, Zod-схемы валидации.
+- **Тесты хуков:** проверка реактивного состояния и вызовов API с помощью `@testing-library/react`.
+- **Тесты компонентов:** рендеринг и симуляция взаимодействия пользователя с UI-элементами.
 
-- Сквозные тесты пользовательских сценариев
-- Инструменты на выбор: Playwright или Cypress
-- Критические пути:
-  - Авторизация (login/signup/forgot-password)
-  - Создание сметы (полный flow)
-  - Работа со справочниками (CRUD)
+### Уровень 3: Интеграционные тесты
+- Проверка серверных обработчиков API (`route-handlers.test.ts`) с изолированными проверками ролей и параметров запросов.
 
-## Моки
+---
 
-В проекте уже существует **8 директорий `__mocks__/`** с данными-заглушками:
+## 4. Рекомендации по написанию тестов
 
-| Модуль | Файл |
-|---|---|
-| `directory-counterparties` | `directory-counterparties.ts` (5 KB) |
-| `directory-materials` | `directory-materials.ts` (2 KB) |
-| `directory-suppliers` | `directory-suppliers.ts` (2 KB) |
-| `directory-works` | `directory-works.ts` (2 KB) |
-| `estimates` | `estimates.ts` (1.5 KB) |
-| `execution` | `execution.ts` (2 KB) |
-| `global-purchases` | `global-purchases.ts` (2 KB) |
-| `purchases` | `purchases.ts` (2 KB) |
-
-Эти моки используются во время фронтенд-разработки. После внедрения Vitest они будут переиспользованы для unit-тестов.
-
-## Рекомендации
-
-1. **Начать с Vitest** — минимальный порог входа, нативная поддержка TypeScript
-2. **Покрыть справочники первыми** — они имеют готовые моки и стабильный CRUD-интерфейс
-3. **Добавить тесты в CI** — запускать `pnpm test` при каждом PR
-4. **Целевое покрытие:** 70%+ для утилит и хуков, 50%+ для UI-компонентов
+1. **Изолированность:** Тесты UI-компонентов должны имитировать действия пользователя через `@testing-library/user-event`.
+2. **Мокирование API:** Для тестирования хуков и компонентов мокировать вызовы `fetch` и Supabase SDK, избегая обращений к реальной сети в тестах.
+3. **Размещение:** Хранить тесты в папках `__tests__/` рядом с тестируемым кодом.
+4. **Контроль покрытия:** Перед слиянием крупных PR рекомендуется локально запускать `pnpm test:coverage`.

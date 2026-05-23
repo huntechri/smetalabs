@@ -27,7 +27,8 @@ export function useInviteLink() {
     defaultRole: data?.defaultRole ?? "viewer",
     loading: inviteLinkQuery.isLoading,
     saving: updateMutation.isPending,
-    error: inviteLinkQuery.error?.message ?? updateMutation.error?.message ?? null,
+    error:
+      inviteLinkQuery.error?.message ?? updateMutation.error?.message ?? null,
     refetch: async () => {
       await inviteLinkQuery.refetch()
     },

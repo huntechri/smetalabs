@@ -5,7 +5,10 @@ import { z } from "zod"
 import { requireAuth } from "@/lib/auth/permissions"
 import { getPrimaryWorkspace, getWorkspaceRole } from "@/lib/auth/team"
 import { WorkspaceSchema } from "./schemas"
-import { updateProfileFields, upsertSettingsColumn } from "./settings.repository"
+import {
+  updateProfileFields,
+  upsertSettingsColumn,
+} from "./settings.repository"
 import { getMergedSettings } from "./settings.service"
 
 export async function updateWorkspace(data: z.infer<typeof WorkspaceSchema>) {

@@ -14,7 +14,10 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import type { ClientNotification } from "../api/notifications-client"
-import { useMarkNotificationsRead, useArchiveNotifications } from "../hooks/use-notifications"
+import {
+  useMarkNotificationsRead,
+  useArchiveNotifications,
+} from "../hooks/use-notifications"
 
 interface NotificationItemProps {
   notification: ClientNotification
@@ -45,7 +48,7 @@ export function formatRelativeTime(dateString: string): string {
  */
 function getNotificationVisuals(type: string) {
   const baseIconClass = "size-4.5"
-  
+
   if (type.startsWith("project_")) {
     return {
       icon: <Briefcase className={baseIconClass} />,
@@ -83,11 +86,14 @@ function getNotificationVisuals(type: string) {
   }
 }
 
-export function NotificationItem({ notification, onClosePopover }: NotificationItemProps) {
+export function NotificationItem({
+  notification,
+  onClosePopover,
+}: NotificationItemProps) {
   const router = useRouter()
   const { mutate: markRead } = useMarkNotificationsRead()
   const { mutate: archive } = useArchiveNotifications()
-  
+
   const isUnread = !notification.read_at
   const { icon, bgClass } = getNotificationVisuals(notification.type)
 
@@ -96,7 +102,7 @@ export function NotificationItem({ notification, onClosePopover }: NotificationI
     if (isUnread) {
       markRead({ ids: [notification.id] })
     }
-    
+
     // 2. Закрываем поповер
     onClosePopover?.()
 
@@ -120,36 +126,51 @@ export function NotificationItem({ notification, onClosePopover }: NotificationI
       )}
     >
       {/* Иконка уведомления */}
-      <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", bgClass)}>
+      <div
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+          bgClass
+        )}
+      >
         {icon}
       </div>
 
       {/* Контент уведомления */}
       <div className="flex flex-1 flex-col gap-1 pr-6">
         <div className="flex items-baseline justify-between gap-2">
-          <span className={cn("text-xs font-semibold text-foreground line-clamp-1", isUnread && "text-primary font-bold")}>
+          <span
+            className={cn(
+              "line-clamp-1 text-xs font-semibold text-foreground",
+              isUnread && "font-bold text-primary"
+            )}
+          >
             {notification.title}
           </span>
-          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+          <span className="text-[10px] whitespace-nowrap text-muted-foreground">
             {formatRelativeTime(notification.created_at)}
           </span>
         </div>
-        <p className={cn("text-xs text-muted-foreground line-clamp-2 leading-relaxed", isUnread && "text-foreground/80")}>
+        <p
+          className={cn(
+            "line-clamp-2 text-xs leading-relaxed text-muted-foreground",
+            isUnread && "text-foreground/80"
+          )}
+        >
           {notification.body}
         </p>
       </div>
 
       {/* Индикатор непрочитанного и кнопка архивации */}
-      <div className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-1">
+      <div className="absolute top-1/2 right-4 flex -translate-y-1/2 items-center gap-1">
         {isUnread && (
           <span className="h-2 w-2 rounded-full bg-primary transition-opacity group-hover:opacity-0" />
         )}
-        
+
         <Button
           variant="ghost"
           size="icon"
           onClick={handleArchiveClick}
-          className="h-7 w-7 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+          className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive"
           title="В архив"
         >
           <Trash className="size-4" />

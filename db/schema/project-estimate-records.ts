@@ -14,11 +14,10 @@ import {
 import { profiles } from "./profiles"
 import { projects } from "./projects"
 
-export const projectEstimateRecordStatusEnum = pgEnum("project_estimate_record_status", [
-  "new",
-  "in_progress",
-  "completed",
-])
+export const projectEstimateRecordStatusEnum = pgEnum(
+  "project_estimate_record_status",
+  ["new", "in_progress", "completed"]
+)
 
 export const projectEstimateRecords = pgTable(
   "project_estimate_records",
@@ -34,7 +33,9 @@ export const projectEstimateRecords = pgTable(
     normalizedName: text("normalized_name").notNull(),
     type: text("type").notNull().default("Основная"),
     status: projectEstimateRecordStatusEnum("status").notNull().default("new"),
-    amount: numeric("amount", { precision: 14, scale: 2 }).notNull().default("0"),
+    amount: numeric("amount", { precision: 14, scale: 2 })
+      .notNull()
+      .default("0"),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => profiles.id, { onDelete: "restrict" }),
@@ -51,7 +52,10 @@ export const projectEstimateRecords = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (t) => [
-    uniqueIndex("uq_project_estimate_records_id_workspace").on(t.id, t.workspaceOwnerId),
+    uniqueIndex("uq_project_estimate_records_id_workspace").on(
+      t.id,
+      t.workspaceOwnerId
+    ),
     uniqueIndex("uq_project_estimate_records_id_workspace_project").on(
       t.id,
       t.workspaceOwnerId,
@@ -64,9 +68,21 @@ export const projectEstimateRecords = pgTable(
       t.deletedAt,
       t.createdAt
     ),
-    index("idx_project_estimate_records_status").on(t.workspaceOwnerId, t.status),
-    check("chk_project_estimate_records_name_not_empty", sql`btrim(${t.name}) <> ''`),
-    check("chk_project_estimate_records_type_not_empty", sql`btrim(${t.type}) <> ''`),
-    check("chk_project_estimate_records_amount_non_negative", sql`${t.amount} >= 0`),
+    index("idx_project_estimate_records_status").on(
+      t.workspaceOwnerId,
+      t.status
+    ),
+    check(
+      "chk_project_estimate_records_name_not_empty",
+      sql`btrim(${t.name}) <> ''`
+    ),
+    check(
+      "chk_project_estimate_records_type_not_empty",
+      sql`btrim(${t.type}) <> ''`
+    ),
+    check(
+      "chk_project_estimate_records_amount_non_negative",
+      sql`${t.amount} >= 0`
+    ),
   ]
 )

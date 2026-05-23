@@ -39,7 +39,10 @@ function buildListUrl(path: string, query: DirectoryMaterialsListParams = {}) {
   return search ? `${path}?${search}` : path
 }
 
-function buildCategoriesUrl(path: string, query: DirectoryMaterialsCategoriesParams = {}) {
+function buildCategoriesUrl(
+  path: string,
+  query: DirectoryMaterialsCategoriesParams = {}
+) {
   const params = new URLSearchParams()
 
   appendParam(params, "status", query.status)
@@ -64,16 +67,23 @@ async function fetchJson<T>(url: string, resource: string, init?: RequestInit) {
   return response.json() as Promise<T>
 }
 
-export function fetchDirectoryMaterials(params: DirectoryMaterialsListParams = {}) {
+export function fetchDirectoryMaterials(
+  params: DirectoryMaterialsListParams = {}
+) {
   return fetchJson<DirectoryMaterialsListResponse>(
     buildListUrl("/api/directory-materials", params),
     "справочника материалов"
   )
 }
 
-export function searchDirectoryMaterials(params: DirectoryMaterialsListParams = {}) {
+export function searchDirectoryMaterials(
+  params: DirectoryMaterialsListParams = {}
+) {
   return fetchJson<DirectoryMaterialsListResponse>(
-    buildListUrl("/api/directory-materials/search", { sort: "relevance", ...params }),
+    buildListUrl("/api/directory-materials/search", {
+      sort: "relevance",
+      ...params,
+    }),
     "поиска материалов"
   )
 }
@@ -116,7 +126,9 @@ export function archiveDirectoryMaterial(id: string) {
   )
 }
 
-export function createDirectoryMaterialImportJob(input: DirectoryMaterialImportCreateInput) {
+export function createDirectoryMaterialImportJob(
+  input: DirectoryMaterialImportCreateInput
+) {
   return fetchJson<DirectoryMaterialImportPreviewResponse>(
     "/api/directory-materials/import-jobs",
     "импорта материалов",
@@ -159,7 +171,9 @@ export function applyDirectoryMaterialImportJob({
   )
 }
 
-export function fetchDirectoryMaterialsCategories(params: DirectoryMaterialsCategoriesParams = {}) {
+export function fetchDirectoryMaterialsCategories(
+  params: DirectoryMaterialsCategoriesParams = {}
+) {
   return fetchJson<DirectoryMaterialsCategoriesResponse>(
     buildCategoriesUrl("/api/directory-materials/categories", params),
     "категорий материалов"

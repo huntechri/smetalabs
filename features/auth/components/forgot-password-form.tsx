@@ -99,8 +99,7 @@ export function ForgotPasswordForm({
         </CardContent>
       </Card>
       <FieldDescription className="px-6 text-center">
-        Продолжая, вы соглашаетесь с{" "}
-        <a href="#">условиями использования</a> и{" "}
+        Продолжая, вы соглашаетесь с <a href="#">условиями использования</a> и{" "}
         <a href="#">политикой конфиденциальности</a>.
       </FieldDescription>
     </div>

@@ -12,7 +12,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -90,7 +95,8 @@ export function GlobalPurchaseMaterialDialog({
   const [search, setSearch] = useState("")
   const [submittedSearch, setSubmittedSearch] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const [selectedMaterial, setSelectedMaterial] = useState<GlobalPurchaseMaterialOption | null>(null)
+  const [selectedMaterial, setSelectedMaterial] =
+    useState<GlobalPurchaseMaterialOption | null>(null)
   const [quantityDialogOpen, setQuantityDialogOpen] = useState(false)
   const [quantity, setQuantity] = useState("1")
   const [quantityError, setQuantityError] = useState<string | null>(null)
@@ -123,13 +129,17 @@ export function GlobalPurchaseMaterialDialog({
       return
     }
 
-    const timeout = window.setTimeout(() => setSubmittedSearch(normalizedSearch), MATERIAL_SEARCH_DELAY_MS)
+    const timeout = window.setTimeout(
+      () => setSubmittedSearch(normalizedSearch),
+      MATERIAL_SEARCH_DELAY_MS
+    )
     return () => window.clearTimeout(timeout)
   }, [normalizedSearch, open])
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (normalizedSearch.length >= MATERIAL_SEARCH_MIN_LENGTH) setSubmittedSearch(normalizedSearch)
+    if (normalizedSearch.length >= MATERIAL_SEARCH_MIN_LENGTH)
+      setSubmittedSearch(normalizedSearch)
   }
 
   const handleSelect = async (material: GlobalPurchaseMaterialOption) => {
@@ -173,8 +183,12 @@ export function GlobalPurchaseMaterialDialog({
     }
   }
 
-  const materials = useMemo(() => (canSearch ? materialsQuery.data?.data ?? [] : []), [canSearch, materialsQuery.data])
-  const loading = canSearch && (materialsQuery.isLoading || materialsQuery.isFetching)
+  const materials = useMemo(
+    () => (canSearch ? (materialsQuery.data?.data ?? []) : []),
+    [canSearch, materialsQuery.data]
+  )
+  const loading =
+    canSearch && (materialsQuery.isLoading || materialsQuery.isFetching)
   const showSearchPrompt = !canSearch
   const showEmpty = canSearch && !loading && materials.length === 0
 
@@ -187,7 +201,10 @@ export function GlobalPurchaseMaterialDialog({
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
 
-          <form className="flex shrink-0 items-center gap-2" onSubmit={handleSearch}>
+          <form
+            className="flex shrink-0 items-center gap-2"
+            onSubmit={handleSearch}
+          >
             <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
             <Input
               aria-label="Поиск материалов"
@@ -201,14 +218,18 @@ export function GlobalPurchaseMaterialDialog({
             </Button>
           </form>
 
-          <FieldError>{error ?? materialsQuery.error?.message ?? null}</FieldError>
+          <FieldError>
+            {error ?? materialsQuery.error?.message ?? null}
+          </FieldError>
 
           <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-md border border-border">
             {showSearchPrompt ? (
               <Empty className="h-full min-h-80 border-0">
                 <EmptyHeader>
                   <EmptyTitle>Введите название материала</EmptyTitle>
-                  <EmptyDescription>Поиск начнётся после ввода минимум 2 символов.</EmptyDescription>
+                  <EmptyDescription>
+                    Поиск начнётся после ввода минимум 2 символов.
+                  </EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ) : null}
@@ -225,20 +246,33 @@ export function GlobalPurchaseMaterialDialog({
               <Empty className="h-full min-h-80 border-0">
                 <EmptyHeader>
                   <EmptyTitle>Материалы не найдены</EmptyTitle>
-                  <EmptyDescription>Измените поиск или добавьте материал в справочник.</EmptyDescription>
+                  <EmptyDescription>
+                    Измените поиск или добавьте материал в справочник.
+                  </EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ) : null}
 
             {materials.map((material) => (
-              <Card key={material.id} className="m-2 rounded-md bg-transparent p-0 shadow-none">
+              <Card
+                key={material.id}
+                className="m-2 rounded-md bg-transparent p-0 shadow-none"
+              >
                 <CardContent className="grid gap-2 p-3 sm:grid-cols-[minmax(0,1fr)_120px_140px_auto] sm:items-center">
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-medium">{material.title}</div>
-                    <div className="truncate text-xs text-muted-foreground">{material.category}</div>
+                    <div className="truncate text-sm font-medium">
+                      {material.title}
+                    </div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {material.category}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">{material.unit}</div>
-                  <div className="text-xs font-medium tabular-nums">{formatMoney(material.planPrice)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {material.unit}
+                  </div>
+                  <div className="text-xs font-medium tabular-nums">
+                    {formatMoney(material.planPrice)}
+                  </div>
                   <Button
                     disabled={saving}
                     onClick={() => handleSelect(material)}
@@ -261,7 +295,9 @@ export function GlobalPurchaseMaterialDialog({
           <DialogHeader>
             <DialogTitle>Количество</DialogTitle>
             <DialogDescription>
-              {selectedMaterial ? selectedMaterial.title : "Введите количество материала"}
+              {selectedMaterial
+                ? selectedMaterial.title
+                : "Введите количество материала"}
             </DialogDescription>
           </DialogHeader>
           <form className="space-y-4" onSubmit={handleQuantitySubmit}>
@@ -274,7 +310,11 @@ export function GlobalPurchaseMaterialDialog({
             />
             <FieldError>{quantityError}</FieldError>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setQuantityDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setQuantityDialogOpen(false)}
+              >
                 Отмена
               </Button>
               <Button type="submit" disabled={saving}>

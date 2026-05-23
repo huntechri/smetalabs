@@ -642,9 +642,9 @@ lib/
     └── team.ts                 #   Zod-схемы ролей
 ```
 
-#### База данных (Supabase)
+#### База данных (Supabase & Drizzle)
 
-Миграции управляются через Supabase CLI (нет локальной `db/`). Ключевые таблицы public-схемы:
+Схема базы данных описывается через Drizzle ORM в `db/schema/`, а локальные миграции хранятся в репозитории в каталоге `db/migrations/` и применяются к базе данных. Ключевые таблицы public-схемы:
 
 - **Ядро:** `profiles`, `roles` (5 записей), `permissions` (19 прав), `role_permissions` (61), `user_roles`, `user_settings`, `workspace_members`, `workspace_invitations`, `workspace_allowed_domains`
 - **Справочники:** `directory_works` (723), `directory_materials` (35k+), `directory_suppliers`, `directory_counterparties`

@@ -62,9 +62,14 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
   const queryClient = useQueryClient()
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const sectionsRef = useRef<ProjectEstimateContentSection[] | null>(null)
-  const optimisticSnapshotRef = useRef<ProjectEstimateContentResponse | null>(null)
+  const optimisticSnapshotRef = useRef<ProjectEstimateContentResponse | null>(
+    null
+  )
 
-  const contentKey = projectsQueryKeys.estimateRecordContent(projectId, recordId)
+  const contentKey = projectsQueryKeys.estimateRecordContent(
+    projectId,
+    recordId
+  )
 
   const contentQuery = useQuery({
     queryKey: contentKey,
@@ -75,7 +80,11 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
   })
 
   const updateContentCache = useCallback(
-    async (response: Awaited<ReturnType<typeof fetchProjectEstimateContent>> & { _partial?: boolean }) => {
+    async (
+      response: Awaited<ReturnType<typeof fetchProjectEstimateContent>> & {
+        _partial?: boolean
+      }
+    ) => {
       // Helper to strip _optimistic flag from sections (used for temp→real ID replacement)
       const stripOptimisticSections = (
         sections: ProjectEstimateContentSection[]
@@ -85,9 +94,10 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
       // Opt 1: If this is a partial response (single section update), merge it
       // into the cached data instead of replacing the entire cache.
       if (response._partial) {
-        const cached = queryClient.getQueryData<
-          Awaited<ReturnType<typeof fetchProjectEstimateContent>>
-        >(contentKey)
+        const cached =
+          queryClient.getQueryData<
+            Awaited<ReturnType<typeof fetchProjectEstimateContent>>
+          >(contentKey)
 
         if (cached?.data?.sections && response.data?.sections?.[0]) {
           const updatedSection = response.data.sections[0]
@@ -101,7 +111,9 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
           )
 
           // If the section is new (not in cache), append it
-          const hasSection = cleanSections.some((s) => s.id === updatedSection.id)
+          const hasSection = cleanSections.some(
+            (s) => s.id === updatedSection.id
+          )
           if (!hasSection) {
             mergedSections.push(updatedSection)
           }
@@ -109,9 +121,14 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
           // Recompute summary from merged sections
           const summary = mergedSections.reduce(
             (acc, section) => ({
-              worksAmount: Math.round((acc.worksAmount + section.worksAmount) * 100) / 100,
-              materialsAmount: Math.round((acc.materialsAmount + section.materialsAmount) * 100) / 100,
-              totalAmount: Math.round((acc.totalAmount + section.totalAmount) * 100) / 100,
+              worksAmount:
+                Math.round((acc.worksAmount + section.worksAmount) * 100) / 100,
+              materialsAmount:
+                Math.round(
+                  (acc.materialsAmount + section.materialsAmount) * 100
+                ) / 100,
+              totalAmount:
+                Math.round((acc.totalAmount + section.totalAmount) * 100) / 100,
             }),
             { worksAmount: 0, materialsAmount: 0, totalAmount: 0 }
           )
@@ -137,7 +154,7 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
         queryKey: projectsQueryKeys.estimateRecords(projectId),
       })
     },
-    [contentKey, queryClient, projectId],
+    [contentKey, queryClient, projectId]
   )
 
   const changeMutation = useMutation({
@@ -160,7 +177,8 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
       }
 
       // 2. Save snapshot for rollback
-      const previous = queryClient.getQueryData<ProjectEstimateContentResponse>(contentKey)
+      const previous =
+        queryClient.getQueryData<ProjectEstimateContentResponse>(contentKey)
       optimisticSnapshotRef.current = previous ?? null
 
       // 3. Optimistically update the cache
@@ -214,7 +232,11 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
 
   const coefficientMutation = useMutation({
     mutationFn: (coefficientPercent: number) =>
-      applyProjectEstimateWorkCoefficient({ projectId, recordId, coefficientPercent }),
+      applyProjectEstimateWorkCoefficient({
+        projectId,
+        recordId,
+        coefficientPercent,
+      }),
     onMutate: () => {
       setSavingIds((prev) => new Set(prev).add("__coefficient__"))
     },
@@ -244,9 +266,7 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
   const isSaving = changeMutation.isPending || coefficientMutation.isPending
 
   const mutationError =
-    changeMutation.error?.message ??
-    coefficientMutation.error?.message ??
-    null
+    changeMutation.error?.message ?? coefficientMutation.error?.message ?? null
 
   const clearMutationError = useCallback(() => {
     changeMutation.reset()

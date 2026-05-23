@@ -6,7 +6,11 @@ import type {
 } from "@/types/project"
 import { throwProjectsApiError } from "./projects-errors"
 
-function appendParam(params: URLSearchParams, key: string, value: string | number | undefined) {
+function appendParam(
+  params: URLSearchParams,
+  key: string,
+  value: string | number | undefined
+) {
   if (value === undefined || value === "") return
   params.set(key, String(value))
 }
@@ -46,7 +50,10 @@ export function fetchProjects(params: ProjectsListParams = {}) {
 }
 
 export async function fetchProject(id: string) {
-  const json = await fetchJson<{ data: ProjectRow }>(`/api/projects/${id}`, "проекта")
+  const json = await fetchJson<{ data: ProjectRow }>(
+    `/api/projects/${id}`,
+    "проекта"
+  )
   return json.data
 }
 
@@ -57,15 +64,29 @@ export function createProject(input: ProjectMutationInput) {
   })
 }
 
-export function updateProject({ id, input }: { id: string; input: ProjectMutationInput }) {
-  return fetchJson<{ data: ProjectRow }>(`/api/projects/${id}`, "обновления проекта", {
-    method: "PATCH",
-    body: JSON.stringify(input),
-  })
+export function updateProject({
+  id,
+  input,
+}: {
+  id: string
+  input: ProjectMutationInput
+}) {
+  return fetchJson<{ data: ProjectRow }>(
+    `/api/projects/${id}`,
+    "обновления проекта",
+    {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }
+  )
 }
 
 export function archiveProject(id: string) {
-  return fetchJson<{ data: ProjectRow }>(`/api/projects/${id}`, "архивирования проекта", {
-    method: "DELETE",
-  })
+  return fetchJson<{ data: ProjectRow }>(
+    `/api/projects/${id}`,
+    "архивирования проекта",
+    {
+      method: "DELETE",
+    }
+  )
 }

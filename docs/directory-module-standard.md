@@ -63,32 +63,31 @@ export type DirectoryWorkRow = {
 
 ### 2.2 Слой хука (`hooks/use-directory-{entity}.ts`)
 
-Единая точка получения данных. **Сейчас использует мок-данные**, в будущем — Supabase-запросы.
+Единая точка получения данных. Использует **React Query** (`useQuery` и `useMutation`) для интеграции с API-сервисами, поддерживающими пагинацию, поиск, добавление, обновление и архивацию данных.
 
 **Сигнатура:**
 
 ```typescript
 export function useDirectory{Entity}() {
-  // Сейчас: импорт из __mocks__
-  // В будущем: useQuery / supabase.from(...)
-  return { entities: rows }
+  // Использование useQuery и useMutation с ключами кэширования
+  return {
+    entities: query.data,
+    loading: query.isLoading,
+    error: query.error,
+    createEntity,
+    updateEntity,
+    archiveEntity
+  }
 }
 ```
 
 **Пример (`hooks/use-directory-works.ts`):**
 
-```typescript
-import { directoryWorkRows } from "@/features/directory-works/__mocks__/directory-works"
-
-export function useDirectoryWorks() {
-  return { works: directoryWorkRows }
-}
-```
+Смотрите реальный файл [use-directory-works.ts](file:///c:/Users/Admin/smetalabs/features/directory-works/hooks/use-directory-works.ts), который содержит полную реализацию с React Query.
 
 **Контракт:**
 - Название: `useDirectory{Entity}()`
-- Возвращает объект с коллекцией (множественное число `{entities}`)
-- В будущем: добавит `isLoading`, `error`, `isEmpty`
+- Возвращает коллекцию, флаги загрузки/сохранения, функции мутации и параметры поиска.
 
 ### 2.3 Слой моков (`__mocks__/directory-{entity}.ts`)
 
@@ -422,8 +421,8 @@ import { useDirectoryWorks } from "@/features/directory-works/hooks/use-director
 ## 5. Ссылки
 
 - **Архитектура directory-works:** `features/directory-works/` (эталонный модуль)
-- **Текущее состояние:** все три модуля используют мок-данные. Состояния loading/empty/error не реализованы — только happy path.
-- **Устаревшая документация:** ранее `docs/directory-works-architecture.md` — заменён на `features/directory-works/docs/README.md` (не создан).
+- **Текущее состояние:** справочники полностью подключены к бэкенду. Реализованы состояния загрузки (`loading`/`skeletons`), пустых данных (`empty`/`Empty`) и ошибок (`error`), а также операции импорта CSV и экспорта XLSX.
+- **Локальная документация:** `features/directory-works/docs/README.md` — описание структуры и API.
 
 ---
 

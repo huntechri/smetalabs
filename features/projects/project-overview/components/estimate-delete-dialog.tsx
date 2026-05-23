@@ -31,16 +31,27 @@ export function EstimateDeleteDialog({
         </DialogHeader>
 
         <div className="text-xs/relaxed text-muted-foreground">
-          Смета {estimate ? `«${estimate.name}»` : ""} будет удалена из списка проекта.
+          Смета {estimate ? `«${estimate.name}»` : ""} будет удалена из списка
+          проекта.
         </div>
 
         {error ? <div className="text-xs text-destructive">{error}</div> : null}
 
         <DialogFooter showCloseButton={false}>
-          <Button type="button" variant="outline" disabled={saving} onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={saving}
+            onClick={() => onOpenChange(false)}
+          >
             Отмена
           </Button>
-          <Button type="button" variant="destructive" disabled={saving} onClick={onConfirm}>
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={saving}
+            onClick={onConfirm}
+          >
             Удалить
           </Button>
         </DialogFooter>

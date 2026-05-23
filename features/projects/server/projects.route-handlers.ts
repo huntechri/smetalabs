@@ -31,8 +31,10 @@ async function readJsonBody(request: NextRequest) {
 }
 
 export function handleProjectsRouteError(err: unknown, routeLabel: string) {
-  if (err instanceof ProjectsApiError) return jsonError(err.code, err.message, err.status)
-  if (err instanceof ZodError) return jsonError("BAD_REQUEST", getZodMessage(err), 400)
+  if (err instanceof ProjectsApiError)
+    return jsonError(err.code, err.message, err.status)
+  if (err instanceof ZodError)
+    return jsonError("BAD_REQUEST", getZodMessage(err), 400)
 
   console.error(routeLabel, err)
   return jsonError("INTERNAL_ERROR", "Ошибка раздела проектов", 500)
@@ -69,7 +71,10 @@ export async function handleProjectDetailRequest(id: string) {
   }
 }
 
-export async function handleProjectUpdateRequest(request: NextRequest, id: string) {
+export async function handleProjectUpdateRequest(
+  request: NextRequest,
+  id: string
+) {
   try {
     const projectId = parseProjectId(id)
     const body = await readJsonBody(request)

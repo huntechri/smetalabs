@@ -15,7 +15,10 @@ function appendParam(
   params.set(key, String(value))
 }
 
-function buildListUrl(path: string, query: DirectoryCounterpartiesListParams = {}) {
+function buildListUrl(
+  path: string,
+  query: DirectoryCounterpartiesListParams = {}
+) {
   const params = new URLSearchParams()
 
   appendParam(params, "q", query.q)
@@ -37,12 +40,15 @@ async function fetchJson<T>(url: string, resource: string, init?: RequestInit) {
       : init?.headers,
   })
 
-  if (!response.ok) await throwDirectoryCounterpartiesApiError(response, resource)
+  if (!response.ok)
+    await throwDirectoryCounterpartiesApiError(response, resource)
 
   return response.json() as Promise<T>
 }
 
-export function fetchDirectoryCounterparties(params: DirectoryCounterpartiesListParams = {}) {
+export function fetchDirectoryCounterparties(
+  params: DirectoryCounterpartiesListParams = {}
+) {
   return fetchJson<DirectoryCounterpartiesListResponse>(
     buildListUrl("/api/directory-counterparties", params),
     "справочника контрагентов"
@@ -57,7 +63,9 @@ export async function fetchDirectoryCounterparty(id: string) {
   return json.data
 }
 
-export function createDirectoryCounterparty(input: DirectoryCounterpartyMutationInput) {
+export function createDirectoryCounterparty(
+  input: DirectoryCounterpartyMutationInput
+) {
   return fetchJson<{ data: DirectoryCounterparty }>(
     "/api/directory-counterparties",
     "создания контрагента",

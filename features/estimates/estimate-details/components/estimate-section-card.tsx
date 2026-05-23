@@ -99,7 +99,7 @@ export function EstimateSectionCard({
         <div className="flex flex-col gap-4 border-b bg-muted/45 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <CollapsibleTrigger asChild>
             <button
-              className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-primary group"
+              className="group flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:text-primary"
               type="button"
             >
               <CaretRightIcon
@@ -110,10 +110,10 @@ export function EstimateSectionCard({
                 )}
               />
               <div className="flex min-w-0 items-center gap-2">
-                <Badge className="rounded-md font-semibold shrink-0">
+                <Badge className="shrink-0 rounded-md font-semibold">
                   Раздел {section.number}
                 </Badge>
-                <span className="text-sm font-semibold tracking-tight text-foreground truncate">
+                <span className="truncate text-sm font-semibold tracking-tight text-foreground">
                   {section.title}
                 </span>
               </div>
@@ -122,20 +122,36 @@ export function EstimateSectionCard({
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="h-auto rounded-md bg-background px-2.5 py-1 text-xs font-medium border border-border">
-                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mr-1">Работы:</span>
-                <span className="font-semibold tabular-nums text-foreground">{formatMoney(section.worksAmount)}</span>
+              <Badge
+                variant="outline"
+                className="h-auto rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium"
+              >
+                <span className="mr-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
+                  Работы:
+                </span>
+                <span className="font-semibold text-foreground tabular-nums">
+                  {formatMoney(section.worksAmount)}
+                </span>
               </Badge>
-              <Badge variant="outline" className="h-auto rounded-md bg-background px-2.5 py-1 text-xs font-medium border border-border">
-                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mr-1">Материалы:</span>
-                <span className="font-semibold tabular-nums text-foreground">{formatMoney(section.materialsAmount)}</span>
+              <Badge
+                variant="outline"
+                className="h-auto rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium"
+              >
+                <span className="mr-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
+                  Материалы:
+                </span>
+                <span className="font-semibold text-foreground tabular-nums">
+                  {formatMoney(section.materialsAmount)}
+                </span>
               </Badge>
             </div>
             <Frame>
               <ButtonGroup>
                 <Button
                   aria-label="Поднять раздел"
-                  disabled={moveDisabled || reorderDisabled || sectionIndex === 0}
+                  disabled={
+                    moveDisabled || reorderDisabled || sectionIndex === 0
+                  }
                   size="icon-xs"
                   type="button"
                   variant="ghost"
@@ -145,7 +161,11 @@ export function EstimateSectionCard({
                 </Button>
                 <Button
                   aria-label="Опустить раздел"
-                  disabled={moveDisabled || reorderDisabled || sectionIndex >= sectionsCount - 1}
+                  disabled={
+                    moveDisabled ||
+                    reorderDisabled ||
+                    sectionIndex >= sectionsCount - 1
+                  }
                   size="icon-xs"
                   type="button"
                   variant="ghost"
@@ -160,7 +180,12 @@ export function EstimateSectionCard({
 
         <CollapsibleContent>
           <Separator />
-          <div className={cn("flex flex-col", section.works.length && "bg-muted/20 px-3 py-2 gap-3")}>
+          <div
+            className={cn(
+              "flex flex-col",
+              section.works.length && "gap-3 bg-muted/20 px-3 py-2"
+            )}
+          >
             {section.works.length ? (
               section.works.map((work, index) => (
                 <EstimateWorkCard
@@ -180,11 +205,19 @@ export function EstimateSectionCard({
                 <div className="mt-3 flex justify-end">
                   <Frame>
                     <ButtonGroup>
-                      <Button size="xs" variant="outline" onClick={onAddSection}>
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        onClick={onAddSection}
+                      >
                         <PlusIcon data-icon="inline-start" />
                         Раздел
                       </Button>
-                      <Button size="xs" variant="outline" onClick={() => onAddWork(section.id)}>
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        onClick={() => onAddWork(section.id)}
+                      >
                         <PlusIcon data-icon="inline-start" />
                         Работа
                       </Button>

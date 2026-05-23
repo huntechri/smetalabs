@@ -16,7 +16,9 @@ type ApiErrorPayload = {
   }
 }
 
-async function readErrorPayload(response: Response): Promise<ApiErrorPayload | null> {
+async function readErrorPayload(
+  response: Response
+): Promise<ApiErrorPayload | null> {
   try {
     return (await response.json()) as ApiErrorPayload
   } catch {
@@ -24,11 +26,13 @@ async function readErrorPayload(response: Response): Promise<ApiErrorPayload | n
   }
 }
 
-export async function throwProjectsApiError(response: Response, resource: string): Promise<never> {
+export async function throwProjectsApiError(
+  response: Response,
+  resource: string
+): Promise<never> {
   const payload = await readErrorPayload(response)
   const message =
-    payload?.error?.message ??
-    `Не удалось выполнить действие для ${resource}`
+    payload?.error?.message ?? `Не удалось выполнить действие для ${resource}`
 
   throw new ProjectsApiError(
     payload?.error?.code ?? "REQUEST_FAILED",

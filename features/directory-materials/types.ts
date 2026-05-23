@@ -158,10 +158,11 @@ export type DirectoryMaterialImportRawRow = Partial<{
   source_external_row_key: string
 }>
 
-export type DirectoryMaterialImportNormalizedRow = DirectoryMaterialMutationInput & {
-  aliases: string[]
-  keywords: string[]
-}
+export type DirectoryMaterialImportNormalizedRow =
+  DirectoryMaterialMutationInput & {
+    aliases: string[]
+    keywords: string[]
+  }
 
 export type DirectoryMaterialImportJob = {
   id: string

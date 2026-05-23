@@ -68,7 +68,9 @@ function mapWorkOption(row: DirectoryWorkOptionRow): ProjectEstimateOptionRow {
   }
 }
 
-function mapMaterialOption(row: DirectoryMaterialOptionRow): ProjectEstimateMaterialOptionRow {
+function mapMaterialOption(
+  row: DirectoryMaterialOptionRow
+): ProjectEstimateMaterialOptionRow {
   return {
     id: row.id,
     code: row.code,
@@ -138,6 +140,8 @@ export async function listProjectEstimateMaterialOptionsForWorkspace(
 
   if (error) throw error
 
-  const rows = ((data ?? []) as DirectoryMaterialOptionRow[]).map(mapMaterialOption)
+  const rows = ((data ?? []) as DirectoryMaterialOptionRow[]).map(
+    mapMaterialOption
+  )
   return buildMeta(rows, params)
 }

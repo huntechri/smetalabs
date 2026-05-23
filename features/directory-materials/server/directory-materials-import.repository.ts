@@ -91,9 +91,9 @@ type SupabaseWriteError = {
 function isSupabaseWriteError(error: unknown): error is SupabaseWriteError {
   return Boolean(
     error &&
-      typeof error === "object" &&
-      "message" in error &&
-      typeof (error as { message?: unknown }).message === "string"
+    typeof error === "object" &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
   )
 }
 
@@ -108,7 +108,8 @@ function throwImportCreateError(error: unknown): never {
 
     throw new DirectoryMaterialsApiError(
       "BAD_REQUEST",
-      error.message || "Не удалось создать импорт материалов. Проверьте файл и попробуйте снова.",
+      error.message ||
+        "Не удалось создать импорт материалов. Проверьте файл и попробуйте снова.",
       400
     )
   }
@@ -129,7 +130,9 @@ function toNullableString(value: unknown) {
 
 function splitList(value: unknown) {
   if (Array.isArray(value)) {
-    return Array.from(new Set(value.map((item) => toNullableString(item)).filter(Boolean))) as string[]
+    return Array.from(
+      new Set(value.map((item) => toNullableString(item)).filter(Boolean))
+    ) as string[]
   }
 
   const stringValue = toNullableString(value)
@@ -191,15 +194,40 @@ function buildDedupeFingerprint(input: DirectoryMaterialImportNormalizedRow) {
 function normalizeImportRow(
   rawData: Record<string, unknown>,
   fallbackSourceName: string | null
-): DirectoryMaterialImportNormalizedRow & { errors: string[]; warnings: string[] } {
-  const name = toNullableString(getRawValue(rawData, ["name", "title", "наименование", "название"])) ?? ""
+): DirectoryMaterialImportNormalizedRow & {
+  errors: string[]
+  warnings: string[]
+} {
+  const name =
+    toNullableString(
+      getRawValue(rawData, ["name", "title", "наименование", "название"])
+    ) ?? ""
   const unit =
-    toNullableString(getRawValue(rawData, ["unit", "unit_label", "unit_code", "единица", "ед. изм."])) ?? ""
-  const category = toNullableString(getRawValue(rawData, ["category", "категория"])) ?? ""
-  const rawPrice = getRawValue(rawData, ["price", "price_amount", "rate", "цена"])
+    toNullableString(
+      getRawValue(rawData, [
+        "unit",
+        "unit_label",
+        "unit_code",
+        "единица",
+        "ед. изм.",
+      ])
+    ) ?? ""
+  const category =
+    toNullableString(getRawValue(rawData, ["category", "категория"])) ?? ""
+  const rawPrice = getRawValue(rawData, [
+    "price",
+    "price_amount",
+    "rate",
+    "цена",
+  ])
   const price = normalizeNumber(rawPrice)
   const rawCurrency = toNullableString(
-    getRawValue(rawData, ["currency_code", "currencyCode", "currency", "валюта"])
+    getRawValue(rawData, [
+      "currency_code",
+      "currencyCode",
+      "currency",
+      "валюта",
+    ])
   )
   const currencyCode = rawCurrency ? rawCurrency.toUpperCase() : "RUB"
   const errors: string[] = []
@@ -220,20 +248,38 @@ function normalizeImportRow(
     unit,
     price: Number.isFinite(price) ? price : 0,
     category,
-    subcategory: toNullableString(getRawValue(rawData, ["subcategory", "подкатегория"])),
+    subcategory: toNullableString(
+      getRawValue(rawData, ["subcategory", "подкатегория"])
+    ),
     code: toNullableString(getRawValue(rawData, ["code", "код"])),
     supplierName: toNullableString(
-      getRawValue(rawData, ["supplierName", "supplier_name", "supplier", "поставщик"])
+      getRawValue(rawData, [
+        "supplierName",
+        "supplier_name",
+        "supplier",
+        "поставщик",
+      ])
     ),
-    imageUrl: toNullableString(getRawValue(rawData, ["imageUrl", "image_url", "ссылка на изображение"])),
-    description: toNullableString(getRawValue(rawData, ["description", "описание"])),
+    imageUrl: toNullableString(
+      getRawValue(rawData, ["imageUrl", "image_url", "ссылка на изображение"])
+    ),
+    description: toNullableString(
+      getRawValue(rawData, ["description", "описание"])
+    ),
     aliases: splitList(getRawValue(rawData, ["aliases", "alias", "синонимы"])),
-    keywords: splitList(getRawValue(rawData, ["keywords", "keyword", "ключевые слова"])),
+    keywords: splitList(
+      getRawValue(rawData, ["keywords", "keyword", "ключевые слова"])
+    ),
     sourceName:
-      toNullableString(getRawValue(rawData, ["sourceName", "source_name", "источник"])) ??
-      fallbackSourceName,
+      toNullableString(
+        getRawValue(rawData, ["sourceName", "source_name", "источник"])
+      ) ?? fallbackSourceName,
     sourceExternalRowKey: toNullableString(
-      getRawValue(rawData, ["sourceExternalRowKey", "source_external_row_key", "external_id"])
+      getRawValue(rawData, [
+        "sourceExternalRowKey",
+        "source_external_row_key",
+        "external_id",
+      ])
     ),
     currencyCode,
     errors,
@@ -248,7 +294,8 @@ function mapJob(row: ImportJobDbRow): DirectoryMaterialImportJob {
     sourceName: row.source_name,
     fileName: row.file_name,
     fileMimeType: row.file_mime_type,
-    fileSizeBytes: row.file_size_bytes === null ? null : Number(row.file_size_bytes),
+    fileSizeBytes:
+      row.file_size_bytes === null ? null : Number(row.file_size_bytes),
     totalRows: toNumber(row.total_rows),
     parsedRows: toNumber(row.parsed_rows),
     validRows: toNumber(row.valid_rows),
@@ -370,14 +417,18 @@ function classifyAgainstExisting(
       status: "duplicate",
       action: "skip",
       duplicateMaterialId: exactDuplicate.id,
-      warningMessages: [...row.warningMessages, "Такой материал уже есть в справочнике"],
+      warningMessages: [
+        ...row.warningMessages,
+        "Такой материал уже есть в справочнике",
+      ],
     }
   }
 
   const conflicts = existing
     .filter(
       (candidate) =>
-        candidate.normalized_name === normalizedName && candidate.unit_code === unitCode
+        candidate.normalized_name === normalizedName &&
+        candidate.unit_code === unitCode
     )
     .map((candidate) => candidate.id)
 
@@ -410,7 +461,10 @@ export async function getDirectoryMaterialImportJobForWorkspace(
 
   if (error) throw error
   if (!data) return null
-  return { job: mapJob(data as ImportJobDbRow), rows: await getRows(workspaceOwnerId, id) }
+  return {
+    job: mapJob(data as ImportJobDbRow),
+    rows: await getRows(workspaceOwnerId, id),
+  }
 }
 
 export async function createDirectoryMaterialImportJobForWorkspace(
@@ -425,7 +479,8 @@ export async function createDirectoryMaterialImportJobForWorkspace(
     const normalized = normalizeImportRow(rawData, fallbackSourceName)
     const { errors, warnings, ...normalizedData } = normalized
     const dedupeFingerprint = buildDedupeFingerprint(normalizedData)
-    let status: DirectoryMaterialImportRowStatus = errors.length > 0 ? "error" : "valid"
+    let status: DirectoryMaterialImportRowStatus =
+      errors.length > 0 ? "error" : "valid"
 
     if (status !== "error" && seen.has(dedupeFingerprint)) {
       status = "duplicate"
@@ -475,22 +530,24 @@ export async function createDirectoryMaterialImportJobForWorkspace(
 
   if (jobError) throwImportCreateError(jobError)
 
-  const { error: rowsError } = await supabase.from("directory_material_import_rows").insert(
-    rows.map((row) => ({
-      workspace_owner_id: workspaceOwnerId,
-      job_id: jobRow.id,
-      row_number: row.rowNumber,
-      raw_data: row.rawData,
-      normalized_data: row.normalizedData,
-      status: row.status,
-      action: row.action,
-      error_messages: row.errorMessages,
-      warning_messages: row.warningMessages,
-      duplicate_material_id: row.duplicateMaterialId,
-      conflict_material_ids: row.conflictMaterialIds,
-      dedupe_fingerprint: row.dedupeFingerprint,
-    }))
-  )
+  const { error: rowsError } = await supabase
+    .from("directory_material_import_rows")
+    .insert(
+      rows.map((row) => ({
+        workspace_owner_id: workspaceOwnerId,
+        job_id: jobRow.id,
+        row_number: row.rowNumber,
+        raw_data: row.rawData,
+        normalized_data: row.normalizedData,
+        status: row.status,
+        action: row.action,
+        error_messages: row.errorMessages,
+        warning_messages: row.warningMessages,
+        duplicate_material_id: row.duplicateMaterialId,
+        conflict_material_ids: row.conflictMaterialIds,
+        dedupe_fingerprint: row.dedupeFingerprint,
+      }))
+    )
   if (rowsError) throwImportCreateError(rowsError)
 
   return {
@@ -541,8 +598,16 @@ export async function applyDirectoryMaterialImportJobForWorkspace(
   userId: string,
   id: string
 ): Promise<DirectoryMaterialImportApplyResponse> {
-  const current = await getDirectoryMaterialImportJobForWorkspace(workspaceOwnerId, id)
-  if (!current) throw new DirectoryMaterialsApiError("NOT_FOUND", "Import job материалов не найден", 404)
+  const current = await getDirectoryMaterialImportJobForWorkspace(
+    workspaceOwnerId,
+    id
+  )
+  if (!current)
+    throw new DirectoryMaterialsApiError(
+      "NOT_FOUND",
+      "Import job материалов не найден",
+      404
+    )
   if (current.job.status !== "ready_for_review") {
     throw new DirectoryMaterialsApiError(
       "BAD_REQUEST",
@@ -552,12 +617,18 @@ export async function applyDirectoryMaterialImportJobForWorkspace(
   }
 
   const rows = current.rows.filter(
-    (row) => row.action === "create" && (row.status === "valid" || row.status === "warning")
+    (row) =>
+      row.action === "create" &&
+      (row.status === "valid" || row.status === "warning")
   )
   const skippedRows = current.rows.length - rows.length
   await supabase
     .from("directory_material_import_jobs")
-    .update({ status: "applying", started_at: new Date().toISOString(), last_error: null })
+    .update({
+      status: "applying",
+      started_at: new Date().toISOString(),
+      last_error: null,
+    })
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
 
@@ -572,7 +643,11 @@ export async function applyDirectoryMaterialImportJobForWorkspace(
       )
       const { data, error } = await supabase
         .from("directory_materials")
-        .insert(normalizedRows.map((row) => toInsertRow(workspaceOwnerId, userId, row)))
+        .insert(
+          normalizedRows.map((row) =>
+            toInsertRow(workspaceOwnerId, userId, row)
+          )
+        )
         .select("id")
       if (error) throw error
 
@@ -623,7 +698,10 @@ export async function applyDirectoryMaterialImportJobForWorkspace(
       .from("directory_material_import_jobs")
       .update({
         status: "failed",
-        last_error: err instanceof Error ? err.message : "Не удалось применить импорт материалов",
+        last_error:
+          err instanceof Error
+            ? err.message
+            : "Не удалось применить импорт материалов",
         completed_at: new Date().toISOString(),
       })
       .eq("workspace_owner_id", workspaceOwnerId)

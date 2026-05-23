@@ -10,7 +10,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ru" suppressHydrationWarning className="antialiased font-sans">
+    <html lang="ru" suppressHydrationWarning className="font-sans antialiased">
       <body>
         <ThemeProvider>
           <AppQueryProvider>

@@ -45,15 +45,13 @@ describe("directory works client", () => {
   })
 
   it("sends mutation and processing requests with JSON bodies", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockImplementation(() =>
-        Promise.resolve(
-          new Response(JSON.stringify({ data: { id: "work-1" } }), {
-            status: 200,
-          })
-        )
+    const fetchMock = vi.fn().mockImplementation(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ data: { id: "work-1" } }), {
+          status: 200,
+        })
       )
+    )
     vi.stubGlobal("fetch", fetchMock)
 
     await createDirectoryWork(mutationInput)

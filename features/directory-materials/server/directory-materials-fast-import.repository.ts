@@ -81,7 +81,9 @@ function normalizeUnitCode(unit: string) {
 
 function toTextArray(value: unknown) {
   if (!Array.isArray(value)) return []
-  return Array.from(new Set(value.map((item) => cleanString(item)).filter(Boolean))) as string[]
+  return Array.from(
+    new Set(value.map((item) => cleanString(item)).filter(Boolean))
+  ) as string[]
 }
 
 function mapJob(row: ImportJobDbRow): DirectoryMaterialImportJob {
@@ -91,7 +93,8 @@ function mapJob(row: ImportJobDbRow): DirectoryMaterialImportJob {
     sourceName: row.source_name,
     fileName: row.file_name,
     fileMimeType: row.file_mime_type,
-    fileSizeBytes: row.file_size_bytes === null ? null : Number(row.file_size_bytes),
+    fileSizeBytes:
+      row.file_size_bytes === null ? null : Number(row.file_size_bytes),
     totalRows: toNumber(row.total_rows),
     parsedRows: toNumber(row.parsed_rows),
     validRows: toNumber(row.valid_rows),
@@ -112,14 +115,18 @@ function mapJob(row: ImportJobDbRow): DirectoryMaterialImportJob {
 }
 
 function toApplyRow(row: ImportRowDbRow): ApplyRow {
-  const normalizedData = (row.normalized_data ?? {}) as DirectoryMaterialImportNormalizedRow
+  const normalizedData = (row.normalized_data ??
+    {}) as DirectoryMaterialImportNormalizedRow
   return {
     id: row.id,
     rowNumber: row.row_number,
     action: row.action,
     normalizedData,
     duplicateMaterialId: row.duplicate_material_id,
-    materialId: row.action === "create" ? randomUUID() : row.duplicate_material_id ?? randomUUID(),
+    materialId:
+      row.action === "create"
+        ? randomUUID()
+        : (row.duplicate_material_id ?? randomUUID()),
   }
 }
 
@@ -168,12 +175,19 @@ async function getJobRow(workspaceOwnerId: string, id: string) {
   return data as ImportJobDbRow | null
 }
 
-async function markImportJobFailed(workspaceOwnerId: string, id: string, error: unknown) {
+async function markImportJobFailed(
+  workspaceOwnerId: string,
+  id: string,
+  error: unknown
+) {
   await supabase
     .from("directory_material_import_jobs")
     .update({
       status: "failed",
-      last_error: error instanceof Error ? error.message : "Не удалось быстро применить пакет импорта материалов",
+      last_error:
+        error instanceof Error
+          ? error.message
+          : "Не удалось быстро применить пакет импорта материалов",
       completed_at: new Date().toISOString(),
     })
     .eq("workspace_owner_id", workspaceOwnerId)
@@ -194,33 +208,44 @@ async function countPendingApplyRows(workspaceOwnerId: string, jobId: string) {
   return count ?? 0
 }
 
-async function updateMaterialPrices(workspaceOwnerId: string, userId: string, rows: ApplyRow[]) {
+async function updateMaterialPrices(
+  workspaceOwnerId: string,
+  userId: string,
+  rows: ApplyRow[]
+) {
   const appliedIds: string[] = []
 
   for (let index = 0; index < rows.length; index += UPDATE_PRICE_CONCURRENCY) {
     const group = rows.slice(index, index + UPDATE_PRICE_CONCURRENCY)
-    await Promise.all(group.map(async (row) => {
-      if (!row.duplicateMaterialId) return
-      const { error } = await supabase
-        .from("directory_materials")
-        .update({
-          price_amount: row.normalizedData.price,
-          currency_code: row.normalizedData.currencyCode ?? "RUB",
-          updated_by: userId,
-        })
-        .eq("workspace_owner_id", workspaceOwnerId)
-        .eq("id", row.duplicateMaterialId)
-        .is("deleted_at", null)
+    await Promise.all(
+      group.map(async (row) => {
+        if (!row.duplicateMaterialId) return
+        const { error } = await supabase
+          .from("directory_materials")
+          .update({
+            price_amount: row.normalizedData.price,
+            currency_code: row.normalizedData.currencyCode ?? "RUB",
+            updated_by: userId,
+          })
+          .eq("workspace_owner_id", workspaceOwnerId)
+          .eq("id", row.duplicateMaterialId)
+          .is("deleted_at", null)
 
-      if (error) throw error
-      appliedIds.push(row.duplicateMaterialId)
-    }))
+        if (error) throw error
+        appliedIds.push(row.duplicateMaterialId)
+      })
+    )
   }
 
   return appliedIds
 }
 
-async function markImportRowsApplied(workspaceOwnerId: string, jobId: string, rows: ApplyRow[], appliedAt: string) {
+async function markImportRowsApplied(
+  workspaceOwnerId: string,
+  jobId: string,
+  rows: ApplyRow[],
+  appliedAt: string
+) {
   for (let index = 0; index < rows.length; index += MARK_ROWS_CHUNK_SIZE) {
     const group = rows.slice(index, index + MARK_ROWS_CHUNK_SIZE)
     const { error } = await supabase
@@ -228,7 +253,10 @@ async function markImportRowsApplied(workspaceOwnerId: string, jobId: string, ro
       .update({ status: "applied", applied_at: appliedAt })
       .eq("workspace_owner_id", workspaceOwnerId)
       .eq("job_id", jobId)
-      .in("id", group.map((row) => row.id))
+      .in(
+        "id",
+        group.map((row) => row.id)
+      )
 
     if (error) throw error
   }
@@ -241,22 +269,40 @@ export async function applyFastDirectoryMaterialImportBatchForWorkspace(
   input: DirectoryMaterialImportApplyInput = {}
 ): Promise<DirectoryMaterialImportApplyResponse> {
   const jobRow = await getJobRow(workspaceOwnerId, id)
-  if (!jobRow) throw new DirectoryMaterialsApiError("NOT_FOUND", "Import job материалов не найден", 404)
+  if (!jobRow)
+    throw new DirectoryMaterialsApiError(
+      "NOT_FOUND",
+      "Import job материалов не найден",
+      404
+    )
   if (!["ready_for_review", "applying"].includes(jobRow.status)) {
-    throw new DirectoryMaterialsApiError("BAD_REQUEST", "Импорт материалов можно применять только после загрузки всех пакетов", 400)
+    throw new DirectoryMaterialsApiError(
+      "BAD_REQUEST",
+      "Импорт материалов можно применять только после загрузки всех пакетов",
+      400
+    )
   }
 
   const requestedBatchSize = input.batchSize ?? DEFAULT_FAST_APPLY_BATCH_SIZE
-  const batchSize = Math.max(1, Math.min(requestedBatchSize, MAX_FAST_APPLY_BATCH_SIZE))
+  const batchSize = Math.max(
+    1,
+    Math.min(requestedBatchSize, MAX_FAST_APPLY_BATCH_SIZE)
+  )
   await supabase
     .from("directory_material_import_jobs")
-    .update({ status: "applying", started_at: jobRow.started_at ?? new Date().toISOString(), last_error: null })
+    .update({
+      status: "applying",
+      started_at: jobRow.started_at ?? new Date().toISOString(),
+      last_error: null,
+    })
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
 
   const { data, error } = await supabase
     .from("directory_material_import_rows")
-    .select("id,job_id,row_number,normalized_data,status,action,duplicate_material_id,applied_at")
+    .select(
+      "id,job_id,row_number,normalized_data,status,action,duplicate_material_id,applied_at"
+    )
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("job_id", id)
     .in("action", ["create", "update"])
@@ -269,10 +315,17 @@ export async function applyFastDirectoryMaterialImportBatchForWorkspace(
   const rowsToApply = ((data ?? []) as ImportRowDbRow[]).map(toApplyRow)
 
   if (rowsToApply.length === 0) {
-    const skippedRows = Math.max(0, toNumber(jobRow.total_rows) - toNumber(jobRow.applied_rows))
+    const skippedRows = Math.max(
+      0,
+      toNumber(jobRow.total_rows) - toNumber(jobRow.applied_rows)
+    )
     const { data: completedJob, error: updateError } = await supabase
       .from("directory_material_import_jobs")
-      .update({ status: "completed", skipped_rows: skippedRows, completed_at: new Date().toISOString() })
+      .update({
+        status: "completed",
+        skipped_rows: skippedRows,
+        completed_at: new Date().toISOString(),
+      })
       .eq("workspace_owner_id", workspaceOwnerId)
       .eq("id", id)
       .select("*")
@@ -301,11 +354,17 @@ export async function applyFastDirectoryMaterialImportBatchForWorkspace(
     if (createRows.length > 0) {
       const { error: insertError } = await supabase
         .from("directory_materials")
-        .insert(createRows.map((row) => toInsertRow(workspaceOwnerId, userId, row)))
+        .insert(
+          createRows.map((row) => toInsertRow(workspaceOwnerId, userId, row))
+        )
       if (insertError) throw insertError
     }
 
-    const updatedIds = await updateMaterialPrices(workspaceOwnerId, userId, updateRows)
+    const updatedIds = await updateMaterialPrices(
+      workspaceOwnerId,
+      userId,
+      updateRows
+    )
     const appliedAt = new Date().toISOString()
     await markImportRowsApplied(workspaceOwnerId, id, rowsToApply, appliedAt)
 
@@ -313,7 +372,9 @@ export async function applyFastDirectoryMaterialImportBatchForWorkspace(
     const hasMore = remainingRows > 0
     const nextAppliedRows = toNumber(jobRow.applied_rows) + rowsToApply.length
     const completed = !hasMore
-    const skippedRows = completed ? Math.max(0, toNumber(jobRow.total_rows) - nextAppliedRows) : toNumber(jobRow.skipped_rows)
+    const skippedRows = completed
+      ? Math.max(0, toNumber(jobRow.total_rows) - nextAppliedRows)
+      : toNumber(jobRow.skipped_rows)
     const { data: updatedJob, error: updateError } = await supabase
       .from("directory_material_import_jobs")
       .update({

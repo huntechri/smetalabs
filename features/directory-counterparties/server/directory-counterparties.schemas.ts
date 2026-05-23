@@ -22,8 +22,12 @@ const requiredTrimmedString = (maxLength: number, message: string) =>
     return value.trim().replace(/\s+/g, " ")
   }, z.string().min(1, message).max(maxLength))
 
-const directoryCounterpartyStatusSchema = z.enum(["active", "archived"]).default("active")
-const directoryCounterpartiesSortSchema = z.enum(["relevance", "updated_desc", "name_asc"]).default("relevance")
+const directoryCounterpartyStatusSchema = z
+  .enum(["active", "archived"])
+  .default("active")
+const directoryCounterpartiesSortSchema = z
+  .enum(["relevance", "updated_desc", "name_asc"])
+  .default("relevance")
 const directoryCounterpartiesCursorSchema = z.preprocess((value) => {
   if (value === undefined || value === null || value === "") return 0
   return Number(value)
@@ -41,34 +45,72 @@ export const directoryCounterpartiesListQuerySchema = z.object({
   sort: directoryCounterpartiesSortSchema,
 })
 
-export const directoryCounterpartyMutationSchema = z.object({
-  name: requiredTrimmedString(240, "Название или ФИО обязательно"),
-  type: z.enum(["customer", "contractor"]),
-  legalStatus: z.enum(["juridical", "individual"]),
-  inn: nullableTrimmedString(20),
-  phone: nullableTrimmedString(40),
-  legalAddress: nullableTrimmedString(500),
-  bankName: nullableTrimmedString(240),
-  bik: nullableTrimmedString(20),
-  corrAccount: nullableTrimmedString(40),
-  accountNumber: nullableTrimmedString(40),
-  passportSeries: nullableTrimmedString(20),
-  passportNumber: nullableTrimmedString(20),
-  passportIssuedBy: nullableTrimmedString(500),
-  passportIssueDate: nullableTrimmedString(20),
-  passportDepartmentCode: nullableTrimmedString(20),
-  registrationAddress: nullableTrimmedString(500),
-}).strict()
+export const directoryCounterpartyMutationSchema = z
+  .object({
+    name: requiredTrimmedString(240, "Название или ФИО обязательно"),
+    type: z.enum(["customer", "contractor"]),
+    legalStatus: z.enum(["juridical", "individual"]),
+    inn: nullableTrimmedString(20),
+    phone: nullableTrimmedString(40),
+    legalAddress: nullableTrimmedString(500),
+    bankName: nullableTrimmedString(240),
+    bik: nullableTrimmedString(20),
+    corrAccount: nullableTrimmedString(40),
+    accountNumber: nullableTrimmedString(40),
+    passportSeries: nullableTrimmedString(20),
+    passportNumber: nullableTrimmedString(20),
+    passportIssuedBy: nullableTrimmedString(500),
+    passportIssueDate: nullableTrimmedString(20),
+    passportDepartmentCode: nullableTrimmedString(20),
+    registrationAddress: nullableTrimmedString(500),
+  })
+  .strict()
 
 export const directoryCounterpartyIdSchema = z.string().uuid()
 
-export function normalizeDirectoryCounterpartiesListParams(params: DirectoryCounterpartiesListParams): Required<Pick<DirectoryCounterpartiesListParams, "status" | "limit" | "cursor" | "sort">> & Omit<DirectoryCounterpartiesListParams, "status" | "limit" | "cursor" | "sort"> {
-  return { ...params, status: params.status ?? "active", limit: params.limit ?? 50, cursor: params.cursor ?? 0, sort: params.sort ?? "relevance" }
+export function normalizeDirectoryCounterpartiesListParams(
+  params: DirectoryCounterpartiesListParams
+): Required<
+  Pick<
+    DirectoryCounterpartiesListParams,
+    "status" | "limit" | "cursor" | "sort"
+  >
+> &
+  Omit<
+    DirectoryCounterpartiesListParams,
+    "status" | "limit" | "cursor" | "sort"
+  > {
+  return {
+    ...params,
+    status: params.status ?? "active",
+    limit: params.limit ?? 50,
+    cursor: params.cursor ?? 0,
+    sort: params.sort ?? "relevance",
+  }
 }
 
-export function parseDirectoryCounterpartiesListParams(searchParams: URLSearchParams): Required<Pick<DirectoryCounterpartiesListParams, "status" | "limit" | "cursor" | "sort">> & Omit<DirectoryCounterpartiesListParams, "status" | "limit" | "cursor" | "sort"> {
-  return normalizeDirectoryCounterpartiesListParams(directoryCounterpartiesListQuerySchema.parse(Object.fromEntries(searchParams)))
+export function parseDirectoryCounterpartiesListParams(
+  searchParams: URLSearchParams
+): Required<
+  Pick<
+    DirectoryCounterpartiesListParams,
+    "status" | "limit" | "cursor" | "sort"
+  >
+> &
+  Omit<
+    DirectoryCounterpartiesListParams,
+    "status" | "limit" | "cursor" | "sort"
+  > {
+  return normalizeDirectoryCounterpartiesListParams(
+    directoryCounterpartiesListQuerySchema.parse(
+      Object.fromEntries(searchParams)
+    )
+  )
 }
 
-export function parseDirectoryCounterpartyMutationBody(body: unknown) { return directoryCounterpartyMutationSchema.parse(body) }
-export function parseDirectoryCounterpartyId(id: string) { return directoryCounterpartyIdSchema.parse(id) }
+export function parseDirectoryCounterpartyMutationBody(body: unknown) {
+  return directoryCounterpartyMutationSchema.parse(body)
+}
+export function parseDirectoryCounterpartyId(id: string) {
+  return directoryCounterpartyIdSchema.parse(id)
+}

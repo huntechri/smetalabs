@@ -28,11 +28,16 @@ export async function handleProjectEstimateRecordsListRequest(
 ) {
   try {
     const projectId = parseProjectId(projectIdParam)
-    const params = parseProjectEstimateRecordsListParams(request.nextUrl.searchParams)
+    const params = parseProjectEstimateRecordsListParams(
+      request.nextUrl.searchParams
+    )
     const response = await listProjectEstimateRecords(projectId, params)
     return NextResponse.json(response)
   } catch (err) {
-    return handleProjectsRouteError(err, "[GET /api/projects/[id]/estimate-records]")
+    return handleProjectsRouteError(
+      err,
+      "[GET /api/projects/[id]/estimate-records]"
+    )
   }
 }
 
@@ -47,7 +52,10 @@ export async function handleProjectEstimateRecordCreateRequest(
     const response = await createProjectEstimateRecord(projectId, input)
     return NextResponse.json(response, { status: 201 })
   } catch (err) {
-    return handleProjectsRouteError(err, "[POST /api/projects/[id]/estimate-records]")
+    return handleProjectsRouteError(
+      err,
+      "[POST /api/projects/[id]/estimate-records]"
+    )
   }
 }
 
@@ -61,10 +69,17 @@ export async function handleProjectEstimateRecordUpdateRequest(
     const recordId = parseEstimateRecordId(recordIdParam)
     const body = await readJsonBody(request)
     const input = parseProjectEstimateRecordMutationBody(body)
-    const response = await updateProjectEstimateRecord(projectId, recordId, input)
+    const response = await updateProjectEstimateRecord(
+      projectId,
+      recordId,
+      input
+    )
     return NextResponse.json(response)
   } catch (err) {
-    return handleProjectsRouteError(err, "[PATCH /api/projects/[id]/estimate-records/[recordId]]")
+    return handleProjectsRouteError(
+      err,
+      "[PATCH /api/projects/[id]/estimate-records/[recordId]]"
+    )
   }
 }
 
@@ -78,6 +93,9 @@ export async function handleProjectEstimateRecordDeleteRequest(
     const response = await deleteProjectEstimateRecord(projectId, recordId)
     return NextResponse.json(response)
   } catch (err) {
-    return handleProjectsRouteError(err, "[DELETE /api/projects/[id]/estimate-records/[recordId]]")
+    return handleProjectsRouteError(
+      err,
+      "[DELETE /api/projects/[id]/estimate-records/[recordId]]"
+    )
   }
 }

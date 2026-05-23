@@ -48,7 +48,9 @@ export function SetPasswordForm({
     setIsPending(false)
 
     if (error) {
-      setError("Не удалось сохранить пароль. Откройте ссылку из приглашения ещё раз или запросите новое приглашение.")
+      setError(
+        "Не удалось сохранить пароль. Откройте ссылку из приглашения ещё раз или запросите новое приглашение."
+      )
       return
     }
 
@@ -64,7 +66,8 @@ export function SetPasswordForm({
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Придумайте пароль</h1>
                 <p className="text-balance text-muted-foreground">
-                  Установите пароль для входа в SmetaLab после принятия приглашения.
+                  Установите пароль для входа в SmetaLab после принятия
+                  приглашения.
                 </p>
               </div>
 
@@ -82,7 +85,9 @@ export function SetPasswordForm({
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="confirmPassword">Повторите пароль</FieldLabel>
+                <FieldLabel htmlFor="confirmPassword">
+                  Повторите пароль
+                </FieldLabel>
                 <Input
                   id="confirmPassword"
                   type="password"

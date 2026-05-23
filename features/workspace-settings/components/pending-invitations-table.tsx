@@ -14,12 +14,7 @@ import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,11 +50,13 @@ function InvitationStatusBadge({
 }: {
   status: WorkspaceInvitation["status"]
 }) {
-  const variants: Record<WorkspaceInvitation["status"], "secondary" | "outline"> =
-    {
-      pending: "secondary",
-      expired: "outline",
-    }
+  const variants: Record<
+    WorkspaceInvitation["status"],
+    "secondary" | "outline"
+  > = {
+    pending: "secondary",
+    expired: "outline",
+  }
   const colors: Record<WorkspaceInvitation["status"], string> = {
     pending: "bg-amber-500/10 text-amber-600 hover:bg-amber-500/10",
     expired: "bg-destructive/10 text-destructive hover:bg-destructive/10",
@@ -99,18 +96,21 @@ function InvitationRow({
     <TableRow>
       <TableCell>
         <div className="flex items-center gap-1.5">
-          <Envelope className="size-3 text-muted-foreground shrink-0" />
-          <span className="truncate text-xs font-mono">{invitation.email}</span>
+          <Envelope className="size-3 shrink-0 text-muted-foreground" />
+          <span className="truncate font-mono text-xs">{invitation.email}</span>
         </div>
       </TableCell>
-      <TableCell className="text-xs">{ROLE_LABELS[invitation.role as keyof typeof ROLE_LABELS] ?? invitation.role}</TableCell>
-      <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
+      <TableCell className="text-xs">
+        {ROLE_LABELS[invitation.role as keyof typeof ROLE_LABELS] ??
+          invitation.role}
+      </TableCell>
+      <TableCell className="hidden text-xs text-muted-foreground sm:table-cell">
         {invitation.invitedBy}
       </TableCell>
-      <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+      <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
         {formatDate(invitation.invitedAt)}
       </TableCell>
-      <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">
+      <TableCell className="hidden text-xs text-muted-foreground lg:table-cell">
         {formatDate(invitation.expiresAt)}
       </TableCell>
       <TableCell>
@@ -169,7 +169,14 @@ function InvitationRow({
 }
 
 export function PendingInvitationsTable() {
-  const { invitations, loading, error, refetch, cancelInvitation, resendInvitation } = useInvitations()
+  const {
+    invitations,
+    loading,
+    error,
+    refetch,
+    cancelInvitation,
+    resendInvitation,
+  } = useInvitations()
   const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [resendingId, setResendingId] = useState<string | null>(null)
 
@@ -191,7 +198,9 @@ export function PendingInvitationsTable() {
       await resendInvitation(id)
       toast.success("Приглашение отправлено повторно")
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Ошибка повторной отправки")
+      toast.error(
+        err instanceof Error ? err.message : "Ошибка повторной отправки"
+      )
     } finally {
       setResendingId(null)
     }
@@ -200,11 +209,11 @@ export function PendingInvitationsTable() {
   // ── Loading skeleton ──
   if (loading) {
     return (
-      <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
+      <Card className="overflow-hidden border-dashed border-muted-foreground/30">
         <CardHeader>
           <Skeleton className="h-5 w-48" />
         </CardHeader>
-        <CardContent className="p-4 space-y-3">
+        <CardContent className="space-y-3 p-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3">
               <Skeleton className="h-4 flex-1" />
@@ -220,7 +229,7 @@ export function PendingInvitationsTable() {
   // ── Error state ──
   if (error && invitations.length === 0) {
     return (
-      <Card className="border-dashed border-destructive/30 overflow-hidden">
+      <Card className="overflow-hidden border-dashed border-destructive/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Clock className="size-4" />
@@ -228,7 +237,7 @@ export function PendingInvitationsTable() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
-          <p className="text-sm text-destructive mb-3">Ошибка: {error}</p>
+          <p className="mb-3 text-sm text-destructive">Ошибка: {error}</p>
           <Button variant="outline" size="sm" onClick={refetch}>
             Повторить
           </Button>
@@ -240,7 +249,7 @@ export function PendingInvitationsTable() {
   // ── Empty state ──
   if (invitations.length === 0) {
     return (
-      <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
+      <Card className="overflow-hidden border-dashed border-muted-foreground/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Clock className="size-4" />
@@ -248,14 +257,16 @@ export function PendingInvitationsTable() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 text-center">
-          <p className="text-xs text-muted-foreground">Нет ожидающих приглашений</p>
+          <p className="text-xs text-muted-foreground">
+            Нет ожидающих приглашений
+          </p>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card className="border-dashed border-muted-foreground/30 overflow-hidden">
+    <Card className="overflow-hidden border-dashed border-muted-foreground/30">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Clock className="size-4" />
@@ -276,9 +287,7 @@ export function PendingInvitationsTable() {
                 <TableHead className="hidden md:table-cell">
                   Отправлено
                 </TableHead>
-                <TableHead className="hidden lg:table-cell">
-                  Истекает
-                </TableHead>
+                <TableHead className="hidden lg:table-cell">Истекает</TableHead>
                 <TableHead>Статус</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
@@ -299,18 +308,20 @@ export function PendingInvitationsTable() {
         </div>
 
         {/* Mobile card list */}
-        <div className="sm:hidden divide-y divide-border/50">
+        <div className="divide-y divide-border/50 sm:hidden">
           {invitations.map((inv) => (
             <div key={inv.id} className="flex items-center gap-3 px-4 py-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <Envelope className="size-3 text-muted-foreground shrink-0" />
-                  <p className="truncate text-xs font-mono">{inv.email}</p>
+                  <Envelope className="size-3 shrink-0 text-muted-foreground" />
+                  <p className="truncate font-mono text-xs">{inv.email}</p>
                 </div>
                 <div className="mt-1 flex items-center gap-2">
                   <InvitationStatusBadge status={inv.status} />
                   <span className="text-[0.6rem] text-muted-foreground">
-                    {ROLE_LABELS[inv.role as keyof typeof ROLE_LABELS] ?? inv.role} · {inv.invitedBy}
+                    {ROLE_LABELS[inv.role as keyof typeof ROLE_LABELS] ??
+                      inv.role}{" "}
+                    · {inv.invitedBy}
                   </span>
                 </div>
                 <p className="mt-0.5 text-[0.6rem] text-muted-foreground">
@@ -319,7 +330,11 @@ export function PendingInvitationsTable() {
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="size-7 shrink-0 p-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="size-7 shrink-0 p-0"
+                  >
                     <DotsThree className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -328,7 +343,9 @@ export function PendingInvitationsTable() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => handleResend(inv.id)}
-                    disabled={resendingId === inv.id || inv.status === "expired"}
+                    disabled={
+                      resendingId === inv.id || inv.status === "expired"
+                    }
                   >
                     {resendingId === inv.id ? (
                       <Spinner className="size-3.5 animate-spin" />

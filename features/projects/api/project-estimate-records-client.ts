@@ -6,12 +6,19 @@ import type {
 } from "@/types/project-estimate-record"
 import { throwProjectsApiError } from "./projects-errors"
 
-function appendParam(params: URLSearchParams, key: string, value: string | number | undefined) {
+function appendParam(
+  params: URLSearchParams,
+  key: string,
+  value: string | number | undefined
+) {
   if (value === undefined || value === "") return
   params.set(key, String(value))
 }
 
-function buildListUrl(projectId: string, query: ProjectEstimateRecordsListParams = {}) {
+function buildListUrl(
+  projectId: string,
+  query: ProjectEstimateRecordsListParams = {}
+) {
   const params = new URLSearchParams()
 
   appendParam(params, "limit", query.limit)

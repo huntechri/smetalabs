@@ -36,13 +36,18 @@ function getNumberParam(searchParams: ReadonlySearchParams, key: string) {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
 }
 
-function getSortParam(searchParams: ReadonlySearchParams): DirectoryCounterpartiesSort | undefined {
+function getSortParam(
+  searchParams: ReadonlySearchParams
+): DirectoryCounterpartiesSort | undefined {
   const sort = searchParams.get("sort")
-  if (sort === "relevance" || sort === "updated_desc" || sort === "name_asc") return sort
+  if (sort === "relevance" || sort === "updated_desc" || sort === "name_asc")
+    return sort
   return undefined
 }
 
-function getListParams(searchParams: ReadonlySearchParams): DirectoryCounterpartiesListParams {
+function getListParams(
+  searchParams: ReadonlySearchParams
+): DirectoryCounterpartiesListParams {
   return {
     q: getStringParam(searchParams, "q"),
     status: searchParams.get("status") === "archived" ? "archived" : "active",
@@ -67,14 +72,18 @@ export function useDirectoryCounterparties() {
   })
 
   const invalidateCounterparties = async () => {
-    await queryClient.invalidateQueries({ queryKey: directoryCounterpartiesQueryKeys.all })
+    await queryClient.invalidateQueries({
+      queryKey: directoryCounterpartiesQueryKeys.all,
+    })
   }
 
   const createMutation = useMutation({
     mutationFn: createDirectoryCounterparty,
     onSuccess: async (response) => {
       await invalidateCounterparties()
-      await queryClient.invalidateQueries({ queryKey: directoryCounterpartiesQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryCounterpartiesQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -82,7 +91,9 @@ export function useDirectoryCounterparties() {
     mutationFn: updateDirectoryCounterparty,
     onSuccess: async (response) => {
       await invalidateCounterparties()
-      await queryClient.invalidateQueries({ queryKey: directoryCounterpartiesQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryCounterpartiesQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -90,7 +101,9 @@ export function useDirectoryCounterparties() {
     mutationFn: archiveDirectoryCounterparty,
     onSuccess: async (response) => {
       await invalidateCounterparties()
-      await queryClient.invalidateQueries({ queryKey: directoryCounterpartiesQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryCounterpartiesQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -106,7 +119,10 @@ export function useDirectoryCounterparties() {
       updateMutation.error?.message ??
       archiveMutation.error?.message ??
       null,
-    saving: createMutation.isPending || updateMutation.isPending || archiveMutation.isPending,
+    saving:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      archiveMutation.isPending,
     refetch: async () => {
       await counterpartiesQuery.refetch()
     },
@@ -114,7 +130,10 @@ export function useDirectoryCounterparties() {
       const response = await createMutation.mutateAsync(input)
       return response.data
     },
-    updateCounterparty: async (id: string, input: DirectoryCounterpartyMutationInput) => {
+    updateCounterparty: async (
+      id: string,
+      input: DirectoryCounterpartyMutationInput
+    ) => {
       const response = await updateMutation.mutateAsync({ id, input })
       return response.data
     },

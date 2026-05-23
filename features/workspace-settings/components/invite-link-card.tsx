@@ -30,7 +30,16 @@ import { useInviteLink } from "../hooks/use-workspace-settings"
 const roles: Role[] = ["admin", "manager", "estimator", "viewer"]
 
 export function InviteLinkCard() {
-  const { enabled, url, defaultRole, loading, saving, error, updateInviteLink, refetch } = useInviteLink()
+  const {
+    enabled,
+    url,
+    defaultRole,
+    loading,
+    saving,
+    error,
+    updateInviteLink,
+    refetch,
+  } = useInviteLink()
 
   // ── Loading skeleton ──
   if (loading) {
@@ -109,7 +118,7 @@ export function InviteLinkCard() {
             id="invite-link"
             value={enabled ? (url ?? "—") : "Ссылка отключена"}
             readOnly
-            className="h-8 text-xs font-mono"
+            className="h-8 font-mono text-xs"
           />
         </div>
         <div className="flex items-end">
@@ -150,7 +159,9 @@ export function InviteLinkCard() {
         <div className="px-6 pb-4">
           <p className="text-xs text-destructive">
             Ошибка: {error}{" "}
-            <button onClick={refetch} className="underline">Повторить</button>
+            <button onClick={refetch} className="underline">
+              Повторить
+            </button>
           </p>
         </div>
       )}

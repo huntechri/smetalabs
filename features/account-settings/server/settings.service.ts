@@ -28,7 +28,8 @@ export async function getMergedSettings(userId: string, userEmail: string) {
         workspaceName: workspaceProfile?.workspace_name ?? "",
         companyLegalName: workspaceSettings?.workspace?.companyLegalName ?? "",
         companyType: workspaceSettings?.workspace?.companyType ?? "",
-        registrationNumber: workspaceSettings?.workspace?.registrationNumber ?? "",
+        registrationNumber:
+          workspaceSettings?.workspace?.registrationNumber ?? "",
         taxNumber: workspaceSettings?.workspace?.taxNumber ?? "",
         legalAddress: workspaceSettings?.workspace?.legalAddress ?? "",
         billingEmail: workspaceSettings?.workspace?.billingEmail ?? "",

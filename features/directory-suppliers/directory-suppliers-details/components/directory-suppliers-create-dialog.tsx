@@ -56,7 +56,8 @@ export function DirectorySuppliersFormDialog({
 }: DirectorySuppliersFormDialogProps) {
   const [name, setName] = useState("")
   const [color, setColor] = useState("#64748B")
-  const [legalStatus, setLegalStatus] = useState<DirectorySupplierLegalStatus>("juridical")
+  const [legalStatus, setLegalStatus] =
+    useState<DirectorySupplierLegalStatus>("juridical")
   const [inn, setInn] = useState("")
   const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
@@ -93,7 +94,9 @@ export function DirectorySuppliersFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{supplier ? "Редактировать поставщика" : "Новый поставщик"}</DialogTitle>
+          <DialogTitle>
+            {supplier ? "Редактировать поставщика" : "Новый поставщик"}
+          </DialogTitle>
           <DialogDescription>
             Заполните основные данные поставщика.
           </DialogDescription>
@@ -102,14 +105,26 @@ export function DirectorySuppliersFormDialog({
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="supplier-name">Название или ФИО</Label>
-            <Input id="supplier-name" placeholder="Введите название" value={name} onChange={(event) => setName(event.target.value)} />
+            <Input
+              id="supplier-name"
+              placeholder="Введите название"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="supplier-status">Тип</Label>
-              <Select value={legalStatus} onValueChange={(value) => setLegalStatus(value as DirectorySupplierLegalStatus)}>
-                <SelectTrigger id="supplier-status" className="w-full"><SelectValue placeholder="Выберите тип" /></SelectTrigger>
+              <Select
+                value={legalStatus}
+                onValueChange={(value) =>
+                  setLegalStatus(value as DirectorySupplierLegalStatus)
+                }
+              >
+                <SelectTrigger id="supplier-status" className="w-full">
+                  <SelectValue placeholder="Выберите тип" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="juridical">Юр. лицо</SelectItem>
                   <SelectItem value="individual">Физ. лицо</SelectItem>
@@ -120,10 +135,14 @@ export function DirectorySuppliersFormDialog({
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="supplier-color">Цвет</Label>
               <Select value={color} onValueChange={setColor}>
-                <SelectTrigger id="supplier-color" className="w-full"><SelectValue placeholder="Выберите цвет" /></SelectTrigger>
+                <SelectTrigger id="supplier-color" className="w-full">
+                  <SelectValue placeholder="Выберите цвет" />
+                </SelectTrigger>
                 <SelectContent>
                   {colorPresets.map((preset) => (
-                    <SelectItem key={preset.value} value={preset.value}>{preset.label} {preset.value}</SelectItem>
+                    <SelectItem key={preset.value} value={preset.value}>
+                      {preset.label} {preset.value}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -133,31 +152,64 @@ export function DirectorySuppliersFormDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="supplier-inn">ИНН</Label>
-              <Input id="supplier-inn" placeholder="Введите ИНН" value={inn} onChange={(event) => setInn(event.target.value)} />
+              <Input
+                id="supplier-inn"
+                placeholder="Введите ИНН"
+                value={inn}
+                onChange={(event) => setInn(event.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="supplier-phone">Телефон</Label>
-              <Input id="supplier-phone" placeholder="+7 (XXX) XXX-XX-XX" value={phone} onChange={(event) => setPhone(event.target.value)} />
+              <Input
+                id="supplier-phone"
+                placeholder="+7 (XXX) XXX-XX-XX"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+              />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="supplier-email">Email</Label>
-            <Input id="supplier-email" placeholder="mail@example.com" value={email} onChange={(event) => setEmail(event.target.value)} />
+            <Input
+              id="supplier-email"
+              placeholder="mail@example.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="supplier-address">Адрес</Label>
-            <Input id="supplier-address" placeholder="Введите адрес" value={address} onChange={(event) => setAddress(event.target.value)} />
+            <Input
+              id="supplier-address"
+              placeholder="Введите адрес"
+              value={address}
+              onChange={(event) => setAddress(event.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="supplier-notes">Примечание</Label>
-            <Textarea id="supplier-notes" placeholder="Дополнительная информация" value={notes} onChange={(event) => setNotes(event.target.value)} />
+            <Textarea
+              id="supplier-notes"
+              placeholder="Дополнительная информация"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+            />
           </div>
         </div>
 
         <DialogFooter showCloseButton={false}>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Отмена</Button>
-          <Button onClick={handleSubmit} disabled={saving || !name.trim()}>{supplier ? "Сохранить" : "Создать"}</Button>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={saving}
+          >
+            Отмена
+          </Button>
+          <Button onClick={handleSubmit} disabled={saving || !name.trim()}>
+            {supplier ? "Сохранить" : "Создать"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

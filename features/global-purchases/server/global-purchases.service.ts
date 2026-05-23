@@ -45,7 +45,11 @@ export async function requireGlobalPurchasesReadContext(): Promise<GlobalPurchas
   const { data, error } = await client.auth.getUser()
 
   if (error || !data.user) {
-    throw new GlobalPurchasesApiError("UNAUTHORIZED", "Требуется аутентификация", 401)
+    throw new GlobalPurchasesApiError(
+      "UNAUTHORIZED",
+      "Требуется аутентификация",
+      401
+    )
   }
 
   try {
@@ -55,12 +59,17 @@ export async function requireGlobalPurchasesReadContext(): Promise<GlobalPurchas
       workspaceOwnerId,
       cacheTags: {
         list: globalPurchasesCacheTags.list(workspaceOwnerId),
-        detail: (purchaseId: string) => globalPurchasesCacheTags.detail(workspaceOwnerId, purchaseId),
+        detail: (purchaseId: string) =>
+          globalPurchasesCacheTags.detail(workspaceOwnerId, purchaseId),
       },
     }
   } catch (err) {
     if (err instanceof Error && err.message === "WORKSPACE_MEMBER_REQUIRED") {
-      throw new GlobalPurchasesApiError("FORBIDDEN", "Нет доступа к workspace", 403)
+      throw new GlobalPurchasesApiError(
+        "FORBIDDEN",
+        "Нет доступа к workspace",
+        403
+      )
     }
     throw err
   }
@@ -71,13 +80,20 @@ export async function requireGlobalPurchasesWriteContext(): Promise<GlobalPurcha
   const role = await getWorkspaceRole(context.userId, context.workspaceOwnerId)
 
   if (!role || !WRITE_ROLES.has(role)) {
-    throw new GlobalPurchasesApiError("FORBIDDEN", "Недостаточно прав для изменения закупок", 403)
+    throw new GlobalPurchasesApiError(
+      "FORBIDDEN",
+      "Недостаточно прав для изменения закупок",
+      403
+    )
   }
 
   return context
 }
 
-function revalidateGlobalPurchaseTags(context: GlobalPurchasesContext, purchaseId?: string) {
+function revalidateGlobalPurchaseTags(
+  context: GlobalPurchasesContext,
+  purchaseId?: string
+) {
   revalidateTag(context.cacheTags.list, "max")
   if (purchaseId) revalidateTag(context.cacheTags.detail(purchaseId), "max")
 }
@@ -85,12 +101,22 @@ function revalidateGlobalPurchaseTags(context: GlobalPurchasesContext, purchaseI
 export async function listGlobalPurchases(params: GlobalPurchasesListParams) {
   const context = await requireGlobalPurchasesReadContext()
   const normalizedParams = normalizeGlobalPurchasesListParams(params)
-  const cacheKey = stableHash({ workspaceOwnerId: context.workspaceOwnerId, normalizedParams })
+  const cacheKey = stableHash({
+    workspaceOwnerId: context.workspaceOwnerId,
+    normalizedParams,
+  })
 
   return unstable_cache(
-    () => listGlobalPurchasesForWorkspace(context.workspaceOwnerId, normalizedParams),
+    () =>
+      listGlobalPurchasesForWorkspace(
+        context.workspaceOwnerId,
+        normalizedParams
+      ),
     ["global-purchases:list", cacheKey],
-    { revalidate: LIST_CACHE_REVALIDATE_SECONDS, tags: [context.cacheTags.list] }
+    {
+      revalidate: LIST_CACHE_REVALIDATE_SECONDS,
+      tags: [context.cacheTags.list],
+    }
   )()
 }
 
@@ -99,11 +125,21 @@ export async function searchGlobalPurchaseMaterialOptions(query: string) {
   const normalizedQuery = query.trim().replace(/\s+/g, " ")
   if (normalizedQuery.length < 2) return { data: [] }
 
-  const cacheKey = stableHash({ workspaceOwnerId: context.workspaceOwnerId, normalizedQuery })
+  const cacheKey = stableHash({
+    workspaceOwnerId: context.workspaceOwnerId,
+    normalizedQuery,
+  })
   const data = await unstable_cache(
-    () => searchGlobalPurchaseMaterialOptionsForWorkspace(context.workspaceOwnerId, normalizedQuery),
+    () =>
+      searchGlobalPurchaseMaterialOptionsForWorkspace(
+        context.workspaceOwnerId,
+        normalizedQuery
+      ),
     ["global-purchases:material-options", cacheKey],
-    { revalidate: LIST_CACHE_REVALIDATE_SECONDS, tags: [context.cacheTags.list] }
+    {
+      revalidate: LIST_CACHE_REVALIDATE_SECONDS,
+      tags: [context.cacheTags.list],
+    }
   )()
 
   return { data }
@@ -120,19 +156,30 @@ export async function getGlobalPurchase(id: string) {
     }
   )()
 
-  if (!purchase) throw new GlobalPurchasesApiError("NOT_FOUND", "Закупка не найдена", 404)
-  return { data: purchase, meta: { cacheTag: context.cacheTags.detail(purchase.id) } }
+  if (!purchase)
+    throw new GlobalPurchasesApiError("NOT_FOUND", "Закупка не найдена", 404)
+  return {
+    data: purchase,
+    meta: { cacheTag: context.cacheTags.detail(purchase.id) },
+  }
 }
 
 export async function createGlobalPurchase(input: GlobalPurchaseMutationInput) {
   const context = await requireGlobalPurchasesWriteContext()
-  const purchase = await createGlobalPurchaseForWorkspace(context.workspaceOwnerId, context.userId, input)
+  const purchase = await createGlobalPurchaseForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    input
+  )
 
   revalidateGlobalPurchaseTags(context, purchase.id)
   return { data: purchase }
 }
 
-export async function updateGlobalPurchase(id: string, input: GlobalPurchaseMutationInput) {
+export async function updateGlobalPurchase(
+  id: string,
+  input: GlobalPurchaseMutationInput
+) {
   const context = await requireGlobalPurchasesWriteContext()
   const purchase = await updateGlobalPurchaseForWorkspace(
     context.workspaceOwnerId,
@@ -147,7 +194,11 @@ export async function updateGlobalPurchase(id: string, input: GlobalPurchaseMuta
 
 export async function archiveGlobalPurchase(id: string) {
   const context = await requireGlobalPurchasesWriteContext()
-  const purchase = await archiveGlobalPurchaseForWorkspace(context.workspaceOwnerId, context.userId, id)
+  const purchase = await archiveGlobalPurchaseForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id
+  )
 
   revalidateGlobalPurchaseTags(context, purchase.id)
   return { data: purchase }
@@ -183,7 +234,10 @@ export async function exportGlobalPurchases(
   params: GlobalPurchasesListParams
 ) {
   const context = await requireGlobalPurchasesReadContext()
-  const purchases = await getGlobalPurchasesForExport(context.workspaceOwnerId, params)
+  const purchases = await getGlobalPurchasesForExport(
+    context.workspaceOwnerId,
+    params
+  )
 
   return buildGlobalPurchasesExportFile(purchases, format)
 }

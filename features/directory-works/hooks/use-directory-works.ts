@@ -42,13 +42,18 @@ function getNumberParam(searchParams: ReadonlySearchParams, key: string) {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
 }
 
-function getSortParam(searchParams: ReadonlySearchParams): DirectoryWorksSort | undefined {
+function getSortParam(
+  searchParams: ReadonlySearchParams
+): DirectoryWorksSort | undefined {
   const sort = searchParams.get("sort")
-  if (sort === "relevance" || sort === "updated_desc" || sort === "title_asc") return sort
+  if (sort === "relevance" || sort === "updated_desc" || sort === "title_asc")
+    return sort
   return undefined
 }
 
-function getListParams(searchParams: ReadonlySearchParams): DirectoryWorksListParams {
+function getListParams(
+  searchParams: ReadonlySearchParams
+): DirectoryWorksListParams {
   return {
     q: getStringParam(searchParams, "q"),
     category: getStringParam(searchParams, "category"),
@@ -78,7 +83,9 @@ export function useDirectoryWorks() {
   const invalidateWorks = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: directoryWorksQueryKeys.all }),
-      queryClient.invalidateQueries({ queryKey: directoryWorksQueryKeys.categories() }),
+      queryClient.invalidateQueries({
+        queryKey: directoryWorksQueryKeys.categories(),
+      }),
     ])
   }
 
@@ -86,7 +93,9 @@ export function useDirectoryWorks() {
     mutationFn: createDirectoryWork,
     onSuccess: async (response) => {
       await invalidateWorks()
-      await queryClient.invalidateQueries({ queryKey: directoryWorksQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryWorksQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -94,8 +103,14 @@ export function useDirectoryWorks() {
     mutationFn: updateDirectoryWork,
     onSuccess: async (response) => {
       await invalidateWorks()
-      await queryClient.invalidateQueries({ queryKey: directoryWorksQueryKeys.detail(response.data.id) })
-      await queryClient.invalidateQueries({ queryKey: directoryWorksQueryKeys.aiSearch({ query: response.data.title }) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryWorksQueryKeys.detail(response.data.id),
+      })
+      await queryClient.invalidateQueries({
+        queryKey: directoryWorksQueryKeys.aiSearch({
+          query: response.data.title,
+        }),
+      })
     },
   })
 
@@ -103,22 +118,32 @@ export function useDirectoryWorks() {
     mutationFn: archiveDirectoryWork,
     onSuccess: async (response) => {
       await invalidateWorks()
-      await queryClient.invalidateQueries({ queryKey: directoryWorksQueryKeys.detail(response.data.id) })
-      await queryClient.invalidateQueries({ queryKey: directoryWorksQueryKeys.aiSearch({ query: response.data.title }) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryWorksQueryKeys.detail(response.data.id),
+      })
+      await queryClient.invalidateQueries({
+        queryKey: directoryWorksQueryKeys.aiSearch({
+          query: response.data.title,
+        }),
+      })
     },
   })
 
   const createImportMutation = useMutation({
     mutationFn: createDirectoryWorkImportJob,
     onSuccess: async (response) => {
-      await queryClient.invalidateQueries({ queryKey: directoryWorksQueryKeys.importJob(response.data.job.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryWorksQueryKeys.importJob(response.data.job.id),
+      })
     },
   })
 
   const appendImportBatchMutation = useMutation({
     mutationFn: appendDirectoryWorkImportBatch,
     onSuccess: async (response) => {
-      await queryClient.invalidateQueries({ queryKey: directoryWorksQueryKeys.importJob(response.data.job.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryWorksQueryKeys.importJob(response.data.job.id),
+      })
     },
   })
 
@@ -127,7 +152,9 @@ export function useDirectoryWorks() {
     onSuccess: async (response) => {
       await Promise.all([
         invalidateWorks(),
-        queryClient.invalidateQueries({ queryKey: directoryWorksQueryKeys.importJob(response.data.job.id) }),
+        queryClient.invalidateQueries({
+          queryKey: directoryWorksQueryKeys.importJob(response.data.job.id),
+        }),
         queryClient.invalidateQueries({ queryKey: ["directoryWorksAiSearch"] }),
       ])
     },
@@ -178,11 +205,20 @@ export function useDirectoryWorks() {
       const response = await createImportMutation.mutateAsync(input)
       return response.data
     },
-    appendImportBatch: async (id: string, input: DirectoryWorkImportBatchInput) => {
-      const response = await appendImportBatchMutation.mutateAsync({ id, input })
+    appendImportBatch: async (
+      id: string,
+      input: DirectoryWorkImportBatchInput
+    ) => {
+      const response = await appendImportBatchMutation.mutateAsync({
+        id,
+        input,
+      })
       return response.data
     },
-    applyImportJob: async (id: string, input?: DirectoryWorkImportApplyInput) => {
+    applyImportJob: async (
+      id: string,
+      input?: DirectoryWorkImportApplyInput
+    ) => {
       const response = await applyImportMutation.mutateAsync({ id, input })
       return response.data
     },

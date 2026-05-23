@@ -68,7 +68,10 @@ async function getWorkOrder(workspaceOwnerId: string, workId: string) {
   return data ? (data as DirectoryWorkOrderRow) : null
 }
 
-async function getNextSortOrder(workspaceOwnerId: string, afterSortOrder: number) {
+async function getNextSortOrder(
+  workspaceOwnerId: string,
+  afterSortOrder: number
+) {
   const { data, error } = await supabase
     .from("directory_works")
     .select("sort_order")
@@ -114,7 +117,11 @@ export async function getSortOrderForNewDirectoryWork(
   if (retried) return afterSortOrder + MIN_ORDER_GAP / 2
 
   await normalizeDirectoryWorkSortOrders(workspaceOwnerId)
-  return getSortOrderForNewDirectoryWork(workspaceOwnerId, insertAfterWorkId, true)
+  return getSortOrderForNewDirectoryWork(
+    workspaceOwnerId,
+    insertAfterWorkId,
+    true
+  )
 }
 
 export async function getSortOrderStartForImportedDirectoryWorks(
@@ -127,6 +134,9 @@ export async function getSortOrderStartForImportedDirectoryWorks(
   return firstSortOrder - Math.max(rowCount, 1) * ORDER_STEP
 }
 
-export function getImportedDirectoryWorkSortOrder(startSortOrder: number, index: number) {
+export function getImportedDirectoryWorkSortOrder(
+  startSortOrder: number,
+  index: number
+) {
   return startSortOrder + index * ORDER_STEP
 }

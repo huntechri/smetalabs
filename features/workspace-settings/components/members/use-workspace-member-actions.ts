@@ -69,7 +69,9 @@ export function useWorkspaceMemberActions(
       try {
         await mutations.suspendMember(target.id, suspend)
         toast.success(
-          suspend ? `${target.name} заблокирован` : `${target.name} разблокирован`
+          suspend
+            ? `${target.name} заблокирован`
+            : `${target.name} разблокирован`
         )
         dialogs.closeSuspend()
       } catch (err) {

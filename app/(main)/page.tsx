@@ -1,9 +1,6 @@
 import { AppSidebar } from "@/features/app-sidebar"
 import { SiteHeader } from "@/features/site-header"
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
 export const iframeHeight = "800px"
 

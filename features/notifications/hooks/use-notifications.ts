@@ -15,7 +15,9 @@ import { notificationsQueryKeys } from "../api/notifications-query-keys"
 /**
  * Хук для получения списка уведомлений.
  */
-export function useNotifications(filters: { unreadOnly?: boolean; limit?: number; offset?: number } = {}) {
+export function useNotifications(
+  filters: { unreadOnly?: boolean; limit?: number; offset?: number } = {}
+) {
   return useQuery({
     queryKey: notificationsQueryKeys.list(filters),
     queryFn: () => fetchNotifications(filters),
@@ -42,7 +44,8 @@ export function useMarkNotificationsRead() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params: { ids?: string[]; all?: boolean }) => markNotificationsRead(params),
+    mutationFn: (params: { ids?: string[]; all?: boolean }) =>
+      markNotificationsRead(params),
     onSuccess: () => {
       // Инвалидируем все связанные запросы
       queryClient.invalidateQueries({ queryKey: notificationsQueryKeys.all })
@@ -60,7 +63,8 @@ export function useArchiveNotifications() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params: { ids?: string[]; all?: boolean }) => archiveNotifications(params),
+    mutationFn: (params: { ids?: string[]; all?: boolean }) =>
+      archiveNotifications(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationsQueryKeys.all })
     },
@@ -83,7 +87,9 @@ export function useNotificationsRealtime() {
 
     async function subscribe() {
       // Получаем id текущего аутентифицированного пользователя
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (!user) return
 
       activeChannel = supabase
@@ -114,7 +120,9 @@ export function useNotificationsRealtime() {
             })
 
             // Инвалидируем кэш, чтобы обновить списки и счетчики
-            queryClient.invalidateQueries({ queryKey: notificationsQueryKeys.all })
+            queryClient.invalidateQueries({
+              queryKey: notificationsQueryKeys.all,
+            })
           }
         )
         .subscribe()

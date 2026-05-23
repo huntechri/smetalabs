@@ -91,7 +91,10 @@ export type DirectoryWorkUnitOption = {
 }
 
 export type DirectoryWorksCategoriesResponse = {
-  data: { categories: DirectoryWorkCategoryOption[]; units: DirectoryWorkUnitOption[] }
+  data: {
+    categories: DirectoryWorkCategoryOption[]
+    units: DirectoryWorkUnitOption[]
+  }
   meta: { totalCategories: number; totalUnits: number }
 }
 
@@ -124,7 +127,13 @@ export type DirectoryWorkAiSearchResponse = {
 }
 
 export type DirectoryWorkEmbeddingProcessResponse = {
-  data: { processed: number; failed: number; pending: number; modelName: string; dimensions: number }
+  data: {
+    processed: number
+    failed: number
+    pending: number
+    modelName: string
+    dimensions: number
+  }
 }
 
 export type DirectoryWorkImportJobStatus =
@@ -172,7 +181,10 @@ export type DirectoryWorkImportRawRow = Partial<{
   effective_date: string
 }>
 
-export type DirectoryWorkImportNormalizedRow = Omit<DirectoryWorkMutationInput, "insertAfterWorkId"> & {
+export type DirectoryWorkImportNormalizedRow = Omit<
+  DirectoryWorkMutationInput,
+  "insertAfterWorkId"
+> & {
   aliases: string[]
   keywords: string[]
   vatRate: number | null

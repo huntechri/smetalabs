@@ -6,7 +6,9 @@ type EstimateDetailsPageProps = {
   params: Promise<{ projectId: string; estimateId: string }>
 }
 
-export default async function EstimateDetailsPage({ params }: EstimateDetailsPageProps) {
+export default async function EstimateDetailsPage({
+  params,
+}: EstimateDetailsPageProps) {
   const { projectId, estimateId } = await params
 
   return <EstimateEditorView projectId={projectId} recordId={estimateId} />

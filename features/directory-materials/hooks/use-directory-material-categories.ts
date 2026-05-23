@@ -8,7 +8,9 @@ import type { DirectoryMaterialsCategoriesParams } from "../types"
 const DIRECTORY_MATERIALS_CATEGORIES_STALE_TIME_MS = 5 * 60_000
 const DIRECTORY_MATERIALS_CATEGORIES_GC_TIME_MS = 10 * 60_000
 
-export function useDirectoryMaterialCategories(params: DirectoryMaterialsCategoriesParams = {}) {
+export function useDirectoryMaterialCategories(
+  params: DirectoryMaterialsCategoriesParams = {}
+) {
   const categoriesQuery = useQuery({
     queryKey: directoryMaterialsQueryKeys.categories(params),
     queryFn: () => fetchDirectoryMaterialsCategories(params),

@@ -10,7 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import type { EstimateDialogState } from "@/features/projects/project-overview/types"
 
@@ -33,7 +38,9 @@ export function EstimateNameDialog({
     <Dialog open={state.open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Редактировать смету" : "Новая смета"}</DialogTitle>
+          <DialogTitle>
+            {isEdit ? "Редактировать смету" : "Новая смета"}
+          </DialogTitle>
         </DialogHeader>
 
         <form className="flex flex-col gap-4" onSubmit={onSubmit}>

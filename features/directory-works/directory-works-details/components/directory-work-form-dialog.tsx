@@ -182,7 +182,9 @@ export function DirectoryWorkFormDialog({
               <Input
                 id="directory-work-category"
                 maxLength={120}
-                onChange={(event) => updateField("category", event.target.value)}
+                onChange={(event) =>
+                  updateField("category", event.target.value)
+                }
                 placeholder="Отделочные работы"
                 value={form.category}
               />
@@ -202,7 +204,9 @@ export function DirectoryWorkFormDialog({
             </div>
           </div>
 
-          {error ? <p className="text-xs/relaxed text-destructive">{error}</p> : null}
+          {error ? (
+            <p className="text-xs/relaxed text-destructive">{error}</p>
+          ) : null}
 
           <DialogFooter showCloseButton={false}>
             <Button

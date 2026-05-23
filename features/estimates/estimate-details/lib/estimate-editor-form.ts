@@ -5,8 +5,13 @@ export function safeNumber(value: string): number | undefined {
   return Number.isFinite(num) ? num : undefined
 }
 
-export function parseDecimal(value: FormDataEntryValue | null, fallback?: number) {
-  const raw = String(value ?? "").replace(",", ".").trim()
+export function parseDecimal(
+  value: FormDataEntryValue | null,
+  fallback?: number
+) {
+  const raw = String(value ?? "")
+    .replace(",", ".")
+    .trim()
   if (!raw) return fallback
 
   const number = Number(raw)

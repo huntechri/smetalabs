@@ -10,7 +10,8 @@ export function CounterpartiesToolbar() {
     {
       label: "Добавить",
       icon: <PlusIcon data-icon="inline-start" />,
-      onClick: () => window.dispatchEvent(new Event(DIRECTORY_COUNTERPARTIES_CREATE_EVENT)),
+      onClick: () =>
+        window.dispatchEvent(new Event(DIRECTORY_COUNTERPARTIES_CREATE_EVENT)),
     },
   ]
 

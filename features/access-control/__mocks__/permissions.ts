@@ -26,7 +26,11 @@ export const permissions: PermissionDefinition[] = [
   // Projects
   { key: "projects.read", label: "Просмотр проектов", group: "projects" },
   { key: "projects.create", label: "Создание проектов", group: "projects" },
-  { key: "projects.update", label: "Редактирование проектов", group: "projects" },
+  {
+    key: "projects.update",
+    label: "Редактирование проектов",
+    group: "projects",
+  },
   { key: "projects.delete", label: "Удаление проектов", group: "projects" },
   // Estimates
   { key: "estimates.read", label: "Просмотр смет", group: "estimates" },
@@ -36,7 +40,11 @@ export const permissions: PermissionDefinition[] = [
   // Purchases
   { key: "purchases.read", label: "Просмотр закупок", group: "purchases" },
   { key: "purchases.create", label: "Создание закупок", group: "purchases" },
-  { key: "purchases.update", label: "Редактирование закупок", group: "purchases" },
+  {
+    key: "purchases.update",
+    label: "Редактирование закупок",
+    group: "purchases",
+  },
   { key: "purchases.delete", label: "Удаление закупок", group: "purchases" },
   // Team
   { key: "team.read", label: "Просмотр команды", group: "team" },
@@ -51,7 +59,9 @@ export const permissions: PermissionDefinition[] = [
 
 export const defaultPermissionMatrix: Record<Role, PermissionKey[]> = {
   owner: permissions.map((p) => p.key),
-  admin: permissions.filter((p) => p.key !== "billing.manage").map((p) => p.key),
+  admin: permissions
+    .filter((p) => p.key !== "billing.manage")
+    .map((p) => p.key),
   manager: permissions
     .filter(
       (p) =>

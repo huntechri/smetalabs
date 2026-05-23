@@ -44,7 +44,9 @@ export function ProjectsToolbar({
   }, [search])
 
   const activeStatusLabel = useMemo(
-    () => STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label ?? "Все статусы",
+    () =>
+      STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label ??
+      "Все статусы",
     [statusFilter]
   )
 
@@ -71,7 +73,10 @@ export function ProjectsToolbar({
               value={localSearch}
             />
             <Button disabled={disabled} type="submit" variant="outline">
-              <MagnifyingGlassIcon className="sm:hidden" data-icon="inline-start" />
+              <MagnifyingGlassIcon
+                className="sm:hidden"
+                data-icon="inline-start"
+              />
               <span className="hidden sm:inline">Поиск</span>
             </Button>
           </div>
@@ -79,13 +84,25 @@ export function ProjectsToolbar({
 
         <div className="flex rounded-md border border-border p-2">
           <ButtonGroup className="flex-wrap">
-            <Button disabled={disabled} size="sm" type="button" variant="outline" onClick={onCreateClick}>
+            <Button
+              disabled={disabled}
+              size="sm"
+              type="button"
+              variant="outline"
+              onClick={onCreateClick}
+            >
               <PlusIcon data-icon="inline-start" />
               Добавить
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button disabled={disabled} size="sm" type="button" variant="outline" aria-label="Фильтр">
+                <Button
+                  disabled={disabled}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                  aria-label="Фильтр"
+                >
                   <Funnel data-icon="inline-start" />
                   {activeStatusLabel}
                 </Button>

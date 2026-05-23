@@ -42,13 +42,18 @@ function getNumberParam(searchParams: ReadonlySearchParams, key: string) {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
 }
 
-function getSortParam(searchParams: ReadonlySearchParams): DirectoryMaterialsSort | undefined {
+function getSortParam(
+  searchParams: ReadonlySearchParams
+): DirectoryMaterialsSort | undefined {
   const sort = searchParams.get("sort")
-  if (sort === "relevance" || sort === "updated_desc" || sort === "name_asc") return sort
+  if (sort === "relevance" || sort === "updated_desc" || sort === "name_asc")
+    return sort
   return undefined
 }
 
-function getListParams(searchParams: ReadonlySearchParams): DirectoryMaterialsListParams {
+function getListParams(
+  searchParams: ReadonlySearchParams
+): DirectoryMaterialsListParams {
   return {
     q: getStringParam(searchParams, "q"),
     category: getStringParam(searchParams, "category"),
@@ -78,8 +83,12 @@ export function useDirectoryMaterials() {
 
   const invalidateMaterials = async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: directoryMaterialsQueryKeys.all }),
-      queryClient.invalidateQueries({ queryKey: directoryMaterialsQueryKeys.categories() }),
+      queryClient.invalidateQueries({
+        queryKey: directoryMaterialsQueryKeys.all,
+      }),
+      queryClient.invalidateQueries({
+        queryKey: directoryMaterialsQueryKeys.categories(),
+      }),
     ])
   }
 
@@ -87,7 +96,9 @@ export function useDirectoryMaterials() {
     mutationFn: createDirectoryMaterial,
     onSuccess: async (response) => {
       await invalidateMaterials()
-      await queryClient.invalidateQueries({ queryKey: directoryMaterialsQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryMaterialsQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -95,7 +106,9 @@ export function useDirectoryMaterials() {
     mutationFn: updateDirectoryMaterial,
     onSuccess: async (response) => {
       await invalidateMaterials()
-      await queryClient.invalidateQueries({ queryKey: directoryMaterialsQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryMaterialsQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -103,21 +116,27 @@ export function useDirectoryMaterials() {
     mutationFn: archiveDirectoryMaterial,
     onSuccess: async (response) => {
       await invalidateMaterials()
-      await queryClient.invalidateQueries({ queryKey: directoryMaterialsQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryMaterialsQueryKeys.detail(response.data.id),
+      })
     },
   })
 
   const createImportMutation = useMutation({
     mutationFn: createDirectoryMaterialImportJob,
     onSuccess: async (response) => {
-      await queryClient.invalidateQueries({ queryKey: directoryMaterialsQueryKeys.importJob(response.data.job.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryMaterialsQueryKeys.importJob(response.data.job.id),
+      })
     },
   })
 
   const appendImportBatchMutation = useMutation({
     mutationFn: appendDirectoryMaterialImportBatch,
     onSuccess: async (response) => {
-      await queryClient.invalidateQueries({ queryKey: directoryMaterialsQueryKeys.importJob(response.data.job.id) })
+      await queryClient.invalidateQueries({
+        queryKey: directoryMaterialsQueryKeys.importJob(response.data.job.id),
+      })
     },
   })
 
@@ -126,7 +145,9 @@ export function useDirectoryMaterials() {
     onSuccess: async (response) => {
       await Promise.all([
         invalidateMaterials(),
-        queryClient.invalidateQueries({ queryKey: directoryMaterialsQueryKeys.importJob(response.data.job.id) }),
+        queryClient.invalidateQueries({
+          queryKey: directoryMaterialsQueryKeys.importJob(response.data.job.id),
+        }),
       ])
     },
   })
@@ -164,7 +185,10 @@ export function useDirectoryMaterials() {
       const response = await createMutation.mutateAsync(input)
       return response.data
     },
-    updateMaterial: async (id: string, input: DirectoryMaterialMutationInput) => {
+    updateMaterial: async (
+      id: string,
+      input: DirectoryMaterialMutationInput
+    ) => {
       const response = await updateMutation.mutateAsync({ id, input })
       return response.data
     },
@@ -176,11 +200,20 @@ export function useDirectoryMaterials() {
       const response = await createImportMutation.mutateAsync(input)
       return response.data
     },
-    appendImportBatch: async (id: string, input: DirectoryMaterialImportBatchInput) => {
-      const response = await appendImportBatchMutation.mutateAsync({ id, input })
+    appendImportBatch: async (
+      id: string,
+      input: DirectoryMaterialImportBatchInput
+    ) => {
+      const response = await appendImportBatchMutation.mutateAsync({
+        id,
+        input,
+      })
       return response.data
     },
-    applyImportJob: async (id: string, input?: DirectoryMaterialImportApplyInput) => {
+    applyImportJob: async (
+      id: string,
+      input?: DirectoryMaterialImportApplyInput
+    ) => {
       const response = await applyImportMutation.mutateAsync({ id, input })
       return response.data
     },

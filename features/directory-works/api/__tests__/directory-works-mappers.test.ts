@@ -37,7 +37,10 @@ describe("directory works mappers", () => {
   })
 
   it("reports browse fast-path totals as lower bounds", () => {
-    const rows = [baseRow, { ...baseRow, id: "550e8400-e29b-41d4-a716-446655440001" }]
+    const rows = [
+      baseRow,
+      { ...baseRow, id: "550e8400-e29b-41d4-a716-446655440001" },
+    ]
 
     expect(getExactTotalCount(rows)).toBeNull()
     expect(getTotalCount(rows, 5000, 1, true)).toBe(5002)

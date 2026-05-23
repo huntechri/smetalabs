@@ -12,10 +12,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import type { GlobalPurchaseMutationInput, GlobalPurchaseRow } from "@/types/global-purchases"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import type {
+  GlobalPurchaseMutationInput,
+  GlobalPurchaseRow,
+} from "@/types/global-purchases"
 import type { ProjectRow } from "@/types/project"
-import { CalendarDots, CaretDown, GearSixIcon, SwapIcon, TrashIcon } from "@phosphor-icons/react"
+import {
+  CalendarDots,
+  CaretDown,
+  GearSixIcon,
+  SwapIcon,
+  TrashIcon,
+} from "@phosphor-icons/react"
 
 function formatMoney(value: number | null) {
   if (value === null) return "—"
@@ -102,13 +115,20 @@ export function GlobalPurchasesRow({
 }: {
   onDelete: (row: GlobalPurchaseRow) => void
   onReplace: (row: GlobalPurchaseRow) => void
-  onUpdate: (row: GlobalPurchaseRow, input: GlobalPurchaseMutationInput) => Promise<void>
+  onUpdate: (
+    row: GlobalPurchaseRow,
+    input: GlobalPurchaseMutationInput
+  ) => Promise<void>
   projects: ProjectRow[]
   row: GlobalPurchaseRow
   saving: boolean
 }) {
-  const [visibleFactQuantity, setVisibleFactQuantity] = useState<number | null>(row.factQuantity)
-  const [visibleFactPrice, setVisibleFactPrice] = useState<number | null>(row.factPrice)
+  const [visibleFactQuantity, setVisibleFactQuantity] = useState<number | null>(
+    row.factQuantity
+  )
+  const [visibleFactPrice, setVisibleFactPrice] = useState<number | null>(
+    row.factPrice
+  )
   const rowRef = useRef(row)
   const factQuantityRef = useRef(row.factQuantity)
   const factPriceRef = useRef(row.factPrice)
@@ -191,19 +211,30 @@ export function GlobalPurchasesRow({
   return (
     <div className="mx-3 my-1.5 grid gap-2 rounded-md border border-border p-2 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(460px,2fr)_76px_minmax(150px,0.55fr)_minmax(230px,0.85fr)_minmax(240px,0.85fr)]">
       <div className="min-w-0 rounded-md border border-border p-2">
-        <span className="mb-1 block text-xs text-muted-foreground uppercase">Наименование</span>
-        <div className="break-words text-sm font-medium leading-snug">{row.title}</div>
+        <span className="mb-1 block text-xs text-muted-foreground uppercase">
+          Наименование
+        </span>
+        <div className="text-sm leading-snug font-medium break-words">
+          {row.title}
+        </div>
       </div>
 
       <div className="min-w-0 rounded-md border border-border p-2">
-        <span className="mb-1 block text-xs text-muted-foreground uppercase">Ед. изм</span>
+        <span className="mb-1 block text-xs text-muted-foreground uppercase">
+          Ед. изм
+        </span>
         <div className="text-sm font-medium">{row.unit}</div>
       </div>
 
       <div className="min-w-0 rounded-md border border-border p-2">
-        <span className="mb-1 block text-xs text-muted-foreground uppercase">Кол-во План/Факт</span>
+        <span className="mb-1 block text-xs text-muted-foreground uppercase">
+          Кол-во План/Факт
+        </span>
         <div className="flex min-w-0 flex-wrap gap-1.5">
-          <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
+          <Badge
+            variant="outline"
+            className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"
+          >
             <span className="text-muted-foreground">План:</span>
             <span>{formatNumber(row.planQuantity)}</span>
           </Badge>
@@ -218,9 +249,14 @@ export function GlobalPurchasesRow({
       </div>
 
       <div className="min-w-0 rounded-md border border-border p-2">
-        <span className="mb-1 block text-xs text-muted-foreground uppercase">Цена План/Факт</span>
+        <span className="mb-1 block text-xs text-muted-foreground uppercase">
+          Цена План/Факт
+        </span>
         <div className="flex min-w-0 flex-wrap gap-1.5">
-          <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
+          <Badge
+            variant="outline"
+            className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"
+          >
             <span className="text-muted-foreground">План:</span>
             <span>{formatMoney(row.planPrice)} ₽</span>
           </Badge>
@@ -236,19 +272,32 @@ export function GlobalPurchasesRow({
       </div>
 
       <div className="min-w-0 rounded-md border border-border p-2">
-        <span className="mb-1 block text-xs text-muted-foreground uppercase">Объект, дата, действие</span>
+        <span className="mb-1 block text-xs text-muted-foreground uppercase">
+          Объект, дата, действие
+        </span>
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Badge variant="outline" className="max-w-28 cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted">
+              <Badge
+                variant="outline"
+                className="max-w-28 cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted"
+              >
                 <span className="truncate">{row.projectTitle ?? "Объект"}</span>
                 <CaretDown className="size-2.5" />
               </Badge>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="max-h-72 w-72 overflow-y-auto">
-              <DropdownMenuItem onClick={() => updateProject(null)}>Без объекта</DropdownMenuItem>
+            <DropdownMenuContent
+              align="start"
+              className="max-h-72 w-72 overflow-y-auto"
+            >
+              <DropdownMenuItem onClick={() => updateProject(null)}>
+                Без объекта
+              </DropdownMenuItem>
               {projects.map((project) => (
-                <DropdownMenuItem key={project.id} onClick={() => updateProject(project.id)}>
+                <DropdownMenuItem
+                  key={project.id}
+                  onClick={() => updateProject(project.id)}
+                >
                   {project.title}
                 </DropdownMenuItem>
               ))}
@@ -257,26 +306,49 @@ export function GlobalPurchasesRow({
 
           <Popover>
             <PopoverTrigger asChild>
-              <Badge variant="outline" className="cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted">
+              <Badge
+                variant="outline"
+                className="cursor-pointer gap-1 rounded-md px-1.5 py-0.5 font-normal hover:bg-muted"
+              >
                 <CalendarDots className="size-3" />
                 {formatDate(row.purchaseDate)}
               </Badge>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-auto p-0">
-              <Calendar mode="single" selected={toDateValue(row.purchaseDate)} onSelect={updateDate} />
+              <Calendar
+                mode="single"
+                selected={toDateValue(row.purchaseDate)}
+                onSelect={updateDate}
+              />
             </PopoverContent>
           </Popover>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button aria-label={`Действия для ${row.title}`} className="ml-auto" disabled={saving} size="icon-sm" type="button" variant="ghost">
+              <Button
+                aria-label={`Действия для ${row.title}`}
+                className="ml-auto"
+                disabled={saving}
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              >
                 <GearSixIcon />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onClick={() => onReplace(row)}><SwapIcon />Заменить</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onReplace(row)}>
+                <SwapIcon />
+                Заменить
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onDelete(row)} variant="destructive"><TrashIcon />Удалить</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onDelete(row)}
+                variant="destructive"
+              >
+                <TrashIcon />
+                Удалить
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

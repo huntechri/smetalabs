@@ -38,7 +38,7 @@ export function DirectoryMaterialsRow({
           <span className="mb-1 block text-xs text-muted-foreground uppercase">
             КОД
           </span>
-          <div className="break-words font-mono text-xs font-medium leading-snug">
+          <div className="font-mono text-xs leading-snug font-medium break-words">
             {row.code || "—"}
           </div>
         </div>
@@ -46,7 +46,7 @@ export function DirectoryMaterialsRow({
           <span className="mb-1 block text-xs text-muted-foreground uppercase">
             НАЗВАНИЕ
           </span>
-          <div className="break-words text-sm font-medium leading-snug">
+          <div className="text-sm leading-snug font-medium break-words">
             {row.name}
           </div>
         </div>
@@ -58,11 +58,17 @@ export function DirectoryMaterialsRow({
             ЕД. ИЗМ / ЦЕНА
           </div>
           <div className="flex min-w-0 flex-wrap gap-1.5">
-            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
+            <Badge
+              variant="outline"
+              className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"
+            >
               <span className="text-muted-foreground">Ед.:</span>
               <span>{row.unit}</span>
             </Badge>
-            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-medium tabular-nums">
+            <Badge
+              variant="outline"
+              className="gap-1 rounded-md px-1.5 py-0.5 font-medium tabular-nums"
+            >
               <span className="text-muted-foreground">Цена:</span>
               <span>{priceLabel}</span>
             </Badge>
@@ -74,12 +80,18 @@ export function DirectoryMaterialsRow({
             КАТЕГОРИЯ / ПОСТАВЩИК
           </div>
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
+            <Badge
+              variant="outline"
+              className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"
+            >
               <span className="text-muted-foreground">Кат.:</span>
               <span>{row.category}</span>
             </Badge>
             {row.supplierName ? (
-              <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
+              <Badge
+                variant="outline"
+                className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"
+              >
                 <span className="text-muted-foreground">Пост.:</span>
                 <span>{row.supplierName}</span>
               </Badge>

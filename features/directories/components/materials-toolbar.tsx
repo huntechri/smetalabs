@@ -10,7 +10,12 @@ import {
   dispatchDirectoryMaterialsCreateEvent,
   dispatchDirectoryMaterialsImportEvent,
 } from "@/features/directory-materials/lib/directory-materials-events"
-import { PlusIcon, FileArrowDownIcon, ExportIcon, FunnelIcon } from "@phosphor-icons/react"
+import {
+  PlusIcon,
+  FileArrowDownIcon,
+  ExportIcon,
+  FunnelIcon,
+} from "@phosphor-icons/react"
 
 function exportDirectoryMaterials() {
   const searchParams = new URLSearchParams(window.location.search)

@@ -55,8 +55,10 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
     updateRecord,
     deleteRecord,
   } = useProjectEstimateRecords(projectId)
-  const [dialogState, setDialogState] = React.useState<EstimateDialogState>(EMPTY_DIALOG_STATE)
-  const [estimateToDelete, setEstimateToDelete] = React.useState<EstimateRow | null>(null)
+  const [dialogState, setDialogState] =
+    React.useState<EstimateDialogState>(EMPTY_DIALOG_STATE)
+  const [estimateToDelete, setEstimateToDelete] =
+    React.useState<EstimateRow | null>(null)
   const [deleteError, setDeleteError] = React.useState<string | null>(null)
   const [pageIndex, setPageIndex] = React.useState(0)
   const pageSize = 10
@@ -107,12 +109,17 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
     setDialogState((current) => ({ ...current, name, error: null }))
   }
 
-  const handleDialogSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleDialogSubmit = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault()
 
     const name = dialogState.name.trim()
     if (!name) {
-      setDialogState((current) => ({ ...current, error: "Укажите название сметы" }))
+      setDialogState((current) => ({
+        ...current,
+        error: "Укажите название сметы",
+      }))
       return
     }
 
@@ -128,7 +135,8 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
     } catch (err) {
       setDialogState((current) => ({
         ...current,
-        error: err instanceof Error ? err.message : "Не удалось сохранить смету",
+        error:
+          err instanceof Error ? err.message : "Не удалось сохранить смету",
       }))
     }
   }
@@ -140,24 +148,39 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
       await deleteRecord(estimateToDelete.id)
       closeDeleteDialog()
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : "Не удалось удалить смету")
+      setDeleteError(
+        err instanceof Error ? err.message : "Не удалось удалить смету"
+      )
     }
   }
 
   return (
     <>
-      <Tabs defaultValue="estimates" className="w-full flex-col justify-start gap-6">
+      <Tabs
+        defaultValue="estimates"
+        className="w-full flex-col justify-start gap-6"
+      >
         <div className="flex items-center justify-between px-4 lg:px-6">
           <TabsList className="**:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1">
             <TabsTrigger value="estimates">Сметы</TabsTrigger>
           </TabsList>
-          <Button variant="outline" size="sm" onClick={openCreateDialog} disabled={saving}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openCreateDialog}
+            disabled={saving}
+          >
             Создать смету
           </Button>
         </div>
 
-        <TabsContent value="estimates" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
-          {error ? <div className="text-xs text-destructive">{error}</div> : null}
+        <TabsContent
+          value="estimates"
+          className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
+        >
+          {error ? (
+            <div className="text-xs text-destructive">{error}</div>
+          ) : null}
           <div className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader className="sticky top-0 z-10 bg-muted">
@@ -190,12 +213,18 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
                         </button>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="px-1.5 text-muted-foreground">
+                        <Badge
+                          variant="outline"
+                          className="px-1.5 text-muted-foreground"
+                        >
                           {estimate.type}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="px-1.5 text-muted-foreground">
+                        <Badge
+                          variant="outline"
+                          className="px-1.5 text-muted-foreground"
+                        >
                           {estimate.status === "completed" ? (
                             <CheckCircle className="fill-green-500 dark:fill-green-400" />
                           ) : (
@@ -224,7 +253,9 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-32">
-                              <DropdownMenuItem onSelect={() => openEditDialog(estimate)}>
+                              <DropdownMenuItem
+                                onSelect={() => openEditDialog(estimate)}
+                              >
                                 Редактировать
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
@@ -259,7 +290,9 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPageIndex((current) => Math.max(current - 1, 0))}
+                onClick={() =>
+                  setPageIndex((current) => Math.max(current - 1, 0))
+                }
                 disabled={pageIndex === 0}
               >
                 Назад
@@ -270,7 +303,11 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPageIndex((current) => Math.min(current + 1, pageCount - 1))}
+                onClick={() =>
+                  setPageIndex((current) =>
+                    Math.min(current + 1, pageCount - 1)
+                  )
+                }
                 disabled={pageIndex >= pageCount - 1}
               >
                 Далее

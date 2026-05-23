@@ -83,9 +83,7 @@ export async function getPrimaryWorkspace(userId: string): Promise<string> {
     throw new Error("WORKSPACE_MEMBER_REQUIRED")
   }
 
-  const ownWorkspace = activeMemberships.find(
-    (m: any) => m.owner_id === userId
-  )
+  const ownWorkspace = activeMemberships.find((m: any) => m.owner_id === userId)
   return ownWorkspace?.owner_id ?? activeMemberships[0]?.owner_id ?? userId
 }
 

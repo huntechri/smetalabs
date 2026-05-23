@@ -11,7 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -22,7 +27,11 @@ import {
 } from "@/components/ui/select"
 import { fetchDirectoryCounterparties } from "@/features/directory-counterparties/api/directory-counterparties-client"
 import { directoryCounterpartiesQueryKeys } from "@/features/directory-counterparties/api/directory-counterparties-query-keys"
-import type { ProjectMutationInput, ProjectRow, ProjectStatus } from "@/types/project"
+import type {
+  ProjectMutationInput,
+  ProjectRow,
+  ProjectStatus,
+} from "@/types/project"
 
 const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [
   { label: "Новый", value: "new" },
@@ -114,14 +123,19 @@ export function CreateProjectDialog({
   })
 
   const customers = useMemo(
-    () => (counterpartiesQuery.data?.data ?? []).filter((counterparty) => counterparty.type === "customer"),
+    () =>
+      (counterpartiesQuery.data?.data ?? []).filter(
+        (counterparty) => counterparty.type === "customer"
+      ),
     [counterpartiesQuery.data?.data]
   )
 
   const selectedCustomerMissing = Boolean(
     project?.customerCounterpartyId &&
-      project.customerName &&
-      !customers.some((customer) => customer.id === project.customerCounterpartyId)
+    project.customerName &&
+    !customers.some(
+      (customer) => customer.id === project.customerCounterpartyId
+    )
   )
 
   useEffect(() => {
@@ -159,7 +173,9 @@ export function CreateProjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[calc(100vh-4rem)] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Редактировать проект" : "Новый проект"}</DialogTitle>
+          <DialogTitle>
+            {isEdit ? "Редактировать проект" : "Новый проект"}
+          </DialogTitle>
           <DialogDescription>
             Заполните обязательные поля. Остальные данные можно добавить позже.
           </DialogDescription>
@@ -183,16 +199,24 @@ export function CreateProjectDialog({
                 disabled={customerSelectDisabled}
                 value={customerSelectValue}
                 onValueChange={(value) =>
-                  setField("customerCounterpartyId", value === NO_CUSTOMER_VALUE ? "" : value)
+                  setField(
+                    "customerCounterpartyId",
+                    value === NO_CUSTOMER_VALUE ? "" : value
+                  )
                 }
               >
                 <SelectTrigger id="project-customer" className="w-full">
                   <SelectValue placeholder="Выберите заказчика" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_CUSTOMER_VALUE}>Без заказчика</SelectItem>
-                  {selectedCustomerMissing && project?.customerCounterpartyId ? (
-                    <SelectItem value={project.customerCounterpartyId}>{project.customerName}</SelectItem>
+                  <SelectItem value={NO_CUSTOMER_VALUE}>
+                    Без заказчика
+                  </SelectItem>
+                  {selectedCustomerMissing &&
+                  project?.customerCounterpartyId ? (
+                    <SelectItem value={project.customerCounterpartyId}>
+                      {project.customerName}
+                    </SelectItem>
                   ) : null}
                   {customers.map((customer) => (
                     <SelectItem key={customer.id} value={customer.id}>
@@ -202,7 +226,9 @@ export function CreateProjectDialog({
                 </SelectContent>
               </Select>
               {counterpartiesQuery.isLoading ? (
-                <p className="text-xs text-muted-foreground">Загружаем заказчиков...</p>
+                <p className="text-xs text-muted-foreground">
+                  Загружаем заказчиков...
+                </p>
               ) : customers.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
                   В справочнике контрагентов нет активных заказчиков.
@@ -212,7 +238,10 @@ export function CreateProjectDialog({
 
             <Field>
               <FieldLabel htmlFor="project-status">Статус</FieldLabel>
-              <Select value={form.status} onValueChange={(value) => setField("status", value)}>
+              <Select
+                value={form.status}
+                onValueChange={(value) => setField("status", value)}
+              >
                 <SelectTrigger id="project-status" className="w-full">
                   <SelectValue placeholder="Выберите статус" />
                 </SelectTrigger>
@@ -263,7 +292,12 @@ export function CreateProjectDialog({
           <FieldError>{error}</FieldError>
 
           <DialogFooter showCloseButton={false}>
-            <Button disabled={saving} type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              disabled={saving}
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Отмена
             </Button>
             <Button disabled={saving} type="submit">

@@ -2,7 +2,9 @@ import { z } from "zod"
 import type { ProjectEstimateRecordsListParams } from "@/types/project-estimate-record"
 
 const projectIdSchema = z.string().uuid("Некорректный идентификатор проекта")
-const estimateRecordIdSchema = z.string().uuid("Некорректный идентификатор строки сметы")
+const estimateRecordIdSchema = z
+  .string()
+  .uuid("Некорректный идентификатор строки сметы")
 
 const projectEstimateRecordMutationSchema = z.object({
   name: z

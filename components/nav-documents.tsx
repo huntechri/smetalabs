@@ -16,7 +16,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { DotsThreeOutlineIcon, FolderIcon, ShareIcon, TrashIcon } from "@phosphor-icons/react"
+import {
+  DotsThreeOutlineIcon,
+  FolderIcon,
+  ShareIcon,
+  TrashIcon,
+} from "@phosphor-icons/react"
 
 export function NavDocuments({
   items,
@@ -47,8 +52,7 @@ export function NavDocuments({
                   showOnHover
                   className="rounded-sm data-[state=open]:bg-accent"
                 >
-                  <DotsThreeOutlineIcon
-                  />
+                  <DotsThreeOutlineIcon />
                   <span className="sr-only">Ещё</span>
                 </SidebarMenuAction>
               </DropdownMenuTrigger>
@@ -58,19 +62,16 @@ export function NavDocuments({
                 align={isMobile ? "end" : "start"}
               >
                 <DropdownMenuItem>
-                  <FolderIcon
-                  />
+                  <FolderIcon />
                   <span>Открыть</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <ShareIcon
-                  />
+                  <ShareIcon />
                   <span>Поделиться</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive">
-                  <TrashIcon
-                  />
+                  <TrashIcon />
                   <span>Удалить</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

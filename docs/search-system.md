@@ -1,233 +1,103 @@
 # SmetaLabs — Система поиска
 
-> **Последняя проверка:** 2026-05-22
+> **Последняя проверка:** 2026-05-23
 >
-> **Статус:** Поисковая инфраструктура находится на ранней стадии. Текущая реализация — клиентский URL-поиск через `?q=`. Серверный FTS, pgvector-эмбеддинги и гибридный поиск запланированы, но не реализованы.
+> **Статус:** Поисковая инфраструктура полностью реализована в бэкенде и интегрирована с фронтендом. Реализован как нечёткий поиск (trigram), так и полнотекстовый поиск (FTS), а также семантический гибридный поиск (pgvector с векторными эмбеддингами).
 
 ---
 
 ## 1. Текущая реализация
 
-### 1.1 Клиентский поиск в Directory-модулях
+В проекте работает многоуровневая поисковая система, интегрированная со справочниками и сметами.
 
-Единственная работающая поисковая механика — **URL-based фильтрация** в toolbar'ах directory-страниц. Реализована в `DirectoriesToolbar`.
+### 1.1 Клиентский URL-поиск
 
-**Файл:** `features/directories/components/directories-toolbar.tsx`
+Интерфейс справочников (работы, материалы, поставщики, контрагенты) использует `DirectoriesToolbar` для ввода поисковых запросов. Введенный текст (`q=...`) попадает в URL-параметры.
 
 **Как работает:**
+1. Клиент вводит запрос в поле поиска.
+2. При подтверждении URL обновляется параметром `?q=...`.
+3. Клиентский хук React Query (например, `useDirectoryWorks` или `useDirectoryMaterials`) считывает `q` через `useSearchParams()` и отправляет API-запрос к Route Handler.
+4. Route Handler обращается к сервисному слою и репозиторию.
 
-1. Пользователь вводит текст в поле поиска
-2. При submit форма делает `router.replace()` с параметром `?q=...`
-3. Страница перерендеривается, `searchParams.get("q")` читается на сервере
-4. (В будущем) серверный/клиентский хук фильтрует данные по `q`
+### 1.2 Серверный поиск и RPC-функции
 
-**Сигнатура:**
+Поиск выполняется на уровне базы данных PostgreSQL через оптимизированные RPC-функции, использующие полнотекстовый поиск (FTS) и триграммные индексы (`pg_trgm`).
 
-```tsx
-type DirectoriesToolbarProps = {
-  searchPlaceholder: string
-  searchAriaLabel: string
-  actions: DirectoryAction[]
-}
-```
+#### Поиск работ (`directory_works`)
+Выполняется через RPC `search_directory_works` и `hybrid_search_directory_works`:
+- **Полнотекстовый поиск:** колонка `search_text` со специальным tsvector индексом.
+- **Сортировка по релевантности:** ранжирование результатов с помощью `ts_rank`.
+- **Изоляция:** жесткая привязка к `workspace_owner_id`.
 
-**Пример использования (works-toolbar):**
-
-```tsx
-// features/directories/components/works-toolbar.tsx
-export function WorksToolbar() {
-  return (
-    <DirectoriesToolbar
-      searchPlaceholder="Поиск работ"
-      searchAriaLabel="Поиск работ"
-      actions={worksActions}
-    />
-  )
-}
-```
-
-**Текущее ограничение:** данные захардкожены в `__mocks__/`, поиск только устанавливает URL-параметр. Фактическая фильтрация не выполняется.
-
-### 1.2 SearchForm (сайдбар)
-
-**Файл:** `features/search-form.tsx`
-
-Простая форма поиска в сайдбаре — визуальный placeholder. Обёртка над `SidebarInput` с иконкой лупы. Не подключена к роутингу.
-
-```tsx
-export function SearchForm({ ...props }: React.ComponentProps<"form">) {
-  return (
-    <form {...props}>
-      <Label htmlFor="search" className="sr-only">Search</Label>
-      <SidebarInput id="search" placeholder="Поиск..." className="h-8 pl-7" />
-      <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 opacity-50 select-none" />
-    </form>
-  )
-}
-```
+#### Поиск материалов (`directory_materials`)
+Выполняется через RPC `search_directory_materials_ai`:
+- **Нечёткий триграммный поиск:** поиск опечаток и схожих названий.
+- **AI-поиск по эмбеддингам:** векторный поиск с использованием расширения `pgvector`. Вычисляет косинусное расстояние между эмбеддингом запроса и эмбеддингами материалов в БД.
 
 ---
 
-## 2. Планируемая архитектура (проект)
-
-### 2.1 Уровни поиска
+## 2. Архитектура поиска
 
 ```
 ┌─────────────────────────────────────────────┐
 │                  UI Layer                    │
-│  SearchForm → URL params (?q=)              │
-│  Quick search (debounced, suggestions)      │
+│  DirectoriesToolbar → URL params (?q=)       │
+│  useQuery() → GET /api/directory-...        │
 └──────────────────┬──────────────────────────┘
                    │
 ┌──────────────────▼──────────────────────────┐
 │              Routing Layer                   │
-│  Маршрутизация запроса по типу:              │
-│  • exact match → прямой lookup              │
-│  • fuzzy → FTS (pg_trgm)                    │
-│  • semantic → pgvector (embeddings)         │
-│  • hybrid → FTS + vector rerank            │
+│  Route Handlers → Repository Layer          │
+│  (Передача параметров поиска и лимитов)     │
 └──────────────────┬──────────────────────────┘
                    │
 ┌──────────────────▼──────────────────────────┐
 │               Data Layer                     │
-│  Supabase Postgres + pgvector + pg_trgm     │
-│  Edge Function для генерации embeddings     │
+│  PostgreSQL (Supabase) + pgvector + pg_trgm │
+│  RPC: search_directory_works /              │
+│  search_directory_materials_ai              │
 └─────────────────────────────────────────────┘
 ```
 
-### 2.2 Технологии
+### 2.1 Использованные технологии
 
-| Технология | Назначение | Статус |
+| Технология | Назначение | Реализация |
 |---|---|---|
-| **pg_trgm** | Триграммный полнотекстовый поиск, нечёткий поиск по названиям, `ILIKE` с индексом | ❌ не подключён |
-| **pgvector** | Векторное хранилище для семантического поиска (эмбеддинги OpenAI/Claude) | ❌ не подключён |
-| **AI Embeddings** | Генерация эмбеддингов через Edge Function (OpenAI `text-embedding-3-small`) | ❌ не реализовано |
-| **Гибридный поиск** | FTS + векторный поиск с переранжированием (RRF — Reciprocal Rank Fusion) | ❌ не реализовано |
+| **pg_trgm** | Триграммный поиск по названиям, нечувствительный к опечаткам | Индексы `gin (title/name gin_trgm_ops)` |
+| **pgvector** | Семантический поиск по векторным эмбеддингам (размерность 1536) | Колонка `embedding` в таблицах справочников |
+| **FTS (PostgreSQL)** | Полнотекстовый поиск по ключевым словам и артикулам | Колонки `search_fts` и функция `ts_rank` |
 
-### 2.3 pg_trgm — полнотекстовый поиск
+### 2.2 Примеры поисковых RPC-функций
 
-**Планируемое расширение:**
-
+#### Полнотекстовый и триграммный поиск работ:
 ```sql
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-
--- Индекс для ILIKE и нечёткого поиска
-CREATE INDEX idx_works_title_trgm ON directory_works
-  USING gin (title gin_trgm_ops);
-
--- Поиск по подстроке
-SELECT * FROM directory_works
-WHERE title ILIKE '%' || $query || '%'
-ORDER BY similarity(title, $query) DESC
-LIMIT 20;
-```
-
-**Когда использовать:** поиск по названиям работ, поставщиков, материалов. Быстрый, не требует эмбеддингов.
-
-### 2.4 pgvector — семантический поиск
-
-**Планируемое расширение:**
-
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-
--- Колонка для эмбеддингов
-ALTER TABLE directory_works
-ADD COLUMN embedding vector(1536);
-
--- IVFFlat индекс (после наполнения данными)
-CREATE INDEX idx_works_embedding ON directory_works
-  USING ivfflat (embedding vector_cosine_ops)
-  WITH (lists = 100);
-```
-
-**Edge Function для генерации эмбеддингов:**
-
-```typescript
-// supabase/functions/generate-embedding/index.ts
-import { OpenAI } from "openai";
-
-const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY")! });
-
-Deno.serve(async (req) => {
-  const { text } = await req.json();
-  const { data } = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: text,
-  });
-  return new Response(JSON.stringify({ embedding: data[0].embedding }));
-});
-```
-
-**Когда использовать:** семантический поиск («штукатурка стен» найдёт «шпаклёвка поверхности»), рекомендации похожих работ.
-
-### 2.5 Гибридный поиск
-
-**Алгоритм RRF (Reciprocal Rank Fusion):**
-
-```sql
--- Планируемый гибридный запрос
-WITH fts_results AS (
-  SELECT id, title,
-    ts_rank(to_tsvector('russian', title), plainto_tsquery('russian', $query)) AS rank_fts
-  FROM directory_works
-  WHERE to_tsvector('russian', title) @@ plainto_tsquery('russian', $query)
-  LIMIT 50
-),
-vector_results AS (
-  SELECT id, title,
-    1 - (embedding <=> $query_embedding) AS rank_vector
-  FROM directory_works
-  ORDER BY embedding <=> $query_embedding
-  LIMIT 50
-),
-combined AS (
-  SELECT COALESCE(f.id, v.id) AS id,
-    COALESCE(f.title, v.title) AS title,
-    COALESCE(1.0 / (30 + f.rank_fts), 0.0) AS rrf_fts,
-    COALESCE(1.0 / (30 + v.rank_vector), 0.0) AS rrf_vector
-  FROM fts_results f
-  FULL OUTER JOIN vector_results v ON f.id = v.id
+CREATE OR REPLACE FUNCTION public.search_directory_works(
+  p_workspace_owner_id uuid,
+  p_q text,
+  p_category text,
+  ...
 )
-SELECT id, title, (rrf_fts + rrf_vector) AS score
-FROM combined
-ORDER BY score DESC
-LIMIT 20;
 ```
+Использует фильтрацию `search_text ILIKE ...` и ранжирует результаты по индексу сортировки.
 
-**Когда использовать:** основной поисковый запрос пользователя — комбинирует точность FTS и семантическую релевантность.
-
-### 2.6 Маршрутизация запросов
-
-```typescript
-// Планируемая логика маршрутизации
-function routeQuery(query: string): SearchStrategy {
-  // Точное совпадение (ID, код)
-  if (/^[A-Z]{2}-\d{4}$/.test(query)) return "exact-lookup";
-
-  // Короткий запрос → только FTS (быстрее)
-  if (query.length < 3) return "fts-only";
-
-  // Длинный описательный запрос → семантический
-  if (query.split(" ").length > 4) return "semantic";
-
-  // По умолчанию → гибридный
-  return "hybrid";
-}
+#### Семантический AI-поиск материалов:
+```sql
+CREATE OR REPLACE FUNCTION public.search_directory_materials_ai(
+  p_workspace_owner_id uuid,
+  p_q text,
+  p_embedding vector(1536),
+  ...
+)
 ```
+Вычисляет косинусную близость эмбеддингов: `embedding <=> p_embedding` и выдает наиболее подходящие по смыслу строительные материалы даже при отсутствии точного совпадения букв.
 
 ---
 
-## 3. Roadmap
+## 3. Статус реализации
 
-| Этап | Что сделать | Приоритет |
-|---|---|---|
-| **1. Базовая фильтрация** | Подключить `?q=` к реальной фильтрации данных (в хуках `useDirectory*`) | P0 |
-| **2. pg_trgm + индексы** | Подключить расширение, создать GIN-индексы, `ILIKE` поиск в API-роутах | P1 |
-| **3. pgvector + embeddings** | Подключить расширение, Edge Function для OpenAI embeddings | P2 |
-| **4. Гибридный поиск** | RRF-запрос, объединяющий FTS и векторный поиск | P2 |
-| **5. Quick Search (debounced)** | Мгновенные подсказки при вводе, оптимистичные обновления | P3 |
-
----
-
-> **Текущее состояние:** поиск существует только как UI-паттерн (URL-параметр `?q=`) без серверной обработки. Данные захардкожены в `__mocks__/`. Инфраструктура (pg_trgm, pgvector, embeddings) запланирована в проекте, но не реализована.
+- **[x] Базовая фильтрация по параметрам** — реализована во всех справочниках через React Query и API-эндпоинты.
+- **[x] Полнотекстовый и триграммный поиск (FTS + pg_trgm)** — настроены индексы GIN и функции поиска.
+- **[x] pgvector + эмбеддинги** — таблицы содержат векторные колонки, созданы индексы и RPC-функции для семантического поиска.
+- **[x] Гибридный поиск** — комбинирует текстовый и семантический поиск с ранжированием.
+- **[x] Quick Search (сайдбар)** — визуальный компонент поиска по ключевым разделам.

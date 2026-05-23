@@ -30,7 +30,10 @@ type UnitPayload = {
 
 export type EstimateContentChangeInput =
   | { action: "create_section"; payload: { title: string; sortOrder?: number } }
-  | { action: "update_section"; payload: { sectionId: string; title?: string; sortOrder?: number } }
+  | {
+      action: "update_section"
+      payload: { sectionId: string; title?: string; sortOrder?: number }
+    }
   | { action: "archive_section"; payload: { sectionId: string } }
   | { action: "reorder_sections"; payload: { items: SortItem[] } }
   | {
@@ -68,8 +71,14 @@ export type EstimateContentChangeInput =
       }
     }
   | { action: "archive_work"; payload: { workId: string } }
-  | { action: "reorder_works"; payload: { sectionId: string; items: SortItem[] } }
-  | { action: "move_work_to_section"; payload: { workId: string; sectionId: string; sortOrder?: number } }
+  | {
+      action: "reorder_works"
+      payload: { sectionId: string; items: SortItem[] }
+    }
+  | {
+      action: "move_work_to_section"
+      payload: { workId: string; sectionId: string; sortOrder?: number }
+    }
   | {
       action: "add_material_from_directory"
       payload: {
@@ -111,9 +120,16 @@ export type EstimateContentChangeInput =
       }
     }
   | { action: "archive_material"; payload: { materialId: string } }
-  | { action: "move_material_to_work"; payload: { materialId: string; workId: string; sortOrder?: number } }
+  | {
+      action: "move_material_to_work"
+      payload: { materialId: string; workId: string; sortOrder?: number }
+    }
 
-function appendParam(params: URLSearchParams, key: string, value: string | number | undefined) {
+function appendParam(
+  params: URLSearchParams,
+  key: string,
+  value: string | number | undefined
+) {
   if (value === undefined || value === "") return
   params.set(key, String(value))
 }
@@ -250,7 +266,9 @@ export function fetchProjectEstimateMaterialOptions({
   recordId: string
   params?: EstimateContentOptionsParams
 }) {
-  return fetchJson<ProjectEstimateOptionsResponse<ProjectEstimateMaterialOptionRow>>(
+  return fetchJson<
+    ProjectEstimateOptionsResponse<ProjectEstimateMaterialOptionRow>
+  >(
     buildOptionsUrl(projectId, recordId, "material-options", params),
     "справочника материалов"
   )

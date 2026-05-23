@@ -1,6 +1,10 @@
 import type { Role } from "@/types/roles"
 import type { ApiRole } from "../hooks/use-access-control"
-import type { PermissionDefinition, PermissionGroup, PermissionKey } from "../types"
+import type {
+  PermissionDefinition,
+  PermissionGroup,
+  PermissionKey,
+} from "../types"
 import { buildPermissionGroups } from "./permission-groups"
 
 export function buildPermissionMatrix(roles: ApiRole[]) {

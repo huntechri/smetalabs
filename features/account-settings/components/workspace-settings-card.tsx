@@ -210,7 +210,8 @@ export function WorkspaceSettingsCard({
         <CardHeader>
           <CardTitle>Рабочее пространство</CardTitle>
           <CardDescription>
-            Данные workspace, к которому у вас есть доступ. Изменять эти данные может только владелец workspace.
+            Данные workspace, к которому у вас есть доступ. Изменять эти данные
+            может только владелец workspace.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -238,7 +239,10 @@ export function WorkspaceSettingsCard({
               value={defaultTimezone}
             />
           </div>
-          <ReadonlyTextAreaField label="Юридический адрес" value={legalAddress} />
+          <ReadonlyTextAreaField
+            label="Юридический адрес"
+            value={legalAddress}
+          />
         </CardContent>
       </Card>
     )

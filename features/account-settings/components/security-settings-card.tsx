@@ -69,9 +69,7 @@ export function SecuritySettingsCard({
       toast.success(result.message ?? "Другие сессии завершены")
     } catch (err) {
       toast.error(
-        err instanceof Error
-          ? err.message
-          : "Ошибка завершения других сессий"
+        err instanceof Error ? err.message : "Ошибка завершения других сессий"
       )
     } finally {
       setRevokingSessions(false)
@@ -149,7 +147,9 @@ export function SecuritySettingsCard({
 
         <div className="flex items-center justify-between gap-4 py-1">
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium">Двухфакторная аутентификация</span>
+            <span className="text-sm font-medium">
+              Двухфакторная аутентификация
+            </span>
             <span className="text-xs text-muted-foreground">
               Дополнительная защита аккаунта будет подключена отдельной задачей
             </span>

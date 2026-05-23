@@ -19,8 +19,6 @@
 | [deployment.md](./deployment.md) | Деплой: Vercel, переменные окружения, процедура | 🚀 DevOps |
 | [testing-strategy.md](./testing-strategy.md) | Стратегия тестирования, планы, моки | 🧪 QA, разработчики |
 | [filemap.md](./filemap.md) | Полная карта исходного кода (все файлы) | 🗺️ Все |
-| [designer-prompt.md](./designer-prompt.md) | AI-промпт для дизайн-генерации | 🤖 AI-ассистенты |
-| [ui-audit.md](./ui-audit.md) | Аудит UI: несоответствия макетам, баги | 🎨 Дизайнеры |
 
 ### Feature-документы (`features/<name>/docs/README.md`)
 
@@ -28,23 +26,24 @@
 
 | Модуль | Документация | Статус |
 |---|---|---|
-| [access-control](./features/access-control/docs/README.md) | ✅ | production (backend), mock (frontend) |
-| [account-settings](./features/account-settings/docs/README.md) | ✅ | production (backend), not implemented (frontend) |
-| [auth](./features/auth/) | ⬜ | login/signup/forgot-password |
-| [dashboard](./features/dashboard/) | ⬜ | главная страница после входа |
-| [directories](./features/directories/) | ⬜ | общий layout справочников |
-| [directory-counterparties](./features/directory-counterparties/docs/README.md) | ✅ | mock (вёрстка) |
-| [directory-materials](./features/directory-materials/docs/README.md) | ✅ | production |
-| [directory-suppliers](./features/directory-suppliers/docs/README.md) | ✅ | mock (вёрстка) |
-| [directory-works](./features/directory-works/docs/README.md) | ✅ | production |
-| [estimates](./features/estimates/docs/README.md) | ✅ | вёрстка + моки, БД готова |
-| [execution](./features/execution/) | ⬜ | исполнение смет |
-| [global-purchases](./features/global-purchases/docs/README.md) | ✅ | вёрстка + моки, БД готова |
-| [projects](./features/projects/docs/README.md) | ✅ | вёрстка-заглушка, БД готова |
-| [purchases](./features/purchases/) | ⬜ | закупки |
-| [workspace-settings](./features/workspace-settings/docs/README.md) | ✅ | production (backend), not implemented (frontend) |
+| [access-control](../features/access-control/docs/README.md) | ✅ | production (бэкенд + интерактивная матрица) |
+| [account-settings](../features/account-settings/docs/README.md) | ✅ | production (настройки профиля, темы, уведомлений, пароля) |
+| [auth](../features/auth/docs/README.md) | ✅ | production (аутентификация, RBAC, сессии) |
+| [dashboard](../features/dashboard/docs/README.md) | ✅ | production (демо-данные, графики Recharts, DataTable) |
+| [directories](../features/directories/docs/README.md) | ✅ | production (общий макет справочников, поиск, категории) |
+| [directory-counterparties](../features/directory-counterparties/docs/README.md) | ✅ | production (справочник контрагентов, реквизиты, паспорта) |
+| [directory-materials](../features/directory-materials/docs/README.md) | ✅ | production (справочник материалов, категории, импорт/экспорт) |
+| [directory-suppliers](../features/directory-suppliers/docs/README.md) | ✅ | production (справочник поставщиков, цвета, реквизиты) |
+| [directory-works](../features/directory-works/docs/README.md) | ✅ | production (справочник работ, импорт CSV, экспорт XLSX) |
+| [estimates](../features/estimates/docs/README.md) | ✅ | production (сметный редактор, RPC, drag-and-drop) |
+| [execution](../features/execution/docs/README.md) | ✅ | mock (план-факт вкладки «Выполнение» в смете) |
+| [global-purchases](../features/global-purchases/docs/README.md) | ✅ | production (сводные закупки, фильтры, API) |
+| [notifications](../features/notifications/docs/README.md) | ✅ | production (in-app, real-time, email-оповещения) |
+| [projects](../features/projects/docs/README.md) | ✅ | production (список проектов, детали, пагинация) |
+| [purchases](../features/purchases/docs/README.md) | ✅ | mock (план-факт вкладки «Закупки» в смете) |
+| [workspace-settings](../features/workspace-settings/docs/README.md) | ✅ | production (команда, инвайт-ссылки, разрешённые домены) |
 
-**Итого:** 10 из 15 модулей имеют документацию.
+**Итого:** Все 16 фич-модулей полностью задокументированы.
 
 ## 🧭 Как использовать
 

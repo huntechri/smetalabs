@@ -11,7 +11,12 @@ import {
   dispatchDirectoryWorksExportEvent,
   dispatchDirectoryWorksImportEvent,
 } from "@/features/directory-works/lib/directory-works-events"
-import { PlusIcon, FileArrowDownIcon, ExportIcon, FunnelIcon } from "@phosphor-icons/react"
+import {
+  PlusIcon,
+  FileArrowDownIcon,
+  ExportIcon,
+  FunnelIcon,
+} from "@phosphor-icons/react"
 
 function WorksToolbarContent() {
   const [filtersOpen, setFiltersOpen] = useState(false)

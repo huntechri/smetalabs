@@ -46,7 +46,9 @@ function authCallbackUrl(origin: string) {
   return `${origin}/auth/callback`
 }
 
-export async function inviteMemberAction(input: z.infer<typeof InviteMemberSchema>) {
+export async function inviteMemberAction(
+  input: z.infer<typeof InviteMemberSchema>
+) {
   const user = await requireAuth()
   const parsed = InviteMemberSchema.parse({
     ...input,
@@ -82,14 +84,17 @@ export async function inviteMemberAction(input: z.infer<typeof InviteMemberSchem
   }
 
   const origin = await getRequestOrigin()
-  const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(parsed.email, {
-    redirectTo: authCallbackUrl(origin),
-    data: {
-      invited_by: user.id,
-      workspace_role: parsed.role,
-      invitation_id: invitation.id,
-    },
-  })
+  const { error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(
+    parsed.email,
+    {
+      redirectTo: authCallbackUrl(origin),
+      data: {
+        invited_by: user.id,
+        workspace_role: parsed.role,
+        invitation_id: invitation.id,
+      },
+    }
+  )
 
   if (inviteErr) {
     await supabase
@@ -118,13 +123,19 @@ export async function inviteMemberAction(input: z.infer<typeof InviteMemberSchem
 
 export async function leaveWorkspaceAction() {
   await requireAuth()
-  throw new Error("Not implemented: безопасный выход из workspace ещё не подключён")
+  throw new Error(
+    "Not implemented: безопасный выход из workspace ещё не подключён"
+  )
 }
 
-export async function transferOwnershipAction(input: z.infer<typeof TransferOwnershipSchema>) {
+export async function transferOwnershipAction(
+  input: z.infer<typeof TransferOwnershipSchema>
+) {
   await requireAuth()
   TransferOwnershipSchema.parse(input)
-  throw new Error("Not implemented: передача владельца требует отдельной транзакционной операции")
+  throw new Error(
+    "Not implemented: передача владельца требует отдельной транзакционной операции"
+  )
 }
 
 export async function deactivateAccountAction() {

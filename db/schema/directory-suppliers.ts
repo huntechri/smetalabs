@@ -18,10 +18,10 @@ export const directorySupplierStatusEnum = pgEnum("directory_supplier_status", [
   "archived",
 ])
 
-export const directorySupplierLegalStatusEnum = pgEnum("directory_supplier_legal_status", [
-  "juridical",
-  "individual",
-])
+export const directorySupplierLegalStatusEnum = pgEnum(
+  "directory_supplier_legal_status",
+  ["juridical", "individual"]
+)
 
 export const directorySuppliers = pgTable(
   "directory_suppliers",
@@ -77,9 +77,18 @@ export const directorySuppliers = pgTable(
       t.workspaceOwnerId,
       t.updatedAt
     ),
-    check("chk_directory_suppliers_name_not_empty", sql`btrim(${t.name}) <> ''`),
-    check("chk_directory_suppliers_normalized_name_not_empty", sql`btrim(${t.normalizedName}) <> ''`),
+    check(
+      "chk_directory_suppliers_name_not_empty",
+      sql`btrim(${t.name}) <> ''`
+    ),
+    check(
+      "chk_directory_suppliers_normalized_name_not_empty",
+      sql`btrim(${t.normalizedName}) <> ''`
+    ),
     check("chk_directory_suppliers_version_positive", sql`${t.version} > 0`),
-    check("chk_directory_suppliers_color_hex", sql`${t.color} ~ '^#[0-9A-Fa-f]{6}$'`),
+    check(
+      "chk_directory_suppliers_color_hex",
+      sql`${t.color} ~ '^#[0-9A-Fa-f]{6}$'`
+    ),
   ]
 )

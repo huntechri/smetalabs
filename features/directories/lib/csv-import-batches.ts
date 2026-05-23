@@ -19,7 +19,11 @@ type ParseCsvFileInBatchesOptions = {
 }
 
 function normalizeHeader(header: string, aliases: CsvImportHeaderAliases) {
-  const key = header.trim().toLowerCase().replace(/\s+/g, " ").replace(/-/g, "_")
+  const key = header
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/-/g, "_")
   return aliases[key] ?? key.replace(/\s+/g, "_")
 }
 
@@ -38,7 +42,8 @@ function normalizeCellValue(header: string, value: string) {
   if (header !== "currencyCode" && header !== "currency_code") return value
 
   const normalized = value.trim().toLowerCase().replace(/\s+/g, "")
-  if (["руб", "руб.", "р", "р.", "₽", "rur", "rub"].includes(normalized)) return "RUB"
+  if (["руб", "руб.", "р", "р.", "₽", "rur", "rub"].includes(normalized))
+    return "RUB"
   return value
 }
 

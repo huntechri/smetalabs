@@ -50,7 +50,8 @@ export function useProjectEstimateRecords(projectId: string) {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (recordId: string) => deleteProjectEstimateRecord({ projectId, recordId }),
+    mutationFn: (recordId: string) =>
+      deleteProjectEstimateRecord({ projectId, recordId }),
     onSuccess: invalidateEstimateRecords,
   })
 
@@ -65,7 +66,10 @@ export function useProjectEstimateRecords(projectId: string) {
       updateMutation.error?.message ??
       deleteMutation.error?.message ??
       null,
-    saving: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    saving:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending,
     refetch: async () => {
       await estimateRecordsQuery.refetch()
     },
@@ -73,7 +77,10 @@ export function useProjectEstimateRecords(projectId: string) {
       const response = await createMutation.mutateAsync(input)
       return response.data
     },
-    updateRecord: async (recordId: string, input: ProjectEstimateRecordMutationInput) => {
+    updateRecord: async (
+      recordId: string,
+      input: ProjectEstimateRecordMutationInput
+    ) => {
       const response = await updateMutation.mutateAsync({ recordId, input })
       return response.data
     },

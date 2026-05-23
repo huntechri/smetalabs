@@ -1,9 +1,20 @@
 import { sql } from "drizzle-orm"
-import { pgTable, uuid, text, timestamp, pgEnum, uniqueIndex, index } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  pgEnum,
+  uniqueIndex,
+  index,
+} from "drizzle-orm/pg-core"
 import { profiles } from "./profiles"
 import { roles } from "./rbac"
 
-export const invitationStatusEnum = pgEnum("invitation_status", ["pending", "expired"])
+export const invitationStatusEnum = pgEnum("invitation_status", [
+  "pending",
+  "expired",
+])
 
 /**
  * workspace_invitations — приглашения в рабочее пространство.
@@ -26,14 +37,17 @@ export const workspaceInvitations = pgTable(
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
     message: text("message"),
-    invitedAt: timestamp("invited_at", { withTimezone: true }).notNull().defaultNow(),
+    invitedAt: timestamp("invited_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     status: invitationStatusEnum("status").notNull().default("pending"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (t) => [
-    uniqueIndex("uq_workspace_invitations_email_owner")
-      .on(t.email, t.ownerId),
+    uniqueIndex("uq_workspace_invitations_email_owner").on(t.email, t.ownerId),
     index("idx_workspace_invitations_status").on(t.status),
     index("idx_workspace_invitations_role_id").on(t.roleId),
     index("idx_workspace_invitations_owner_id").on(t.ownerId),

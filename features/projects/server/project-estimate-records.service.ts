@@ -5,7 +5,10 @@ import type {
   ProjectEstimateRecordMutationInput,
   ProjectEstimateRecordsListParams,
 } from "@/types/project-estimate-record"
-import { requireProjectsReadContext, requireProjectsWriteContext } from "./projects.service"
+import {
+  requireProjectsReadContext,
+  requireProjectsWriteContext,
+} from "./projects.service"
 import {
   createProjectEstimateRecordForWorkspace,
   deleteProjectEstimateRecordForWorkspace,
@@ -24,7 +27,10 @@ function estimateRecordsCacheTag(workspaceOwnerId: string, projectId: string) {
   return `projects:${workspaceOwnerId}:detail:${projectId}:estimate-records`
 }
 
-function revalidateEstimateRecords(workspaceOwnerId: string, projectId: string) {
+function revalidateEstimateRecords(
+  workspaceOwnerId: string,
+  projectId: string
+) {
   revalidateTag(estimateRecordsCacheTag(workspaceOwnerId, projectId), "max")
   revalidateTag(projectsCacheTags.detail(workspaceOwnerId, projectId), "max")
 }
@@ -90,7 +96,10 @@ export async function updateProjectEstimateRecord(
   return { data: record }
 }
 
-export async function deleteProjectEstimateRecord(projectId: string, recordId: string) {
+export async function deleteProjectEstimateRecord(
+  projectId: string,
+  recordId: string
+) {
   const context = await requireProjectsWriteContext()
   const record = await deleteProjectEstimateRecordForWorkspace(
     context.workspaceOwnerId,

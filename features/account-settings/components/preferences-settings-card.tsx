@@ -93,7 +93,8 @@ export function PreferencesSettingsCard({ preferences }: SettingsStateProps) {
           <div className="space-y-1">
             <CardTitle>Настройки интерфейса</CardTitle>
             <CardDescription>
-              Персонализация внешнего вида и форматов отображения находится в разработке.
+              Персонализация внешнего вида и форматов отображения находится в
+              разработке.
             </CardDescription>
           </div>
           <span className="w-fit rounded-md border bg-background px-2 py-1 text-xs font-medium text-muted-foreground">

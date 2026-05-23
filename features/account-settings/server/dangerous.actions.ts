@@ -129,7 +129,9 @@ export async function transferWorkspaceOwnershipAction(
 
   const target = await getWorkspaceMemberByUser(parsed.targetUserId, ownerId)
   if (!target) {
-    throw new Error("Новый владелец должен быть активным участником текущего workspace")
+    throw new Error(
+      "Новый владелец должен быть активным участником текущего workspace"
+    )
   }
 
   const { data: existingOwnedWorkspace, error: existingOwnedWorkspaceError } =
@@ -194,7 +196,8 @@ export async function deactivateAccountAction(): Promise<DangerousActionResult> 
 
   return {
     success: true,
-    message: "Аккаунт деактивирован. Повторная активация выполняется администратором workspace.",
+    message:
+      "Аккаунт деактивирован. Повторная активация выполняется администратором workspace.",
     redirectTo: "/login",
   }
 }

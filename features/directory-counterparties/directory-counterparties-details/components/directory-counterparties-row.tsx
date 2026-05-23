@@ -29,7 +29,8 @@ export function DirectoryCounterpartiesRow({
   saving: boolean
 }) {
   const typeLabel = row.type === "customer" ? "Заказчик" : "Подрядчик"
-  const legalStatusLabel = row.legalStatus === "juridical" ? "Юр. лицо" : "Физ. лицо"
+  const legalStatusLabel =
+    row.legalStatus === "juridical" ? "Юр. лицо" : "Физ. лицо"
   const extraLabel = row.legalStatus === "juridical" ? "Банк / БИК" : "Паспорт"
 
   return (
@@ -62,13 +63,25 @@ export function DirectoryCounterpartiesRow({
         <DirectoryCounterpartiesMetricGroup title={extraLabel}>
           {row.legalStatus === "juridical" ? (
             <>
-              <DirectoryCounterpartiesValue label="Банк" value={row.bankDetails.bankName} />
-              <DirectoryCounterpartiesValue label="БИК" value={row.bankDetails.bik} />
+              <DirectoryCounterpartiesValue
+                label="Банк"
+                value={row.bankDetails.bankName}
+              />
+              <DirectoryCounterpartiesValue
+                label="БИК"
+                value={row.bankDetails.bik}
+              />
             </>
           ) : (
             <>
-              <DirectoryCounterpartiesValue label="Серия" value={row.passport.series} />
-              <DirectoryCounterpartiesValue label="Номер" value={row.passport.number} />
+              <DirectoryCounterpartiesValue
+                label="Серия"
+                value={row.passport.series}
+              />
+              <DirectoryCounterpartiesValue
+                label="Номер"
+                value={row.passport.number}
+              />
             </>
           )}
           <DropdownMenu>

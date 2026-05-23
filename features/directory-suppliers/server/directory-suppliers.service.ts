@@ -39,7 +39,11 @@ export async function requireDirectorySuppliersReadContext(): Promise<DirectoryS
   const { data, error } = await client.auth.getUser()
 
   if (error || !data.user) {
-    throw new DirectorySuppliersApiError("UNAUTHORIZED", "Требуется аутентификация", 401)
+    throw new DirectorySuppliersApiError(
+      "UNAUTHORIZED",
+      "Требуется аутентификация",
+      401
+    )
   }
 
   try {
@@ -49,12 +53,17 @@ export async function requireDirectorySuppliersReadContext(): Promise<DirectoryS
       workspaceOwnerId,
       cacheTags: {
         list: directorySuppliersCacheTags.list(workspaceOwnerId),
-        detail: (supplierId: string) => directorySuppliersCacheTags.detail(workspaceOwnerId, supplierId),
+        detail: (supplierId: string) =>
+          directorySuppliersCacheTags.detail(workspaceOwnerId, supplierId),
       },
     }
   } catch (err) {
     if (err instanceof Error && err.message === "WORKSPACE_MEMBER_REQUIRED") {
-      throw new DirectorySuppliersApiError("FORBIDDEN", "Нет доступа к workspace", 403)
+      throw new DirectorySuppliersApiError(
+        "FORBIDDEN",
+        "Нет доступа к workspace",
+        403
+      )
     }
     throw err
   }
@@ -65,26 +74,45 @@ export async function requireDirectorySuppliersWriteContext(): Promise<Directory
   const role = await getWorkspaceRole(context.userId, context.workspaceOwnerId)
 
   if (!role || !WRITE_ROLES.has(role)) {
-    throw new DirectorySuppliersApiError("FORBIDDEN", "Недостаточно прав для изменения справочника поставщиков", 403)
+    throw new DirectorySuppliersApiError(
+      "FORBIDDEN",
+      "Недостаточно прав для изменения справочника поставщиков",
+      403
+    )
   }
 
   return context
 }
 
-function revalidateDirectorySupplierTags(context: DirectorySuppliersContext, supplierId?: string) {
+function revalidateDirectorySupplierTags(
+  context: DirectorySuppliersContext,
+  supplierId?: string
+) {
   revalidateTag(context.cacheTags.list, "max")
   if (supplierId) revalidateTag(context.cacheTags.detail(supplierId), "max")
 }
 
-export async function listDirectorySuppliers(params: DirectorySuppliersListParams) {
+export async function listDirectorySuppliers(
+  params: DirectorySuppliersListParams
+) {
   const context = await requireDirectorySuppliersReadContext()
   const normalizedParams = normalizeDirectorySuppliersListParams(params)
-  const cacheKey = stableHash({ workspaceOwnerId: context.workspaceOwnerId, normalizedParams })
+  const cacheKey = stableHash({
+    workspaceOwnerId: context.workspaceOwnerId,
+    normalizedParams,
+  })
 
   return unstable_cache(
-    () => listDirectorySuppliersForWorkspace(context.workspaceOwnerId, normalizedParams),
+    () =>
+      listDirectorySuppliersForWorkspace(
+        context.workspaceOwnerId,
+        normalizedParams
+      ),
     ["directory-suppliers:list", cacheKey],
-    { revalidate: LIST_CACHE_REVALIDATE_SECONDS, tags: [context.cacheTags.list] }
+    {
+      revalidate: LIST_CACHE_REVALIDATE_SECONDS,
+      tags: [context.cacheTags.list],
+    }
   )()
 }
 
@@ -93,24 +121,49 @@ export async function getDirectorySupplier(id: string) {
   const supplier = await unstable_cache(
     () => getDirectorySupplierForWorkspace(context.workspaceOwnerId, id),
     ["directory-suppliers:detail", context.workspaceOwnerId, id],
-    { revalidate: DETAIL_CACHE_REVALIDATE_SECONDS, tags: [context.cacheTags.detail(id), context.cacheTags.list] }
+    {
+      revalidate: DETAIL_CACHE_REVALIDATE_SECONDS,
+      tags: [context.cacheTags.detail(id), context.cacheTags.list],
+    }
   )()
 
-  if (!supplier) throw new DirectorySuppliersApiError("NOT_FOUND", "Поставщик не найден", 404)
-  return { data: supplier, meta: { cacheTag: context.cacheTags.detail(supplier.id) } }
+  if (!supplier)
+    throw new DirectorySuppliersApiError(
+      "NOT_FOUND",
+      "Поставщик не найден",
+      404
+    )
+  return {
+    data: supplier,
+    meta: { cacheTag: context.cacheTags.detail(supplier.id) },
+  }
 }
 
-export async function createDirectorySupplier(input: DirectorySupplierMutationInput) {
+export async function createDirectorySupplier(
+  input: DirectorySupplierMutationInput
+) {
   const context = await requireDirectorySuppliersWriteContext()
-  const supplier = await createDirectorySupplierForWorkspace(context.workspaceOwnerId, context.userId, input)
+  const supplier = await createDirectorySupplierForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    input
+  )
 
   revalidateDirectorySupplierTags(context, supplier.id)
   return { data: supplier }
 }
 
-export async function updateDirectorySupplier(id: string, input: DirectorySupplierMutationInput) {
+export async function updateDirectorySupplier(
+  id: string,
+  input: DirectorySupplierMutationInput
+) {
   const context = await requireDirectorySuppliersWriteContext()
-  const supplier = await updateDirectorySupplierForWorkspace(context.workspaceOwnerId, context.userId, id, input)
+  const supplier = await updateDirectorySupplierForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id,
+    input
+  )
 
   revalidateDirectorySupplierTags(context, supplier.id)
   return { data: supplier }
@@ -118,7 +171,11 @@ export async function updateDirectorySupplier(id: string, input: DirectorySuppli
 
 export async function archiveDirectorySupplier(id: string) {
   const context = await requireDirectorySuppliersWriteContext()
-  const supplier = await archiveDirectorySupplierForWorkspace(context.workspaceOwnerId, context.userId, id)
+  const supplier = await archiveDirectorySupplierForWorkspace(
+    context.workspaceOwnerId,
+    context.userId,
+    id
+  )
 
   revalidateDirectorySupplierTags(context, supplier.id)
   return { data: supplier }

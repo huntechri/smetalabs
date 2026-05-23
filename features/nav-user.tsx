@@ -11,11 +11,7 @@ import {
   Sparkle,
 } from "@phosphor-icons/react"
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,10 +38,12 @@ export type NavUserData = {
 function getInitials(name: string, email: string) {
   const source = name.trim() || email.trim()
   const parts = source.split(/[\s@._-]+/).filter(Boolean)
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "SL"
+  return (
+    parts
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "SL"
+  )
 }
 
 export function NavUser({ user }: { user: NavUserData }) {
@@ -65,7 +63,9 @@ export function NavUser({ user }: { user: NavUserData }) {
                 {user.avatar ? (
                   <AvatarImage src={user.avatar} alt={user.name} />
                 ) : null}
-                <AvatarFallback className="rounded-lg">{fallback}</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {fallback}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
@@ -86,7 +86,9 @@ export function NavUser({ user }: { user: NavUserData }) {
                   {user.avatar ? (
                     <AvatarImage src={user.avatar} alt={user.name} />
                   ) : null}
-                  <AvatarFallback className="rounded-lg">{fallback}</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {fallback}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>

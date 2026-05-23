@@ -4,20 +4,44 @@ import type { ProjectEstimateRecordsListParams } from "@/types/project-estimate-
 export const projectsQueryKeys = {
   all: ["projects"] as const,
   lists: () => [...projectsQueryKeys.all, "list"] as const,
-  list: (params: ProjectsListParams = {}) => [...projectsQueryKeys.lists(), params] as const,
+  list: (params: ProjectsListParams = {}) =>
+    [...projectsQueryKeys.lists(), params] as const,
   detail: (id: string) => [...projectsQueryKeys.all, "detail", id] as const,
   estimateRecords: (projectId: string) =>
     [...projectsQueryKeys.detail(projectId), "estimate-records"] as const,
   estimateRecordsList: (
     projectId: string,
     params: ProjectEstimateRecordsListParams = {}
-  ) => [...projectsQueryKeys.estimateRecords(projectId), "list", params] as const,
+  ) =>
+    [...projectsQueryKeys.estimateRecords(projectId), "list", params] as const,
   estimateRecordContent: (projectId: string, recordId: string) =>
-    [...projectsQueryKeys.estimateRecords(projectId), recordId, "content"] as const,
-  estimateWorkOptions: (projectId: string, recordId: string, params: object = {}) =>
-    [...projectsQueryKeys.estimateRecords(projectId), recordId, "work-options", params] as const,
-  estimateMaterialOptions: (projectId: string, recordId: string, params: object = {}) =>
-    [...projectsQueryKeys.estimateRecords(projectId), recordId, "material-options", params] as const,
+    [
+      ...projectsQueryKeys.estimateRecords(projectId),
+      recordId,
+      "content",
+    ] as const,
+  estimateWorkOptions: (
+    projectId: string,
+    recordId: string,
+    params: object = {}
+  ) =>
+    [
+      ...projectsQueryKeys.estimateRecords(projectId),
+      recordId,
+      "work-options",
+      params,
+    ] as const,
+  estimateMaterialOptions: (
+    projectId: string,
+    recordId: string,
+    params: object = {}
+  ) =>
+    [
+      ...projectsQueryKeys.estimateRecords(projectId),
+      recordId,
+      "material-options",
+      params,
+    ] as const,
 }
 
 export const projectsCacheTags = {

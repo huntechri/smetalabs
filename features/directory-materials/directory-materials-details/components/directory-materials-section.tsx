@@ -3,11 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import {
   Empty,
   EmptyDescription,
@@ -100,8 +96,10 @@ export function DirectoryMaterialsSection() {
   } = useDirectoryMaterials()
   const [formOpen, setFormOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
-  const [selectedMaterial, setSelectedMaterial] = useState<DirectoryMaterial | null>(null)
-  const [insertAfterMaterial, setInsertAfterMaterial] = useState<DirectoryMaterial | null>(null)
+  const [selectedMaterial, setSelectedMaterial] =
+    useState<DirectoryMaterial | null>(null)
+  const [insertAfterMaterial, setInsertAfterMaterial] =
+    useState<DirectoryMaterial | null>(null)
 
   useEffect(() => {
     const handleCreate = () => {
@@ -140,7 +138,9 @@ export function DirectoryMaterialsSection() {
   }
 
   const handleArchive = async (material: DirectoryMaterial) => {
-    const confirmed = window.confirm(`Архивировать материал «${material.name}»? Он исчезнет из активного списка.`)
+    const confirmed = window.confirm(
+      `Архивировать материал «${material.name}»? Он исчезнет из активного списка.`
+    )
     if (!confirmed) return
     await archiveMaterial(material.id)
   }
@@ -157,7 +157,9 @@ export function DirectoryMaterialsSection() {
   const currentLimit = params.limit ?? meta?.limit ?? DEFAULT_LIMIT
   const pageStart = materials.length > 0 ? currentCursor + 1 : 0
   const pageEnd = currentCursor + materials.length
-  const totalLabel = meta?.hasMore ? `минимум ${meta.total}` : String(meta?.total ?? materials.length)
+  const totalLabel = meta?.hasMore
+    ? `минимум ${meta.total}`
+    : String(meta?.total ?? materials.length)
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
   const showSkeletonRows = loading || isFetching
@@ -195,10 +197,28 @@ export function DirectoryMaterialsSection() {
         </CardContent>
         {meta ? (
           <CardFooter className="flex flex-col gap-3 border-t p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div>
+            <div>
+              Показано {pageStart}–{pageEnd}. Всего: {totalLabel}
+            </div>
             <div className="flex gap-2">
-              <Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button>
-              <Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={currentCursor === 0 || loading || isFetching}
+                onClick={() => setCursor(previousCursor)}
+              >
+                Назад
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={!meta.hasMore || loading || isFetching}
+                onClick={() => setCursor(nextCursor)}
+              >
+                Вперёд
+              </Button>
             </div>
           </CardFooter>
         ) : null}

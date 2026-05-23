@@ -57,7 +57,9 @@ function getNumberParam(searchParams: ReadonlySearchParams, key: string) {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
 }
 
-function getStatusParam(searchParams: ReadonlySearchParams): GlobalPurchasesStatusFilter {
+function getStatusParam(
+  searchParams: ReadonlySearchParams
+): GlobalPurchasesStatusFilter {
   const status = searchParams.get("status")
   if (
     status === "planned" ||
@@ -71,13 +73,23 @@ function getStatusParam(searchParams: ReadonlySearchParams): GlobalPurchasesStat
   return "all"
 }
 
-function getSortParam(searchParams: ReadonlySearchParams): GlobalPurchasesSort | undefined {
+function getSortParam(
+  searchParams: ReadonlySearchParams
+): GlobalPurchasesSort | undefined {
   const sort = searchParams.get("sort")
-  if (sort === "relevance" || sort === "updated_desc" || sort === "title_asc" || sort === "project_asc") return sort
+  if (
+    sort === "relevance" ||
+    sort === "updated_desc" ||
+    sort === "title_asc" ||
+    sort === "project_asc"
+  )
+    return sort
   return undefined
 }
 
-function getListParams(searchParams: ReadonlySearchParams): GlobalPurchasesListParams {
+function getListParams(
+  searchParams: ReadonlySearchParams
+): GlobalPurchasesListParams {
   return {
     q: getStringParam(searchParams, "q"),
     status: getStatusParam(searchParams),
@@ -90,18 +102,32 @@ function getListParams(searchParams: ReadonlySearchParams): GlobalPurchasesListP
   }
 }
 
-function compareText(a: string | null | undefined, b: string | null | undefined) {
+function compareText(
+  a: string | null | undefined,
+  b: string | null | undefined
+) {
   return (a || "~~~").localeCompare(b || "~~~", "ru")
 }
 
-function compareDate(a: string | null | undefined, b: string | null | undefined) {
+function compareDate(
+  a: string | null | undefined,
+  b: string | null | undefined
+) {
   return (a || "9999-12-31").localeCompare(b || "9999-12-31")
 }
 
-function sortRows(rows: GlobalPurchaseRow[], sort: GlobalPurchasesSort | undefined) {
+function sortRows(
+  rows: GlobalPurchaseRow[],
+  sort: GlobalPurchasesSort | undefined
+) {
   return [...rows].sort((a, b) => {
-    if (sort === "title_asc") return compareText(a.title, b.title) || a.id.localeCompare(b.id)
-    if (sort === "updated_desc") return b.metadata.updatedAt.localeCompare(a.metadata.updatedAt) || a.id.localeCompare(b.id)
+    if (sort === "title_asc")
+      return compareText(a.title, b.title) || a.id.localeCompare(b.id)
+    if (sort === "updated_desc")
+      return (
+        b.metadata.updatedAt.localeCompare(a.metadata.updatedAt) ||
+        a.id.localeCompare(b.id)
+      )
 
     return (
       compareText(a.projectTitle, b.projectTitle) ||
@@ -119,11 +145,20 @@ function getSearchText(row: GlobalPurchaseRow) {
     .toLowerCase()
 }
 
-function matchesParams(row: GlobalPurchaseRow, params: GlobalPurchasesListParams) {
-  if (params.status && params.status !== "all" && row.status !== params.status) return false
+function matchesParams(
+  row: GlobalPurchaseRow,
+  params: GlobalPurchasesListParams
+) {
+  if (params.status && params.status !== "all" && row.status !== params.status)
+    return false
   if (params.projectId && row.projectId !== params.projectId) return false
-  if (params.dateFrom && (!row.purchaseDate || row.purchaseDate < params.dateFrom)) return false
-  if (params.dateTo && (!row.purchaseDate || row.purchaseDate > params.dateTo)) return false
+  if (
+    params.dateFrom &&
+    (!row.purchaseDate || row.purchaseDate < params.dateFrom)
+  )
+    return false
+  if (params.dateTo && (!row.purchaseDate || row.purchaseDate > params.dateTo))
+    return false
 
   const q = params.q?.trim().toLowerCase()
   if (!q) return true
@@ -141,20 +176,26 @@ function updateCachedLists(
     params: GlobalPurchasesListParams
   ) => GlobalPurchasesListResponse
 ) {
-  const queries = queryClient.getQueryCache().findAll({ queryKey: globalPurchasesQueryKeys.all })
+  const queries = queryClient
+    .getQueryCache()
+    .findAll({ queryKey: globalPurchasesQueryKeys.all })
 
   for (const query of queries) {
     const queryKey = query.queryKey as QueryKey
     if (queryKey[1] !== "list") continue
 
     const listParams = (queryKey[2] ?? {}) as GlobalPurchasesListParams
-    queryClient.setQueryData<GlobalPurchasesListResponse>(queryKey, (current) =>
-      current ? updater(current, listParams) : current
+    queryClient.setQueryData<GlobalPurchasesListResponse>(
+      queryKey,
+      (current) => (current ? updater(current, listParams) : current)
     )
   }
 }
 
-function replaceRowInCachedLists(queryClient: QueryClient, row: GlobalPurchaseRow) {
+function replaceRowInCachedLists(
+  queryClient: QueryClient,
+  row: GlobalPurchaseRow
+) {
   queryClient.setQueryData(globalPurchasesQueryKeys.detail(row.id), row)
   updateCachedLists(queryClient, (current, listParams) => {
     const existed = current.data.some((item) => item.id === row.id)
@@ -162,7 +203,12 @@ function replaceRowInCachedLists(queryClient: QueryClient, row: GlobalPurchaseRo
 
     const nextRows = current.data.filter((item) => item.id !== row.id)
     const matches = matchesParams(row, listParams)
-    const nextData = matches ? sortRows([...nextRows, row], listParams.sort).slice(0, current.meta.limit) : nextRows
+    const nextData = matches
+      ? sortRows([...nextRows, row], listParams.sort).slice(
+          0,
+          current.meta.limit
+        )
+      : nextRows
 
     return {
       ...current,
@@ -181,25 +227,41 @@ function insertRowIntoCurrentList(
   row: GlobalPurchaseRow
 ) {
   queryClient.setQueryData(globalPurchasesQueryKeys.detail(row.id), row)
-  queryClient.setQueryData<GlobalPurchasesListResponse>(globalPurchasesQueryKeys.list(params), (current) => {
-    if (!current || !matchesParams(row, params)) return current
+  queryClient.setQueryData<GlobalPurchasesListResponse>(
+    globalPurchasesQueryKeys.list(params),
+    (current) => {
+      if (!current || !matchesParams(row, params)) return current
 
-    const rowsWithoutDuplicate = current.data.filter((item) => item.id !== row.id)
-    const nextData = sortRows([...rowsWithoutDuplicate, row], params.sort).slice(0, current.meta.limit)
+      const rowsWithoutDuplicate = current.data.filter(
+        (item) => item.id !== row.id
+      )
+      const nextData = sortRows(
+        [...rowsWithoutDuplicate, row],
+        params.sort
+      ).slice(0, current.meta.limit)
 
-    return {
-      ...current,
-      data: nextData,
-      meta: {
-        ...current.meta,
-        total: current.meta.total + (current.data.some((item) => item.id === row.id) ? 0 : 1),
-      },
+      return {
+        ...current,
+        data: nextData,
+        meta: {
+          ...current.meta,
+          total:
+            current.meta.total +
+            (current.data.some((item) => item.id === row.id) ? 0 : 1),
+        },
+      }
     }
-  })
+  )
 }
 
-function removeRowFromCachedLists(queryClient: QueryClient, row: GlobalPurchaseRow) {
-  queryClient.removeQueries({ queryKey: globalPurchasesQueryKeys.detail(row.id), exact: true })
+function removeRowFromCachedLists(
+  queryClient: QueryClient,
+  row: GlobalPurchaseRow
+) {
+  queryClient.removeQueries({
+    queryKey: globalPurchasesQueryKeys.detail(row.id),
+    exact: true,
+  })
   updateCachedLists(queryClient, (current) => {
     const existed = current.data.some((item) => item.id === row.id)
     if (!existed) return current
@@ -295,13 +357,20 @@ export function useGlobalPurchases() {
       updateMutation.error?.message ??
       archiveMutation.error?.message ??
       null,
-    saving: createMutation.isPending || updateMutation.isPending || archiveMutation.isPending,
+    saving:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      archiveMutation.isPending,
     setSearch: (q: string) => updateUrlParams({ q: q.trim() || undefined }),
-    setStatusFilter: (status: GlobalPurchasesStatusFilter) => updateUrlParams({ status }),
+    setStatusFilter: (status: GlobalPurchasesStatusFilter) =>
+      updateUrlParams({ status }),
     setProjectFilter: (projectId: string | undefined) =>
       updateUrlParams({ projectId: projectId?.trim() || undefined }),
     setDateFilters: (dateFrom?: string, dateTo?: string) =>
-      updateUrlParams({ dateFrom: dateFrom?.trim() || undefined, dateTo: dateTo?.trim() || undefined }),
+      updateUrlParams({
+        dateFrom: dateFrom?.trim() || undefined,
+        dateTo: dateTo?.trim() || undefined,
+      }),
     setCursor: (cursor: number) => updateUrlParams({ cursor }),
     refetch: async () => {
       await purchasesQuery.refetch()

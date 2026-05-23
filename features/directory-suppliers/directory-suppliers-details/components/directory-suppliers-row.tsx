@@ -8,7 +8,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import type { DirectorySupplier } from "@/features/directory-suppliers/types"
-import { ArchiveIcon, GearSixIcon, PencilSimpleIcon } from "@phosphor-icons/react"
+import {
+  ArchiveIcon,
+  GearSixIcon,
+  PencilSimpleIcon,
+} from "@phosphor-icons/react"
 import { DirectorySuppliersName } from "./directory-suppliers-name"
 import { DirectorySuppliersValue } from "./directory-suppliers-value"
 import { DirectorySuppliersMetricGroup } from "./directory-suppliers-metric-group"
@@ -33,13 +37,24 @@ export function DirectorySuppliersRow({
       <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(160px,1fr)_minmax(140px,1fr)_minmax(140px,1fr)_minmax(180px,1fr)]">
         <DirectorySuppliersMetricGroup title="Цвет">
           <div className="flex items-center gap-1.5">
-            <div className="h-5 w-5 rounded-full border border-muted-foreground/30" style={{ backgroundColor: row.color }} />
-            <Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"><span>{row.color}</span></Badge>
+            <div
+              className="h-5 w-5 rounded-full border border-muted-foreground/30"
+              style={{ backgroundColor: row.color }}
+            />
+            <Badge
+              variant="outline"
+              className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums"
+            >
+              <span>{row.color}</span>
+            </Badge>
           </div>
         </DirectorySuppliersMetricGroup>
 
         <DirectorySuppliersMetricGroup title="Тип">
-          <Badge variant={row.legalStatus === "juridical" ? "default" : "secondary"} className="gap-1 rounded-md px-1.5 py-0.5 font-normal">
+          <Badge
+            variant={row.legalStatus === "juridical" ? "default" : "secondary"}
+            className="gap-1 rounded-md px-1.5 py-0.5 font-normal"
+          >
             {row.legalStatus === "juridical" ? "Юр. лицо" : "Физ. лицо"}
           </Badge>
         </DirectorySuppliersMetricGroup>
@@ -53,12 +68,30 @@ export function DirectorySuppliersRow({
           <DirectorySuppliersValue label="Email" value={row.email} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button aria-label={`Действия для ${row.name}`} className="ml-auto" disabled={saving} size="icon-sm" type="button" variant="ghost"><GearSixIcon /></Button>
+              <Button
+                aria-label={`Действия для ${row.name}`}
+                className="ml-auto"
+                disabled={saving}
+                size="icon-sm"
+                type="button"
+                variant="ghost"
+              >
+                <GearSixIcon />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onClick={() => onEdit(row)}><PencilSimpleIcon />Редактировать</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(row)}>
+                <PencilSimpleIcon />
+                Редактировать
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onArchive(row)} variant="destructive"><ArchiveIcon />Архивировать</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onArchive(row)}
+                variant="destructive"
+              >
+                <ArchiveIcon />
+                Архивировать
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </DirectorySuppliersMetricGroup>

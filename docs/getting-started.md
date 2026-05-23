@@ -59,10 +59,10 @@ pnpm typecheck    # TypeScript без эмита (tsc --noEmit)
 
 ### База данных
 
-- Схема управляется **миграциями Supabase** (не хранятся в репозитории)
-- На клиенте: прямые запросы через `@supabase/supabase-js` (RLS фильтрует)
-- На сервере: RPC-функции Pl/pgSQL для атомарных мутаций
-- Для локальных экспериментов — создать отдельный Supabase-проект
+- Схема описывается с помощью **Drizzle ORM** в `db/schema/`
+- SQL-миграции генерируются через `drizzle-kit` и хранятся в репозитории (`db/migrations/`)
+- Применение миграций и работа с базой на сервере: прямые запросы через `@supabase/supabase-js` (в рантайме) и RPC-функции Pl/pgSQL для атомарных мутаций смет
+- Для локальных экспериментов — создать отдельный Supabase-проект и применить миграции с помощью `pnpm db:migrate`
 
 ## Структура проекта
 
@@ -103,10 +103,14 @@ smetalabs/
 ├── hooks/                  # Общие хуки (use-mobile)
 ├── middleware.ts            # Next.js middleware (auth guard)
 ├── docs/                   # Документация
-│   ├── backend-architecture.md  # ← этот документ
+│   ├── getting-started.md       # ← этот документ
+│   ├── architecture.md          # Общая архитектура
+│   ├── backend-architecture.md  # Бэкенд-архитектура
 │   ├── design-system.md         # Дизайн-система
+│   ├── search-system.md         # Архитектура поиска
+│   ├── testing-strategy.md      # Стратегия тестирования
 │   ├── filemap.md               # Карта файлов проекта
-│   └── ui-audit.md              # UI-аудит
+│   └── README.md                # Навигация по документации
 ├── package.json
 ├── tsconfig.json
 └── next.config.mjs

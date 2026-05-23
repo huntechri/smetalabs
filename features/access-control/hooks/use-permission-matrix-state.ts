@@ -20,7 +20,8 @@ export function usePermissionMatrixState(
 
   function togglePermission(role: Role, key: PermissionKey) {
     setState((prev) => {
-      const baseMatrix = prev.source === initialMatrix ? prev.matrix : initialMatrix
+      const baseMatrix =
+        prev.source === initialMatrix ? prev.matrix : initialMatrix
       const current = baseMatrix[role] ?? []
       const updated = current.includes(key)
         ? current.filter((item) => item !== key)

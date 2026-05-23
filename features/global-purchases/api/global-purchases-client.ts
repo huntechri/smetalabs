@@ -7,7 +7,11 @@ import type {
 } from "@/types/global-purchases"
 import { throwGlobalPurchasesApiError } from "./global-purchases-errors"
 
-function appendParam(params: URLSearchParams, key: string, value: string | number | undefined) {
+function appendParam(
+  params: URLSearchParams,
+  key: string,
+  value: string | number | undefined
+) {
   if (value === undefined || value === "") return
   params.set(key, String(value))
 }

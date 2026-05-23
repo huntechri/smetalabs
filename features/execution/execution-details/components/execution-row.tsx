@@ -28,16 +28,12 @@ export function ExecutionRow({
             <EditableBadge
               label="Кол-во"
               value={row.planQuantity}
-              onChange={(v) =>
-                onUpdate(row.id, { planQuantity: Number(v) })
-              }
+              onChange={(v) => onUpdate(row.id, { planQuantity: Number(v) })}
             />
             <EditableBadge
               label="Цена"
               value={row.planPrice}
-              onChange={(v) =>
-                onUpdate(row.id, { planPrice: Number(v) })
-              }
+              onChange={(v) => onUpdate(row.id, { planPrice: Number(v) })}
               formatDisplay={(v) => formatMoney(Number(v))}
             />
             <EditableBadge
@@ -52,16 +48,12 @@ export function ExecutionRow({
             <EditableBadge
               label="Кол-во"
               value={row.factQuantity}
-              onChange={(v) =>
-                onUpdate(row.id, { factQuantity: Number(v) })
-              }
+              onChange={(v) => onUpdate(row.id, { factQuantity: Number(v) })}
             />
             <EditableBadge
               label="Цена"
               value={row.factPrice}
-              onChange={(v) =>
-                onUpdate(row.id, { factPrice: Number(v) })
-              }
+              onChange={(v) => onUpdate(row.id, { factPrice: Number(v) })}
               formatDisplay={(v) => formatMoney(Number(v))}
             />
             <EditableBadge

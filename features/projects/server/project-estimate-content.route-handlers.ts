@@ -32,7 +32,10 @@ export async function handleProjectEstimateContentRequest(
     const response = await getProjectEstimateContent(projectId, recordId)
     return NextResponse.json(response)
   } catch (err) {
-    return handleProjectsRouteError(err, "[GET /api/projects/[id]/estimate-records/[recordId]/content]")
+    return handleProjectsRouteError(
+      err,
+      "[GET /api/projects/[id]/estimate-records/[recordId]/content]"
+    )
   }
 }
 
@@ -46,10 +49,17 @@ export async function handleProjectEstimateContentChangeRequest(
     const recordId = parseEstimateContentRecordId(recordIdParam)
     const body = await readJsonBody(request)
     const input = parseEstimateContentChangeBody(body)
-    const response = await applyProjectEstimateContentChange(projectId, recordId, input)
+    const response = await applyProjectEstimateContentChange(
+      projectId,
+      recordId,
+      input
+    )
     return NextResponse.json(response)
   } catch (err) {
-    return handleProjectsRouteError(err, "[POST /api/projects/[id]/estimate-records/[recordId]/changes]")
+    return handleProjectsRouteError(
+      err,
+      "[POST /api/projects/[id]/estimate-records/[recordId]/changes]"
+    )
   }
 }
 
@@ -61,11 +71,20 @@ export async function handleProjectEstimateWorkOptionsRequest(
   try {
     const projectId = parseEstimateContentProjectId(projectIdParam)
     const recordId = parseEstimateContentRecordId(recordIdParam)
-    const params = parseEstimateContentOptionsParams(request.nextUrl.searchParams)
-    const response = await listProjectEstimateWorkOptions(projectId, recordId, params)
+    const params = parseEstimateContentOptionsParams(
+      request.nextUrl.searchParams
+    )
+    const response = await listProjectEstimateWorkOptions(
+      projectId,
+      recordId,
+      params
+    )
     return NextResponse.json(response)
   } catch (err) {
-    return handleProjectsRouteError(err, "[GET /api/projects/[id]/estimate-records/[recordId]/work-options]")
+    return handleProjectsRouteError(
+      err,
+      "[GET /api/projects/[id]/estimate-records/[recordId]/work-options]"
+    )
   }
 }
 
@@ -77,10 +96,19 @@ export async function handleProjectEstimateMaterialOptionsRequest(
   try {
     const projectId = parseEstimateContentProjectId(projectIdParam)
     const recordId = parseEstimateContentRecordId(recordIdParam)
-    const params = parseEstimateContentOptionsParams(request.nextUrl.searchParams)
-    const response = await listProjectEstimateMaterialOptions(projectId, recordId, params)
+    const params = parseEstimateContentOptionsParams(
+      request.nextUrl.searchParams
+    )
+    const response = await listProjectEstimateMaterialOptions(
+      projectId,
+      recordId,
+      params
+    )
     return NextResponse.json(response)
   } catch (err) {
-    return handleProjectsRouteError(err, "[GET /api/projects/[id]/estimate-records/[recordId]/material-options]")
+    return handleProjectsRouteError(
+      err,
+      "[GET /api/projects/[id]/estimate-records/[recordId]/material-options]"
+    )
   }
 }

@@ -11,11 +11,7 @@ export function SearchForm({ ...props }: React.ComponentProps<"form">) {
         <Label htmlFor="search" className="sr-only">
           Search
         </Label>
-        <SidebarInput
-          id="search"
-          placeholder="Поиск..."
-          className="h-8 pl-7"
-        />
+        <SidebarInput id="search" placeholder="Поиск..." className="h-8 pl-7" />
         <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 opacity-50 select-none" />
       </div>
     </form>

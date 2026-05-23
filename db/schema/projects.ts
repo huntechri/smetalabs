@@ -67,14 +67,22 @@ export const projects = pgTable(
     ),
     index("idx_projects_workspace_customer_counterparty")
       .on(t.workspaceOwnerId, t.customerCounterpartyId)
-      .where(sql`${t.customerCounterpartyId} IS NOT NULL AND ${t.deletedAt} IS NULL`),
+      .where(
+        sql`${t.customerCounterpartyId} IS NOT NULL AND ${t.deletedAt} IS NULL`
+      ),
     index("idx_projects_workspace_normalized_title").on(
       t.workspaceOwnerId,
       t.normalizedTitle
     ),
-    index("idx_projects_workspace_updated_at").on(t.workspaceOwnerId, t.updatedAt),
+    index("idx_projects_workspace_updated_at").on(
+      t.workspaceOwnerId,
+      t.updatedAt
+    ),
     check("chk_projects_title_not_empty", sql`btrim(${t.title}) <> ''`),
-    check("chk_projects_progress_range", sql`${t.progress} >= 0 AND ${t.progress} <= 100`),
+    check(
+      "chk_projects_progress_range",
+      sql`${t.progress} >= 0 AND ${t.progress} <= 100`
+    ),
     check(
       "chk_projects_budget_non_negative",
       sql`${t.budgetAmount} IS NULL OR ${t.budgetAmount} >= 0`

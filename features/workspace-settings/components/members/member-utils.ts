@@ -1,7 +1,12 @@
 import type { Role } from "@/types/roles"
 import type { WorkspaceMember } from "../../types"
 
-export const EDITABLE_ROLES: Role[] = ["admin", "manager", "estimator", "viewer"]
+export const EDITABLE_ROLES: Role[] = [
+  "admin",
+  "manager",
+  "estimator",
+  "viewer",
+]
 
 export type MemberActions = {
   onChangeRole: (member: WorkspaceMember, role: Role) => Promise<void>

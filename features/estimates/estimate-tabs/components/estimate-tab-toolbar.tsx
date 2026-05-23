@@ -4,7 +4,11 @@ import { type FormEvent, useMemo, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import {
   ExportIcon,
   FileArrowDownIcon,
@@ -128,9 +132,17 @@ export function EstimateTabToolbar() {
             value={search}
           />
           <InputGroupAddon align="inline-end">
-            <Button size="sm" type="submit" variant="ghost" className="h-6 gap-1">
+            <Button
+              size="sm"
+              type="submit"
+              variant="ghost"
+              className="h-6 gap-1"
+            >
               <span className="hidden sm:inline">Поиск</span>
-              <MagnifyingGlassIcon className="sm:hidden" data-icon="inline-start" />
+              <MagnifyingGlassIcon
+                className="sm:hidden"
+                data-icon="inline-start"
+              />
             </Button>
           </InputGroupAddon>
         </InputGroup>

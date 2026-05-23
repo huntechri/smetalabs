@@ -77,7 +77,9 @@ const SORT_ORDER_STEP = 1000
 type MoveDirection = "up" | "down"
 
 function formatCoefficientInput(value: number) {
-  return Number.isInteger(value) ? String(value) : String(value).replace(".", ",")
+  return Number.isInteger(value)
+    ? String(value)
+    : String(value).replace(".", ",")
 }
 
 function normalizeSearchText(value: unknown) {
@@ -201,10 +203,15 @@ export function EstimateEditorView({
   const [sectionOpen, setSectionOpen] = React.useState(false)
   const [coefficientOpen, setCoefficientOpen] = React.useState(false)
   const [coefficientValue, setCoefficientValue] = React.useState("0")
-  const [coefficientError, setCoefficientError] = React.useState<string | null>(null)
-  const [workDialog, setWorkDialog] = React.useState<WorkDialogState>(EMPTY_WORK_DIALOG)
-  const [materialDialog, setMaterialDialog] = React.useState<MaterialDialogState>(EMPTY_MATERIAL_DIALOG)
-  const [archiveRequest, setArchiveRequest] = React.useState<EstimateArchiveRequest | null>(null)
+  const [coefficientError, setCoefficientError] = React.useState<string | null>(
+    null
+  )
+  const [workDialog, setWorkDialog] =
+    React.useState<WorkDialogState>(EMPTY_WORK_DIALOG)
+  const [materialDialog, setMaterialDialog] =
+    React.useState<MaterialDialogState>(EMPTY_MATERIAL_DIALOG)
+  const [archiveRequest, setArchiveRequest] =
+    React.useState<EstimateArchiveRequest | null>(null)
   const [workSearch, setWorkSearch] = React.useState("")
   const [materialSearch, setMaterialSearch] = React.useState("")
   const ensuringRef = useRef(false)
@@ -215,8 +222,6 @@ export function EstimateEditorView({
   const estimateSearch = searchParams.get("q")?.trim() ?? ""
   const searchActive = estimateSearch.length > 0
   const deferredSearch = useDeferredValue(estimateSearch)
-
-
 
   // Stabilise visibleSections: only recompute when content sections actually change
   const nextSections = content?.sections ?? EMPTY_SECTIONS
@@ -241,7 +246,7 @@ export function EstimateEditorView({
   const sectionIndexMap = React.useMemo(() => {
     const map = new Map<string, number>()
     sectionsForMemo.forEach((s: ProjectEstimateContentSection, i: number) =>
-      map.set(s.id, i),
+      map.set(s.id, i)
     )
     return map
   }, [sectionsForMemo])
@@ -256,7 +261,8 @@ export function EstimateEditorView({
   )
 
   const canSearchWorks = workSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
-  const canSearchMaterials = materialSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
+  const canSearchMaterials =
+    materialSearch.trim().length >= OPTION_SEARCH_MIN_LENGTH
 
   // Duplicate protection: track already-added directory item codes
   const addedWorkCodes = React.useMemo(() => {
@@ -302,7 +308,8 @@ export function EstimateEditorView({
   }, [pathname, router, searchParams])
 
   const nextValue = coefficientQuery.data?.data.coefficientPercent
-  const [prevCoefficientOpen, setPrevCoefficientOpen] = React.useState(coefficientOpen)
+  const [prevCoefficientOpen, setPrevCoefficientOpen] =
+    React.useState(coefficientOpen)
   const [prevNextValue, setPrevNextValue] = React.useState(nextValue)
 
   if (coefficientOpen !== prevCoefficientOpen || nextValue !== prevNextValue) {
@@ -314,9 +321,17 @@ export function EstimateEditorView({
   }
 
   const workOptions = useQuery({
-    queryKey: projectsQueryKeys.estimateWorkOptions(projectId, recordId, workParams),
+    queryKey: projectsQueryKeys.estimateWorkOptions(
+      projectId,
+      recordId,
+      workParams
+    ),
     queryFn: () =>
-      fetchProjectEstimateWorkOptions({ projectId, recordId, params: workParams }),
+      fetchProjectEstimateWorkOptions({
+        projectId,
+        recordId,
+        params: workParams,
+      }),
     enabled: workDialog.open && canSearchWorks,
     staleTime: 30_000,
   })
@@ -400,7 +415,9 @@ export function EstimateEditorView({
   const moveWork = useCallback(
     async (sectionId: string, workId: string, direction: MoveDirection) => {
       if (!content || searchActive) return
-      const section = content.sections.find((item: ProjectEstimateContentSection) => item.id === sectionId)
+      const section = content.sections.find(
+        (item: ProjectEstimateContentSection) => item.id === sectionId
+      )
       if (!section) return
       const next = moveItem(section.works, workId, direction)
       if (!next) return
@@ -430,16 +447,19 @@ export function EstimateEditorView({
     [ensureSection]
   )
 
-  const openReplaceWorkDialog = useCallback((work: ProjectEstimateContentWork) => {
-    setWorkSearch("")
-    setWorkDialog({
-      open: true,
-      mode: "replace",
-      sectionId: work.sectionId,
-      work,
-      selected: null,
-    })
-  }, [])
+  const openReplaceWorkDialog = useCallback(
+    (work: ProjectEstimateContentWork) => {
+      setWorkSearch("")
+      setWorkDialog({
+        open: true,
+        mode: "replace",
+        sectionId: work.sectionId,
+        work,
+        selected: null,
+      })
+    },
+    []
+  )
 
   const openMaterialDialog = useCallback((work: ProjectEstimateContentWork) => {
     setMaterialDialog({ open: true, work, selected: null })
@@ -480,7 +500,9 @@ export function EstimateEditorView({
         setCoefficientOpen(false)
       } catch (err) {
         setCoefficientError(
-          err instanceof Error ? err.message : "Не удалось применить коэффициент"
+          err instanceof Error
+            ? err.message
+            : "Не удалось применить коэффициент"
         )
       }
     },
@@ -488,7 +510,11 @@ export function EstimateEditorView({
   )
 
   const addDirectoryWork = useCallback(
-    async (selected: ProjectEstimateOptionRow, quantity: number, price: number) => {
+    async (
+      selected: ProjectEstimateOptionRow,
+      quantity: number,
+      price: number
+    ) => {
       if (!workDialog.sectionId) return
 
       await save({
@@ -528,7 +554,13 @@ export function EstimateEditorView({
   )
 
   const addDirectoryMaterial = useCallback(
-    async (selected: ProjectEstimateMaterialOptionRow, quantity: number, consumption: number | null, price: number, changedField: "quantity" | "consumption" | "price") => {
+    async (
+      selected: ProjectEstimateMaterialOptionRow,
+      quantity: number,
+      consumption: number | null,
+      price: number,
+      changedField: "quantity" | "consumption" | "price"
+    ) => {
       if (!materialDialog.work) return
 
       await save({
@@ -624,7 +656,9 @@ export function EstimateEditorView({
       <div className="flex flex-col gap-3 p-4">
         <Alert variant="destructive">
           <AlertTitle>Ошибка</AlertTitle>
-          <AlertDescription>{loadError ?? "Не удалось загрузить смету"}</AlertDescription>
+          <AlertDescription>
+            {loadError ?? "Не удалось загрузить смету"}
+          </AlertDescription>
         </Alert>
         <Button className="w-fit" variant="outline" onClick={() => refetch()}>
           Повторить
@@ -695,13 +729,17 @@ export function EstimateEditorView({
           onSelect={handleMaterialSelect}
           onDirectorySubmit={addDirectoryMaterial}
         />
-        <Dialog open={coefficientOpen} onOpenChange={handleCoefficientOpenChange}>
+        <Dialog
+          open={coefficientOpen}
+          onOpenChange={handleCoefficientOpenChange}
+        >
           <DialogContent className="sm:max-w-sm">
             <form className="flex flex-col gap-4" onSubmit={applyCoefficient}>
               <DialogHeader>
                 <DialogTitle>Коэффициент работ</DialogTitle>
                 <DialogDescription>
-                  Коэффициент применяется только к работам. Цена округляется вверх до ближайших 10 ₽.
+                  Коэффициент применяется только к работам. Цена округляется
+                  вверх до ближайших 10 ₽.
                 </DialogDescription>
               </DialogHeader>
               <Field>
@@ -727,7 +765,10 @@ export function EstimateEditorView({
                 >
                   Отмена
                 </Button>
-                <Button type="submit" disabled={saving || coefficientQuery.isLoading}>
+                <Button
+                  type="submit"
+                  disabled={saving || coefficientQuery.isLoading}
+                >
                   Применить
                 </Button>
               </DialogFooter>
@@ -741,7 +782,9 @@ export function EstimateEditorView({
           <AlertDialogContent className="sm:max-w-sm">
             <AlertDialogHeader>
               <AlertDialogTitle>{archiveRequest?.title}</AlertDialogTitle>
-              <AlertDialogDescription>{archiveRequest?.description}</AlertDialogDescription>
+              <AlertDialogDescription>
+                {archiveRequest?.description}
+              </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel

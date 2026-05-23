@@ -49,7 +49,11 @@ export function InviteMemberCard() {
     }
 
     try {
-      const result = await invite(email.trim(), role, message.trim() || undefined)
+      const result = await invite(
+        email.trim(),
+        role,
+        message.trim() || undefined
+      )
       if (result.warning) {
         setWarning(result.warning)
         toast.warning(result.warning)
@@ -60,7 +64,8 @@ export function InviteMemberCard() {
       setRole("viewer")
       setMessage("")
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Ошибка отправки приглашения"
+      const msg =
+        err instanceof Error ? err.message : "Ошибка отправки приглашения"
       setLocalError(msg)
       toast.error(msg)
     }
@@ -98,11 +103,7 @@ export function InviteMemberCard() {
             <Label htmlFor="invite-role" className="text-xs">
               Роль
             </Label>
-            <Select
-              value={role}
-              onValueChange={setRole}
-              disabled={loading}
-            >
+            <Select value={role} onValueChange={setRole} disabled={loading}>
               <SelectTrigger id="invite-role" className="h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -122,23 +123,30 @@ export function InviteMemberCard() {
             <Textarea
               id="invite-message"
               placeholder="Привет! Приглашаю тебя присоединиться к workspace..."
-              className="min-h-[80px] text-xs resize-none"
+              className="min-h-[80px] resize-none text-xs"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               disabled={loading}
             />
           </div>
           {localError && (
-            <p className="sm:col-span-2 text-xs text-destructive">{localError}</p>
+            <p className="text-xs text-destructive sm:col-span-2">
+              {localError}
+            </p>
           )}
           {warning && (
-            <p className="sm:col-span-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-md p-2">
+            <p className="rounded-md bg-amber-50 p-2 text-xs text-amber-600 sm:col-span-2 dark:bg-amber-950/30">
               ⚠️ {warning}
             </p>
           )}
         </CardContent>
         <CardFooter className="border-t border-dashed border-border/50 pt-4">
-          <Button type="submit" size="sm" className="gap-1.5" disabled={loading}>
+          <Button
+            type="submit"
+            size="sm"
+            className="gap-1.5"
+            disabled={loading}
+          >
             {loading ? (
               <Spinner className="size-3.5 animate-spin" />
             ) : (

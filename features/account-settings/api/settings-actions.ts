@@ -26,7 +26,9 @@ export async function updateProfileSettings(data: Partial<AccountProfile>) {
   return ensureSettingsData(await updateProfile(data))
 }
 
-export async function updateWorkspaceSettings(data: Partial<WorkspaceSettings>) {
+export async function updateWorkspaceSettings(
+  data: Partial<WorkspaceSettings>
+) {
   return ensureSettingsData(await updateWorkspace(data))
 }
 

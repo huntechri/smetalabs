@@ -19,7 +19,10 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   return handleDirectorySupplierUpdateRequest(request, id)
 }
 
-async function archiveSupplier(_request: NextRequest, { params }: RouteContext) {
+async function archiveSupplier(
+  _request: NextRequest,
+  { params }: RouteContext
+) {
   const { id } = await params
   return handleDirectorySupplierArchiveRequest(id)
 }

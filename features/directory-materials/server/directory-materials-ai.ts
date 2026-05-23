@@ -85,7 +85,9 @@ function buildEmbeddingInputText(row: MaterialForEmbeddingDbRow) {
 
 function buildContentHash(inputText: string) {
   return createHash("sha256")
-    .update(`${DIRECTORY_MATERIALS_AI_MODEL}:${DIRECTORY_MATERIALS_AI_DIMENSIONS}:${inputText}`)
+    .update(
+      `${DIRECTORY_MATERIALS_AI_MODEL}:${DIRECTORY_MATERIALS_AI_DIMENSIONS}:${inputText}`
+    )
     .digest("hex")
 }
 
@@ -189,7 +191,9 @@ export async function enqueueDirectoryMaterialEmbeddingForWorkspace(
 ) {
   const { data, error } = await supabase
     .from("directory_materials")
-    .select("id,name,unit_label,unit_code,price_amount,currency_code,category,subcategory,code,supplier_name,description,aliases,keywords")
+    .select(
+      "id,name,unit_label,unit_code,price_amount,currency_code,category,subcategory,code,supplier_name,description,aliases,keywords"
+    )
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", materialId)
     .eq("status", "active")
@@ -249,7 +253,10 @@ export async function enqueueAllDirectoryMaterialEmbeddingsForWorkspace(
   if (error) throw error
 
   for (const row of (data ?? []) as Array<{ id: string }>) {
-    await enqueueDirectoryMaterialEmbeddingForWorkspace(workspaceOwnerId, row.id)
+    await enqueueDirectoryMaterialEmbeddingForWorkspace(
+      workspaceOwnerId,
+      row.id
+    )
   }
 }
 
@@ -258,7 +265,10 @@ export async function processDirectoryMaterialEmbeddingsForWorkspace(
   limit = DEFAULT_EMBEDDING_PROCESS_LIMIT
 ) {
   const safeLimit = Math.max(1, Math.min(limit, MAX_EMBEDDING_PROCESS_LIMIT))
-  await enqueueAllDirectoryMaterialEmbeddingsForWorkspace(workspaceOwnerId, safeLimit)
+  await enqueueAllDirectoryMaterialEmbeddingsForWorkspace(
+    workspaceOwnerId,
+    safeLimit
+  )
 
   const { data, error } = await supabase
     .from("directory_material_embeddings")
@@ -297,7 +307,10 @@ export async function processDirectoryMaterialEmbeddingsForWorkspace(
         .from("directory_material_embeddings")
         .update({
           status: "failed",
-          last_error: err instanceof Error ? err.message : "Не удалось подготовить материал для AI-поиска",
+          last_error:
+            err instanceof Error
+              ? err.message
+              : "Не удалось подготовить материал для AI-поиска",
         })
         .eq("workspace_owner_id", workspaceOwnerId)
         .eq("id", row.id)
@@ -327,8 +340,14 @@ export async function searchDirectoryMaterialsAiForWorkspace(
   }
 ) {
   const query = normalizeText(input.query)
-  const limit = Math.max(1, Math.min(input.limit ?? DEFAULT_AI_SEARCH_LIMIT, 50))
-  const threshold = Math.min(Math.max(input.threshold ?? DEFAULT_AI_SEARCH_THRESHOLD, 0), 1)
+  const limit = Math.max(
+    1,
+    Math.min(input.limit ?? DEFAULT_AI_SEARCH_LIMIT, 50)
+  )
+  const threshold = Math.min(
+    Math.max(input.threshold ?? DEFAULT_AI_SEARCH_THRESHOLD, 0),
+    1
+  )
   const embedding = await createEmbedding(query)
 
   const { data, error } = await supabase.rpc("search_directory_materials_ai", {

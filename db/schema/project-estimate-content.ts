@@ -78,8 +78,14 @@ export const projectEstimateSections = pgTable(
       t.sortOrder,
       t.id
     ),
-    check("chk_project_estimate_sections_title_not_empty", sql`btrim(${t.title}) <> ''`),
-    check("chk_project_estimate_sections_number_not_empty", sql`btrim(${t.number}) <> ''`),
+    check(
+      "chk_project_estimate_sections_title_not_empty",
+      sql`btrim(${t.title}) <> ''`
+    ),
+    check(
+      "chk_project_estimate_sections_number_not_empty",
+      sql`btrim(${t.number}) <> ''`
+    ),
     check(
       "chk_project_estimate_sections_amounts_non_negative",
       sql`${t.worksAmount} >= 0 AND ${t.materialsAmount} >= 0 AND ${t.totalAmount} >= 0`
@@ -104,7 +110,9 @@ export const projectEstimateWorks = pgTable(
     title: text("title").notNull(),
     unitCode: text("unit_code").notNull(),
     unitLabel: text("unit_label").notNull(),
-    quantity: numeric("quantity", { precision: 14, scale: 3 }).notNull().default("0"),
+    quantity: numeric("quantity", { precision: 14, scale: 3 })
+      .notNull()
+      .default("0"),
     price: numeric("price", { precision: 14, scale: 2 }).notNull().default("0"),
     totalAmount: numeric("total_amount", { precision: 14, scale: 2 })
       .notNull()
@@ -128,7 +136,9 @@ export const projectEstimateWorks = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (t) => [
-    uniqueIndex("uq_project_estimate_works_id_workspace_project_record_section").on(
+    uniqueIndex(
+      "uq_project_estimate_works_id_workspace_project_record_section"
+    ).on(
       t.id,
       t.workspaceOwnerId,
       t.projectId,
@@ -146,7 +156,12 @@ export const projectEstimateWorks = pgTable(
     }).onDelete("cascade"),
     foreignKey({
       name: "fk_project_estimate_works_section_workspace_project_record",
-      columns: [t.sectionId, t.workspaceOwnerId, t.projectId, t.estimateRecordId],
+      columns: [
+        t.sectionId,
+        t.workspaceOwnerId,
+        t.projectId,
+        t.estimateRecordId,
+      ],
       foreignColumns: [
         projectEstimateSections.id,
         projectEstimateSections.workspaceOwnerId,
@@ -172,13 +187,34 @@ export const projectEstimateWorks = pgTable(
     index("idx_project_estimate_works_directory_work")
       .on(t.workspaceOwnerId, t.directoryWorkId)
       .where(sql`${t.directoryWorkId} IS NOT NULL`),
-    check("chk_project_estimate_works_number_not_empty", sql`btrim(${t.number}) <> ''`),
-    check("chk_project_estimate_works_title_not_empty", sql`btrim(${t.title}) <> ''`),
-    check("chk_project_estimate_works_unit_code_not_empty", sql`btrim(${t.unitCode}) <> ''`),
-    check("chk_project_estimate_works_unit_label_not_empty", sql`btrim(${t.unitLabel}) <> ''`),
-    check("chk_project_estimate_works_quantity_non_negative", sql`${t.quantity} >= 0`),
-    check("chk_project_estimate_works_price_non_negative", sql`${t.price} >= 0`),
-    check("chk_project_estimate_works_total_non_negative", sql`${t.totalAmount} >= 0`),
+    check(
+      "chk_project_estimate_works_number_not_empty",
+      sql`btrim(${t.number}) <> ''`
+    ),
+    check(
+      "chk_project_estimate_works_title_not_empty",
+      sql`btrim(${t.title}) <> ''`
+    ),
+    check(
+      "chk_project_estimate_works_unit_code_not_empty",
+      sql`btrim(${t.unitCode}) <> ''`
+    ),
+    check(
+      "chk_project_estimate_works_unit_label_not_empty",
+      sql`btrim(${t.unitLabel}) <> ''`
+    ),
+    check(
+      "chk_project_estimate_works_quantity_non_negative",
+      sql`${t.quantity} >= 0`
+    ),
+    check(
+      "chk_project_estimate_works_price_non_negative",
+      sql`${t.price} >= 0`
+    ),
+    check(
+      "chk_project_estimate_works_total_non_negative",
+      sql`${t.totalAmount} >= 0`
+    ),
     check(
       "chk_project_estimate_works_directory_version_positive",
       sql`${t.directoryWorkVersion} IS NULL OR ${t.directoryWorkVersion} > 0`
@@ -204,7 +240,9 @@ export const projectEstimateMaterials = pgTable(
     title: text("title").notNull(),
     unitCode: text("unit_code").notNull(),
     unitLabel: text("unit_label").notNull(),
-    quantity: numeric("quantity", { precision: 14, scale: 3 }).notNull().default("0"),
+    quantity: numeric("quantity", { precision: 14, scale: 3 })
+      .notNull()
+      .default("0"),
     consumption: numeric("consumption", { precision: 14, scale: 6 }),
     price: numeric("price", { precision: 14, scale: 2 }).notNull().default("0"),
     totalAmount: numeric("total_amount", { precision: 14, scale: 2 })
@@ -240,7 +278,12 @@ export const projectEstimateMaterials = pgTable(
     }).onDelete("cascade"),
     foreignKey({
       name: "fk_project_estimate_materials_section_workspace_project_record",
-      columns: [t.sectionId, t.workspaceOwnerId, t.projectId, t.estimateRecordId],
+      columns: [
+        t.sectionId,
+        t.workspaceOwnerId,
+        t.projectId,
+        t.estimateRecordId,
+      ],
       foreignColumns: [
         projectEstimateSections.id,
         projectEstimateSections.workspaceOwnerId,
@@ -250,7 +293,13 @@ export const projectEstimateMaterials = pgTable(
     }).onDelete("cascade"),
     foreignKey({
       name: "fk_project_estimate_materials_work_workspace_project_record_section",
-      columns: [t.workId, t.workspaceOwnerId, t.projectId, t.estimateRecordId, t.sectionId],
+      columns: [
+        t.workId,
+        t.workspaceOwnerId,
+        t.projectId,
+        t.estimateRecordId,
+        t.sectionId,
+      ],
       foreignColumns: [
         projectEstimateWorks.id,
         projectEstimateWorks.workspaceOwnerId,
@@ -262,7 +311,10 @@ export const projectEstimateMaterials = pgTable(
     foreignKey({
       name: "fk_project_estimate_materials_directory_material_workspace",
       columns: [t.directoryMaterialId, t.workspaceOwnerId],
-      foreignColumns: [directoryMaterials.id, directoryMaterials.workspaceOwnerId],
+      foreignColumns: [
+        directoryMaterials.id,
+        directoryMaterials.workspaceOwnerId,
+      ],
     }).onDelete("restrict"),
     index("idx_project_estimate_materials_work_active").on(
       t.workspaceOwnerId,
@@ -288,17 +340,38 @@ export const projectEstimateMaterials = pgTable(
     index("idx_project_estimate_materials_directory_material")
       .on(t.workspaceOwnerId, t.directoryMaterialId)
       .where(sql`${t.directoryMaterialId} IS NOT NULL`),
-    check("chk_project_estimate_materials_number_not_empty", sql`btrim(${t.number}) <> ''`),
-    check("chk_project_estimate_materials_title_not_empty", sql`btrim(${t.title}) <> ''`),
-    check("chk_project_estimate_materials_unit_code_not_empty", sql`btrim(${t.unitCode}) <> ''`),
-    check("chk_project_estimate_materials_unit_label_not_empty", sql`btrim(${t.unitLabel}) <> ''`),
-    check("chk_project_estimate_materials_quantity_non_negative", sql`${t.quantity} >= 0`),
+    check(
+      "chk_project_estimate_materials_number_not_empty",
+      sql`btrim(${t.number}) <> ''`
+    ),
+    check(
+      "chk_project_estimate_materials_title_not_empty",
+      sql`btrim(${t.title}) <> ''`
+    ),
+    check(
+      "chk_project_estimate_materials_unit_code_not_empty",
+      sql`btrim(${t.unitCode}) <> ''`
+    ),
+    check(
+      "chk_project_estimate_materials_unit_label_not_empty",
+      sql`btrim(${t.unitLabel}) <> ''`
+    ),
+    check(
+      "chk_project_estimate_materials_quantity_non_negative",
+      sql`${t.quantity} >= 0`
+    ),
     check(
       "chk_project_estimate_materials_consumption_positive",
       sql`${t.consumption} IS NULL OR ${t.consumption} > 0`
     ),
-    check("chk_project_estimate_materials_price_non_negative", sql`${t.price} >= 0`),
-    check("chk_project_estimate_materials_total_non_negative", sql`${t.totalAmount} >= 0`),
+    check(
+      "chk_project_estimate_materials_price_non_negative",
+      sql`${t.price} >= 0`
+    ),
+    check(
+      "chk_project_estimate_materials_total_non_negative",
+      sql`${t.totalAmount} >= 0`
+    ),
     check(
       "chk_project_estimate_materials_directory_version_positive",
       sql`${t.directoryMaterialVersion} IS NULL OR ${t.directoryMaterialVersion} > 0`

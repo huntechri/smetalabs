@@ -8,13 +8,11 @@ describe("access-control client", () => {
   })
 
   it("fetches roles with credentials", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        Response.json({
-          data: [{ id: "owner", name: "owner", permissions: [] }],
-        })
-      )
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        data: [{ id: "owner", name: "owner", permissions: [] }],
+      })
+    )
     vi.stubGlobal("fetch", fetchMock)
 
     await expect(fetchAccessRoles()).resolves.toEqual([

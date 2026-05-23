@@ -20,10 +20,7 @@ export function PurchaseRow({ row }: { row: PurchaseRow }) {
         <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)]">
           <PurchaseMetricGroup title="План">
             <PurchaseValue label="Кол-во" value={row.planQuantity} />
-            <PurchaseValue
-              label="Цена"
-              value={formatMoney(row.planPrice)}
-            />
+            <PurchaseValue label="Цена" value={formatMoney(row.planPrice)} />
             <PurchaseValue
               label="Итого"
               strong
@@ -33,10 +30,7 @@ export function PurchaseRow({ row }: { row: PurchaseRow }) {
 
           <PurchaseMetricGroup title="Факт">
             <PurchaseValue label="Кол-во" value={row.factQuantity} />
-            <PurchaseValue
-              label="Цена"
-              value={formatMoney(row.factPrice)}
-            />
+            <PurchaseValue label="Цена" value={formatMoney(row.factPrice)} />
             <PurchaseValue
               label="Итого"
               strong

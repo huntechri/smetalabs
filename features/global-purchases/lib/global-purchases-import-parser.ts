@@ -12,11 +12,32 @@ export type GlobalPurchasesImportPreviewRow = {
 export const GLOBAL_PURCHASES_IMPORT_REQUIRED_COLUMNS =
   "Наименование;Ед. изм.;Кол-во факт;Цена факт;Объект;Дата;Примечание"
 
-export const GLOBAL_PURCHASES_IMPORT_TEMPLATE_FILENAME = "global-purchases-import-template.csv"
+export const GLOBAL_PURCHASES_IMPORT_TEMPLATE_FILENAME =
+  "global-purchases-import-template.csv"
 
 export const GLOBAL_PURCHASES_IMPORT_TEMPLATE = [
-  ["Наименование", "Ед. изм.", "Кол-во факт", "Цена факт", "Объект", "Дата", "Примечание", "Кол-во план", "Цена план"],
-  ["Цемент М500", "меш", "10", "450", "", "2026-05-18", "пример строки, объект можно оставить пустым", "0", "450"],
+  [
+    "Наименование",
+    "Ед. изм.",
+    "Кол-во факт",
+    "Цена факт",
+    "Объект",
+    "Дата",
+    "Примечание",
+    "Кол-во план",
+    "Цена план",
+  ],
+  [
+    "Цемент М500",
+    "меш",
+    "10",
+    "450",
+    "",
+    "2026-05-18",
+    "пример строки, объект можно оставить пустым",
+    "0",
+    "450",
+  ],
 ]
   .map((row) => row.map(formatTemplateCell).join(";"))
   .join("\n")
@@ -97,7 +118,9 @@ function parseDelimited(text: string) {
   if (lines.length === 0) return []
 
   const delimiter =
-    (lines[0]!.match(/;/g)?.length ?? 0) >= (lines[0]!.match(/,/g)?.length ?? 0) ? ";" : ","
+    (lines[0]!.match(/;/g)?.length ?? 0) >= (lines[0]!.match(/,/g)?.length ?? 0)
+      ? ";"
+      : ","
   const headers = splitDelimitedLine(lines[0]!, delimiter).map(normalizeKey)
 
   return lines.slice(1).map((line) => {
@@ -110,7 +133,10 @@ function parseDelimited(text: string) {
   })
 }
 
-export function pickGlobalPurchasesImportValue(row: Record<string, string>, keys: string[]) {
+export function pickGlobalPurchasesImportValue(
+  row: Record<string, string>,
+  keys: string[]
+) {
   for (const key of keys) {
     const value = row[normalizeKey(key)]
     if (value !== undefined) return value
@@ -122,26 +148,81 @@ export function buildGlobalPurchasesImportPreviewRows(
   text: string,
   projects: ProjectRow[]
 ): GlobalPurchasesImportPreviewRow[] {
-  const projectsByTitle = new Map(projects.map((project) => [normalizeKey(project.title), project]))
+  const projectsByTitle = new Map(
+    projects.map((project) => [normalizeKey(project.title), project])
+  )
 
   return parseDelimited(text).map((row, index) => {
     const errors: string[] = []
-    const title = normalizeText(pickGlobalPurchasesImportValue(row, ["Наименование", "Название", "Материал", "title"]))
-    const unit = normalizeText(pickGlobalPurchasesImportValue(row, ["Ед. изм.", "Ед изм", "Единица", "unit"]))
-    const factQuantity = parseNumber(pickGlobalPurchasesImportValue(row, ["Кол-во факт", "Количество факт", "Количество", "factQuantity"]))
-    const factPrice = parseNumber(pickGlobalPurchasesImportValue(row, ["Цена факт", "Цена", "factPrice"]))
-    const planQuantity = parseNumber(pickGlobalPurchasesImportValue(row, ["Кол-во план", "Количество план", "planQuantity"])) ?? 0
-    const planPrice = parseNumber(pickGlobalPurchasesImportValue(row, ["Цена план", "planPrice"])) ?? factPrice ?? 0
-    const projectTitle = normalizeText(pickGlobalPurchasesImportValue(row, ["Объект", "Проект", "project"]))
-    const project = projectTitle ? projectsByTitle.get(normalizeKey(projectTitle)) : null
-    const purchaseDate = parseDate(pickGlobalPurchasesImportValue(row, ["Дата", "Дата закупки", "purchaseDate"]))
-    const notes = normalizeText(pickGlobalPurchasesImportValue(row, ["Примечание", "Комментарий", "notes"]))
+    const title = normalizeText(
+      pickGlobalPurchasesImportValue(row, [
+        "Наименование",
+        "Название",
+        "Материал",
+        "title",
+      ])
+    )
+    const unit = normalizeText(
+      pickGlobalPurchasesImportValue(row, [
+        "Ед. изм.",
+        "Ед изм",
+        "Единица",
+        "unit",
+      ])
+    )
+    const factQuantity = parseNumber(
+      pickGlobalPurchasesImportValue(row, [
+        "Кол-во факт",
+        "Количество факт",
+        "Количество",
+        "factQuantity",
+      ])
+    )
+    const factPrice = parseNumber(
+      pickGlobalPurchasesImportValue(row, ["Цена факт", "Цена", "factPrice"])
+    )
+    const planQuantity =
+      parseNumber(
+        pickGlobalPurchasesImportValue(row, [
+          "Кол-во план",
+          "Количество план",
+          "planQuantity",
+        ])
+      ) ?? 0
+    const planPrice =
+      parseNumber(
+        pickGlobalPurchasesImportValue(row, ["Цена план", "planPrice"])
+      ) ??
+      factPrice ??
+      0
+    const projectTitle = normalizeText(
+      pickGlobalPurchasesImportValue(row, ["Объект", "Проект", "project"])
+    )
+    const project = projectTitle
+      ? projectsByTitle.get(normalizeKey(projectTitle))
+      : null
+    const purchaseDate = parseDate(
+      pickGlobalPurchasesImportValue(row, [
+        "Дата",
+        "Дата закупки",
+        "purchaseDate",
+      ])
+    )
+    const notes = normalizeText(
+      pickGlobalPurchasesImportValue(row, [
+        "Примечание",
+        "Комментарий",
+        "notes",
+      ])
+    )
 
     if (!title) errors.push("Нет наименования")
     if (!unit) errors.push("Нет единицы измерения")
-    if (factQuantity === null) errors.push("Некорректное фактическое количество")
+    if (factQuantity === null)
+      errors.push("Некорректное фактическое количество")
     if (factPrice === null) errors.push("Некорректная фактическая цена")
-    if (projectTitle && !project) errors.push(`Объект не найден: ${projectTitle}`)
+    if (projectTitle && !project)
+      errors.push(`Объект не найден: ${projectTitle}`)
 
     return {
       index: index + 2,

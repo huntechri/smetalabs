@@ -31,11 +31,13 @@ export interface SuccessResponse {
 /**
  * Получение списка уведомлений с бэкенда.
  */
-export async function fetchNotifications(filters: {
-  unreadOnly?: boolean
-  limit?: number
-  offset?: number
-} = {}): Promise<NotificationsResponse["data"]> {
+export async function fetchNotifications(
+  filters: {
+    unreadOnly?: boolean
+    limit?: number
+    offset?: number
+  } = {}
+): Promise<NotificationsResponse["data"]> {
   const params = new URLSearchParams()
   if (filters.unreadOnly !== undefined) {
     params.set("unreadOnly", String(filters.unreadOnly))
@@ -74,7 +76,9 @@ export async function markNotificationsRead(params: {
 
   if (!res.ok) {
     const body = await res.json().catch(() => null)
-    throw new Error(body?.error?.message ?? `Ошибка при сохранении: ${res.status}`)
+    throw new Error(
+      body?.error?.message ?? `Ошибка при сохранении: ${res.status}`
+    )
   }
 
   const json: SuccessResponse = await res.json()
@@ -98,7 +102,9 @@ export async function archiveNotifications(params: {
 
   if (!res.ok) {
     const body = await res.json().catch(() => null)
-    throw new Error(body?.error?.message ?? `Ошибка при архивации: ${res.status}`)
+    throw new Error(
+      body?.error?.message ?? `Ошибка при архивации: ${res.status}`
+    )
   }
 
   const json: SuccessResponse = await res.json()

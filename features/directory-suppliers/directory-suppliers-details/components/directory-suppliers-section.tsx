@@ -31,7 +31,8 @@ export function DirectorySuppliersSection() {
   const searchParams = useSearchParams()
   const supplierState = useDirectorySuppliers()
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingSupplier, setEditingSupplier] = useState<DirectorySupplier | null>(null)
+  const [editingSupplier, setEditingSupplier] =
+    useState<DirectorySupplier | null>(null)
 
   useEffect(() => {
     const handleCreate = () => {
@@ -39,7 +40,8 @@ export function DirectorySuppliersSection() {
       setDialogOpen(true)
     }
     window.addEventListener(DIRECTORY_SUPPLIERS_CREATE_EVENT, handleCreate)
-    return () => window.removeEventListener(DIRECTORY_SUPPLIERS_CREATE_EVENT, handleCreate)
+    return () =>
+      window.removeEventListener(DIRECTORY_SUPPLIERS_CREATE_EVENT, handleCreate)
   }, [])
 
   const setCursor = (cursor: number) => {
@@ -51,9 +53,11 @@ export function DirectorySuppliersSection() {
   }
 
   const currentCursor = supplierState.params.cursor ?? 0
-  const currentLimit = supplierState.params.limit ?? supplierState.meta?.limit ?? DEFAULT_LIMIT
+  const currentLimit =
+    supplierState.params.limit ?? supplierState.meta?.limit ?? DEFAULT_LIMIT
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
-  const nextCursor = supplierState.meta?.nextCursor ?? currentCursor + currentLimit
+  const nextCursor =
+    supplierState.meta?.nextCursor ?? currentCursor + currentLimit
   const isLoadingList = supplierState.loading || supplierState.isFetching
 
   return (
@@ -68,14 +72,19 @@ export function DirectorySuppliersSection() {
           {isLoadingList ? <DirectorySuppliersRowsSkeleton /> : null}
           {!isLoadingList && supplierState.suppliers.length === 0 ? (
             <div className="p-4 text-xs/relaxed text-muted-foreground">
-              Поставщики не найдены. Добавьте первого поставщика вручную или измените поиск.
+              Поставщики не найдены. Добавьте первого поставщика вручную или
+              измените поиск.
             </div>
           ) : null}
           {!isLoadingList
             ? supplierState.suppliers.map((row) => (
                 <DirectorySuppliersRow
                   key={row.id}
-                  onArchive={(supplier) => void supplierState.archiveSupplier(supplier.id).catch(() => undefined)}
+                  onArchive={(supplier) =>
+                    void supplierState
+                      .archiveSupplier(supplier.id)
+                      .catch(() => undefined)
+                  }
                   onEdit={(supplier) => {
                     setEditingSupplier(supplier)
                     setDialogOpen(true)
@@ -88,10 +97,31 @@ export function DirectorySuppliersSection() {
         </div>
         {supplierState.meta ? (
           <div className="flex flex-col gap-3 border-t border-border p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <div>Показано {supplierState.suppliers.length > 0 ? currentCursor + 1 : 0}–{currentCursor + supplierState.suppliers.length}. Всего: {supplierState.meta.total}</div>
+            <div>
+              Показано{" "}
+              {supplierState.suppliers.length > 0 ? currentCursor + 1 : 0}–
+              {currentCursor + supplierState.suppliers.length}. Всего:{" "}
+              {supplierState.meta.total}
+            </div>
             <div className="flex gap-2">
-              <Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || isLoadingList} onClick={() => setCursor(previousCursor)}>Назад</Button>
-              <Button type="button" size="sm" variant="outline" disabled={!supplierState.meta.hasMore || isLoadingList} onClick={() => setCursor(nextCursor)}>Вперёд</Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={currentCursor === 0 || isLoadingList}
+                onClick={() => setCursor(previousCursor)}
+              >
+                Назад
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={!supplierState.meta.hasMore || isLoadingList}
+                onClick={() => setCursor(nextCursor)}
+              >
+                Вперёд
+              </Button>
             </div>
           </div>
         ) : null}
@@ -105,7 +135,8 @@ export function DirectorySuppliersSection() {
         saving={supplierState.saving}
         supplier={editingSupplier}
         onSubmit={async (input) => {
-          if (editingSupplier) await supplierState.updateSupplier(editingSupplier.id, input)
+          if (editingSupplier)
+            await supplierState.updateSupplier(editingSupplier.id, input)
           else await supplierState.createSupplier(input)
           setDialogOpen(false)
           setEditingSupplier(null)

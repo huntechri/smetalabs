@@ -102,7 +102,9 @@ export const directoryWorks = pgTable(
     unitCode: text("unit_code").notNull(),
     unitLabel: text("unit_label").notNull(),
     rateAmount: numeric("rate_amount", { precision: 12, scale: 2 }).notNull(),
-    currencyCode: varchar("currency_code", { length: 3 }).notNull().default("RUB"),
+    currencyCode: varchar("currency_code", { length: 3 })
+      .notNull()
+      .default("RUB"),
     priceKind: directoryWorkPriceKindEnum("price_kind")
       .notNull()
       .default("base"),
@@ -165,9 +167,18 @@ export const directoryWorks = pgTable(
       t.updatedAt
     ),
     check("chk_directory_works_title_not_empty", sql`btrim(${t.title}) <> ''`),
-    check("chk_directory_works_unit_code_not_empty", sql`btrim(${t.unitCode}) <> ''`),
-    check("chk_directory_works_unit_label_not_empty", sql`btrim(${t.unitLabel}) <> ''`),
-    check("chk_directory_works_category_not_empty", sql`btrim(${t.category}) <> ''`),
+    check(
+      "chk_directory_works_unit_code_not_empty",
+      sql`btrim(${t.unitCode}) <> ''`
+    ),
+    check(
+      "chk_directory_works_unit_label_not_empty",
+      sql`btrim(${t.unitLabel}) <> ''`
+    ),
+    check(
+      "chk_directory_works_category_not_empty",
+      sql`btrim(${t.category}) <> ''`
+    ),
     check("chk_directory_works_rate_non_negative", sql`${t.rateAmount} >= 0`),
     check("chk_directory_works_version_positive", sql`${t.version} > 0`),
     check(
@@ -260,7 +271,10 @@ export const workKeywords = pgTable(
       t.workspaceOwnerId,
       t.normalizedKeyword
     ),
-    check("chk_work_keywords_keyword_not_empty", sql`btrim(${t.keyword}) <> ''`),
+    check(
+      "chk_work_keywords_keyword_not_empty",
+      sql`btrim(${t.keyword}) <> ''`
+    ),
     check("chk_work_keywords_weight_positive", sql`${t.weight} > 0`),
   ]
 )
@@ -321,15 +335,42 @@ export const directoryWorkImportJobs = pgTable(
       t.status,
       t.createdAt
     ),
-    check("chk_directory_work_import_jobs_total_rows_non_negative", sql`${t.totalRows} >= 0`),
-    check("chk_directory_work_import_jobs_parsed_rows_non_negative", sql`${t.parsedRows} >= 0`),
-    check("chk_directory_work_import_jobs_valid_rows_non_negative", sql`${t.validRows} >= 0`),
-    check("chk_directory_work_import_jobs_warning_rows_non_negative", sql`${t.warningRows} >= 0`),
-    check("chk_directory_work_import_jobs_error_rows_non_negative", sql`${t.errorRows} >= 0`),
-    check("chk_directory_work_import_jobs_duplicate_rows_non_negative", sql`${t.duplicateRows} >= 0`),
-    check("chk_directory_work_import_jobs_conflict_rows_non_negative", sql`${t.conflictRows} >= 0`),
-    check("chk_directory_work_import_jobs_applied_rows_non_negative", sql`${t.appliedRows} >= 0`),
-    check("chk_directory_work_import_jobs_skipped_rows_non_negative", sql`${t.skippedRows} >= 0`),
+    check(
+      "chk_directory_work_import_jobs_total_rows_non_negative",
+      sql`${t.totalRows} >= 0`
+    ),
+    check(
+      "chk_directory_work_import_jobs_parsed_rows_non_negative",
+      sql`${t.parsedRows} >= 0`
+    ),
+    check(
+      "chk_directory_work_import_jobs_valid_rows_non_negative",
+      sql`${t.validRows} >= 0`
+    ),
+    check(
+      "chk_directory_work_import_jobs_warning_rows_non_negative",
+      sql`${t.warningRows} >= 0`
+    ),
+    check(
+      "chk_directory_work_import_jobs_error_rows_non_negative",
+      sql`${t.errorRows} >= 0`
+    ),
+    check(
+      "chk_directory_work_import_jobs_duplicate_rows_non_negative",
+      sql`${t.duplicateRows} >= 0`
+    ),
+    check(
+      "chk_directory_work_import_jobs_conflict_rows_non_negative",
+      sql`${t.conflictRows} >= 0`
+    ),
+    check(
+      "chk_directory_work_import_jobs_applied_rows_non_negative",
+      sql`${t.appliedRows} >= 0`
+    ),
+    check(
+      "chk_directory_work_import_jobs_skipped_rows_non_negative",
+      sql`${t.skippedRows} >= 0`
+    ),
   ]
 )
 
@@ -403,7 +444,10 @@ export const directoryWorkImportRows = pgTable(
       t.workspaceOwnerId,
       t.dedupeFingerprint
     ),
-    check("chk_directory_work_import_rows_row_number_positive", sql`${t.rowNumber} > 0`),
+    check(
+      "chk_directory_work_import_rows_row_number_positive",
+      sql`${t.rowNumber} > 0`
+    ),
   ]
 )
 
@@ -454,9 +498,18 @@ export const directoryWorkEmbeddings = pgTable(
       t.workspaceOwnerId,
       t.workId
     ),
-    check("chk_directory_work_embeddings_model_name_not_empty", sql`btrim(${t.modelName}) <> ''`),
-    check("chk_directory_work_embeddings_dimensions_positive", sql`${t.dimensions} > 0`),
-    check("chk_directory_work_embeddings_content_hash_not_empty", sql`btrim(${t.contentHash}) <> ''`),
+    check(
+      "chk_directory_work_embeddings_model_name_not_empty",
+      sql`btrim(${t.modelName}) <> ''`
+    ),
+    check(
+      "chk_directory_work_embeddings_dimensions_positive",
+      sql`${t.dimensions} > 0`
+    ),
+    check(
+      "chk_directory_work_embeddings_content_hash_not_empty",
+      sql`btrim(${t.contentHash}) <> ''`
+    ),
     check(
       "chk_directory_work_embeddings_input_not_empty",
       sql`btrim(${t.embeddingInputText}) <> ''`

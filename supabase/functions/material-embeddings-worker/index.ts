@@ -22,7 +22,10 @@ function json(data: unknown, status = 200) {
 function parseLimit(req: Request) {
   const url = new URL(req.url)
   const raw = Number(url.searchParams.get("limit") ?? DEFAULT_LIMIT)
-  return Math.max(1, Math.min(Number.isFinite(raw) ? Math.floor(raw) : DEFAULT_LIMIT, MAX_LIMIT))
+  return Math.max(
+    1,
+    Math.min(Number.isFinite(raw) ? Math.floor(raw) : DEFAULT_LIMIT, MAX_LIMIT)
+  )
 }
 
 function toVectorLiteral(values: number[]) {
@@ -47,7 +50,9 @@ async function createEmbedding(input: string) {
     throw new Error(text || "OpenAI embedding request failed")
   }
 
-  const payload = await response.json() as { data?: Array<{ embedding?: number[] }> }
+  const payload = (await response.json()) as {
+    data?: Array<{ embedding?: number[] }>
+  }
   const embedding = payload.data?.[0]?.embedding
 
   if (!embedding || embedding.length !== DIMENSIONS) {
@@ -66,7 +71,15 @@ Deno.serve(async (req) => {
   }
 
   if (!Deno.env.get("OPENAI_API_KEY")) {
-    return json({ data: { enabled: false, enqueued: 0, processed: 0, failed: 0, skipped: 0 } })
+    return json({
+      data: {
+        enabled: false,
+        enqueued: 0,
+        processed: 0,
+        failed: 0,
+        skipped: 0,
+      },
+    })
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")

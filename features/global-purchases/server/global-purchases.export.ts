@@ -12,7 +12,8 @@ const STATUS_LABELS: Record<GlobalPurchaseRow["status"], string> = {
   cancelled: "Отменено",
 }
 
-const XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+const XLSX_CONTENT_TYPE =
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 const textEncoder = new TextEncoder()
 
 function escapeXml(value: string | number | null | undefined) {
@@ -85,7 +86,12 @@ function buildSheetRows(purchases: GlobalPurchaseRow[]) {
   const rows: string[] = []
 
   rows.push(buildRow([textCell("Глобальные закупки", 1)], 1, 24))
-  rows.push(buildRow([textCell(`Выгружено: ${exportedAt}. Строк: ${purchases.length}.`, 2)], 2))
+  rows.push(
+    buildRow(
+      [textCell(`Выгружено: ${exportedAt}. Строк: ${purchases.length}.`, 2)],
+      2
+    )
+  )
   rows.push(buildRow([], 3))
 
   rows.push(
@@ -137,7 +143,10 @@ function buildSheetRows(purchases: GlobalPurchaseRow[]) {
 
   const summaryRowIndex = purchases.length + 5
   const planTotal = purchases.reduce((sum, row) => sum + row.planTotal, 0)
-  const factTotal = purchases.reduce((sum, row) => sum + (row.factTotal ?? 0), 0)
+  const factTotal = purchases.reduce(
+    (sum, row) => sum + (row.factTotal ?? 0),
+    0
+  )
   const deviationTotal = planTotal - factTotal
 
   rows.push(

@@ -24,7 +24,10 @@ function isAlreadySaved(error: { code?: string; message?: string }) {
 }
 
 function hasInvitationMetadata(metadata: Record<string, unknown> | undefined) {
-  return typeof metadata?.invitation_id === "string" && metadata.invitation_id.length > 0
+  return (
+    typeof metadata?.invitation_id === "string" &&
+    metadata.invitation_id.length > 0
+  )
 }
 
 export function InvitePasswordForm({
@@ -59,7 +62,8 @@ export function InvitePasswordForm({
     if (updateError && !isAlreadySaved(updateError)) {
       setIsPending(false)
       setError(
-        updateError.message ?? "Не удалось сохранить пароль. Попробуйте ещё раз."
+        updateError.message ??
+          "Не удалось сохранить пароль. Попробуйте ещё раз."
       )
       return
     }

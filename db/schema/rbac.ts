@@ -1,4 +1,12 @@
-import { pgTable, uuid, text, boolean, timestamp, primaryKey, index } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  uuid,
+  text,
+  boolean,
+  timestamp,
+  primaryKey,
+  index,
+} from "drizzle-orm/pg-core"
 import { profiles } from "./profiles"
 
 // ── Roles ──
@@ -8,7 +16,9 @@ export const roles = pgTable("roles", {
   label: text("label").notNull(),
   locked: boolean("locked").notNull().default(false),
   description: text("description"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 })
 
 // ── Permissions ──
@@ -20,7 +30,9 @@ export const permissions = pgTable(
     label: text("label").notNull(),
     groupName: text("group_name").notNull(),
     description: text("description"),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (t) => [index("idx_permissions_group").on(t.groupName)]
 )
@@ -55,7 +67,9 @@ export const userRoles = pgTable(
     assignedBy: uuid("assigned_by").references(() => profiles.id, {
       onDelete: "set null",
     }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (t) => [
     primaryKey({ columns: [t.userId, t.roleId] }),

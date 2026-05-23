@@ -109,10 +109,12 @@ function mapProjectRow(row: ProjectDbRow): ProjectRow {
   }
 }
 
-function applyProjectFilters<T extends { or: (filters: string) => T; eq: (column: string, value: string) => T }>(
-  query: T,
-  params: NormalizedListParams
-) {
+function applyProjectFilters<
+  T extends {
+    or: (filters: string) => T
+    eq: (column: string, value: string) => T
+  },
+>(query: T, params: NormalizedListParams) {
   let scoped = query
 
   if (params.status !== "all") {
@@ -138,15 +140,18 @@ function applyProjectFilters<T extends { or: (filters: string) => T; eq: (column
   return scoped
 }
 
-function applyProjectSort<T extends { order: (column: string, options?: { ascending?: boolean }) => T }>(
-  query: T,
-  params: NormalizedListParams
-) {
+function applyProjectSort<
+  T extends { order: (column: string, options?: { ascending?: boolean }) => T },
+>(query: T, params: NormalizedListParams) {
   if (params.sort === "title_asc") {
-    return query.order("normalized_title", { ascending: true }).order("id", { ascending: true })
+    return query
+      .order("normalized_title", { ascending: true })
+      .order("id", { ascending: true })
   }
 
-  return query.order("updated_at", { ascending: false }).order("id", { ascending: true })
+  return query
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: true })
 }
 
 async function assertProjectTitleUnique(
@@ -168,7 +173,11 @@ async function assertProjectTitleUnique(
   const { data, error } = await query
   if (error) throw error
   if ((data ?? []).length > 0) {
-    throw new ProjectsApiError("BAD_REQUEST", "Проект с таким названием уже существует", 400)
+    throw new ProjectsApiError(
+      "BAD_REQUEST",
+      "Проект с таким названием уже существует",
+      400
+    )
   }
 }
 
@@ -189,7 +198,12 @@ async function getCustomerCounterpartyForWorkspace(
     .maybeSingle()
 
   if (error) throw error
-  if (!data) throw new ProjectsApiError("BAD_REQUEST", "Выбранный заказчик не найден", 400)
+  if (!data)
+    throw new ProjectsApiError(
+      "BAD_REQUEST",
+      "Выбранный заказчик не найден",
+      400
+    )
 
   return data as CustomerCounterpartyRow
 }
@@ -301,7 +315,12 @@ export async function createProjectForWorkspace(
 
   const created = toIdRow(data)
   const project = await getProjectForWorkspace(workspaceOwnerId, created.id)
-  if (!project) throw new ProjectsApiError("INTERNAL_ERROR", "Созданный проект не найден", 500)
+  if (!project)
+    throw new ProjectsApiError(
+      "INTERNAL_ERROR",
+      "Созданный проект не найден",
+      500
+    )
 
   return project
 }
@@ -313,7 +332,8 @@ export async function updateProjectForWorkspace(
   input: ProjectMutationInput
 ): Promise<ProjectRow> {
   const existing = await getProjectForWorkspace(workspaceOwnerId, id)
-  if (!existing) throw new ProjectsApiError("NOT_FOUND", "Проект не найден", 404)
+  if (!existing)
+    throw new ProjectsApiError("NOT_FOUND", "Проект не найден", 404)
 
   await assertProjectTitleUnique(workspaceOwnerId, input.title, id)
 
@@ -328,7 +348,12 @@ export async function updateProjectForWorkspace(
   if (error) throw error
 
   const project = await getProjectForWorkspace(workspaceOwnerId, id)
-  if (!project) throw new ProjectsApiError("INTERNAL_ERROR", "Обновлённый проект не найден", 500)
+  if (!project)
+    throw new ProjectsApiError(
+      "INTERNAL_ERROR",
+      "Обновлённый проект не найден",
+      500
+    )
 
   return project
 }
@@ -339,7 +364,8 @@ export async function archiveProjectForWorkspace(
   id: string
 ): Promise<ProjectRow> {
   const existing = await getProjectForWorkspace(workspaceOwnerId, id)
-  if (!existing) throw new ProjectsApiError("NOT_FOUND", "Проект не найден", 404)
+  if (!existing)
+    throw new ProjectsApiError("NOT_FOUND", "Проект не найден", 404)
 
   const { error } = await supabase
     .from("projects")

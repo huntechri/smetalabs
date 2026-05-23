@@ -22,7 +22,10 @@ export function GlobalPurchasesView({
             </div>
           }
         >
-          <GlobalPurchasesSection projects={projects} projectsLoading={projectsLoading} />
+          <GlobalPurchasesSection
+            projects={projects}
+            projectsLoading={projectsLoading}
+          />
         </Suspense>
       </div>
     </div>

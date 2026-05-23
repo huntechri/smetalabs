@@ -86,13 +86,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import { DotsSixVertical, CheckCircle, Spinner, DotsThreeVertical, Columns, CaretDown, Plus, CaretDoubleLeft, CaretLeft, CaretRight, CaretDoubleRight, TrendUp } from "@phosphor-icons/react"
+  DotsSixVertical,
+  CheckCircle,
+  Spinner,
+  DotsThreeVertical,
+  Columns,
+  CaretDown,
+  Plus,
+  CaretDoubleLeft,
+  CaretLeft,
+  CaretRight,
+  CaretDoubleRight,
+  TrendUp,
+} from "@phosphor-icons/react"
 
 export const schema = z.object({
   id: z.number(),
@@ -411,9 +419,13 @@ export function DataTable({
           <SelectContent>
             <SelectGroup>
               <SelectItem value="outline">Содержание</SelectItem>
-              <SelectItem value="past-performance">Прошлые результаты</SelectItem>
+              <SelectItem value="past-performance">
+                Прошлые результаты
+              </SelectItem>
               <SelectItem value="key-personnel">Ключевой персонал</SelectItem>
-              <SelectItem value="focus-documents">Основные документы</SelectItem>
+              <SelectItem value="focus-documents">
+                Основные документы
+              </SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -703,8 +715,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
               <Separator />
               <div className="grid gap-2">
                 <div className="flex gap-2 leading-none font-medium">
-                  Trending up by 5.2% this month{" "}
-                  <TrendUp className="size-4" />
+                  Trending up by 5.2% this month <TrendUp className="size-4" />
                 </div>
                 <div className="text-muted-foreground">
                   Showing total visitors for the last 6 months. This is just
@@ -732,9 +743,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                       <SelectItem value="Table of Contents">
                         Содержание
                       </SelectItem>
-                      <SelectItem value="Executive Summary">
-                        Резюме
-                      </SelectItem>
+                      <SelectItem value="Executive Summary">Резюме</SelectItem>
                       <SelectItem value="Technical Approach">
                         Технический подход
                       </SelectItem>
@@ -744,7 +753,9 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                         Focus Documents
                       </SelectItem>
                       <SelectItem value="Narrative">Описание</SelectItem>
-                      <SelectItem value="Cover Page">Титульная страница</SelectItem>
+                      <SelectItem value="Cover Page">
+                        Титульная страница
+                      </SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>

@@ -37,15 +37,21 @@ function getNumberParam(searchParams: ReadonlySearchParams, key: string) {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
 }
 
-function getStatusParam(searchParams: ReadonlySearchParams): ProjectStatus | "all" {
+function getStatusParam(
+  searchParams: ReadonlySearchParams
+): ProjectStatus | "all" {
   const status = searchParams.get("status")
-  if (status === "new" || status === "in_progress" || status === "completed") return status
+  if (status === "new" || status === "in_progress" || status === "completed")
+    return status
   return "all"
 }
 
-function getSortParam(searchParams: ReadonlySearchParams): ProjectsSort | undefined {
+function getSortParam(
+  searchParams: ReadonlySearchParams
+): ProjectsSort | undefined {
   const sort = searchParams.get("sort")
-  if (sort === "relevance" || sort === "updated_desc" || sort === "title_asc") return sort
+  if (sort === "relevance" || sort === "updated_desc" || sort === "title_asc")
+    return sort
   return undefined
 }
 
@@ -102,7 +108,9 @@ export function useProjects() {
     mutationFn: createProject,
     onSuccess: async (response) => {
       await invalidateProjects()
-      await queryClient.invalidateQueries({ queryKey: projectsQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: projectsQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -110,7 +118,9 @@ export function useProjects() {
     mutationFn: updateProject,
     onSuccess: async (response) => {
       await invalidateProjects()
-      await queryClient.invalidateQueries({ queryKey: projectsQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: projectsQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -118,7 +128,9 @@ export function useProjects() {
     mutationFn: archiveProject,
     onSuccess: async (response) => {
       await invalidateProjects()
-      await queryClient.invalidateQueries({ queryKey: projectsQueryKeys.detail(response.data.id) })
+      await queryClient.invalidateQueries({
+        queryKey: projectsQueryKeys.detail(response.data.id),
+      })
     },
   })
 
@@ -136,9 +148,13 @@ export function useProjects() {
       updateMutation.error?.message ??
       archiveMutation.error?.message ??
       null,
-    saving: createMutation.isPending || updateMutation.isPending || archiveMutation.isPending,
+    saving:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      archiveMutation.isPending,
     setSearch: (q: string) => updateUrlParams({ q: q.trim() || undefined }),
-    setStatusFilter: (status: ProjectStatus | "all") => updateUrlParams({ status }),
+    setStatusFilter: (status: ProjectStatus | "all") =>
+      updateUrlParams({ status }),
     setCursor: (cursor: number) => updateUrlParams({ cursor }),
     refetch: async () => {
       await projectsQuery.refetch()

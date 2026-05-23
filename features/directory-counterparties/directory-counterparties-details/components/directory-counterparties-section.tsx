@@ -28,7 +28,11 @@ function DirectoryCounterpartiesRowsSkeleton() {
   return (
     <div aria-label="Загрузка контрагентов" aria-busy="true">
       {Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
-        <Card key={index} size="sm" className="mx-3 my-1.5 rounded-md bg-transparent p-0">
+        <Card
+          key={index}
+          size="sm"
+          className="mx-3 my-1.5 rounded-md bg-transparent p-0"
+        >
           <CardContent className="grid min-w-0 gap-3 p-3 xl:grid-cols-[minmax(420px,1fr)_minmax(560px,0.95fr)]">
             <div className="min-w-0 rounded-md border border-border p-2">
               <Skeleton className="mb-2 h-3 w-24" />
@@ -63,7 +67,8 @@ export function DirectoryCounterpartiesSection() {
     updateCounterparty,
   } = useDirectoryCounterparties()
   const [formOpen, setFormOpen] = useState(false)
-  const [selectedCounterparty, setSelectedCounterparty] = useState<DirectoryCounterparty | null>(null)
+  const [selectedCounterparty, setSelectedCounterparty] =
+    useState<DirectoryCounterparty | null>(null)
 
   useEffect(() => {
     const handleCreate = () => {
@@ -72,7 +77,11 @@ export function DirectoryCounterpartiesSection() {
     }
 
     window.addEventListener(DIRECTORY_COUNTERPARTIES_CREATE_EVENT, handleCreate)
-    return () => window.removeEventListener(DIRECTORY_COUNTERPARTIES_CREATE_EVENT, handleCreate)
+    return () =>
+      window.removeEventListener(
+        DIRECTORY_COUNTERPARTIES_CREATE_EVENT,
+        handleCreate
+      )
   }, [])
 
   const setCursor = (cursor: number) => {
@@ -103,7 +112,9 @@ export function DirectoryCounterpartiesSection() {
   const currentLimit = params.limit ?? meta?.limit ?? DEFAULT_LIMIT
   const pageStart = counterparties.length > 0 ? currentCursor + 1 : 0
   const pageEnd = currentCursor + counterparties.length
-  const totalLabel = meta?.hasMore ? `минимум ${meta.total}` : String(meta?.total ?? counterparties.length)
+  const totalLabel = meta?.hasMore
+    ? `минимум ${meta.total}`
+    : String(meta?.total ?? counterparties.length)
   const previousCursor = Math.max(currentCursor - currentLimit, 0)
   const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
   const showSkeletonRows = loading || isFetching
@@ -143,10 +154,28 @@ export function DirectoryCounterpartiesSection() {
         </CardContent>
         {meta ? (
           <CardFooter className="flex flex-col gap-3 border-t p-3 text-xs/relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-            <div>Показано {pageStart}–{pageEnd}. Всего: {totalLabel}</div>
+            <div>
+              Показано {pageStart}–{pageEnd}. Всего: {totalLabel}
+            </div>
             <div className="flex gap-2">
-              <Button type="button" size="sm" variant="outline" disabled={currentCursor === 0 || loading || isFetching} onClick={() => setCursor(previousCursor)}>Назад</Button>
-              <Button type="button" size="sm" variant="outline" disabled={!meta.hasMore || loading || isFetching} onClick={() => setCursor(nextCursor)}>Вперёд</Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={currentCursor === 0 || loading || isFetching}
+                onClick={() => setCursor(previousCursor)}
+              >
+                Назад
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={!meta.hasMore || loading || isFetching}
+                onClick={() => setCursor(nextCursor)}
+              >
+                Вперёд
+              </Button>
             </div>
           </CardFooter>
         ) : null}

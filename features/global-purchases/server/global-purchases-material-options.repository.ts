@@ -10,7 +10,8 @@ type MaterialOptionDbRow = {
   category: string
 }
 
-const MATERIAL_OPTION_SELECT = "id,name,unit_code,unit_label,price_amount,category"
+const MATERIAL_OPTION_SELECT =
+  "id,name,unit_code,unit_label,price_amount,category"
 
 function normalizeSearch(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ")
@@ -21,7 +22,9 @@ function toNumber(value: string | number) {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-function mapMaterialOption(row: MaterialOptionDbRow): GlobalPurchaseMaterialOption {
+function mapMaterialOption(
+  row: MaterialOptionDbRow
+): GlobalPurchaseMaterialOption {
   return {
     id: row.id,
     title: row.name,
@@ -44,7 +47,10 @@ export async function searchGlobalPurchaseMaterialOptionsForWorkspace(
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("status", "active")
     .is("deleted_at", null)
-    .textSearch("search_fts", normalizedQuery, { type: "websearch", config: "simple" })
+    .textSearch("search_fts", normalizedQuery, {
+      type: "websearch",
+      config: "simple",
+    })
     .order("normalized_name", { ascending: true })
     .limit(25)
 

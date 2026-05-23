@@ -1,21 +1,11 @@
 "use client"
 
 import { useMemo } from "react"
-import {
-  Buildings,
-  LockKey,
-  Users,
-  CheckCircle,
-} from "@phosphor-icons/react"
+import { Buildings, LockKey, Users, CheckCircle } from "@phosphor-icons/react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -61,7 +51,12 @@ export function WorkspaceOverviewCard() {
           <p className="text-sm text-destructive">
             Не удалось загрузить данные: {error}
           </p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={refetch}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={refetch}
+          >
             Повторить
           </Button>
         </CardContent>
@@ -101,7 +96,7 @@ export function WorkspaceOverviewCard() {
         </div>
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground">Slug</span>
-          <p className="text-sm font-mono text-xs text-muted-foreground">
+          <p className="font-mono text-sm text-xs text-muted-foreground">
             {overview.slug}
           </p>
         </div>
@@ -111,7 +106,7 @@ export function WorkspaceOverviewCard() {
         </div>
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground">Владелец</span>
-          <p className="text-sm flex items-center gap-1.5">
+          <p className="flex items-center gap-1.5 text-sm">
             <LockKey className="size-3 text-muted-foreground" />
             {overview.ownerName}
           </p>
@@ -124,7 +119,7 @@ export function WorkspaceOverviewCard() {
         </div>
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground">Участники</span>
-          <p className="text-sm flex items-center gap-1.5">
+          <p className="flex items-center gap-1.5 text-sm">
             <Users className="size-3.5 text-muted-foreground" />
             {overview.currentMembers}/{MEMBER_LIMIT}
           </p>

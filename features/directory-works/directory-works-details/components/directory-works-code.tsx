@@ -6,7 +6,7 @@ export function DirectoryWorksCode({ value }: { value: string | null }) {
       <span className="mb-1 block text-xs text-muted-foreground uppercase">
         Код
       </span>
-      <div className="break-words font-mono text-xs font-medium leading-snug">
+      <div className="font-mono text-xs leading-snug font-medium break-words">
         {code || "—"}
       </div>
     </div>

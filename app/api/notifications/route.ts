@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { getUserNotifications, getUnreadCount } from "@/features/notifications/server/notifications.repository"
+import {
+  getUserNotifications,
+  getUnreadCount,
+} from "@/features/notifications/server/notifications.repository"
 
 function jsonError(code: string, message: string, status: number) {
   return NextResponse.json({ error: { code, message } }, { status })
@@ -39,6 +42,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (err) {
     console.error("[GET /api/notifications]", err)
-    return jsonError("INTERNAL_ERROR", "Ошибка при получении списка уведомлений", 500)
+    return jsonError(
+      "INTERNAL_ERROR",
+      "Ошибка при получении списка уведомлений",
+      500
+    )
   }
 }

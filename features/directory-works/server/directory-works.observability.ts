@@ -34,7 +34,9 @@ function now() {
 
 function sanitizeContext(context: DirectoryWorksMetricContext) {
   return Object.fromEntries(
-    Object.entries(context).filter(([, value]) => value !== undefined && value !== null)
+    Object.entries(context).filter(
+      ([, value]) => value !== undefined && value !== null
+    )
   )
 }
 

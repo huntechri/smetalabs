@@ -49,7 +49,9 @@ export function AllowedDomainsCard() {
         toast.success(`Домен @${trimmed} добавлен`)
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Ошибка добавления домена")
+      toast.error(
+        err instanceof Error ? err.message : "Ошибка добавления домена"
+      )
     } finally {
       setAddingDomain(false)
     }
@@ -73,7 +75,9 @@ export function AllowedDomainsCard() {
     setSavingAutoJoin(true)
     try {
       await setAutoJoinDomains(checked)
-      toast.success(checked ? "Авто-присоединение включено" : "Авто-присоединение выключено")
+      toast.success(
+        checked ? "Авто-присоединение включено" : "Авто-присоединение выключено"
+      )
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Ошибка сохранения")
     } finally {
@@ -192,7 +196,7 @@ export function AllowedDomainsCard() {
           <Button
             size="sm"
             variant="outline"
-            className="h-8 gap-1.5 shrink-0"
+            className="h-8 shrink-0 gap-1.5"
             onClick={handleAdd}
             disabled={!newDomain.trim() || addingDomain}
           >
@@ -226,9 +230,7 @@ export function AllowedDomainsCard() {
 
         {/* Error indicator for partial failures */}
         {error && domains.length > 0 && (
-          <p className="text-xs text-amber-600">
-            Предупреждение: {error}
-          </p>
+          <p className="text-xs text-amber-600">Предупреждение: {error}</p>
         )}
       </CardContent>
     </Card>

@@ -48,12 +48,7 @@ type SensitiveActionsCardProps = {
   refetch?: () => Promise<void>
 }
 
-type PendingAction =
-  | "leave"
-  | "transfer"
-  | "deactivate"
-  | "delete"
-  | null
+type PendingAction = "leave" | "transfer" | "deactivate" | "delete" | null
 
 function getErrorMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback
@@ -206,7 +201,9 @@ export function SensitiveActionsCard({
             <DialogTrigger asChild>
               <Button
                 variant="destructive"
-                disabled={!isWorkspaceMember || isOwner || pendingAction !== null}
+                disabled={
+                  !isWorkspaceMember || isOwner || pendingAction !== null
+                }
                 title={
                   isOwner
                     ? "Владелец должен передать права или удалить workspace"
@@ -261,7 +258,9 @@ export function SensitiveActionsCard({
               <Button
                 variant="outline"
                 disabled={!isOwner || pendingAction !== null}
-                title={!isOwner ? "Доступно только владельцу workspace" : undefined}
+                title={
+                  !isOwner ? "Доступно только владельцу workspace" : undefined
+                }
               >
                 Передать
               </Button>
@@ -295,7 +294,8 @@ export function SensitiveActionsCard({
                   <SelectContent>
                     {ownerCandidates.map((member) => (
                       <SelectItem key={member.id} value={member.id}>
-                        {member.name || member.email || member.id} · {member.role}
+                        {member.name || member.email || member.id} ·{" "}
+                        {member.role}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -343,7 +343,9 @@ export function SensitiveActionsCard({
             <DialogTrigger asChild>
               <Button
                 variant="destructive"
-                disabled={!isWorkspaceMember || isOwner || pendingAction !== null}
+                disabled={
+                  !isWorkspaceMember || isOwner || pendingAction !== null
+                }
                 title={
                   isOwner
                     ? "Владелец должен передать права или удалить workspace"
@@ -399,7 +401,9 @@ export function SensitiveActionsCard({
               <Button
                 variant="destructive"
                 disabled={!isOwner || pendingAction !== null}
-                title={!isOwner ? "Доступно только владельцу workspace" : undefined}
+                title={
+                  !isOwner ? "Доступно только владельцу workspace" : undefined
+                }
               >
                 Удалить
               </Button>
@@ -423,7 +427,9 @@ export function SensitiveActionsCard({
                 <Input
                   id="delete-workspace-confirmation"
                   value={deleteConfirmation}
-                  onChange={(event) => setDeleteConfirmation(event.target.value)}
+                  onChange={(event) =>
+                    setDeleteConfirmation(event.target.value)
+                  }
                   placeholder={displayWorkspaceName}
                   disabled={pendingAction !== null}
                 />
@@ -440,7 +446,9 @@ export function SensitiveActionsCard({
                 <Button
                   variant="destructive"
                   onClick={handleDeleteWorkspace}
-                  disabled={pendingAction !== null || !deleteConfirmation.trim()}
+                  disabled={
+                    pendingAction !== null || !deleteConfirmation.trim()
+                  }
                   className="gap-1.5"
                 >
                   {pendingAction === "delete" ? (

@@ -42,7 +42,9 @@ const emptyState: DirectoryMaterialFormState = {
   supplierName: "",
 }
 
-function getInitialState(material: DirectoryMaterial | null): DirectoryMaterialFormState {
+function getInitialState(
+  material: DirectoryMaterial | null
+): DirectoryMaterialFormState {
   if (!material) return emptyState
 
   return {
@@ -57,7 +59,9 @@ function getInitialState(material: DirectoryMaterial | null): DirectoryMaterialF
 }
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Не удалось сохранить материал"
+  return error instanceof Error
+    ? error.message
+    : "Не удалось сохранить материал"
 }
 
 export function DirectoryMaterialFormDialog({
@@ -87,7 +91,10 @@ export function DirectoryMaterialFormDialog({
     }
   }, [open, material])
 
-  const updateField = (field: keyof DirectoryMaterialFormState, value: string) => {
+  const updateField = (
+    field: keyof DirectoryMaterialFormState,
+    value: string
+  ) => {
     setForm((current) => ({ ...current, [field]: value }))
   }
 
@@ -139,7 +146,9 @@ export function DirectoryMaterialFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{title ?? (material ? "Редактировать материал" : "Новый материал")}</DialogTitle>
+          <DialogTitle>
+            {title ?? (material ? "Редактировать материал" : "Новый материал")}
+          </DialogTitle>
           <DialogDescription>
             Заполните обязательные поля. Пустой материал не будет сохранён.
           </DialogDescription>
@@ -148,7 +157,9 @@ export function DirectoryMaterialFormDialog({
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <FieldGroup className="grid gap-3 sm:grid-cols-2">
             <Field className="sm:col-span-2">
-              <FieldLabel htmlFor="directory-material-name">Название</FieldLabel>
+              <FieldLabel htmlFor="directory-material-name">
+                Название
+              </FieldLabel>
               <Input
                 id="directory-material-name"
                 maxLength={240}
@@ -159,7 +170,9 @@ export function DirectoryMaterialFormDialog({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="directory-material-unit">Ед. изм.</FieldLabel>
+              <FieldLabel htmlFor="directory-material-unit">
+                Ед. изм.
+              </FieldLabel>
               <Input
                 id="directory-material-unit"
                 maxLength={80}
@@ -183,22 +196,30 @@ export function DirectoryMaterialFormDialog({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="directory-material-category">Категория</FieldLabel>
+              <FieldLabel htmlFor="directory-material-category">
+                Категория
+              </FieldLabel>
               <Input
                 id="directory-material-category"
                 maxLength={120}
-                onChange={(event) => updateField("category", event.target.value)}
+                onChange={(event) =>
+                  updateField("category", event.target.value)
+                }
                 placeholder="Сухие смеси"
                 value={form.category}
               />
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="directory-material-subcategory">Подкатегория</FieldLabel>
+              <FieldLabel htmlFor="directory-material-subcategory">
+                Подкатегория
+              </FieldLabel>
               <Input
                 id="directory-material-subcategory"
                 maxLength={120}
-                onChange={(event) => updateField("subcategory", event.target.value)}
+                onChange={(event) =>
+                  updateField("subcategory", event.target.value)
+                }
                 placeholder="Цемент"
                 value={form.subcategory}
               />
@@ -216,11 +237,15 @@ export function DirectoryMaterialFormDialog({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="directory-material-supplier">Поставщик</FieldLabel>
+              <FieldLabel htmlFor="directory-material-supplier">
+                Поставщик
+              </FieldLabel>
               <Input
                 id="directory-material-supplier"
                 maxLength={160}
-                onChange={(event) => updateField("supplierName", event.target.value)}
+                onChange={(event) =>
+                  updateField("supplierName", event.target.value)
+                }
                 placeholder="Название поставщика"
                 value={form.supplierName}
               />

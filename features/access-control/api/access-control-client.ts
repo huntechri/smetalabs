@@ -1,6 +1,10 @@
 import type { ApiRole } from "../hooks/use-access-control"
 
-function resolveFetchError(status: number, apiMessage: string, resource: string) {
+function resolveFetchError(
+  status: number,
+  apiMessage: string,
+  resource: string
+) {
   switch (status) {
     case 401:
       return "Необходимо войти в систему"

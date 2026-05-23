@@ -88,9 +88,9 @@ type SupabaseWriteError = {
 function isSupabaseWriteError(error: unknown): error is SupabaseWriteError {
   return Boolean(
     error &&
-      typeof error === "object" &&
-      "message" in error &&
-      typeof (error as { message?: unknown }).message === "string"
+    typeof error === "object" &&
+    "message" in error &&
+    typeof (error as { message?: unknown }).message === "string"
   )
 }
 
@@ -105,7 +105,8 @@ function throwImportCreateError(error: unknown): never {
 
     throw new DirectoryWorksApiError(
       "IMPORT_JOB_CREATE_FAILED",
-      error.message || "Не удалось создать импорт. Проверьте файл и попробуйте снова.",
+      error.message ||
+        "Не удалось создать импорт. Проверьте файл и попробуйте снова.",
       400
     )
   }
@@ -185,10 +186,15 @@ function buildDedupeFingerprint(input: DirectoryWorkImportNormalizedRow) {
 function normalizeImportRow(
   rawData: Record<string, unknown>,
   fallbackSourceName: string | null
-): PreparedImportRow["normalizedData"] & { errors: string[]; warnings: string[] } {
+): PreparedImportRow["normalizedData"] & {
+  errors: string[]
+  warnings: string[]
+} {
   const title = toNullableString(getRawValue(rawData, ["title", "name"])) ?? ""
   const unit =
-    toNullableString(getRawValue(rawData, ["unit", "unit_label", "unit_code"])) ?? ""
+    toNullableString(
+      getRawValue(rawData, ["unit", "unit_label", "unit_code"])
+    ) ?? ""
   const category = toNullableString(getRawValue(rawData, ["category"])) ?? ""
   const rawRate = getRawValue(rawData, ["rate", "rate_amount", "price"])
   const rate = normalizeNumber(rawRate)
@@ -198,7 +204,8 @@ function normalizeImportRow(
   const rawPriceKind = toNullableString(
     getRawValue(rawData, ["price_kind", "priceKind"])
   ) as DirectoryWorkPriceKind | null
-  const priceKind = rawPriceKind && VALID_PRICE_KINDS.has(rawPriceKind) ? rawPriceKind : "base"
+  const priceKind =
+    rawPriceKind && VALID_PRICE_KINDS.has(rawPriceKind) ? rawPriceKind : "base"
   const rawVatRate = getRawValue(rawData, ["vat_rate", "vatRate"])
   const vatRate = rawVatRate === undefined ? null : normalizeNumber(rawVatRate)
   const errors: string[] = []
@@ -262,7 +269,8 @@ function mapJob(row: ImportJobDbRow): DirectoryWorkImportJob {
     sourceName: row.source_name,
     fileName: row.file_name,
     fileMimeType: row.file_mime_type,
-    fileSizeBytes: row.file_size_bytes === null ? null : Number(row.file_size_bytes),
+    fileSizeBytes:
+      row.file_size_bytes === null ? null : Number(row.file_size_bytes),
     totalRows: toNumber(row.total_rows),
     parsedRows: toNumber(row.parsed_rows),
     validRows: toNumber(row.valid_rows),
@@ -313,7 +321,13 @@ function getCounts(rows: PreparedImportRow[]) {
       if (row.status === "error") acc.error_rows += 1
       return acc
     },
-    { total_rows: 0, parsed_rows: 0, valid_rows: 0, warning_rows: 0, error_rows: 0 }
+    {
+      total_rows: 0,
+      parsed_rows: 0,
+      valid_rows: 0,
+      warning_rows: 0,
+      error_rows: 0,
+    }
   )
 }
 
@@ -342,7 +356,10 @@ export async function getDirectoryWorkImportJobForWorkspace(
 
   if (error) throw error
   if (!data) return null
-  return { job: mapJob(data as ImportJobDbRow), rows: await getRows(workspaceOwnerId, id) }
+  return {
+    job: mapJob(data as ImportJobDbRow),
+    rows: await getRows(workspaceOwnerId, id),
+  }
 }
 
 export async function createDirectoryWorkImportJobForWorkspace(
@@ -356,7 +373,8 @@ export async function createDirectoryWorkImportJobForWorkspace(
     const normalized = normalizeImportRow(rawData, fallbackSourceName)
     const { errors, warnings, ...normalizedData } = normalized
     const dedupeFingerprint = buildDedupeFingerprint(normalizedData)
-    let status: DirectoryWorkImportRowStatus = errors.length > 0 ? "error" : "valid"
+    let status: DirectoryWorkImportRowStatus =
+      errors.length > 0 ? "error" : "valid"
 
     if (status !== "error" && seen.has(dedupeFingerprint)) {
       status = "duplicate"
@@ -404,20 +422,22 @@ export async function createDirectoryWorkImportJobForWorkspace(
 
   if (jobError) throwImportCreateError(jobError)
 
-  const { error: rowsError } = await supabase.from("directory_work_import_rows").insert(
-    rows.map((row) => ({
-      workspace_owner_id: workspaceOwnerId,
-      job_id: jobRow.id,
-      row_number: row.rowNumber,
-      raw_data: row.rawData,
-      normalized_data: row.normalizedData,
-      status: row.status,
-      action: row.action,
-      error_messages: row.errorMessages,
-      warning_messages: row.warningMessages,
-      dedupe_fingerprint: row.dedupeFingerprint,
-    }))
-  )
+  const { error: rowsError } = await supabase
+    .from("directory_work_import_rows")
+    .insert(
+      rows.map((row) => ({
+        workspace_owner_id: workspaceOwnerId,
+        job_id: jobRow.id,
+        row_number: row.rowNumber,
+        raw_data: row.rawData,
+        normalized_data: row.normalizedData,
+        status: row.status,
+        action: row.action,
+        error_messages: row.errorMessages,
+        warning_messages: row.warningMessages,
+        dedupe_fingerprint: row.dedupeFingerprint,
+      }))
+    )
   if (rowsError) throwImportCreateError(rowsError)
 
   return {
@@ -428,7 +448,11 @@ export async function createDirectoryWorkImportJobForWorkspace(
   }
 }
 
-function toInsertRow(workspaceOwnerId: string, userId: string, row: DirectoryWorkImportNormalizedRow) {
+function toInsertRow(
+  workspaceOwnerId: string,
+  userId: string,
+  row: DirectoryWorkImportNormalizedRow
+) {
   const unit = row.unit.trim().replace(/\s+/g, " ")
   return {
     workspace_owner_id: workspaceOwnerId,
@@ -452,7 +476,12 @@ function toInsertRow(workspaceOwnerId: string, userId: string, row: DirectoryWor
   }
 }
 
-async function insertTerms(workspaceOwnerId: string, userId: string, workId: string, row: DirectoryWorkImportNormalizedRow) {
+async function insertTerms(
+  workspaceOwnerId: string,
+  userId: string,
+  workId: string,
+  row: DirectoryWorkImportNormalizedRow
+) {
   if (row.aliases.length > 0) {
     const { error } = await supabase.from("work_aliases").insert(
       row.aliases.map((alias) => ({
@@ -487,8 +516,12 @@ export async function applyDirectoryWorkImportJobForWorkspace(
   userId: string,
   id: string
 ): Promise<DirectoryWorkImportApplyResponse> {
-  const current = await getDirectoryWorkImportJobForWorkspace(workspaceOwnerId, id)
-  if (!current) throw new DirectoryWorksApiError("NOT_FOUND", "Import job не найден", 404)
+  const current = await getDirectoryWorkImportJobForWorkspace(
+    workspaceOwnerId,
+    id
+  )
+  if (!current)
+    throw new DirectoryWorksApiError("NOT_FOUND", "Import job не найден", 404)
   if (current.job.status !== "ready_for_review") {
     throw new DirectoryWorksApiError(
       "BAD_REQUEST",
@@ -498,12 +531,18 @@ export async function applyDirectoryWorkImportJobForWorkspace(
   }
 
   const rows = current.rows.filter(
-    (row) => row.action === "create" && (row.status === "valid" || row.status === "warning")
+    (row) =>
+      row.action === "create" &&
+      (row.status === "valid" || row.status === "warning")
   )
   const skippedRows = current.rows.length - rows.length
   await supabase
     .from("directory_work_import_jobs")
-    .update({ status: "applying", started_at: new Date().toISOString(), last_error: null })
+    .update({
+      status: "applying",
+      started_at: new Date().toISOString(),
+      last_error: null,
+    })
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
 
@@ -512,14 +551,22 @@ export async function applyDirectoryWorkImportJobForWorkspace(
   try {
     for (let index = 0; index < rows.length; index += APPLY_CHUNK_SIZE) {
       const chunk = rows.slice(index, index + APPLY_CHUNK_SIZE)
-      const normalizedRows = chunk.map((row) => row.normalizedData as DirectoryWorkImportNormalizedRow)
+      const normalizedRows = chunk.map(
+        (row) => row.normalizedData as DirectoryWorkImportNormalizedRow
+      )
       const { data, error } = await supabase
         .from("directory_works")
-        .insert(normalizedRows.map((row) => toInsertRow(workspaceOwnerId, userId, row)))
+        .insert(
+          normalizedRows.map((row) =>
+            toInsertRow(workspaceOwnerId, userId, row)
+          )
+        )
         .select("id")
       if (error) throw error
 
-      const workIds = ((data ?? []) as Array<{ id: string }>).map((work) => work.id)
+      const workIds = ((data ?? []) as Array<{ id: string }>).map(
+        (work) => work.id
+      )
       await Promise.all(
         normalizedRows.map((row, rowIndex) =>
           insertTerms(workspaceOwnerId, userId, workIds[rowIndex], row)
@@ -555,13 +602,20 @@ export async function applyDirectoryWorkImportJobForWorkspace(
       .single()
     if (error) throw error
 
-    return { data: { job: mapJob(updatedJob as ImportJobDbRow), appliedRows, skippedRows } }
+    return {
+      data: {
+        job: mapJob(updatedJob as ImportJobDbRow),
+        appliedRows,
+        skippedRows,
+      },
+    }
   } catch (err) {
     await supabase
       .from("directory_work_import_jobs")
       .update({
         status: "failed",
-        last_error: err instanceof Error ? err.message : "Не удалось применить импорт",
+        last_error:
+          err instanceof Error ? err.message : "Не удалось применить импорт",
         completed_at: new Date().toISOString(),
       })
       .eq("workspace_owner_id", workspaceOwnerId)

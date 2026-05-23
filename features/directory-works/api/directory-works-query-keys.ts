@@ -1,4 +1,7 @@
-import type { DirectoryWorkAiSearchInput, DirectoryWorksListParams } from "../types"
+import type {
+  DirectoryWorkAiSearchInput,
+  DirectoryWorksListParams,
+} from "../types"
 
 function compactParams(params: DirectoryWorksListParams = {}) {
   return Object.fromEntries(

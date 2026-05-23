@@ -89,7 +89,10 @@ export function ProjectsView() {
         {loading ? (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="h-56 animate-pulse rounded-lg border bg-muted/40" />
+              <div
+                key={index}
+                className="h-56 animate-pulse rounded-lg border bg-muted/40"
+              />
             ))}
           </div>
         ) : projects.length === 0 ? (

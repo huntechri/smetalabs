@@ -81,22 +81,25 @@ async function seed() {
     }
 
     // Вставляем дефолтные настройки
-    const { error: insertErr } = await supabase
-      .from("user_settings")
-      .insert({
-        user_id: profile.id,
-        ...defaultSettings,
-      })
+    const { error: insertErr } = await supabase.from("user_settings").insert({
+      user_id: profile.id,
+      ...defaultSettings,
+    })
 
     if (insertErr) {
-      console.error(`  ❌ Failed to seed settings for user ${profile.id}:`, insertErr)
+      console.error(
+        `  ❌ Failed to seed settings for user ${profile.id}:`,
+        insertErr
+      )
       process.exit(1)
     }
 
     created++
   }
 
-  console.log(`  ✅ ${created} settings row(s) created, ${skipped} skipped (already exist)`)
+  console.log(
+    `  ✅ ${created} settings row(s) created, ${skipped} skipped (already exist)`
+  )
 
   // ════════════════════════════════════════════════════════
   // Seed workspace_members
@@ -145,7 +148,9 @@ async function seed() {
   const workspaceOwner = allProfiles[0]
   const ownerId = workspaceOwner.id
 
-  console.log(`  📋 Workspace owner: ${workspaceOwner.full_name ?? workspaceOwner.id} (${ownerId})`)
+  console.log(
+    `  📋 Workspace owner: ${workspaceOwner.full_name ?? workspaceOwner.id} (${ownerId})`
+  )
 
   // Role assignments for remaining users (index-based)
   const memberRoles = [
@@ -191,7 +196,9 @@ async function seed() {
       }
 
       membersCreated++
-      console.log(`  ✅ Owner ${profile.full_name ?? profile.id} added as workspace_member (owner)`)
+      console.log(
+        `  ✅ Owner ${profile.full_name ?? profile.id} added as workspace_member (owner)`
+      )
     } else {
       // Other users: assign roles from memberRoles array (round-robin via modulo)
       const roleIdx = (i - 1) % memberRoles.length
@@ -208,16 +215,23 @@ async function seed() {
         })
 
       if (insertErr) {
-        console.error(`  ❌ Failed to seed workspace_member for ${profile.full_name ?? profile.id}:`, insertErr)
+        console.error(
+          `  ❌ Failed to seed workspace_member for ${profile.full_name ?? profile.id}:`,
+          insertErr
+        )
         process.exit(1)
       }
 
       membersCreated++
-      console.log(`  ✅ ${profile.full_name ?? profile.id} added as workspace_member (${assignedRole.roleName})`)
+      console.log(
+        `  ✅ ${profile.full_name ?? profile.id} added as workspace_member (${assignedRole.roleName})`
+      )
     }
   }
 
-  console.log(`  ✅ ${membersCreated} workspace_member(s) created, ${membersSkipped} skipped`)
+  console.log(
+    `  ✅ ${membersCreated} workspace_member(s) created, ${membersSkipped} skipped`
+  )
 
   // ════════════════════════════════════════════════════════
   // Seed workspace_invitations (2-3 pending)
@@ -249,7 +263,9 @@ async function seed() {
   for (const inv of sampleInvitations) {
     const roleId = roleByName.get(inv.roleName)
     if (!roleId) {
-      console.error(`  ❌ Role "${inv.roleName}" not found, skipping invitation`)
+      console.error(
+        `  ❌ Role "${inv.roleName}" not found, skipping invitation`
+      )
       continue
     }
 
@@ -267,7 +283,9 @@ async function seed() {
       continue
     }
 
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    const expiresAt = new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+    ).toISOString()
 
     const { error: insertErr } = await supabase
       .from("workspace_invitations")
@@ -282,7 +300,10 @@ async function seed() {
       })
 
     if (insertErr) {
-      console.error(`  ❌ Failed to seed invitation for ${inv.email}:`, insertErr)
+      console.error(
+        `  ❌ Failed to seed invitation for ${inv.email}:`,
+        insertErr
+      )
       process.exit(1)
     }
 

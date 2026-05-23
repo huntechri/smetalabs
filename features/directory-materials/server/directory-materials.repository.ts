@@ -17,7 +17,9 @@ type NormalizedListParams = Required<
 > &
   Omit<DirectoryMaterialsListParams, "status" | "limit" | "cursor" | "sort">
 
-type NormalizedCategoriesParams = Required<Pick<DirectoryMaterialsCategoriesParams, "status">> &
+type NormalizedCategoriesParams = Required<
+  Pick<DirectoryMaterialsCategoriesParams, "status">
+> &
   Omit<DirectoryMaterialsCategoriesParams, "status">
 
 type DirectoryMaterialDbRow = {
@@ -44,7 +46,8 @@ type DirectoryMaterialDbRow = {
   updated_at: string
 }
 
-const MATERIAL_SELECT = "id,name,unit_code,unit_label,price_amount,currency_code,category,subcategory,code,supplier_name,supplier_id,image_url,description,aliases,keywords,source_name,source_external_row_key,status,version,created_at,updated_at"
+const MATERIAL_SELECT =
+  "id,name,unit_code,unit_label,price_amount,currency_code,category,subcategory,code,supplier_name,supplier_id,image_url,description,aliases,keywords,source_name,source_external_row_key,status,version,created_at,updated_at"
 const MAX_SEARCH_TOKENS = 8
 
 function normalizeSearch(value: string) {
@@ -86,7 +89,9 @@ function toNumber(value: string | number) {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-function mapDirectoryMaterialRow(row: DirectoryMaterialDbRow): DirectoryMaterial {
+function mapDirectoryMaterialRow(
+  row: DirectoryMaterialDbRow
+): DirectoryMaterial {
   const priceAmount = toNumber(row.price_amount)
 
   return {
@@ -119,10 +124,12 @@ function mapDirectoryMaterialRow(row: DirectoryMaterialDbRow): DirectoryMaterial
   }
 }
 
-function applyDirectoryMaterialFilters<T extends { or: (filters: string) => T; eq: (column: string, value: string) => T }>(
-  query: T,
-  params: NormalizedListParams
-) {
+function applyDirectoryMaterialFilters<
+  T extends {
+    or: (filters: string) => T
+    eq: (column: string, value: string) => T
+  },
+>(query: T, params: NormalizedListParams) {
   let scoped = query
 
   if (params.category) scoped = scoped.eq("category", params.category)
@@ -150,15 +157,18 @@ function applyDirectoryMaterialFilters<T extends { or: (filters: string) => T; e
   return scoped
 }
 
-function applyDirectoryMaterialSort<T extends { order: (column: string, options?: { ascending?: boolean }) => T }>(
-  query: T,
-  params: NormalizedListParams
-) {
+function applyDirectoryMaterialSort<
+  T extends { order: (column: string, options?: { ascending?: boolean }) => T },
+>(query: T, params: NormalizedListParams) {
   if (params.sort === "name_asc") {
-    return query.order("normalized_name", { ascending: true }).order("id", { ascending: true })
+    return query
+      .order("normalized_name", { ascending: true })
+      .order("id", { ascending: true })
   }
 
-  return query.order("updated_at", { ascending: false }).order("id", { ascending: true })
+  return query
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: true })
 }
 
 async function assertDirectoryMaterialUniqueFields(
@@ -180,7 +190,11 @@ async function assertDirectoryMaterialUniqueFields(
     const { data, error } = await query
     if (error) throw error
     if ((data ?? []).length > 0) {
-      throw new DirectoryMaterialsApiError("BAD_REQUEST", "Материал с таким кодом уже существует", 400)
+      throw new DirectoryMaterialsApiError(
+        "BAD_REQUEST",
+        "Материал с таким кодом уже существует",
+        400
+      )
     }
   }
 
@@ -199,7 +213,11 @@ async function assertDirectoryMaterialUniqueFields(
     const { data, error } = await query
     if (error) throw error
     if ((data ?? []).length > 0) {
-      throw new DirectoryMaterialsApiError("BAD_REQUEST", "Материал с таким внешним идентификатором уже существует", 400)
+      throw new DirectoryMaterialsApiError(
+        "BAD_REQUEST",
+        "Материал с таким внешним идентификатором уже существует",
+        400
+      )
     }
   }
 }
@@ -313,9 +331,16 @@ export async function createDirectoryMaterialForWorkspace(
 
   if (error) throw error
 
-  const material = await getDirectoryMaterialForWorkspace(workspaceOwnerId, data.id)
+  const material = await getDirectoryMaterialForWorkspace(
+    workspaceOwnerId,
+    data.id
+  )
   if (!material) {
-    throw new DirectoryMaterialsApiError("INTERNAL_ERROR", "Созданный материал не найден", 500)
+    throw new DirectoryMaterialsApiError(
+      "INTERNAL_ERROR",
+      "Созданный материал не найден",
+      500
+    )
   }
 
   return material
@@ -328,13 +353,17 @@ export async function updateDirectoryMaterialForWorkspace(
   input: DirectoryMaterialMutationInput
 ): Promise<DirectoryMaterial> {
   const existing = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
-  if (!existing) throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
+  if (!existing)
+    throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
 
   await assertDirectoryMaterialUniqueFields(workspaceOwnerId, input, id)
 
   const { error } = await supabase
     .from("directory_materials")
-    .update({ ...toMaterialMutationRow(workspaceOwnerId, userId, input), version: existing.version + 1 })
+    .update({
+      ...toMaterialMutationRow(workspaceOwnerId, userId, input),
+      version: existing.version + 1,
+    })
     .eq("workspace_owner_id", workspaceOwnerId)
     .eq("id", id)
     .is("deleted_at", null)
@@ -343,7 +372,11 @@ export async function updateDirectoryMaterialForWorkspace(
 
   const material = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
   if (!material) {
-    throw new DirectoryMaterialsApiError("INTERNAL_ERROR", "Обновлённый материал не найден", 500)
+    throw new DirectoryMaterialsApiError(
+      "INTERNAL_ERROR",
+      "Обновлённый материал не найден",
+      500
+    )
   }
 
   return material
@@ -355,7 +388,8 @@ export async function archiveDirectoryMaterialForWorkspace(
   id: string
 ): Promise<DirectoryMaterial> {
   const existing = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
-  if (!existing) throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
+  if (!existing)
+    throw new DirectoryMaterialsApiError("NOT_FOUND", "Материал не найден", 404)
 
   const { error } = await supabase
     .from("directory_materials")
@@ -373,7 +407,11 @@ export async function archiveDirectoryMaterialForWorkspace(
 
   const material = await getDirectoryMaterialForWorkspace(workspaceOwnerId, id)
   if (!material) {
-    throw new DirectoryMaterialsApiError("INTERNAL_ERROR", "Архивированный материал не найден", 500)
+    throw new DirectoryMaterialsApiError(
+      "INTERNAL_ERROR",
+      "Архивированный материал не найден",
+      500
+    )
   }
 
   return material
@@ -390,8 +428,10 @@ export async function getDirectoryMaterialCategoriesForWorkspace(
     .eq("status", params.status)
     .is("deleted_at", null)
 
-  if (params.category) materialQuery = materialQuery.eq("category", params.category)
-  if (params.subcategory) materialQuery = materialQuery.eq("subcategory", params.subcategory)
+  if (params.category)
+    materialQuery = materialQuery.eq("category", params.category)
+  if (params.subcategory)
+    materialQuery = materialQuery.eq("subcategory", params.subcategory)
 
   const { data, error } = await materialQuery
   if (error) throw error
@@ -408,10 +448,16 @@ export async function getDirectoryMaterialCategoriesForWorkspace(
     supplier_name: string | null
   }>) {
     if (row.category) {
-      const current = categoryMap.get(row.category) ?? { category: row.category, total: 0, subcategories: [] }
+      const current = categoryMap.get(row.category) ?? {
+        category: row.category,
+        total: 0,
+        subcategories: [],
+      }
       current.total += 1
       if (row.subcategory) {
-        const existing = current.subcategories.find((item) => item.name === row.subcategory)
+        const existing = current.subcategories.find(
+          (item) => item.name === row.subcategory
+        )
         if (existing) existing.total += 1
         else current.subcategories.push({ name: row.subcategory, total: 1 })
       }
@@ -427,24 +473,35 @@ export async function getDirectoryMaterialCategoriesForWorkspace(
     }
 
     if (row.supplier_name) {
-      const current = supplierMap.get(row.supplier_name) ?? { name: row.supplier_name, total: 0 }
+      const current = supplierMap.get(row.supplier_name) ?? {
+        name: row.supplier_name,
+        total: 0,
+      }
       current.total += 1
       supplierMap.set(row.supplier_name, current)
     }
   }
 
-  const sortByTotalAndName = <T extends { total: number }>(getName: (item: T) => string) =>
-    (a: T, b: T) => b.total - a.total || getName(a).localeCompare(getName(b), "ru")
+  const sortByTotalAndName =
+    <T extends { total: number }>(getName: (item: T) => string) =>
+    (a: T, b: T) =>
+      b.total - a.total || getName(a).localeCompare(getName(b), "ru")
 
   const categories = Array.from(categoryMap.values())
     .map((item) => ({
       ...item,
-      subcategories: item.subcategories.sort(sortByTotalAndName((subcategory) => subcategory.name)),
+      subcategories: item.subcategories.sort(
+        sortByTotalAndName((subcategory) => subcategory.name)
+      ),
     }))
     .sort(sortByTotalAndName((category) => category.category))
 
-  const units = Array.from(unitMap.values()).sort(sortByTotalAndName((unit) => unit.label))
-  const suppliers = Array.from(supplierMap.values()).sort(sortByTotalAndName((supplier) => supplier.name))
+  const units = Array.from(unitMap.values()).sort(
+    sortByTotalAndName((unit) => unit.label)
+  )
+  const suppliers = Array.from(supplierMap.values()).sort(
+    sortByTotalAndName((supplier) => supplier.name)
+  )
 
   return {
     data: { categories, units, suppliers },

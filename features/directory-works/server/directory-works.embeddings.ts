@@ -7,7 +7,10 @@ import type {
   DirectoryWorkAiSearchResponse,
   DirectoryWorkEmbeddingProcessResponse,
 } from "../types"
-import { mapDirectoryWorkRow, type DirectoryWorkRpcRow } from "../api/directory-works-mappers"
+import {
+  mapDirectoryWorkRow,
+  type DirectoryWorkRpcRow,
+} from "../api/directory-works-mappers"
 
 export const DIRECTORY_WORK_EMBEDDING_MODEL = "text-embedding-3-small"
 export const DIRECTORY_WORK_EMBEDDING_DIMENSIONS = 1536
@@ -59,7 +62,9 @@ export function buildDirectoryWorkEmbeddingInput(work: DirectoryWork) {
     work.includedOperations ? `Включено: ${work.includedOperations}` : null,
     work.excludedOperations ? `Исключено: ${work.excludedOperations}` : null,
     work.aliases.length > 0 ? `Синонимы: ${work.aliases.join("; ")}` : null,
-    work.keywords.length > 0 ? `Ключевые слова: ${work.keywords.join("; ")}` : null,
+    work.keywords.length > 0
+      ? `Ключевые слова: ${work.keywords.join("; ")}`
+      : null,
   ]
     .filter(Boolean)
     .join("\n")
@@ -143,7 +148,9 @@ async function createEmbedding(input: string) {
 
   if (!response.ok) {
     const text = await response.text().catch(() => "")
-    throw new Error(`OpenAI embeddings request failed: ${response.status} ${text}`)
+    throw new Error(
+      `OpenAI embeddings request failed: ${response.status} ${text}`
+    )
   }
 
   const json = (await response.json()) as {
@@ -202,7 +209,8 @@ export async function processDirectoryWorkEmbeddingQueue(
         .from("directory_work_embeddings")
         .update({
           status: "failed",
-          last_error: err instanceof Error ? err.message : "Embedding generation failed",
+          last_error:
+            err instanceof Error ? err.message : "Embedding generation failed",
         })
         .eq("workspace_owner_id", workspaceOwnerId)
         .eq("work_id", row.work_id)
@@ -252,7 +260,8 @@ export async function aiSearchDirectoryWorksForWorkspace(
 ): Promise<DirectoryWorkAiSearchResponse> {
   const query = input.query.trim().replace(/\s+/g, " ")
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 50)
-  const threshold = input.threshold ?? DIRECTORY_WORK_EMBEDDING_DEFAULT_THRESHOLD
+  const threshold =
+    input.threshold ?? DIRECTORY_WORK_EMBEDDING_DEFAULT_THRESHOLD
   const queryEmbedding = await createEmbedding(query)
 
   const { data, error } = await supabase.rpc("hybrid_search_directory_works", {

@@ -9,7 +9,8 @@ export const directoryMaterialsQueryKeys = {
   list: (params: DirectoryMaterialsListParams = {}) =>
     [...directoryMaterialsQueryKeys.lists(), params] as const,
   details: () => [...directoryMaterialsQueryKeys.all, "detail"] as const,
-  detail: (id: string) => [...directoryMaterialsQueryKeys.details(), id] as const,
+  detail: (id: string) =>
+    [...directoryMaterialsQueryKeys.details(), id] as const,
   categories: (params: DirectoryMaterialsCategoriesParams = {}) =>
     [...directoryMaterialsQueryKeys.all, "categories", params] as const,
   importJobs: () => [...directoryMaterialsQueryKeys.all, "importJob"] as const,

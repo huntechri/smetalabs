@@ -77,7 +77,10 @@ function mapRow(row: ProjectEstimateRecordDbRow): ProjectEstimateRecordRow {
   }
 }
 
-async function assertProjectExists(workspaceOwnerId: string, projectId: string) {
+async function assertProjectExists(
+  workspaceOwnerId: string,
+  projectId: string
+) {
   const { data, error } = await supabase
     .from("projects")
     .select("id")
@@ -112,7 +115,11 @@ async function assertNameUnique(
   const { data, error } = await query
   if (error) throw error
   if ((data ?? []).length > 0) {
-    throw new ProjectsApiError("BAD_REQUEST", "Смета с таким названием уже есть", 400)
+    throw new ProjectsApiError(
+      "BAD_REQUEST",
+      "Смета с таким названием уже есть",
+      400
+    )
   }
 }
 
@@ -211,7 +218,12 @@ export async function createProjectEstimateRecordForWorkspace(
     created.id
   )
 
-  if (!record) throw new ProjectsApiError("INTERNAL_ERROR", "Созданная смета не найдена", 500)
+  if (!record)
+    throw new ProjectsApiError(
+      "INTERNAL_ERROR",
+      "Созданная смета не найдена",
+      500
+    )
 
   return record
 }
@@ -223,8 +235,13 @@ export async function updateProjectEstimateRecordForWorkspace(
   recordId: string,
   input: ProjectEstimateRecordMutationInput
 ): Promise<ProjectEstimateRecordRow> {
-  const existing = await getProjectEstimateRecordForWorkspace(workspaceOwnerId, projectId, recordId)
-  if (!existing) throw new ProjectsApiError("NOT_FOUND", "Смета не найдена", 404)
+  const existing = await getProjectEstimateRecordForWorkspace(
+    workspaceOwnerId,
+    projectId,
+    recordId
+  )
+  if (!existing)
+    throw new ProjectsApiError("NOT_FOUND", "Смета не найдена", 404)
 
   await assertNameUnique(workspaceOwnerId, projectId, input.name, recordId)
 
@@ -242,8 +259,17 @@ export async function updateProjectEstimateRecordForWorkspace(
 
   if (error) throw error
 
-  const updated = await getProjectEstimateRecordForWorkspace(workspaceOwnerId, projectId, recordId)
-  if (!updated) throw new ProjectsApiError("INTERNAL_ERROR", "Обновлённая смета не найдена", 500)
+  const updated = await getProjectEstimateRecordForWorkspace(
+    workspaceOwnerId,
+    projectId,
+    recordId
+  )
+  if (!updated)
+    throw new ProjectsApiError(
+      "INTERNAL_ERROR",
+      "Обновлённая смета не найдена",
+      500
+    )
 
   return updated
 }
@@ -254,8 +280,13 @@ export async function deleteProjectEstimateRecordForWorkspace(
   projectId: string,
   recordId: string
 ): Promise<ProjectEstimateRecordRow> {
-  const existing = await getProjectEstimateRecordForWorkspace(workspaceOwnerId, projectId, recordId)
-  if (!existing) throw new ProjectsApiError("NOT_FOUND", "Смета не найдена", 404)
+  const existing = await getProjectEstimateRecordForWorkspace(
+    workspaceOwnerId,
+    projectId,
+    recordId
+  )
+  if (!existing)
+    throw new ProjectsApiError("NOT_FOUND", "Смета не найдена", 404)
 
   const { error } = await supabase
     .from("project_estimate_records")

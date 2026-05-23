@@ -13,20 +13,20 @@ import {
 
 import { profiles } from "./profiles"
 
-export const directoryCounterpartyTypeEnum = pgEnum("directory_counterparty_type", [
-  "customer",
-  "contractor",
-])
+export const directoryCounterpartyTypeEnum = pgEnum(
+  "directory_counterparty_type",
+  ["customer", "contractor"]
+)
 
 export const directoryCounterpartyLegalStatusEnum = pgEnum(
   "directory_counterparty_legal_status",
   ["juridical", "individual"]
 )
 
-export const directoryCounterpartyStatusEnum = pgEnum("directory_counterparty_status", [
-  "active",
-  "archived",
-])
+export const directoryCounterpartyStatusEnum = pgEnum(
+  "directory_counterparty_status",
+  ["active", "archived"]
+)
 
 export const directoryCounterparties = pgTable(
   "directory_counterparties",
@@ -53,7 +53,9 @@ export const directoryCounterparties = pgTable(
     passportDepartmentCode: text("passport_department_code"),
     registrationAddress: text("registration_address"),
     searchText: text("search_text").notNull(),
-    status: directoryCounterpartyStatusEnum("status").notNull().default("active"),
+    status: directoryCounterpartyStatusEnum("status")
+      .notNull()
+      .default("active"),
     version: integer("version").notNull().default(1),
     createdBy: uuid("created_by")
       .notNull()
@@ -99,7 +101,13 @@ export const directoryCounterparties = pgTable(
       t.workspaceOwnerId,
       t.updatedAt
     ),
-    check("chk_directory_counterparties_name_not_empty", sql`btrim(${t.name}) <> ''`),
-    check("chk_directory_counterparties_version_positive", sql`${t.version} > 0`),
+    check(
+      "chk_directory_counterparties_name_not_empty",
+      sql`btrim(${t.name}) <> ''`
+    ),
+    check(
+      "chk_directory_counterparties_version_positive",
+      sql`${t.version} > 0`
+    ),
   ]
 )

@@ -4,7 +4,7 @@ export function DirectorySuppliersName({ value }: { value: string }) {
       <span className="mb-1 block text-xs text-muted-foreground uppercase">
         Название
       </span>
-      <div className="break-words text-sm font-medium leading-snug">
+      <div className="text-sm leading-snug font-medium break-words">
         {value}
       </div>
     </div>

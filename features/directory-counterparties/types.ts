@@ -1,7 +1,10 @@
 export type CounterpartyType = "customer" | "contractor"
 export type LegalStatus = "juridical" | "individual"
 export type DirectoryCounterpartyStatus = "active" | "archived"
-export type DirectoryCounterpartiesSort = "relevance" | "updated_desc" | "name_asc"
+export type DirectoryCounterpartiesSort =
+  | "relevance"
+  | "updated_desc"
+  | "name_asc"
 
 export type BankDetails = {
   bankName: string | null

@@ -6,7 +6,8 @@ export const directorySuppliersQueryKeys = {
   list: (params: DirectorySuppliersListParams = {}) =>
     [...directorySuppliersQueryKeys.lists(), params] as const,
   details: () => [...directorySuppliersQueryKeys.all, "detail"] as const,
-  detail: (id: string) => [...directorySuppliersQueryKeys.details(), id] as const,
+  detail: (id: string) =>
+    [...directorySuppliersQueryKeys.details(), id] as const,
 }
 
 export const directorySuppliersCacheTags = {

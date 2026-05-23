@@ -25,19 +25,17 @@ describe("settings client", () => {
   it("throws normalized API error messages", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          Response.json(
-            {
-              error: {
-                code: "UNAUTHORIZED",
-                message: "Требуется аутентификация",
-              },
+      vi.fn().mockResolvedValue(
+        Response.json(
+          {
+            error: {
+              code: "UNAUTHORIZED",
+              message: "Требуется аутентификация",
             },
-            { status: 401 }
-          )
+          },
+          { status: 401 }
         )
+      )
     )
 
     await expect(fetchSettings()).rejects.toThrow("Требуется аутентификация")

@@ -30,6 +30,10 @@ export async function POST(request: NextRequest) {
     })
   } catch (err) {
     console.error("[POST /api/notifications/archive]", err)
-    return jsonError("INTERNAL_ERROR", "Ошибка при переносе уведомлений в архив", 500)
+    return jsonError(
+      "INTERNAL_ERROR",
+      "Ошибка при переносе уведомлений в архив",
+      500
+    )
   }
 }

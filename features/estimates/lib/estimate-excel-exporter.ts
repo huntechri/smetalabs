@@ -69,8 +69,8 @@ export async function exportEstimateToExcel(content: any) {
   // 3. Column Config
   worksheet.columns = [
     { key: "number", width: 8 },
-    { key: "image", width: 14 },
-    { key: "title", width: 50 },
+    { key: "image", width: 10 },
+    { key: "title", width: 70 },
     { key: "unit", width: 10 },
     { key: "quantity", width: 12 },
     { key: "price", width: 15 },
@@ -145,7 +145,7 @@ export async function exportEstimateToExcel(content: any) {
       }
       if (col === 1)
         cell.alignment = { horizontal: "center", vertical: "middle" }
-      else cell.alignment = { vertical: "middle" }
+      else cell.alignment = { vertical: "middle", wrapText: true }
     }
 
     const startRowIdx = worksheet.lastRow!.number + 1
@@ -175,7 +175,7 @@ export async function exportEstimateToExcel(content: any) {
         horizontal: "center",
         vertical: "middle",
       }
-      workRow.getCell(3).alignment = { vertical: "middle" }
+      workRow.getCell(3).alignment = { vertical: "middle", wrapText: true }
       workRow.getCell(4).alignment = {
         horizontal: "center",
         vertical: "middle",
@@ -184,6 +184,7 @@ export async function exportEstimateToExcel(content: any) {
       workRow.getCell(6).numFmt = '#,##0.00" ₽"'
       workRow.getCell(7).numFmt = '#,##0.00" ₽"'
       workRow.getCell(7).font = { bold: true }
+      workRow.getCell(8).alignment = { vertical: "middle", wrapText: true }
 
       for (let col = 1; col <= 8; col++) {
         const cell = workRow.getCell(col)
@@ -218,7 +219,7 @@ export async function exportEstimateToExcel(content: any) {
           horizontal: "center",
           vertical: "middle",
         }
-        matRow.getCell(3).alignment = { vertical: "middle" }
+        matRow.getCell(3).alignment = { vertical: "middle", wrapText: true }
         matRow.getCell(4).alignment = {
           horizontal: "center",
           vertical: "middle",
@@ -226,6 +227,7 @@ export async function exportEstimateToExcel(content: any) {
         matRow.getCell(5).numFmt = "#,##0.00"
         matRow.getCell(6).numFmt = '#,##0.00" ₽"'
         matRow.getCell(7).numFmt = '#,##0.00" ₽"'
+        matRow.getCell(8).alignment = { vertical: "middle", wrapText: true }
 
         for (let col = 1; col <= 8; col++) {
           const cell = matRow.getCell(col)
@@ -243,9 +245,12 @@ export async function exportEstimateToExcel(content: any) {
             extension: imgInfo.extension as any,
           })
 
+          // Centered position inside Cell:
+          // Col B width: 10 (~77px). Image size: 0.6cm x 0.6cm (~23px). Offset: (77 - 23)/2 = 27px (~0.35 offset)
+          // Row height: 32 (~43px). Image size: 23px. Offset: (43 - 23)/2 = 10px (~0.23 offset)
           worksheet.addImage(imgId, {
-            tl: { col: 1.15, row: matRowIdx - 0.85 },
-            ext: { width: 32, height: 32 },
+            tl: { col: 1.35, row: matRowIdx - 0.77 },
+            ext: { width: 23, height: 23 },
             editAs: "oneCell",
           } as any)
 
@@ -277,6 +282,9 @@ export async function exportEstimateToExcel(content: any) {
       sectionTotalRow.height = 22
       sectionTotalRows.push(worksheet.lastRow!.number)
 
+      const secTotalRowNum = worksheet.lastRow!.number
+      worksheet.mergeCells(secTotalRowNum, 2, secTotalRowNum, 6)
+
       for (let col = 1; col <= 8; col++) {
         const cell = sectionTotalRow.getCell(col)
         cell.font = { name: "Arial", size: 10, bold: true }
@@ -284,6 +292,10 @@ export async function exportEstimateToExcel(content: any) {
           top: { style: "thin", color: { argb: "94A3B8" } },
           bottom: { style: "double", color: { argb: "94A3B8" } },
         }
+      }
+      sectionTotalRow.getCell(2).alignment = {
+        horizontal: "right",
+        vertical: "middle",
       }
       sectionTotalRow.getCell(7).numFmt = '#,##0.00" ₽"'
     }
@@ -308,6 +320,9 @@ export async function exportEstimateToExcel(content: any) {
   ])
   grandTotalRow.height = 26
 
+  const grandRowNum = worksheet.lastRow!.number
+  worksheet.mergeCells(grandRowNum, 2, grandRowNum, 6)
+
   for (let col = 1; col <= 8; col++) {
     const cell = grandTotalRow.getCell(col)
     cell.font = {
@@ -328,6 +343,10 @@ export async function exportEstimateToExcel(content: any) {
         fgColor: { argb: "F1F5F9" },
       }
     }
+  }
+  grandTotalRow.getCell(2).alignment = {
+    horizontal: "right",
+    vertical: "middle",
   }
 
   // 7. Technical Sheet ("Для импорта")

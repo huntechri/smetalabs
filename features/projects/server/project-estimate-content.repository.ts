@@ -102,7 +102,11 @@ function roundConsumption(value: number) {
   return Math.round(value * 1000000) / 1000000
 }
 
-function mapRecord(row: RecordRow) {
+function mapRecord(
+  row: RecordRow,
+  projectDetails?: { title: string; customer_name: string | null; address: string | null } | null,
+  profileDetails?: { workspace_name: string | null; workspace_logo: string | null } | null
+) {
   return {
     id: row.id,
     projectId: row.project_id,
@@ -110,6 +114,11 @@ function mapRecord(row: RecordRow) {
     type: row.type,
     status: row.status,
     amount: toNumber(row.amount),
+    projectName: projectDetails?.title ?? null,
+    customerName: projectDetails?.customer_name ?? null,
+    projectAddress: projectDetails?.address ?? null,
+    workspaceName: profileDetails?.workspace_name ?? null,
+    workspaceLogo: profileDetails?.workspace_logo ?? null,
   }
 }
 
@@ -387,6 +396,8 @@ export async function getProjectEstimateContentForWorkspace(
     { data: sectionRows, error: sectionError },
     { data: workRows, error: workError },
     { data: materialRows, error: materialError },
+    { data: projectDetails },
+    { data: profileDetails },
   ] = await Promise.all([
     supabase
       .from("project_estimate_sections")
@@ -418,6 +429,16 @@ export async function getProjectEstimateContentForWorkspace(
       .is("deleted_at", null)
       .order("sort_order", { ascending: true })
       .order("id", { ascending: true }),
+    supabase
+      .from("projects")
+      .select("title, customer_name, address")
+      .eq("id", projectId)
+      .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("workspace_name, workspace_logo")
+      .eq("id", workspaceOwnerId)
+      .maybeSingle(),
   ])
 
   if (sectionError) throw sectionError
@@ -453,7 +474,17 @@ export async function getProjectEstimateContentForWorkspace(
     { worksAmount: 0, materialsAmount: 0, totalAmount: 0 }
   )
 
-  return { data: { record: mapRecord(record), sections, summary } }
+  return {
+    data: {
+      record: mapRecord(
+        record,
+        projectDetails as any,
+        profileDetails as any
+      ),
+      sections,
+      summary,
+    },
+  }
 }
 
 /**

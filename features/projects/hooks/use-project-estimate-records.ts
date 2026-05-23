@@ -30,6 +30,12 @@ export function useProjectEstimateRecords(projectId: string) {
     await queryClient.invalidateQueries({
       queryKey: projectsQueryKeys.estimateRecords(projectId),
     })
+    await queryClient.invalidateQueries({
+      queryKey: projectsQueryKeys.detail(projectId),
+    })
+    await queryClient.invalidateQueries({
+      queryKey: projectsQueryKeys.lists(),
+    })
   }
 
   const createMutation = useMutation({

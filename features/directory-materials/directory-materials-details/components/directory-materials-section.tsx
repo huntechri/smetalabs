@@ -166,7 +166,7 @@ export function DirectoryMaterialsSection() {
 
   return (
     <>
-      <Card className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg py-0 shadow-sm">
+      <Card className="flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-lg bg-muted/0 py-0 shadow-sm">
         <FieldError className="m-3 mb-0 rounded-md border border-destructive/30 bg-destructive/10 p-3">
           {error}
         </FieldError>

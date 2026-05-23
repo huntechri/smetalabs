@@ -2,7 +2,10 @@
 
 import { type FormEvent, useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { ru } from "react-day-picker/locale"
+import { CalendarBlank } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import {
   Dialog,
   DialogContent,
@@ -19,6 +22,11 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -27,6 +35,7 @@ import {
 } from "@/components/ui/select"
 import { fetchDirectoryCounterparties } from "@/features/directory-counterparties/api/directory-counterparties-client"
 import { directoryCounterpartiesQueryKeys } from "@/features/directory-counterparties/api/directory-counterparties-query-keys"
+import { cn } from "@/lib/utils"
 import type {
   ProjectMutationInput,
   ProjectRow,
@@ -85,6 +94,29 @@ function nullable(value: string) {
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Не удалось сохранить проект"
+}
+
+function parseDate(value: string): Date | undefined {
+  if (!value) return undefined
+  const date = new Date(value + "T00:00:00")
+  return isNaN(date.getTime()) ? undefined : date
+}
+
+function toDateString(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+function formatDisplayDate(value: string): string {
+  const date = parseDate(value)
+  if (!date) return value
+  return date.toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
 }
 
 function toMutationInput(form: FormState): ProjectMutationInput {
@@ -266,23 +298,67 @@ export function CreateProjectDialog({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="project-start-date">Дата начала</FieldLabel>
-              <Input
-                id="project-start-date"
-                maxLength={20}
-                value={form.startDate}
-                onChange={(event) => setField("startDate", event.target.value)}
-              />
+              <FieldLabel>Дата начала</FieldLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="project-start-date"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !form.startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarBlank className="size-4 shrink-0" />
+                    {form.startDate
+                      ? formatDisplayDate(form.startDate)
+                      : "Выберите дату"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    locale={ru}
+                    selected={parseDate(form.startDate)}
+                    onSelect={(date) =>
+                      setField("startDate", date ? toDateString(date) : "")
+                    }
+                    defaultMonth={parseDate(form.startDate) ?? undefined}
+                  />
+                </PopoverContent>
+              </Popover>
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="project-end-date">Дата окончания</FieldLabel>
-              <Input
-                id="project-end-date"
-                maxLength={20}
-                value={form.endDate}
-                onChange={(event) => setField("endDate", event.target.value)}
-              />
+              <FieldLabel>Дата окончания</FieldLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="project-end-date"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !form.endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarBlank className="size-4 shrink-0" />
+                    {form.endDate
+                      ? formatDisplayDate(form.endDate)
+                      : "Выберите дату"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    locale={ru}
+                    selected={parseDate(form.endDate)}
+                    onSelect={(date) =>
+                      setField("endDate", date ? toDateString(date) : "")
+                    }
+                    defaultMonth={parseDate(form.endDate) ?? undefined}
+                  />
+                </PopoverContent>
+              </Popover>
             </Field>
           </FieldGroup>
 

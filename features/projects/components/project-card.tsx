@@ -105,7 +105,7 @@ export function ProjectCard({
 
       <CardContent>
         <div className="grid min-w-0 grid-cols-1 gap-3 @xs:grid-cols-2">
-          <div className="min-w-0 rounded-lg border bg-muted/20 p-3">
+          <div className="min-w-0 rounded-lg border bg-background p-3">
             <div className="flex w-full flex-col">
               <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
                 <CurrencyRub className="size-3 shrink-0" />
@@ -117,7 +117,7 @@ export function ProjectCard({
             </div>
           </div>
 
-          <div className="min-w-0 rounded-lg border bg-muted/20 p-3">
+          <div className="min-w-0 rounded-lg border bg-background p-3">
             <div className="flex w-full flex-col">
               <div className="mb-1 flex items-center gap-1 text-[0.625rem] text-muted-foreground">
                 <CalendarBlank className="size-3 shrink-0" />
@@ -129,7 +129,7 @@ export function ProjectCard({
             </div>
           </div>
 
-          <div className="col-span-1 min-w-0 rounded-lg border bg-muted/20 p-3 @xs:col-span-2">
+          <div className="col-span-1 min-w-0 rounded-lg border bg-background p-3 @xs:col-span-2">
             <div className="flex w-full flex-col">
               <div className="mb-1 text-[0.625rem] text-muted-foreground">
                 Прогресс

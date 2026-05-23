@@ -153,6 +153,12 @@ export function useProjectEstimateContent(projectId: string, recordId: string) {
       await queryClient.invalidateQueries({
         queryKey: projectsQueryKeys.estimateRecords(projectId),
       })
+      await queryClient.invalidateQueries({
+        queryKey: projectsQueryKeys.detail(projectId),
+      })
+      await queryClient.invalidateQueries({
+        queryKey: projectsQueryKeys.lists(),
+      })
     },
     [contentKey, queryClient, projectId]
   )

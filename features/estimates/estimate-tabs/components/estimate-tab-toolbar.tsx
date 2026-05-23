@@ -20,14 +20,22 @@ import {
 type ToolbarAction = {
   label: string
   icon: React.ReactNode
-  action?: "workCoefficient"
+  action?: "workCoefficient" | "import" | "export"
   variant?: React.ComponentProps<typeof Button>["variant"]
 }
 
 const tabActions: Record<string, ToolbarAction[]> = {
   estimate: [
-    { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
-    { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
+    {
+      label: "Импорт",
+      icon: <FileArrowDownIcon data-icon="inline-start" />,
+      action: "import",
+    },
+    {
+      label: "Экспорт",
+      icon: <ExportIcon data-icon="inline-start" />,
+      action: "export",
+    },
     {
       label: "Коэффициент",
       icon: <PercentIcon data-icon="inline-start" />,
@@ -35,21 +43,45 @@ const tabActions: Record<string, ToolbarAction[]> = {
     },
   ],
   purchases: [
-    { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
-    { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
+    {
+      label: "Импорт",
+      icon: <FileArrowDownIcon data-icon="inline-start" />,
+      action: "import",
+    },
+    {
+      label: "Экспорт",
+      icon: <ExportIcon data-icon="inline-start" />,
+      action: "export",
+    },
   ],
   execution: [
-    { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
-    { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
+    {
+      label: "Импорт",
+      icon: <FileArrowDownIcon data-icon="inline-start" />,
+      action: "import",
+    },
+    {
+      label: "Экспорт",
+      icon: <ExportIcon data-icon="inline-start" />,
+      action: "export",
+    },
     { label: "Доп. работа", icon: <PlusIcon data-icon="inline-start" /> },
   ],
   finances: [
     { label: "Платёж", icon: <PlusIcon data-icon="inline-start" /> },
-    { label: "Экспорт", icon: <ExportIcon data-icon="inline-start" /> },
+    {
+      label: "Экспорт",
+      icon: <ExportIcon data-icon="inline-start" />,
+      action: "export",
+    },
   ],
   documents: [
     { label: "Документ", icon: <PlusIcon data-icon="inline-start" /> },
-    { label: "Импорт", icon: <FileArrowDownIcon data-icon="inline-start" /> },
+    {
+      label: "Импорт",
+      icon: <FileArrowDownIcon data-icon="inline-start" />,
+      action: "import",
+    },
   ],
 }
 
@@ -115,6 +147,20 @@ export function EstimateTabToolbar() {
       const params = new URLSearchParams(searchParams.toString())
       params.set("dialog", "work-coefficient")
       replaceSearch(params)
+    } else if (action.action === "import") {
+      if (activeTab === "estimate") {
+        const params = new URLSearchParams(searchParams.toString())
+        params.set("dialog", "import-estimate")
+        replaceSearch(params)
+      } else {
+        window.dispatchEvent(new CustomEvent(`project-${activeTab}:import`))
+      }
+    } else if (action.action === "export") {
+      if (activeTab === "estimate") {
+        window.dispatchEvent(new CustomEvent("project-estimate:export"))
+      } else {
+        window.dispatchEvent(new CustomEvent(`project-${activeTab}:export`))
+      }
     }
   }
 

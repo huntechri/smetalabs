@@ -202,9 +202,32 @@ export function usePurchases({ estimateId, projectId }: UsePurchasesInput)
 
 ## 7. БД и API (бэкенд)
 
-### RPC `get_estimate_purchases`
+### Таблица `project_estimate_purchases`
 
-Миграция 046 — SECURITY DEFINER, STABLE:
+Миграция 047 — фактические закупки на уровне сметы. Отдельная таблица (не `global_purchases`): каждая смета ведёт собственный учёт закупок материалов.
+
+| Колонка | Тип | Примечание |
+|---|---|---|
+| `id` | uuid PK | |
+| `workspace_owner_id` | uuid FK | Multi-tenant изоляция |
+| `estimate_record_id` | uuid FK | FK → `project_estimate_records` ON DELETE CASCADE |
+| `directory_material_id` | uuid FK | nullable, FK → `directory_materials` ON DELETE SET NULL |
+| `estimate_material_id` | uuid FK | nullable, FK → `project_estimate_materials` ON DELETE SET NULL |
+| `title` / `unit` | text | NOT NULL |
+| `quantity` / `price` / `total` | numeric(14,3/14,2/14,2) | ≥ 0 |
+| `supplier_name` / `purchase_date` / `notes` | text | nullable |
+| `created_by` / `updated_by` | uuid FK | nullable (в отличие от глобальных закупок) |
+| `created_at` / `updated_at` / `archived_at` / `deleted_at` | timestamptz | Soft delete |
+
+**RLS:** `private.workspace_can_read` (SELECT) / `private.workspace_can_write_directory` (INSERT/UPDATE/DELETE) — идентично другим таблицам смет.
+
+**Tenant boundary:** `(id, workspace_owner_id)` — изоляция через RLS + проверка в RPC.
+
+**Ограничения:** `chk_pep_title_not_empty`, `chk_pep_unit_not_empty`, `chk_pep_quantity_non_negative`, `chk_pep_price_non_negative`, `chk_pep_total_non_negative`.
+
+### RPC `get_estimate_purchases` (v2)
+
+Миграция 048 — SECURITY DEFINER, STABLE. Факт теперь из `project_estimate_purchases` (не `global_purchases`):
 
 ```sql
 public.get_estimate_purchases(
@@ -225,6 +248,14 @@ RETURNS TABLE (
 )
 ```
 
+### RPC для CRUD проектных закупок (v1)
+
+Миграция 049 — SECURITY DEFINER, plpgsql:
+
+- `add_project_estimate_purchase(p_estimate_record_id, p_workspace_owner_id, p_directory_material_id, ...)` → `jsonb` — создать запись, авторезолв title/unit из справочника
+- `update_project_estimate_purchase(p_purchase_id, p_workspace_owner_id, p_quantity, p_price, ...)` → `jsonb` — частичное обновление, авто-пересчёт `total`
+- `archive_project_estimate_purchase(p_purchase_id, p_workspace_owner_id, p_updated_by)` → `jsonb` (NULL) — soft delete
+
 ### Краевые случаи
 
 | Случай | Поведение |
@@ -232,7 +263,7 @@ RETURNS TABLE (
 | Материал в плане есть, в факте нет | `fact_*` = NULL, `deviation_total = plan_total` |
 | `directory_material_id IS NULL` | Строки исключаются из агрегации |
 | `archived_at` / `deleted_at` не NULL | Строки исключаются (soft delete) |
-| Несколько записей закупок с разными ценами | Взвешенная средняя цена |
+| Несколько записей закупок с разными ценами | Взвешенная средняя цена: Σ(qty×price)/Σ(qty) |
 
 ---
 

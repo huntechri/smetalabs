@@ -291,6 +291,7 @@ async function toGlobalPurchaseMutationRow(
     plan_price: input.planPrice,
     fact_quantity: input.factQuantity ?? null,
     fact_price: input.factPrice ?? null,
+    directory_material_id: input.directoryMaterialId ?? null,
     supplier_id: null,
     supplier_name: null,
     project_id: project?.id ?? null,

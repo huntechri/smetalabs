@@ -63,6 +63,7 @@ function materialToPurchaseInput(
     planPrice: material.planPrice,
     factQuantity,
     factPrice: material.planPrice,
+    directoryMaterialId: material.id,
     supplierId: null,
     projectId: null,
     purchaseDate: getTodayIsoDate(),

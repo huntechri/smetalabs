@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -61,28 +62,6 @@ function PurchaseRowSkeleton() {
   )
 }
 
-function PurchaseToolbar({
-  onAddClick,
-  adding,
-}: {
-  onAddClick: () => void
-  adding: boolean
-}) {
-  return (
-    <div className="flex items-center gap-2 border-b border-dashed border-gray-400 px-3 py-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={onAddClick}
-        disabled={adding}
-      >
-        <PlusIcon data-icon="inline-start" />
-        {adding ? "Добавление..." : "Добавить закупку"}
-      </Button>
-    </div>
-  )
-}
-
 export function PurchaseSection({
   estimateId,
   projectId,
@@ -90,8 +69,18 @@ export function PurchaseSection({
   estimateId: string
   projectId: string
 }) {
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [addError, setAddError] = useState<string | null>(null)
+
+  const dialogOpen = searchParams.get("dialog") === "add-purchase"
+
+  const closeDialog = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("dialog")
+    const next = params.toString()
+    router.replace(next ? `?${next}` : window.location.pathname)
+  }, [router, searchParams])
 
   const {
     purchases,
@@ -113,7 +102,7 @@ export function PurchaseSection({
     try {
       setAddError(null)
       await addPurchase(input)
-      setDialogOpen(false)
+      closeDialog()
     } catch (err) {
       setAddError(err instanceof Error ? err.message : "Не удалось добавить закупку")
       throw err
@@ -168,10 +157,15 @@ export function PurchaseSection({
     )
   }
 
+  const openAddDialog = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("dialog", "add-purchase")
+    router.replace(`?${params.toString()}`)
+  }, [router, searchParams])
+
   return (
     <>
       <section className="flex flex-col overflow-hidden rounded-lg border border-dashed border-gray-400 bg-card text-card-foreground shadow-sm">
-        <PurchaseToolbar onAddClick={() => setDialogOpen(true)} adding={isAdding} />
         {purchases.length === 0 ? (
           <Empty>
             <EmptyHeader>
@@ -187,7 +181,7 @@ export function PurchaseSection({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setDialogOpen(true)}
+                onClick={openAddDialog}
               >
                 <PlusIcon data-icon="inline-start" />
                 Добавить закупку
@@ -211,8 +205,10 @@ export function PurchaseSection({
       <AddPurchaseDialog
         open={dialogOpen}
         onOpenChange={(open) => {
-          setDialogOpen(open)
-          if (!open) setAddError(null)
+          if (!open) {
+            closeDialog()
+            setAddError(null)
+          }
         }}
         onAdd={handleAdd}
         saving={isAdding}

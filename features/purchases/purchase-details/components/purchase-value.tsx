@@ -5,12 +5,14 @@ import { formatMoney } from "@/lib/formatters"
 export function PurchaseValue({
   className,
   deviation = false,
+  isMoney = true,
   label,
   strong = false,
   value,
 }: {
   className?: string
   deviation?: boolean
+  isMoney?: boolean
   label: string
   strong?: boolean
   value: number | string | null
@@ -24,8 +26,12 @@ export function PurchaseValue({
       const sign = num > 0 ? "+" : ""
       return `${sign}${formatMoney(num)}`
     }
-    if (!deviation && typeof value === "number") {
+    if (isMoney && typeof value === "number") {
       return formatMoney(num)
+    }
+    // plain number (quantity, etc.) — no currency suffix
+    if (typeof value === "number") {
+      return String(num)
     }
     return String(value)
   })()

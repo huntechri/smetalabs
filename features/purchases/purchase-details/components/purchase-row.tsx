@@ -30,7 +30,7 @@ export function PurchaseRow({
   const factTotal = getTotal(factQuantity, factAvgPrice)
   const deviationTotal = planTotal - factTotal
 
-  const hasFact = row.purchaseId !== null && row.factQuantity !== null
+  const hasFact = row.factQuantity !== null && row.factQuantity > 0
 
   const canEdit = typeof onUpdate === "function"
   const canArchive = typeof onArchive === "function" && row.purchaseId !== null
@@ -69,7 +69,7 @@ export function PurchaseRow({
 
         <div className="grid min-w-0 gap-1.5 rounded-md border border-dashed border-green-400 p-1.5 md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)]">
           <PurchaseMetricGroup title="План">
-            <PurchaseValue label="Кол-во" value={row.planQuantity} />
+            <PurchaseValue label="Кол-во" isMoney={false} value={row.planQuantity} />
             <PurchaseValue label="Цена" value={row.planPrice} />
             <PurchaseValue
               label="Итого"

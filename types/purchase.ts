@@ -1,4 +1,5 @@
 export type PurchaseRow = {
+  purchaseId: string | null
   materialId: string | null
   title: string
   unit: string
@@ -9,4 +10,15 @@ export type PurchaseRow = {
   factAvgPrice: number | null
   factTotal: number | null
   deviationTotal: number | null
+}
+
+export type AddPurchaseInput = {
+  directoryMaterialId: string
+  quantity: number
+  price: number
+}
+
+export type UpdatePurchaseInput = {
+  quantity?: number
+  price?: number
 }

@@ -95,7 +95,9 @@ smetalabs/
 │   │
 │   └── api/                             # REST API Route Handlers
 │       ├── projects/[id]/estimate-records/[recordId]/
-│       │   └── purchases/route.ts       #   GET закупок сметы (RPC get_estimate_purchases)
+│       │   └── purchases/
+│       │       ├── route.ts             #   GET закупок + POST создание (RPC)
+│       │       └── [purchaseId]/route.ts  # PATCH обновление + DELETE архивация (RPC)
 │       └── team/
 │           ├── members/route.ts          # GET (список участников), POST (назначить роль), DELETE (снять роль)
 │           └── roles/route.ts            # GET (список ролей), POST (создать роль)
@@ -207,21 +209,22 @@ smetalabs/
 │   │   ├── __mocks__/
 │   │   │   └── purchases.ts             #   Мок-данные (10 позиций закупок, fallback для API)
 │   │   ├── api/
-│   │   │   ├── purchases-client.ts      #   API-клиент (fetch → /api/.../purchases)
-│   │   │   └── purchases-query-keys.ts   #   Ключи кэширования React Query
+│   │   │   ├── purchases-client.ts      #   API-клиент (GET/POST/PATCH/DELETE → /api/.../purchases)
+│   │   │   └── purchases-query-keys.ts   #   Ключи кэширования React Query (list + mutations)
 │   │   ├── components/
 │   │   │   └── purchases-view.tsx       #   Обёртка со скроллом (принимает estimateId, projectId)
 │   │   ├── hooks/
-│   │   │   └── use-purchases.ts         #   Хук React Query (useQuery + фильтрация)
+│   │   │   └── use-purchases.ts         #   Хук React Query (useQuery + useMutation + фильтрация)
 │   │   ├── docs/
 │   │   │   └── README.md                #   Документация модуля
 │   │   └── purchase-details/
 │   │       └── components/
-│   │           ├── purchase-section.tsx  #   Композиция + loading/empty/error состояния
-│   │           ├── purchase-row.tsx      #   Строка закупки (read-only Badge, план/факт/отклонение)
+│   │           ├── purchase-section.tsx  #   Композиция + тулбар + loading/empty/error состояния
+│   │           ├── purchase-row.tsx      #   Строка закупки (read-only план, EditableBadge факт, архив)
 │   │           ├── purchase-name.tsx     #   Название + ед. измерения
 │   │           ├── purchase-value.tsx    #   Бейдж с formatMoney + цвет отклонения (зелёный/красный)
-│   │           └── purchase-metric-group.tsx  # Группа Plan / Actual / Deviation
+│   │           ├── purchase-metric-group.tsx  # Группа Plan / Actual / Deviation
+│   │           └── add-purchase-dialog.tsx  # Диалог добавления закупки (поиск из справочника)
 │   │
 │   ├── execution/                       # Фича «Выполнение» (✅ эталонная структура, идентична purchases)
 │   │   ├── __mocks__/
@@ -500,35 +503,49 @@ features/{domain}/
 ```
 features/purchases/
 ├── __mocks__/                         # Временные моки (удалятся после появления БД)
-│   └── purchases.ts                   #   Массив PurchaseRow[]
+│   └── purchases.ts                   #   Массив PurchaseRow[] (с purchaseId)
+│
+├── api/                               # API-клиент (React Query)
+│   ├── purchases-client.ts            #   fetch-функции: GET/POST/PATCH/DELETE
+│   └── purchases-query-keys.ts        #   Ключи кэширования: list + mutations (add/update/archive)
 │
 ├── components/                        # UI верхнего уровня (обёртки, view-компоненты)
 │   └── purchases-view.tsx             #   Обёртка со скроллом. Только JSX + пропсы.
 │                                      #   Не содержит бизнес-логики.
 │
-├── hooks/                             # Хуки фичи (состояние, useMemo, эффекты)
-│   └── use-purchases.ts               #   Возвращает { purchases }
-│                                      #   Пока — моки. Позже — запрос к API/БД.
+├── hooks/                             # Хуки фичи (React Query, мутации)
+│   └── use-purchases.ts               #   Возвращает { purchases, addPurchase, updatePurchase, archivePurchase }
+│                                      #   useQuery + useMutation с инвалидацией списка
 │
 └── purchase-details/                  # Поддомен «Детали закупки»
     └── components/                    #   Мелкие UI-компоненты поддомена
-        ├── purchase-section.tsx        #     Композиция: хук → map → PurchaseRow
-        ├── purchase-row.tsx            #     Строка: собирает имя + метрики
+        ├── purchase-section.tsx        #     Композиция: тулбар + хук + map → PurchaseRow + диалог
+        ├── purchase-row.tsx            #     Строка: имя + план(read-only) + факт(EditableBadge) + архив
         ├── purchase-name.tsx           #     Название позиции (текст в рамке)
         ├── purchase-value.tsx          #     Бейдж «label: value» (использует Badge из ui/)
-        └── purchase-metric-group.tsx   #     Группа метрик (Plan / Actual / Deviation)
+        ├── purchase-metric-group.tsx   #     Группа метрик (Plan / Actual / Deviation)
+        └── add-purchase-dialog.tsx     #     Диалог добавления: поиск из справочника материалов
 ```
 
 **Поток данных внутри фичи:**
 
 ```
 purchases-view.tsx                   ← page.tsx рендерит этот компонент
-  └─→ PurchaseSection                 ← хук + map
-        ├─→ usePurchases()            ← хук (сейчас моки, потом API)
+  └─→ PurchaseSection                 ← тулбар + хук + map + диалог
+        ├─→ PurchaseToolbar            ← кнопка «Добавить закупку»
+        ├─→ usePurchases()             ← хук (useQuery + useMutation)
+        │     ├─→ fetchEstimatePurchases()  ← GET список
+        │     ├─→ addProjectEstimatePurchase() ← POST создание
+        │     ├─→ updateProjectEstimatePurchase() ← PATCH обновление
+        │     └─→ archiveProjectEstimatePurchase() ← DELETE архивация
+        ├─→ AddPurchaseDialog          ← диалог: поиск материалов + добавление
+        │     └─→ fetchGlobalPurchaseMaterialOptions() ← справочник материалов
         └─→ PurchaseRow (×N)          ← для каждой строки
               ├─→ PurchaseName        ← чистое отображение
               ├─→ PurchaseMetricGroup ← группировка метрик
-              │     └─→ PurchaseValue (×N)  ← бейдж label:value
+              │     ├─→ PurchaseValue (×N, план)  ← статические бейджи
+              │     └─→ EditableBadge (×N, факт)  ← редактируемые бейджи
+              ├─→ DropdownMenu         ← меню «Удалить факт»
               ├─→ formatMoney()       ← lib/formatters.ts
               └─→ getTotal()          ← lib/calculations.ts
 ```

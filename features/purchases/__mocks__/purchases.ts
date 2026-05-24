@@ -2,6 +2,7 @@ import type { PurchaseRow } from "@/types/purchase"
 
 export const purchaseRows: PurchaseRow[] = [
   {
+    purchaseId: "pep-1",
     materialId: "material-1",
     title:
       "Автоматический выключатель EKF PROxima BA-45-2000 3P 1000A 80 кА 690 В",
@@ -15,6 +16,7 @@ export const purchaseRows: PurchaseRow[] = [
     deviationTotal: -355784,
   },
   {
+    purchaseId: "pep-2",
     materialId: "material-2",
     title: "Кабель ВВГнг-LS 5x10",
     unit: "м",
@@ -27,6 +29,7 @@ export const purchaseRows: PurchaseRow[] = [
     deviationTotal: -3360,
   },
   {
+    purchaseId: "pep-3",
     materialId: "material-3",
     title: "Лоток металлический перфорированный 100x50",
     unit: "шт",
@@ -39,6 +42,7 @@ export const purchaseRows: PurchaseRow[] = [
     deviationTotal: -340,
   },
   {
+    purchaseId: "pep-4",
     materialId: "material-4",
     title: "Розетка силовая промышленная 32А",
     unit: "шт",
@@ -51,6 +55,7 @@ export const purchaseRows: PurchaseRow[] = [
     deviationTotal: -4140,
   },
   {
+    purchaseId: "pep-5",
     materialId: "material-5",
     title: "Щит распределительный навесной IP54",
     unit: "шт",
@@ -63,6 +68,7 @@ export const purchaseRows: PurchaseRow[] = [
     deviationTotal: -15500,
   },
   {
+    purchaseId: "pep-6",
     materialId: "material-6",
     title: "DIN-рейка оцинкованная 35 мм",
     unit: "шт",
@@ -75,6 +81,7 @@ export const purchaseRows: PurchaseRow[] = [
     deviationTotal: 180,
   },
   {
+    purchaseId: "pep-7",
     materialId: "material-7",
     title: "Автоматический выключатель 1P 16А",
     unit: "шт",
@@ -87,6 +94,7 @@ export const purchaseRows: PurchaseRow[] = [
     deviationTotal: -1180,
   },
   {
+    purchaseId: "pep-8",
     materialId: "material-8",
     title: "Клемма проходная винтовая 4 мм2",
     unit: "шт",
@@ -99,6 +107,7 @@ export const purchaseRows: PurchaseRow[] = [
     deviationTotal: -240,
   },
   {
+    purchaseId: "pep-9",
     materialId: "material-9",
     title: "Труба гофрированная ПВХ 25 мм",
     unit: "м",
@@ -111,6 +120,7 @@ export const purchaseRows: PurchaseRow[] = [
     deviationTotal: -1160,
   },
   {
+    purchaseId: "pep-10",
     materialId: "material-10",
     title: "Маркировочная бирка кабельная",
     unit: "шт",

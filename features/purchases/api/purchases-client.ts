@@ -1,4 +1,8 @@
-import type { PurchaseRow } from "@/types/purchase"
+import type {
+  PurchaseRow,
+  AddPurchaseInput,
+  UpdatePurchaseInput,
+} from "@/types/purchase"
 
 export type EstimatePurchasesParams = {
   estimateId: string
@@ -64,11 +68,66 @@ function buildUrl({
   return search ? `${base}?${search}` : base
 }
 
+function buildPurchaseUrl(
+  projectId: string,
+  estimateId: string,
+  purchaseId: string
+): string {
+  return `/api/projects/${encodeURIComponent(projectId)}/estimate-records/${encodeURIComponent(estimateId)}/purchases/${encodeURIComponent(purchaseId)}`
+}
+
 export function fetchEstimatePurchases(
   params: EstimatePurchasesParams
 ): Promise<EstimatePurchasesResponse> {
   return fetchJson<EstimatePurchasesResponse>(
     buildUrl(params),
     "закупок сметы"
+  )
+}
+
+export function addProjectEstimatePurchase(
+  projectId: string,
+  estimateId: string,
+  input: AddPurchaseInput
+): Promise<{ data: unknown }> {
+  return fetchJson<{ data: unknown }>(
+    `/api/projects/${encodeURIComponent(projectId)}/estimate-records/${encodeURIComponent(estimateId)}/purchases`,
+    "создания закупки",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    }
+  )
+}
+
+export function updateProjectEstimatePurchase(
+  projectId: string,
+  estimateId: string,
+  purchaseId: string,
+  input: UpdatePurchaseInput
+): Promise<{ data: unknown }> {
+  return fetchJson<{ data: unknown }>(
+    buildPurchaseUrl(projectId, estimateId, purchaseId),
+    "обновления закупки",
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    }
+  )
+}
+
+export function archiveProjectEstimatePurchase(
+  projectId: string,
+  estimateId: string,
+  purchaseId: string
+): Promise<{ data: unknown }> {
+  return fetchJson<{ data: unknown }>(
+    buildPurchaseUrl(projectId, estimateId, purchaseId),
+    "архивирования закупки",
+    {
+      method: "DELETE",
+    }
   )
 }

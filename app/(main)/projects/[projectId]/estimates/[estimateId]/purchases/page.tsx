@@ -1,5 +1,15 @@
 import { PurchasesView } from "@/features/purchases/components/purchases-view"
 
-export default function EstimatePurchasesPage() {
-  return <PurchasesView />
+export const dynamic = "force-dynamic"
+
+type EstimatePurchasesPageProps = {
+  params: Promise<{ projectId: string; estimateId: string }>
+}
+
+export default async function EstimatePurchasesPage({
+  params,
+}: EstimatePurchasesPageProps) {
+  const { projectId, estimateId } = await params
+
+  return <PurchasesView estimateId={estimateId} projectId={projectId} />
 }

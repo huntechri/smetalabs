@@ -1,6 +1,6 @@
 # Закупки сметы (purchases)
 
-> 2026-05-22 · статус: mock (фронтенд), БД и API не реализованы
+> 2026-05-24 · статус: API-клиент реализован, React Query подключён, состояния loading/empty/error
 
 ---
 
@@ -14,8 +14,6 @@
                  ^^^^^^^^^
 ```
 
-На момент 2026-05-22 модуль работает **только с мок-данными** — не подключён к базе данных. Все значения отображаются статически (без inline-редактирования).
-
 ### Отличие от глобальных закупок
 
 | Характеристика | `features/purchases/` | `features/global-purchases/` |
@@ -23,8 +21,7 @@
 | **Контекст** | Внутри конкретной сметы | Уровень workspace (все проекты) |
 | **Данные** | Только чтение (статические бейджи) | Inline-редактирование (EditableBadge) |
 | **Тулбар** | Общий для всех вкладок сметы | Собственный (поиск + фильтры + действия) |
-| **Ед. измерения** | Нет поля `unit` в данных | Есть поле `unit` |
-| **Доп. поля** | Нет | Поставщик, объект, дата закупки |
+| **Источник данных** | RPC `get_estimate_purchases` (агрегация плана + факта) | Таблица `global_purchases` |
 | **Роутинг** | `/projects/:pid/estimates/:eid/purchases` | `/procurements` |
 
 ---
@@ -34,17 +31,20 @@
 ```
 features/purchases/
 ├── __mocks__/
-│   └── purchases.ts                              # Мок-данные: 10 строк закупок
+│   └── purchases.ts                              # Мок-данные: 10 строк закупок (fallback при отсутствии API)
+├── api/
+│   ├── purchases-client.ts                       # API-клиент: fetch → /api/projects/.../purchases
+│   └── purchases-query-keys.ts                   # Ключи кэширования React Query
 ├── hooks/
-│   └── use-purchases.ts                          # Хук (только чтение из моков)
+│   └── use-purchases.ts                          # Хук с React Query (useQuery + фильтрация)
 ├── components/
-│   └── purchases-view.tsx                        # Обёртка со скроллом
+│   └── purchases-view.tsx                        # Обёртка со скроллом (принимает estimateId, projectId)
 └── purchase-details/
     └── components/
-        ├── purchase-section.tsx                   # Композиция списка (хук → map → Row)
+        ├── purchase-section.tsx                   # Композиция списка + состояния (loading/empty/error)
         ├── purchase-row.tsx                       # Строка закупки (план/факт/отклонение)
-        ├── purchase-name.tsx                      # Название материала
-        ├── purchase-value.tsx                     # Бейдж «label: value»
+        ├── purchase-name.tsx                      # Название материала + ед. измерения
+        ├── purchase-value.tsx                     # Бейдж с поддержкой денег и цвета отклонения
         └── purchase-metric-group.tsx              # Группа метрик с заголовком
 ```
 
@@ -54,201 +54,213 @@ features/purchases/
 app/(main)/projects/[projectId]/estimates/[estimateId]/purchases/page.tsx
 ```
 
-Страница рендерит `<PurchasesView />` (из `features/purchases/components/purchases-view.tsx`).
+Страница — серверный компонент, извлекает `projectId` и `estimateId` из params, передаёт в `<PurchasesView />`.
 
-### Типы данных
+---
+
+## 3. API
+
+### 3.1 API Route
+
+**Файл:** `app/api/projects/[id]/estimate-records/[recordId]/purchases/route.ts`
+
+- **Метод:** GET
+- **Аутентификация:** Supabase `auth.getUser()` + `requireCurrentWorkspace()`
+- **Валидация:** Проверка принадлежности сметы проекту и workspace
+- **RPC:** `get_estimate_purchases(p_estimate_record_id, p_workspace_owner_id)`
+- **Поиск:** Поддержка `?q=` для фильтрации по `title` (серверная)
+- **Возвращает:** `{ data: PurchaseRow[] }`
+
+### 3.2 API Client
+
+**Файл:** `features/purchases/api/purchases-client.ts`
+
+```typescript
+export function fetchEstimatePurchases(params: EstimatePurchasesParams): Promise<EstimatePurchasesResponse>
+```
+
+Параметры:
+- `projectId: string` — ID проекта
+- `estimateId: string` — ID сметы (estimate record)
+- `q?: string` — поисковый запрос (опционально)
+
+### 3.3 Query Keys
+
+```typescript
+export const purchasesQueryKeys = {
+  all: ["estimatePurchases"] as const,
+  list: (params) => [...purchasesQueryKeys.all, "list", params] as const,
+}
+```
+
+---
+
+## 4. Типы данных
 
 ```typescript
 // types/purchase.ts
 export type PurchaseRow = {
-  id: string
-  title: string           // Наименование материала
-  planQuantity: number    // Плановое количество
-  planPrice: number       // Плановая цена
-  factQuantity: number    // Фактическое количество
-  factPrice: number       // Фактическая цена
+  materialId: string | null     // ID материала в справочнике (null = без привязки)
+  title: string                 // Наименование материала
+  unit: string                  // Единица измерения (шт, м, м², и т.д.)
+  planQuantity: number          // Плановое количество
+  planPrice: number             // Плановая цена за единицу
+  planTotal: number             // Плановый итог (qty × price)
+  factQuantity: number | null   // Фактическое количество (null = нет данных)
+  factAvgPrice: number | null   // Фактическая средневзвешенная цена
+  factTotal: number | null      // Фактический итог
+  deviationTotal: number | null // Отклонение (plan − fact)
 }
 ```
-
-**Отличие от `ExecutionRow`:** `PurchaseRow` **не содержит** поле `unit` — единица измерения не предусмотрена в данных закупок сметы. Название материала отображается одной строкой без указания единицы измерения.
 
 ---
 
-## 3. Компоненты
+## 5. Компоненты
 
-### 3.1 `PurchasesView` — обёртка
+### 5.1 `PurchasesView` — обёртка
 
-**Файл:** `features/purchases/components/purchases-view.tsx`
+Принимает `estimateId` и `projectId`, передаёт в `PurchaseSection`.
 
-```tsx
-export function PurchasesView() {
-  return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
-      <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-xl border border-dashed border-red-500 p-1">
-        <PurchaseSection />
-      </div>
-    </div>
-  )
-}
-```
+### 5.2 `PurchaseSection` — состояния
 
-Идентичен `ExecutionView` по структуре. Рамка `border-red-500` визуально выделяет зону вкладки.
+Четыре состояния:
 
-### 3.2 `PurchaseSection` — композиция списка
+| Состояние | Условие | Отображение |
+|---|---|---|
+| **Loading** | `isLoading === true` | 5 скелетон-строк (`PurchaseRowSkeleton`) |
+| **Error** | `isError === true` | `<Empty>` с `WarningIcon`, текстом ошибки, кнопкой Retry |
+| **Empty** | `purchases.length === 0` | `<Empty>` с `ShoppingCartIcon`, «Нет закупок» |
+| **Data** | `purchases.length > 0` | Список `PurchaseRow` |
 
-**Файл:** `features/purchases/purchase-details/components/purchase-section.tsx`
+### 5.3 `PurchaseRow` — строка закупки
 
-```tsx
-export function PurchaseSection() {
-  const { purchases } = usePurchases()
+Read-only: все значения через `PurchaseValue` (статический `Badge`).
 
-  return (
-    <section className="flex flex-col overflow-hidden rounded-lg border border-dashed border-gray-400 bg-card text-card-foreground shadow-sm">
-      <div className="flex flex-col">
-        {purchases.map((row) => (
-          <PurchaseRow key={row.id} row={row} />
-        ))}
-      </div>
-    </section>
-  )
-}
-```
-
-**Важное отличие от `ExecutionSection`:** не передаёт `onUpdate` в строки — все данные **только для чтения**.
-
-### 3.3 `PurchaseRow` — строка закупки
-
-**Файл:** `features/purchases/purchase-details/components/purchase-row.tsx`
-
-Строка только для чтения — все значения отображаются через `PurchaseValue` (статический `Badge`).
-
-**Сетка:** `lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]` — идентична `ExecutionRow`.
+**Сетка:** `lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]`
 
 **Три группы метрик:**
 
-| Группа | Поля | Тип компонента |
+| Группа | Поля | Компонент |
 |---|---|---|
 | **План** | Кол-во, Цена, Итого | `PurchaseValue` (Badge, readonly) |
-| **Факт** | Кол-во, Цена, Итого | `PurchaseValue` (Badge, readonly) |
-| **Отклонение** | Итого | `PurchaseValue` (Badge, readonly) |
+| **Факт** | Кол-во, Ср. цена, Итого | `PurchaseValue` (Badge, readonly) |
+| **Отклонение** | Итого (со знаком +/−) | `PurchaseValue` (deviation=true, цветной) |
 
-**Расчёт итогов:**
+**Ключ строки:** `row.materialId ?? `purchase-${index}`` (fallback для null materialId)
 
-```typescript
-const planTotal = getTotal(row.planQuantity, row.planPrice)
-const factTotal = getTotal(row.factQuantity, row.factPrice)
-const deviationTotal = planTotal - factTotal
-```
-
-**Форматирование:** цена и итоги форматируются через `formatMoney()` **перед передачей** в `PurchaseValue` (в отличие от `ExecutionValue`, где форматирование происходит внутри через `formatDisplay`).
-
-**Визуальное отличие от `ExecutionRow`:**
-- `ExecutionRow` использует `EditableBadge` для плана и факта → можно редактировать на месте
-- `PurchaseRow` использует статические `PurchaseValue` (Badge) → только просмотр
-
-### 3.4 `PurchaseName` — название материала
-
-**Файл:** `features/purchases/purchase-details/components/purchase-name.tsx`
+### 5.4 `PurchaseName` — название + ед. измерения
 
 ```tsx
-export function PurchaseName({ value }: { value: string }) {
-  return (
-    <div className="...">
-      <span className="...uppercase">Name</span>
-      <div className="...">{value}</div>
-    </div>
-  )
-}
+export function PurchaseName({ title, unit }: { title: string; unit: string })
 ```
 
-**Отличие от `ExecutionName`:** не отображает единицу измерения (нет пропса `unit`). Название материала может включать полное описание (например, «Автоматический выключатель EKF PROxima BA-45-2000 3P 1000A 80 кА 690 В»).
+Показывает название материала жирным шрифтом, ниже — единицу измерения мелким muted-текстом.
 
-### 3.5 `PurchaseValue` — бейдж значения
+### 5.5 `PurchaseValue` — бейдж значения
 
-**Файл:** `features/purchases/purchase-details/components/purchase-value.tsx`
+Новые возможности:
+- **`deviation`** (bool) — включает цветовое кодирование (зелёный/красный) и знак `+`
+- **`value`** — number | string | null (null → «—»)
+- **Форматирование денег:** автоматическое через `formatMoney()` для числовых значений
 
-```tsx
-<Badge variant="outline" className="gap-1 rounded-md px-1.5 py-0.5 font-normal tabular-nums">
-  <span className="text-muted-foreground">{label}:</span>
-  <span>{value}</span>
-</Badge>
-```
+**Цветовая кодировка отклонения:**
+- `> 0` (экономия) → зелёный оттенок (`border-emerald-200 bg-emerald-50 text-emerald-700`)
+- `< 0` (перерасход) → красный оттенок (`border-red-200 bg-red-50 text-red-700`)
+- `= 0` → нейтральный
 
-Идентичен `ExecutionValue` и `EstimateValue`. Поддерживает `strong` для жирного шрифта. Значение передаётся уже отформатированным (строка).
+### 5.6 `PurchaseMetricGroup` — группа метрик
 
-### 3.6 `PurchaseMetricGroup` — группа метрик
-
-**Файл:** `features/purchases/purchase-details/components/purchase-metric-group.tsx`
-
-Идентичен `ExecutionMetricGroup` и `EstimateMetricGroup` — группировка метрик с uppercase-заголовком в рамке `border-emerald-400`.
+Без изменений. Идентичен `ExecutionMetricGroup`.
 
 ---
 
-## 4. Хук `usePurchases`
+## 6. Хук `usePurchases`
 
 **Файл:** `features/purchases/hooks/use-purchases.ts`
 
 ```typescript
-export function usePurchases() {
-  return { purchases: purchaseRows }
-}
+export function usePurchases({ estimateId, projectId }: UsePurchasesInput)
 ```
 
-**Крайне минимальный хук:**
-- Нет `useState` — возвращает статический массив из моков
-- Нет `updatePurchase` — данные не редактируются
-- Отличие от `useExecution`: там есть `useState` и `updateExecution`, здесь — чистый импорт
+**Логика:**
+1. Читает `?q=` из `useSearchParams()`
+2. Формирует `queryParams` → React Query `useQuery` с `purchasesQueryKeys.list(params)`
+3. Вызывает `fetchEstimatePurchases(params)` → API route → Supabase RPC
+4. **Fallback:** при отсутствии данных от API использует моки из `__mocks__/purchases.ts`
+5. Клиентская фильтрация по `q` (дополнительный safety net)
+
+**Возвращает:**
+- `purchases: PurchaseRow[]`
+- `isLoading: boolean`
+- `isFetching: boolean`
+- `isError: boolean`
+- `error: string | null`
+- `search: string`
+- `refetch: () => Promise<void>`
 
 ---
 
-## 5. Мок-данные
+## 7. БД и API (бэкенд)
+
+### RPC `get_estimate_purchases`
+
+Миграция 046 — SECURITY DEFINER, STABLE:
+
+```sql
+public.get_estimate_purchases(
+  p_estimate_record_id uuid,
+  p_workspace_owner_id uuid
+)
+RETURNS TABLE (
+  material_id uuid,
+  title text,
+  unit text,
+  plan_quantity numeric,
+  plan_price numeric,
+  plan_total numeric,
+  fact_quantity numeric,
+  fact_avg_price numeric,
+  fact_total numeric,
+  deviation_total numeric
+)
+```
+
+### Краевые случаи
+
+| Случай | Поведение |
+|---|---|
+| Материал в плане есть, в факте нет | `fact_*` = NULL, `deviation_total = plan_total` |
+| `directory_material_id IS NULL` | Строки исключаются из агрегации |
+| `archived_at` / `deleted_at` не NULL | Строки исключаются (soft delete) |
+| Несколько записей закупок с разными ценами | Взвешенная средняя цена |
+
+---
+
+## 8. Поиск
+
+Поиск работает в двух слоях:
+1. **Серверный** (`?q=` в API route) — фильтрация по `title.toLowerCase().includes(q)`
+2. **Клиентский** (в хуке) — дополнительный safety net при использовании моков
+
+Тулбар (`EstimateTabToolbar`) шлёт `?q=...` в URL, хук читает из `useSearchParams()`.
+
+---
+
+## 9. Мок-данные
 
 **Файл:** `features/purchases/__mocks__/purchases.ts`
 
-10 строк электротехнических материалов:
-
-| ID | Материал | План (кол-во) | План (цена) | Факт (кол-во) | Факт (цена) |
-|---|---|---|---|---|---|
-| purchase-1 | Автоматический выключатель EKF PROxima BA-45-2000 3P 1000A 80 кА 690 В | 0 | 0 | 1 | 355 784 |
-| purchase-2 | Кабель ВВГнг-LS 5x10 | 120 | 680 | 118 | 720 |
-| purchase-3 | Лоток металлический перфорированный 100x50 | 34 | 1 250 | 36 | 1 190 |
-| purchase-4 | Розетка силовая промышленная 32А | 18 | 2 400 | 18 | 2 630 |
-| purchase-5 | Щит распределительный навесной IP54 | 4 | 18 500 | 5 | 17 900 |
-| purchase-6 | DIN-рейка оцинкованная 35 мм | 45 | 180 | 45 | 176 |
-| purchase-7 | Автоматический выключатель 1P 16А | 96 | 420 | 100 | 415 |
-| purchase-8 | Клемма проходная винтовая 4 мм2 | 320 | 48 | 300 | 52 |
-| purchase-9 | Труба гофрированная ПВХ 25 мм | 250 | 38 | 260 | 41 |
-| purchase-10 | Маркировочная бирка кабельная | 1 000 | 6 | 1 200 | 5 |
-
-Цены в рублях. Интересный кейс: `purchase-1` имеет план 0/0 — позиция добавлена только по факту (незапланированная закупка).
+10 строк электротехнических материалов. Используются как fallback когда API ещё не отвечает или в процессе разработки. При появлении реальных данных от API — всегда показываются реальные данные.
 
 ---
 
-## 6. Tenant boundary
+## 10. Связанные файлы
 
-Модуль `purchases` **не имеет собственных таблиц в БД** — все данные приходят через моки. Tenant-изоляция будет обеспечена при реализации:
-
-- Таблица (планируется) будет содержать `workspace_owner_id` с RLS-политикой
-- Закупки будут привязаны к `project_estimate_materials.id` или `project_estimate_records.id`
-- План-факт сравнение может опираться на существующие таблицы сметы:
-  - План: `project_estimate_materials.quantity` × `project_estimate_materials.price`
-  - Факт: новая таблица `project_estimate_purchases`
-
----
-
-## 7. Текущие ограничения
-
-| Ограничение | Детали |
-|---|---|
-| **Только моки** | Все данные из `__mocks__/purchases.ts`, нет подключения к БД |
-| **Только чтение** | `usePurchases` не поддерживает обновление — все значения статические |
-| **Нет таблицы в БД** | Схема для закупок сметы не создана |
-| **Нет API** | Отсутствуют RPC-функции и Route Handlers |
-| **Нет связи со сметой** | Мок-данные не привязаны к `estimateId` |
-| **Нет единиц измерения** | Тип `PurchaseRow` не содержит поле `unit` |
-| **Хук без состояния** | В отличие от `useExecution`, хук `usePurchases` не использует `useState` — возвращает статический импорт |
-| **Нет фильтрации/поиска** | Тулбар общий для всех вкладок сметы, специфичного для закупок нет |
-| **Форматирование на уровне Row** | `formatMoney()` вызывается в `PurchaseRow`, а не в `PurchaseValue` — неконсистентно с `ExecutionValue` (где форматирование внутри) |
-| **Компоненты дублируются** | `PurchaseValue`, `PurchaseMetricGroup` структурно идентичны `ExecutionValue`, `ExecutionMetricGroup` — кандидаты на вынос в shared |
-| **Нет пагинации** | Все 10 строк рендерятся сразу |
-| **purchase-1 имеет план 0** | Мок содержит кейс с нулевыми плановыми значениями — неясно, предусмотрена ли обработка таких случаев в UI |
+- **Тип:** `types/purchase.ts` — `PurchaseRow`
+- **API клиент:** `features/purchases/api/purchases-client.ts`
+- **Query keys:** `features/purchases/api/purchases-query-keys.ts`
+- **API route:** `app/api/projects/[id]/estimate-records/[recordId]/purchases/route.ts`
+- **Хук:** `features/purchases/hooks/use-purchases.ts`
+- **Тулбар:** `features/estimates/estimate-tabs/components/estimate-tab-toolbar.tsx`
+- **Layout сметы:** `app/(main)/projects/[projectId]/estimates/[estimateId]/layout.tsx`
+- **Глобальные закупки:** `features/global-purchases/` (аналогичная структура, другой контекст)

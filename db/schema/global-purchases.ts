@@ -11,6 +11,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core"
 
+import { directoryMaterials } from "./directory-materials"
 import { profiles } from "./profiles"
 import { projects } from "./projects"
 
@@ -39,6 +40,10 @@ export const globalPurchases = pgTable(
     planPrice: numeric("plan_price", { precision: 14, scale: 2 }).notNull(),
     factQuantity: numeric("fact_quantity", { precision: 14, scale: 3 }),
     factPrice: numeric("fact_price", { precision: 14, scale: 2 }),
+    directoryMaterialId: uuid("directory_material_id").references(
+      () => directoryMaterials.id,
+      { onDelete: "set null" }
+    ),
     supplierId: uuid("supplier_id"),
     supplierName: text("supplier_name"),
     projectId: uuid("project_id").references(() => projects.id, {
@@ -95,6 +100,9 @@ export const globalPurchases = pgTable(
       t.workspaceOwnerId,
       t.updatedAt
     ),
+    index("idx_global_purchases_material")
+      .on(t.directoryMaterialId, t.workspaceOwnerId)
+      .where(sql`${t.directoryMaterialId} IS NOT NULL`),
     check("chk_global_purchases_title_not_empty", sql`btrim(${t.title}) <> ''`),
     check("chk_global_purchases_unit_not_empty", sql`btrim(${t.unit}) <> ''`),
     check(

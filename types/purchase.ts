@@ -1,8 +1,12 @@
 export type PurchaseRow = {
-  id: string
+  materialId: string | null
   title: string
+  unit: string
   planQuantity: number
   planPrice: number
-  factQuantity: number
-  factPrice: number
+  planTotal: number
+  factQuantity: number | null
+  factAvgPrice: number | null
+  factTotal: number | null
+  deviationTotal: number | null
 }

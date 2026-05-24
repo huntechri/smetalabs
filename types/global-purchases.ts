@@ -31,6 +31,7 @@ export type GlobalPurchaseMutationInput = {
   planPrice: number
   factQuantity?: number | null
   factPrice?: number | null
+  directoryMaterialId?: string | null
   supplierId?: string | null
   projectId?: string | null
   purchaseDate?: string | null

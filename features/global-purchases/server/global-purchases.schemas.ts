@@ -92,6 +92,7 @@ const globalPurchaseMutationSchema = z.object({
   factPrice: nullableNonNegativeNumber(
     "Фактическая цена должна быть неотрицательным числом"
   ),
+  directoryMaterialId: nullableUuid("Некорректный материал"),
   supplierId: nullableUuid("Некорректный поставщик"),
   projectId: nullableUuid("Некорректный объект"),
   purchaseDate: nullableText(30),

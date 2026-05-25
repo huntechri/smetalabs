@@ -43,6 +43,9 @@ export type ProjectEstimateContentWork = {
   quantity: number
   price: number
   totalAmount: number
+  factQuantity: number
+  factPrice: number
+  factTotalAmount: number
   category: string | null
   notes: string | null
   sortOrder: number

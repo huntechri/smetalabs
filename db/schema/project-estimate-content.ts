@@ -114,6 +114,12 @@ export const projectEstimateWorks = pgTable(
       .notNull()
       .default("0"),
     price: numeric("price", { precision: 14, scale: 2 }).notNull().default("0"),
+    factQuantity: numeric("fact_quantity", { precision: 14, scale: 3 })
+      .notNull()
+      .default("0"),
+    factPrice: numeric("fact_price", { precision: 14, scale: 2 })
+      .notNull()
+      .default("0"),
     totalAmount: numeric("total_amount", { precision: 14, scale: 2 })
       .notNull()
       .default("0"),
@@ -210,6 +216,14 @@ export const projectEstimateWorks = pgTable(
     check(
       "chk_project_estimate_works_price_non_negative",
       sql`${t.price} >= 0`
+    ),
+    check(
+      "chk_project_estimate_works_fact_quantity_non_negative",
+      sql`${t.factQuantity} >= 0`
+    ),
+    check(
+      "chk_project_estimate_works_fact_price_non_negative",
+      sql`${t.factPrice} >= 0`
     ),
     check(
       "chk_project_estimate_works_total_non_negative",

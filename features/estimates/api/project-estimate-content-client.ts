@@ -66,6 +66,8 @@ export type EstimateContentChangeInput =
         title?: string
         quantity?: number
         price?: number
+        factQuantity?: number
+        factPrice?: number
         notes?: string | null
         sortOrder?: number
       }

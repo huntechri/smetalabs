@@ -1,6 +1,7 @@
 "use client"
 
-import { Fragment, useCallback, useEffect, useState } from "react"
+import { Fragment, useCallback, useEffect, useRef, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { CaretDownIcon, CaretRightIcon, PlusIcon } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/table"
 import { formatMoney } from "@/lib/formatters"
 import { FinancesKpiCards } from "@/features/finances/components/finances-kpi-cards"
+import { PaymentCreateDialog } from "@/features/finances/components/payment-create-dialog"
 import {
   financeSections,
   getSectionFactAmount,
@@ -190,9 +192,15 @@ export function FinancesView({
   // eslint-disable-next-line no-console
   console.log("FinancesView mounted", { projectId, estimateId })
 
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set()
   )
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+  const paymentTriggered = useRef(false)
 
   const toggleSection = useCallback((sectionId: string) => {
     setExpandedSections((prev) => {
@@ -206,39 +214,31 @@ export function FinancesView({
     })
   }, [])
 
-  // Listen to toolbar «Платёж» event
+  // Watch searchParams for «add-payment» dialog
   useEffect(() => {
-    const handleAddPayment = () => {
-      // Заглушка — в будущем откроется диалог добавления платежа
-      // eslint-disable-next-line no-alert
-      alert(`Добавление платежа (прототип)\nСмета: ${estimateId}\nПроект: ${projectId}`)
+    if (searchParams.get("dialog") !== "add-payment") {
+      paymentTriggered.current = false
+      return
     }
-    window.addEventListener(
-      "project-finances:add-payment",
-      handleAddPayment
-    )
-    return () => {
-      window.removeEventListener(
-        "project-finances:add-payment",
-        handleAddPayment
-      )
-    }
-  }, [estimateId, projectId])
+    if (paymentTriggered.current) return
+    paymentTriggered.current = true
 
-  // Listen to toolbar «Экспорт» event
-  useEffect(() => {
-    const handleExport = () => {
-      // eslint-disable-next-line no-alert
-      alert(`Экспорт финансов (прототип)\nСмета: ${estimateId}`)
-    }
-    window.addEventListener("project-finances:export", handleExport)
-    return () => {
-      window.removeEventListener("project-finances:export", handleExport)
-    }
-  }, [estimateId])
+    setPaymentDialogOpen(true)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("dialog")
+    const nextSearch = params.toString()
+    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
+  }, [pathname, router, searchParams])
+
+  const openPaymentDialog = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("dialog", "add-payment")
+    const nextSearch = params.toString()
+    router.replace(`${pathname}?${nextSearch}`)
+  }, [pathname, router, searchParams])
 
   return (
-    <div className="flex flex-col gap-4 p-1">
+    <div className="flex flex-col gap-4 p-1 overflow-auto">
       {/* KPI-шапка */}
       <FinancesKpiCards sections={financeSections} />
 
@@ -273,15 +273,17 @@ export function FinancesView({
           variant="outline"
           size="sm"
           className="gap-1.5 border-dashed"
-          onClick={() =>
-            // eslint-disable-next-line no-alert
-            alert(`Добавление платежа (прототип)`)
-          }
+          onClick={openPaymentDialog}
         >
           <PlusIcon className="size-3.5" />
           Платёж
         </Button>
       </div>
+
+      <PaymentCreateDialog
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+      />
     </div>
   )
 }

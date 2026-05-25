@@ -179,9 +179,9 @@ export function EstimateTabToolbar() {
       replaceSearch(params)
     }
     if (action.action === "addPayment") {
-      window.dispatchEvent(
-        new CustomEvent(`project-${activeTab}:add-payment`)
-      )
+      const params = new URLSearchParams(searchParams.toString())
+      params.set("dialog", "add-payment")
+      replaceSearch(params)
     }
   }
 

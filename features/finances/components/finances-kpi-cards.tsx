@@ -92,14 +92,6 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
             {metrics.progressPercent}%
           </CardTitle>
         </CardHeader>
-        <div className="mx-4 mb-4 -mt-1">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-500"
-              style={{ width: `${metrics.progressPercent}%` }}
-            />
-          </div>
-        </div>
       </Card>
     </div>
   )

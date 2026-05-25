@@ -37,6 +37,7 @@ function buildReplaceInput(
     purchaseDate: row.purchaseDate,
     status: row.status,
     notes: row.notes,
+    directoryMaterialId: selected.directoryMaterialId,
   }
 }
 

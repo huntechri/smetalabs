@@ -54,6 +54,7 @@ export type GlobalPurchaseRow = {
   supplierName: string | null
   projectId: string | null
   projectTitle: string | null
+  directoryMaterialId: string | null
   purchaseDate: string | null
   status: GlobalPurchaseStatus
   notes: string | null

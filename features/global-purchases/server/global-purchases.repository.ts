@@ -25,6 +25,7 @@ type GlobalPurchaseDbRow = {
   supplier_name: string | null
   project_id: string | null
   project_title: string | null
+  directory_material_id: string | null
   purchase_date: string | null
   status:
     | "planned"
@@ -68,6 +69,7 @@ const GLOBAL_PURCHASE_SELECT = [
   "updated_by",
   "created_at",
   "updated_at",
+  "directory_material_id",
 ].join(",")
 
 const MATERIAL_OPTION_SELECT =
@@ -118,8 +120,8 @@ function getFactTotal(factQuantity: number | null, factPrice: number | null) {
 }
 
 function mapGlobalPurchaseRow(row: GlobalPurchaseDbRow): GlobalPurchaseRow {
-  const planQuantity = toNumber(row.plan_quantity)
-  const planPrice = toNumber(row.plan_price)
+  const planQuantity = 0
+  const planPrice = 0
   const factQuantity = toNullableNumber(row.fact_quantity)
   const factPrice = toNullableNumber(row.fact_price)
   const planTotal = planQuantity * planPrice
@@ -140,6 +142,7 @@ function mapGlobalPurchaseRow(row: GlobalPurchaseDbRow): GlobalPurchaseRow {
     supplierName: row.supplier_name,
     projectId: row.project_id,
     projectTitle: row.project_title,
+    directoryMaterialId: row.directory_material_id || null,
     purchaseDate: row.purchase_date,
     status: row.status,
     notes: row.notes,
@@ -304,6 +307,159 @@ async function toGlobalPurchaseMutationRow(
   }
 }
 
+export async function resolveEstimatePlansForGlobalPurchases(
+  workspaceOwnerId: string,
+  dbRows: GlobalPurchaseDbRow[]
+): Promise<GlobalPurchaseRow[]> {
+  if (dbRows.length === 0) return []
+
+  const projectIds = Array.from(
+    new Set(dbRows.map((r) => r.project_id).filter((id): id is string => !!id))
+  )
+  const directoryMaterialIds = Array.from(
+    new Set(
+      dbRows
+        .map((r) => r.directory_material_id)
+        .filter((id): id is string => !!id)
+    )
+  )
+
+  if (projectIds.length === 0 || directoryMaterialIds.length === 0) {
+    return dbRows.map(mapGlobalPurchaseRow)
+  }
+
+  // 1. Fetch latest active estimate record for each project
+  const { data: estimateRecords, error: estimateRecordsError } = await supabase
+    .from("project_estimate_records")
+    .select("id, project_id, created_at")
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .in("project_id", projectIds)
+    .is("archived_at", null)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+
+  if (estimateRecordsError) throw estimateRecordsError
+
+  // Map to get the latest estimate for each project
+  const latestEstimateIdByProjectId = new Map<string, string>()
+  if (estimateRecords) {
+    for (const record of estimateRecords) {
+      if (!latestEstimateIdByProjectId.has(record.project_id)) {
+        latestEstimateIdByProjectId.set(record.project_id, record.id)
+      }
+    }
+  }
+
+  const estimateRecordIds = Array.from(latestEstimateIdByProjectId.values())
+  const planMap = new Map<string, { quantity: number; price: number }>()
+
+  if (estimateRecordIds.length > 0) {
+    // 2. Fetch estimate materials matching the estimates and materials
+    const { data: materials, error: materialsError } = await supabase
+      .from("project_estimate_materials")
+      .select("estimate_record_id, directory_material_id, quantity, price")
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .in("estimate_record_id", estimateRecordIds)
+      .in("directory_material_id", directoryMaterialIds)
+      .is("archived_at", null)
+
+    if (materialsError) throw materialsError
+
+    if (materials) {
+      // Group to aggregate quantity and calculate average or weighted average price
+      const grouped = new Map<
+        string,
+        { totalQty: number; totalSum: number; prices: number[] }
+      >()
+
+      for (const mat of materials) {
+        if (!mat.directory_material_id) continue
+        const key = `${mat.estimate_record_id}_${mat.directory_material_id}`
+        const qty = Number(mat.quantity || 0)
+        const price = Number(mat.price || 0)
+
+        let group = grouped.get(key)
+        if (!group) {
+          group = { totalQty: 0, totalSum: 0, prices: [] }
+          grouped.set(key, group)
+        }
+        group.totalQty += qty
+        group.totalSum += qty * price
+        group.prices.push(price)
+      }
+
+      for (const [key, group] of grouped.entries()) {
+        const quantity = group.totalQty
+        let price = 0
+        if (quantity > 0) {
+          price = group.totalSum / quantity
+        } else if (group.prices.length > 0) {
+          const sumPrices = group.prices.reduce((a, b) => a + b, 0)
+          price = sumPrices / group.prices.length
+        }
+        planMap.set(key, { quantity, price })
+      }
+    }
+  }
+
+  return dbRows.map((row) => {
+    let planQuantity = 0
+    let planPrice = 0
+
+    if (row.project_id && row.directory_material_id) {
+      const estimateId = latestEstimateIdByProjectId.get(row.project_id)
+      if (estimateId) {
+        const key = `${estimateId}_${row.directory_material_id}`
+        const plan = planMap.get(key)
+        if (plan) {
+          planQuantity = plan.quantity
+          planPrice = plan.price
+        } else {
+          // Material not found in project's estimate -> unplanned -> 0
+          planQuantity = 0
+          planPrice = 0
+        }
+      } else {
+        // No estimate record found for the project -> unplanned -> 0
+        planQuantity = 0
+        planPrice = 0
+      }
+    }
+
+    const factQuantity = toNullableNumber(row.fact_quantity)
+    const factPrice = toNullableNumber(row.fact_price)
+    const planTotal = planQuantity * planPrice
+    const factTotal = getFactTotal(factQuantity, factPrice)
+
+    return {
+      id: row.id,
+      title: row.title,
+      unit: row.unit,
+      planQuantity,
+      planPrice,
+      factQuantity,
+      factPrice,
+      planTotal,
+      factTotal,
+      deviationTotal: factTotal === null ? null : planTotal - factTotal,
+      supplierId: row.supplier_id,
+      supplierName: row.supplier_name,
+      projectId: row.project_id,
+      projectTitle: row.project_title,
+      directoryMaterialId: row.directory_material_id || null,
+      purchaseDate: row.purchase_date,
+      status: row.status,
+      notes: row.notes,
+      metadata: {
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        createdBy: row.created_by,
+        updatedBy: row.updated_by,
+      },
+    }
+  })
+}
+
 export async function listGlobalPurchasesForWorkspace(
   workspaceOwnerId: string,
   params: NormalizedListParams
@@ -328,8 +484,13 @@ export async function listGlobalPurchasesForWorkspace(
   const visibleRows = rows.slice(0, params.limit)
   const hasMore = rows.length > params.limit
 
+  const mappedRows = await resolveEstimatePlansForGlobalPurchases(
+    workspaceOwnerId,
+    visibleRows
+  )
+
   return {
-    data: visibleRows.map(mapGlobalPurchaseRow),
+    data: mappedRows,
     meta: {
       limit: params.limit,
       cursor: params.cursor,
@@ -395,7 +556,11 @@ export async function getGlobalPurchaseForWorkspace(
     throw error
   }
 
-  return mapGlobalPurchaseRow(toGlobalPurchaseRow(data))
+  const resolved = await resolveEstimatePlansForGlobalPurchases(
+    workspaceOwnerId,
+    [toGlobalPurchaseRow(data)]
+  )
+  return resolved[0] ?? null
 }
 
 export async function createGlobalPurchaseForWorkspace(
@@ -413,7 +578,11 @@ export async function createGlobalPurchaseForWorkspace(
     .single()
 
   if (error) throw error
-  return mapGlobalPurchaseRow(toGlobalPurchaseRow(data))
+  const resolved = await resolveEstimatePlansForGlobalPurchases(
+    workspaceOwnerId,
+    [toGlobalPurchaseRow(data)]
+  )
+  return resolved[0]
 }
 
 export async function updateGlobalPurchaseForWorkspace(
@@ -438,7 +607,11 @@ export async function updateGlobalPurchaseForWorkspace(
     throw error
   }
 
-  return mapGlobalPurchaseRow(toGlobalPurchaseRow(data))
+  const resolved = await resolveEstimatePlansForGlobalPurchases(
+    workspaceOwnerId,
+    [toGlobalPurchaseRow(data)]
+  )
+  return resolved[0]
 }
 
 export async function archiveGlobalPurchaseForWorkspace(
@@ -465,5 +638,9 @@ export async function archiveGlobalPurchaseForWorkspace(
     throw error
   }
 
-  return mapGlobalPurchaseRow(toGlobalPurchaseRow(data))
+  const resolved = await resolveEstimatePlansForGlobalPurchases(
+    workspaceOwnerId,
+    [toGlobalPurchaseRow(data)]
+  )
+  return resolved[0]
 }

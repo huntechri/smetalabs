@@ -99,6 +99,7 @@ function buildInput(
     purchaseDate: row.purchaseDate,
     status: row.status,
     notes: row.notes,
+    directoryMaterialId: row.directoryMaterialId,
     ...updates,
   }
 }

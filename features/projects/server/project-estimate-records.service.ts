@@ -34,6 +34,7 @@ function revalidateEstimateRecords(
   revalidateTag(estimateRecordsCacheTag(workspaceOwnerId, projectId), "max")
   revalidateTag(projectsCacheTags.detail(workspaceOwnerId, projectId), "max")
   revalidateTag(projectsCacheTags.list(workspaceOwnerId), "max")
+  revalidateTag(`global-purchases:${workspaceOwnerId}`, "max")
 }
 
 export async function listProjectEstimateRecords(

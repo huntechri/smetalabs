@@ -56,17 +56,12 @@ const tabActions: Record<string, ToolbarAction[]> = {
   ],
   execution: [
     {
-      label: "Импорт",
-      icon: <FileArrowDownIcon data-icon="inline-start" />,
-      action: "import",
-    },
-    {
       label: "Экспорт",
       icon: <ExportIcon data-icon="inline-start" />,
       action: "export",
     },
     {
-      label: "Доп. работа",
+      label: "Работа",
       icon: <PlusIcon data-icon="inline-start" />,
       action: "addWork",
     },

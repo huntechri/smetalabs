@@ -146,6 +146,32 @@ export function ExecutionView({
     }
   }, [])
 
+  // Listen to toolbar export event
+  useEffect(() => {
+    const handleExport = async () => {
+      if (content?.record && content?.sections) {
+        const hasAnyFact = content.sections.some((s) =>
+          s.works.some((w) => (w.factQuantity ?? 0) !== 0)
+        )
+        if (!hasAnyFact) {
+          toast.error("Нет работ с фактическим выполнением для экспорта")
+          return
+        }
+        const { exportExecutionToExcel } = await import(
+          "@/features/execution/lib/execution-excel-exporter"
+        )
+        await exportExecutionToExcel({
+          record: content.record,
+          sections: content.sections,
+        })
+      }
+    }
+    window.addEventListener("project-execution:export", handleExport)
+    return () => {
+      window.removeEventListener("project-execution:export", handleExport)
+    }
+  }, [content])
+
   const ensureSection = useCallback(async () => {
     const existing = content?.sections?.[0]?.id
     if (existing) return existing
@@ -190,7 +216,7 @@ export function ExecutionView({
             category: "Дополнительные работы",
           },
         })
-        toast.success("Дополнительная работа добавлена")
+        toast.success("Работа добавлена")
       } catch (err) {
         console.error("Failed to add manual work:", err)
         toast.error("Не удалось добавить работу")
@@ -226,7 +252,7 @@ export function ExecutionView({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
+    <div className="h-full flex flex-col">
       {mutationError && (
         <Alert variant="destructive" className="mx-1 mb-3">
           <AlertTitle>Ошибка сохранения</AlertTitle>
@@ -238,7 +264,7 @@ export function ExecutionView({
           <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-4 text-center text-xs text-muted-foreground">
             <p>В смете пока нет разделов и работ.</p>
             <Button size="sm" variant="outline" onClick={() => setCreateWorkOpen(true)}>
-              Добавить доп. работу
+              Добавить работу
             </Button>
           </div>
         ) : visibleSections.length === 0 ? (

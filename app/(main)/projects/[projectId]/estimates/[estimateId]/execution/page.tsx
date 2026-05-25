@@ -39,7 +39,9 @@ export default async function EstimateExecutionPage({
 
   return (
     <Suspense fallback={<ExecutionSkeleton />}>
-      <ExecutionView estimateId={estimateId} projectId={projectId} />
+      <div className="flex-1 min-h-0 flex flex-col">
+        <ExecutionView estimateId={estimateId} projectId={projectId} />
+      </div>
     </Suspense>
   )
 }

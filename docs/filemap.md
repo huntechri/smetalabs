@@ -243,20 +243,34 @@ smetalabs/
 │   │           ├── execution-value.tsx    #   Бейдж «label: value»
 │   │           └── execution-metric-group.tsx  # Группа метрик
 │   │
-│   ├── global-purchases/                # Фича «Глобальные закупки» (копия execution, с доработками)
-│   │   ├── __mocks__/
-│   │   │   └── global-purchases.ts      #   Мок-данные (10 материалов)
+│   ├── global-purchases/                # Фича «Глобальные закупки»
+│   │   ├── api/
+│   │   │   ├── global-purchases-client.ts    # API-клиент для глобальных закупок
+│   │   │   ├── global-purchases-errors.ts    # Типизированные API-ошибки
+│   │   │   └── global-purchases-query-keys.ts # Ключи запросов и теги кэша
 │   │   ├── hooks/
-│   │   │   └── use-global-purchases.ts  #   Хук с состоянием
+│   │   │   └── use-global-purchases.ts  # Хук с состоянием и мутациями
+│   │   ├── server/
+│   │   │   ├── global-purchases.repository.ts # Репозиторий (динамические планы из смет)
+│   │   │   ├── global-purchases.route-handlers.ts # Обработчики API-маршрутов
+│   │   │   ├── global-purchases.schemas.ts   # Валидация Zod
+│   │   │   ├── global-purchases.service.ts   # Сервисный слой, кэш, экспорт
+│   │   │   └── global-purchases.export.ts    # Экспорт закупок в XLSX
 │   │   └── global-purchases-details/
 │   │       └── components/
-│   │           ├── global-purchases-view.tsx     # Обёртка со скроллом
-│   │           ├── global-purchases-section.tsx  # Композиция (хук → map → Row)
-│   │           ├── global-purchases-row.tsx      # Строка: наименование + стоимость + параметры + объект
-│   │           ├── global-purchases-name.tsx     # Наименование + ед. изм
-│   │           ├── global-purchases-metric-group.tsx  # Группа метрик
+│   │           ├── global-purchases-view.tsx     # Скролл-контейнер
+│   │           ├── global-purchases-screen.tsx   # Главный экран
+│   │           ├── global-purchases-section.tsx  # Композиция данных и диалогов
+│   │           ├── global-purchases-list.tsx     # Список строк
+│   │           ├── global-purchases-row.tsx      # Строка: наименование + параметры + объект + факт
+│   │           ├── global-purchases-name.tsx     # Название позиции
+│   │           ├── global-purchases-metric-group.tsx  # Группа метрик (План/Факт/Отклонение)
 │   │           ├── global-purchases-value.tsx    # Бейдж «label: value»
-│   │           └── global-purchases-toolbar.tsx  # Тулбар (поиск + кнопки + фильтры)
+│   │           ├── global-purchases-toolbar.tsx  # Тулбар (фильтры, добавление, экспорт)
+│   │           ├── global-purchases-pagination.tsx # Постраничный переход
+│   │           ├── global-purchase-archive-dialog.tsx # Диалог удаления/архивации
+│   │           ├── global-purchase-material-dialog.tsx # Выбор материала из каталога
+│   │           └── global-purchases-import-dialog.tsx # Диалог импорта закупок
 │   │
 │   ├── directories/                     # Фича «Справочники» (общие тулбары для страниц справочников)
 │   │   └── components/

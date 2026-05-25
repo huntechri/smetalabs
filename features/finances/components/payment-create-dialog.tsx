@@ -1,6 +1,9 @@
 "use client"
 
+import { useState } from "react"
+import { CalendarDots } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import {
   Dialog,
   DialogContent,
@@ -9,8 +12,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Field, FieldLabel, FieldGroup } from "@/components/ui/field"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -19,8 +27,32 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { financeSections } from "@/features/finances/__mocks__/finances"
 import type { PaymentStatus } from "@/features/finances/__mocks__/finances"
+import { financeSections } from "@/features/finances/__mocks__/finances"
+
+/** Преобразует ISO-строку в Date для Calendar */
+function toDateValue(value: string | null) {
+  if (!value) return undefined
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? undefined : date
+}
+
+/** Преобразует Date в ISO-строку (YYYY-MM-DD) */
+function toIsoDate(value: Date | undefined) {
+  if (!value) return ""
+  const year = value.getFullYear()
+  const month = String(value.getMonth() + 1).padStart(2, "0")
+  const day = String(value.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+/** Форматирует дату для отображения в триггере */
+function formatDisplayDate(value: string) {
+  if (!value) return "Выберите дату"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString("ru-RU")
+}
 
 const paymentStatusOptions: { value: PaymentStatus; label: string }[] = [
   { value: "conducted", label: "Проведён" },
@@ -38,13 +70,15 @@ export function PaymentCreateDialog({
   open,
   onOpenChange,
 }: PaymentCreateDialogProps) {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
 
     const data = {
       sectionId: formData.get("sectionId") as string,
-      date: formData.get("date") as string,
+      date: toIsoDate(selectedDate),
       amount: formData.get("amount") as string,
       status: formData.get("status") as PaymentStatus,
       purpose: formData.get("purpose") as string,
@@ -53,6 +87,7 @@ export function PaymentCreateDialog({
     // eslint-disable-next-line no-console
     console.log("Добавление платежа:", data)
 
+    setSelectedDate(undefined)
     onOpenChange(false)
   }
 
@@ -83,14 +118,28 @@ export function PaymentCreateDialog({
               </Select>
             </Field>
             <Field>
-              <FieldLabel htmlFor="date">Дата</FieldLabel>
-              <Input
-                id="date"
-                name="date"
-                type="date"
-                className="w-full"
-                required
-              />
+              <FieldLabel>Дата</FieldLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start gap-1.5 font-normal"
+                  >
+                    <CalendarDots className="size-4 text-muted-foreground" />
+                    {selectedDate
+                      ? formatDisplayDate(toIsoDate(selectedDate))
+                      : "Выберите дату"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                  />
+                </PopoverContent>
+              </Popover>
             </Field>
             <Field>
               <FieldLabel htmlFor="amount">Сумма (₽)</FieldLabel>

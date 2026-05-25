@@ -248,7 +248,8 @@ smetalabs/
 │   │   │   └── finances.ts               #   Мок-данные: разделы + платежи
 │   │   ├── components/
 │   │   │   ├── finances-view.tsx          #   Основной view (KPI + таблица с expandable-строками)
-│   │   │   └── finances-kpi-cards.tsx     #   4 KPI-карточки (Договор/Оплачено/Остаток/Готовность)
+│   │   │   ├── finances-kpi-cards.tsx     #   4 KPI-карточки (Договор/Оплачено/Остаток/Готовность)
+│   │   │   └── payment-create-dialog.tsx  # Диалог добавления платежа (Calendar + Popover)
 │   │   └── docs/
 │   │       └── README.md                  #   Документация модуля
 │   │

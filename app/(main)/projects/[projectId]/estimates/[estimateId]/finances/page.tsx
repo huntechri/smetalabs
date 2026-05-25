@@ -19,7 +19,7 @@ function FinancesSkeleton() {
       </div>
 
       {/* Table skeleton */}
-      <div className="flex flex-col gap-3 rounded-lg border border-dashed border-gray-400 p-4">
+      <div className="flex flex-col gap-3 rounded-lg border border-dashed border-border p-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}

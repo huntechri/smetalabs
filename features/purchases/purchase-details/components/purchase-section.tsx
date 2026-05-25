@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePurchases } from "@/features/purchases/hooks/use-purchases"
+import { useProjectEstimateContent } from "@/features/estimates/hooks/use-project-estimate-content"
 import { PurchaseRow } from "./purchase-row"
 import { AddPurchaseDialog } from "./add-purchase-dialog"
 import {
@@ -106,6 +107,26 @@ export function PurchaseSection({
     estimateId,
     projectId,
   })
+
+  const { content } = useProjectEstimateContent(projectId, estimateId)
+
+  useEffect(() => {
+    const handleExport = async () => {
+      if (purchases && content?.record) {
+        const { exportPurchasesToExcel } = await import(
+          "@/features/purchases/lib/purchases-excel-exporter"
+        )
+        await exportPurchasesToExcel({
+          record: content.record,
+          purchases,
+        })
+      }
+    }
+    window.addEventListener("project-purchases:export", handleExport)
+    return () => {
+      window.removeEventListener("project-purchases:export", handleExport)
+    }
+  }, [purchases, content])
 
   const handleAdd = async (input: AddPurchaseInput) => {
     try {

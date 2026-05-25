@@ -74,7 +74,7 @@ function StatusBadge({
   labelMap: Record<string, string>
 }) {
   return (
-    <Badge variant={variantMap[status] ?? "outline"} className="text-[0.625rem]">
+    <Badge variant={variantMap[status] ?? "outline"} className="text-xs">
       {labelMap[status] ?? status}
     </Badge>
   )

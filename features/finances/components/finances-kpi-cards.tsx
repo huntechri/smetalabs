@@ -59,10 +59,10 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
       <Card className="@container/card">
         <CardHeader>
           <CardDescription className="flex items-center gap-1.5">
-            <CheckCircleIcon className="size-3.5 text-emerald-500" />
+            <CheckCircleIcon className="size-3.5 text-chart-2" />
             Оплачено
           </CardDescription>
-          <CardTitle className="text-xl font-semibold tabular-nums text-emerald-600 @[250px]/card:text-2xl dark:text-emerald-400">
+          <CardTitle className="text-xl font-semibold tabular-nums text-chart-2 @[250px]/card:text-2xl">
             {formatMoney(metrics.paidTotal)}
           </CardTitle>
         </CardHeader>

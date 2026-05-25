@@ -1,6 +1,5 @@
 "use client"
 
-import { useMemo } from "react"
 import {
   CurrencyRubIcon,
   CheckCircleIcon,
@@ -14,31 +13,27 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { formatMoney } from "@/lib/formatters"
-import type { FinanceSection } from "@/features/finances/__mocks__/finances"
-import { getSectionFactAmount } from "@/features/finances/__mocks__/finances"
+import type { FinanceSection } from "@/features/finances/types"
+import { getSectionFactAmount } from "@/features/finances/lib/utils"
 
 interface FinancesKpiCardsProps {
   sections: FinanceSection[]
 }
 
 export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
-  const metrics = useMemo(() => {
-    const contractTotal = sections.reduce(
-      (sum, s) => sum + s.planAmount,
-      0
-    )
-    const paidTotal = sections.reduce(
-      (sum, s) => sum + getSectionFactAmount(s),
-      0
-    )
-    const remainder = contractTotal - paidTotal
-    const progressPercent =
-      contractTotal > 0
-        ? Math.round((paidTotal / contractTotal) * 100)
-        : 0
-
-    return { contractTotal, paidTotal, remainder, progressPercent }
-  }, [sections])
+  const contractTotal = sections.reduce(
+    (sum, s) => sum + s.planAmount,
+    0
+  )
+  const paidTotal = sections.reduce(
+    (sum, s) => sum + getSectionFactAmount(s),
+    0
+  )
+  const remainder = contractTotal - paidTotal
+  const progressPercent =
+    contractTotal > 0
+      ? Math.round((paidTotal / contractTotal) * 100)
+      : 0
 
   return (
     <div className="grid grid-cols-2 gap-4 @5xl/main:grid-cols-4">
@@ -50,7 +45,7 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
             Договор
           </CardDescription>
           <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
-            {formatMoney(metrics.contractTotal)}
+            {formatMoney(contractTotal)}
           </CardTitle>
         </CardHeader>
       </Card>
@@ -63,7 +58,7 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
             Оплачено
           </CardDescription>
           <CardTitle className="text-xl font-semibold tabular-nums text-chart-2 @[250px]/card:text-2xl">
-            {formatMoney(metrics.paidTotal)}
+            {formatMoney(paidTotal)}
           </CardTitle>
         </CardHeader>
       </Card>
@@ -76,7 +71,7 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
             Остаток
           </CardDescription>
           <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
-            {formatMoney(metrics.remainder)}
+            {formatMoney(remainder)}
           </CardTitle>
         </CardHeader>
       </Card>
@@ -89,7 +84,7 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
             Готовность
           </CardDescription>
           <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
-            {metrics.progressPercent}%
+            {progressPercent}%
           </CardTitle>
         </CardHeader>
       </Card>

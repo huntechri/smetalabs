@@ -27,32 +27,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import type { PaymentStatus } from "@/features/finances/__mocks__/finances"
+import {
+  toDateValue,
+  toIsoDate,
+  formatDisplayDate,
+} from "@/features/finances/lib/date-utils"
 import { financeSections } from "@/features/finances/__mocks__/finances"
-
-/** Преобразует ISO-строку в Date для Calendar */
-function toDateValue(value: string | null) {
-  if (!value) return undefined
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? undefined : date
-}
-
-/** Преобразует Date в ISO-строку (YYYY-MM-DD) */
-function toIsoDate(value: Date | undefined) {
-  if (!value) return ""
-  const year = value.getFullYear()
-  const month = String(value.getMonth() + 1).padStart(2, "0")
-  const day = String(value.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
-}
-
-/** Форматирует дату для отображения в триггере */
-function formatDisplayDate(value: string) {
-  if (!value) return "Выберите дату"
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString("ru-RU")
-}
+import type { PaymentStatus } from "@/features/finances/types"
 
 const paymentStatusOptions: { value: PaymentStatus; label: string }[] = [
   { value: "conducted", label: "Проведён" },
@@ -84,8 +65,10 @@ export function PaymentCreateDialog({
       purpose: formData.get("purpose") as string,
     }
 
-    // eslint-disable-next-line no-console
-    console.log("Добавление платежа:", data)
+    if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
+      console.log("Добавление платежа:", data)
+    }
 
     setSelectedDate(undefined)
     onOpenChange(false)

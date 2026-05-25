@@ -1,8 +1,6 @@
 import { Suspense } from "react"
-import { FinancesView } from "@/features/finances/components/finances-view"
 import { Skeleton } from "@/components/ui/skeleton"
-
-export const dynamic = "force-dynamic"
+import { FinancesView } from "@/features/finances/components/finances-view"
 
 function FinancesSkeleton() {
   return (
@@ -13,24 +11,33 @@ function FinancesSkeleton() {
           <div key={i} className="rounded-lg border border-border bg-card p-4">
             <Skeleton className="mb-2 h-3 w-16" />
             <Skeleton className="h-7 w-28" />
-            {i === 3 && <Skeleton className="mt-3 h-2 w-full" />}
           </div>
         ))}
       </div>
 
-      {/* Table skeleton */}
-      <div className="flex flex-col gap-3 rounded-lg border border-dashed border-border p-4">
+      {/* Table skeleton — repeats real table structure: 5 cols */}
+      <div className="rounded-lg border border-dashed border-border">
+        <div className="flex items-center gap-4 border-b border-border px-4 py-3">
+          <Skeleton className="h-3 w-[40%]" />
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-3 w-8" />
+        </div>
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="grid gap-3 rounded-md border border-border p-3"
+            className="flex items-center gap-4 border-b border-border px-4 py-3 last:border-b-0"
           >
-            <div className="flex items-center gap-2">
-              <Skeleton className="size-4" />
-              <Skeleton className="h-4 w-64" />
+            <div className="flex items-center gap-2 w-[40%]">
+              <Skeleton className="size-4 shrink-0" />
+              <Skeleton className="h-4 flex-1 max-w-64" />
               <Skeleton className="h-4 w-16" />
             </div>
-            <Skeleton className="h-2 w-full" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-8" />
           </div>
         ))}
       </div>

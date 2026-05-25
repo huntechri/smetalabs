@@ -3,29 +3,7 @@
  * Будет заменён на API-запросы после появления бэкенда.
  */
 
-export type PaymentStatus = "conducted" | "processing" | "cancelled" | "expected"
-
-export type SectionStatus =
-  | "paid"
-  | "partial"
-  | "unpaid"
-  | "overpaid"
-
-export interface FinancePayment {
-  paymentId: string
-  sectionId: string
-  date: string
-  amount: number
-  status: PaymentStatus
-  purpose: string
-}
-
-export interface FinanceSection {
-  sectionId: string
-  title: string
-  planAmount: number
-  payments: FinancePayment[]
-}
+import type { FinanceSection } from "@/features/finances/types"
 
 export const financeSections: FinanceSection[] = [
   {
@@ -173,20 +151,28 @@ export const financeSections: FinanceSection[] = [
       },
     ],
   },
+  // Раздел с переплатой — факт > план
+  {
+    sectionId: "sec-7",
+    title: "Раздел 7. Благоустройство территории",
+    planAmount: 1_200_000,
+    payments: [
+      {
+        paymentId: "pay-7-1",
+        sectionId: "sec-7",
+        date: "2026-05-20",
+        amount: 800_000,
+        status: "conducted",
+        purpose: "Аванс 65% по договору №40/05",
+      },
+      {
+        paymentId: "pay-7-2",
+        sectionId: "sec-7",
+        date: "2026-06-25",
+        amount: 600_000,
+        status: "conducted",
+        purpose: "Окончательный расчёт + доп. работы (переплата)",
+      },
+    ],
+  },
 ]
-
-/** Вычисляет сумму проведённых и в обработке платежей для секции */
-export function getSectionFactAmount(section: FinanceSection): number {
-  return section.payments
-    .filter((p) => p.status === "conducted" || p.status === "processing")
-    .reduce((sum, p) => sum + p.amount, 0)
-}
-
-/** Определяет статус секции на основе план/факт */
-export function getSectionStatus(section: FinanceSection): SectionStatus {
-  const fact = getSectionFactAmount(section)
-  if (fact === 0) return "unpaid"
-  if (fact > section.planAmount) return "overpaid"
-  if (fact >= section.planAmount) return "paid"
-  return "partial"
-}

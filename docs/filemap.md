@@ -245,11 +245,15 @@ smetalabs/
 │   │
 │   ├── finances/                        # Фича «Финансы» (✅ прототип, моки)
 │   │   ├── __mocks__/
-│   │   │   └── finances.ts               #   Мок-данные: разделы + платежи
+│   │   │   └── finances.ts               #   Мок-данные: разделы + платежи (7 разделов, вкл. overpaid)
+│   │   ├── lib/
+│   │   │   ├── utils.ts                   #   Бизнес-логика: getSectionFactAmount, getSectionStatus
+│   │   │   └── date-utils.ts              #   Утилиты дат: toDateValue, toIsoDate, formatDisplayDate
+│   │   ├── types.ts                       #   Типы: PaymentStatus, SectionStatus, FinancePayment, FinanceSection
 │   │   ├── components/
 │   │   │   ├── finances-view.tsx          #   Основной view (KPI + таблица с expandable-строками)
 │   │   │   ├── finances-kpi-cards.tsx     #   4 KPI-карточки (Договор/Оплачено/Остаток/Готовность)
-│   │   │   └── payment-create-dialog.tsx  # Диалог добавления платежа (Calendar + Popover)
+│   │   │   └── payment-create-dialog.tsx  #   Диалог добавления платежа (Calendar + Popover)
 │   │   └── docs/
 │   │       └── README.md                  #   Документация модуля
 │   │

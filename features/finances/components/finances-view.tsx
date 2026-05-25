@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { CaretDownIcon, CaretRightIcon, PlusIcon } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge"
@@ -16,17 +16,15 @@ import {
 import { formatMoney } from "@/lib/formatters"
 import { FinancesKpiCards } from "@/features/finances/components/finances-kpi-cards"
 import { PaymentCreateDialog } from "@/features/finances/components/payment-create-dialog"
-import {
-  financeSections,
-  getSectionFactAmount,
-  getSectionStatus,
-} from "@/features/finances/__mocks__/finances"
+import { formatDisplayDate } from "@/features/finances/lib/date-utils"
+import { getSectionFactAmount, getSectionStatus } from "@/features/finances/lib/utils"
+import { financeSections } from "@/features/finances/__mocks__/finances"
 import type {
   FinanceSection,
   FinancePayment,
   PaymentStatus,
   SectionStatus,
-} from "@/features/finances/__mocks__/finances"
+} from "@/features/finances/types"
 
 /** Цвет бейджа для статуса платежа */
 const paymentStatusVariant: Record<
@@ -88,7 +86,7 @@ function PaymentRow({ payment }: { payment: FinancePayment }) {
       {/* Отступ + дата */}
       <TableCell className="pl-12">
         <span className="text-muted-foreground">
-          {new Date(payment.date).toLocaleDateString("ru-RU")}
+          {formatDisplayDate(payment.date)}
         </span>
       </TableCell>
       {/* Сумма */}
@@ -134,29 +132,31 @@ function SectionRow({
         onClick={onToggle}
         aria-expanded={isExpanded}
       >
-        <TableCell className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="size-6 p-0"
-            aria-label={isExpanded ? "Свернуть" : "Развернуть"}
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggle()
-            }}
-          >
-            {isExpanded ? (
-              <CaretDownIcon className="size-3.5" />
-            ) : (
-              <CaretRightIcon className="size-3.5" />
-            )}
-          </Button>
-          <span className="font-medium">{section.title}</span>
-          <StatusBadge
-            status={status}
-            variantMap={sectionStatusVariant}
-            labelMap={sectionStatusLabel}
-          />
+        <TableCell>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="size-6 p-0"
+              aria-label={isExpanded ? "Свернуть" : "Развернуть"}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggle()
+              }}
+            >
+              {isExpanded ? (
+                <CaretDownIcon className="size-3.5" />
+              ) : (
+                <CaretRightIcon className="size-3.5" />
+              )}
+            </Button>
+            <span className="font-medium">{section.title}</span>
+            <StatusBadge
+              status={status}
+              variantMap={sectionStatusVariant}
+              labelMap={sectionStatusLabel}
+            />
+          </div>
         </TableCell>
         <TableCell className="tabular-nums">{formatMoney(section.planAmount)}</TableCell>
         <TableCell className="tabular-nums">{formatMoney(factAmount)}</TableCell>
@@ -182,15 +182,18 @@ function SectionRow({
   )
 }
 
-export function FinancesView({
-  estimateId,
-  projectId,
-}: {
+interface FinancesViewProps {
+  /** ID сметы — зарезервирован для будущих API-запросов */
   estimateId: string
+  /** ID проекта — зарезервирован для будущих API-запросов */
   projectId: string
-}) {
-  // eslint-disable-next-line no-console
-  console.log("FinancesView mounted", { projectId, estimateId })
+}
+
+export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
+  if (process.env.NODE_ENV === "development") {
+    // eslint-disable-next-line no-console
+    console.log("FinancesView mounted", { projectId, estimateId })
+  }
 
   const pathname = usePathname()
   const router = useRouter()
@@ -202,7 +205,7 @@ export function FinancesView({
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
   const paymentTriggered = useRef(false)
 
-  const toggleSection = useCallback((sectionId: string) => {
+  const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev)
       if (next.has(sectionId)) {
@@ -212,7 +215,7 @@ export function FinancesView({
       }
       return next
     })
-  }, [])
+  }
 
   // Watch searchParams for «add-payment» dialog
   useEffect(() => {
@@ -230,15 +233,15 @@ export function FinancesView({
     router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
   }, [pathname, router, searchParams])
 
-  const openPaymentDialog = useCallback(() => {
+  const openPaymentDialog = () => {
     const params = new URLSearchParams(searchParams.toString())
     params.set("dialog", "add-payment")
     const nextSearch = params.toString()
     router.replace(`${pathname}?${nextSearch}`)
-  }, [pathname, router, searchParams])
+  }
 
   return (
-    <div className="flex flex-col gap-4 p-1 overflow-auto">
+    <div className="flex flex-col gap-4 p-1 min-h-0 overflow-auto">
       {/* KPI-шапка */}
       <FinancesKpiCards sections={financeSections} />
 

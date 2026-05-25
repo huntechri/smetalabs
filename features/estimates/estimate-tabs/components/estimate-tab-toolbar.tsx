@@ -49,11 +49,6 @@ const tabActions: Record<string, ToolbarAction[]> = {
       action: "addPurchase",
     },
     {
-      label: "Импорт",
-      icon: <FileArrowDownIcon data-icon="inline-start" />,
-      action: "import",
-    },
-    {
       label: "Экспорт",
       icon: <ExportIcon data-icon="inline-start" />,
       action: "export",

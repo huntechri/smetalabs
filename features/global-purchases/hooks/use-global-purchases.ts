@@ -323,6 +323,7 @@ export function useGlobalPurchases() {
     mutationFn: createGlobalPurchase,
     onSuccess: (response) => {
       insertRowIntoCurrentList(queryClient, params, response.data)
+      queryClient.invalidateQueries({ queryKey: ["estimatePurchases"] })
     },
   })
 
@@ -330,6 +331,7 @@ export function useGlobalPurchases() {
     mutationFn: updateGlobalPurchase,
     onSuccess: (response) => {
       replaceRowInCachedLists(queryClient, response.data)
+      queryClient.invalidateQueries({ queryKey: ["estimatePurchases"] })
     },
   })
 
@@ -337,6 +339,7 @@ export function useGlobalPurchases() {
     mutationFn: archiveGlobalPurchase,
     onSuccess: (response) => {
       removeRowFromCachedLists(queryClient, response.data)
+      queryClient.invalidateQueries({ queryKey: ["estimatePurchases"] })
     },
   })
 

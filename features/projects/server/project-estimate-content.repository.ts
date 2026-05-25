@@ -37,6 +37,8 @@ type WorkRow = {
   unit_label: string
   quantity: string | number
   price: string | number
+  fact_quantity: string | number
+  fact_price: string | number
   total_amount: string | number
   category: string | null
   notes: string | null
@@ -81,7 +83,7 @@ const RECORD_SELECT = "id,project_id,name,type,status,amount"
 const SECTION_SELECT =
   "id,title,number,sort_order,works_amount,materials_amount,total_amount"
 const WORK_SELECT =
-  "id,section_id,number,code,title,unit_code,unit_label,quantity,price,total_amount,category,notes,sort_order"
+  "id,section_id,number,code,title,unit_code,unit_label,quantity,price,total_amount,category,notes,sort_order,fact_quantity,fact_price"
 const MATERIAL_SELECT =
   "id,work_id,section_id,number,code,title,unit_code,unit_label,quantity,consumption,price,total_amount,supplier_name,notes,sort_order,directory_material_id,directory_materials(image_url)"
 
@@ -160,6 +162,9 @@ function mapWork(
     materials.reduce((sum, material) => sum + material.totalAmount, 0)
   )
   const totalAmount = toNumber(row.total_amount)
+  const factQuantity = toNumber(row.fact_quantity)
+  const factPrice = toNumber(row.fact_price)
+  const factTotalAmount = roundMoney(factQuantity * factPrice)
 
   return {
     id: row.id,
@@ -172,6 +177,9 @@ function mapWork(
     quantity: toNumber(row.quantity),
     price: toNumber(row.price),
     totalAmount,
+    factQuantity,
+    factPrice,
+    factTotalAmount,
     category: row.category,
     notes: row.notes,
     sortOrder: row.sort_order,
@@ -551,6 +559,8 @@ function mapRpcSectionResponse(
       ms.reduce((sum, m) => sum + m.totalAmount, 0)
     )
     const totalAmount = toNumber(narrow(row.totalAmount))
+    const factQuantity = toNumber(narrow(row.factQuantity))
+    const factPrice = toNumber(narrow(row.factPrice))
     return {
       id: rowId,
       sectionId: String(row.sectionId ?? ""),
@@ -562,6 +572,9 @@ function mapRpcSectionResponse(
       quantity: toNumber(narrow(row.quantity)),
       price: toNumber(narrow(row.price)),
       totalAmount,
+      factQuantity,
+      factPrice,
+      factTotalAmount: roundMoney(factQuantity * factPrice),
       category: (row.category as string | null) ?? null,
       notes: (row.notes as string | null) ?? null,
       sortOrder: toNumber(narrow(row.sortOrder)),
@@ -845,6 +858,10 @@ export async function applyProjectEstimateContentChangeForWorkspace(
       if (input.payload.quantity !== undefined)
         patch.quantity = input.payload.quantity
       if (input.payload.price !== undefined) patch.price = input.payload.price
+      if (input.payload.factQuantity !== undefined)
+        patch.fact_quantity = input.payload.factQuantity
+      if (input.payload.factPrice !== undefined)
+        patch.fact_price = input.payload.factPrice
       if (input.payload.notes !== undefined) patch.notes = input.payload.notes
       if (input.payload.sortOrder !== undefined)
         patch.sort_order = input.payload.sortOrder

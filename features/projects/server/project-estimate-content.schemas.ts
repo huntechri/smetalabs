@@ -120,6 +120,8 @@ export const estimateContentChangeSchema = z.discriminatedUnion("action", [
       title: trimmedTextSchema("Название работы обязательно").optional(),
       quantity: quantitySchema.optional(),
       price: moneySchema.optional(),
+      factQuantity: quantitySchema.optional(),
+      factPrice: moneySchema.optional(),
       notes: nullableTrimmedTextSchema,
       sortOrder: z.coerce.number().int().min(0).optional(),
     }),

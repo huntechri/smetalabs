@@ -2,6 +2,15 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+} from "@/components/ui/empty"
+import { FolderSimplePlus } from "@phosphor-icons/react"
 import { CreateProjectDialog } from "./create-project-dialog"
 import { ProjectCard } from "./project-card"
 import { ProjectsToolbar } from "./projects-toolbar"
@@ -69,7 +78,7 @@ export function ProjectsView() {
   }
 
   return (
-    <div className="space-y-6 px-4 lg:px-6">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <ProjectsToolbar
         search={search}
         onSearchChange={setSearch}
@@ -85,66 +94,79 @@ export function ProjectsView() {
         </div>
       ) : null}
 
-      <div className="rounded-lg border bg-card p-4">
-        {loading ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={index}
-                className="h-56 animate-pulse rounded-lg border bg-muted/40"
-              />
-            ))}
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="py-12 text-center">
-            <p className="text-sm font-medium">Проекты не найдены</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Добавьте первый проект вручную или измените поиск.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                disabled={saving}
-                onEdit={handleEditClick}
-                onArchive={handleArchiveClick}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      <div className="min-h-0 flex-1 rounded-xl border border-border p-1">
+        <div className="scrollbar-subtle h-full min-h-0 overflow-y-auto rounded-lg p-4">
+          {loading ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-56 animate-pulse rounded-lg border bg-muted/40"
+                />
+              ))}
+            </div>
+          ) : projects.length === 0 ? (
+            <Empty className="h-full">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <FolderSimplePlus />
+                </EmptyMedia>
+                <EmptyTitle>Проекты не найдены</EmptyTitle>
+                <EmptyDescription>
+                  Добавьте первый проект вручную или измените параметры поиска.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button size="sm" onClick={handleCreateClick}>
+                  <FolderSimplePlus data-icon="inline-start" />
+                  Создать проект
+                </Button>
+              </EmptyContent>
+            </Empty>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {projects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  disabled={saving}
+                  onEdit={handleEditClick}
+                  onArchive={handleArchiveClick}
+                />
+              ))}
+            </div>
+          )}
 
-      {meta && (meta.hasMore || meta.cursor > 0) ? (
-        <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-          <span>
-            Показано {projects.length} из {meta.total}
-            {isFetching ? " · обновление..." : ""}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              disabled={saving || meta.cursor === 0}
-              size="sm"
-              type="button"
-              variant="outline"
-              onClick={handlePreviousPage}
-            >
-              Назад
-            </Button>
-            <Button
-              disabled={saving || !meta.hasMore}
-              size="sm"
-              type="button"
-              variant="outline"
-              onClick={handleNextPage}
-            >
-              Далее
-            </Button>
-          </div>
+          {meta && (meta.hasMore || meta.cursor > 0) ? (
+            <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted-foreground">
+              <span>
+                Показано {projects.length} из {meta.total}
+                {isFetching ? " · обновление..." : ""}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  disabled={saving || meta.cursor === 0}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                  onClick={handlePreviousPage}
+                >
+                  Назад
+                </Button>
+                <Button
+                  disabled={saving || !meta.hasMore}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                  onClick={handleNextPage}
+                >
+                  Далее
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      </div>
 
       <CreateProjectDialog
         open={dialogOpen}

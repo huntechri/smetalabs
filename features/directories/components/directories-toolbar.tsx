@@ -4,7 +4,11 @@ import { type FormEvent, useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ButtonGroup } from "@/components/ui/button-group"
-import { Input } from "@/components/ui/input"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 
 export type DirectoryAction = {
@@ -58,52 +62,55 @@ export function DirectoriesToolbar({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-col gap-3 rounded-lg border border-border p-2 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
-        <form
-          className="min-w-0 flex-1 rounded-md border border-border p-2"
-          onSubmit={handleSearch}
-        >
-          <div className="flex min-w-0 items-center gap-2">
-            <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
-            <Input
+      <div className="flex flex-col gap-3 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
+        <form className="min-w-0 flex-1" onSubmit={handleSearch}>
+          <InputGroup className="h-8">
+            <InputGroupAddon align="inline-start">
+              <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
+            </InputGroupAddon>
+            <InputGroupInput
               aria-label={searchAriaLabel}
-              className="h-8"
               onChange={(event) => setSearch(event.target.value)}
               placeholder={searchPlaceholder}
               value={search}
             />
-            <Button type="submit" variant="outline">
-              <MagnifyingGlassIcon
-                className="sm:hidden"
-                data-icon="inline-start"
-              />
-              <span className="hidden sm:inline">Поиск</span>
-            </Button>
-          </div>
+            <InputGroupAddon align="inline-end">
+              <Button
+                size="sm"
+                type="submit"
+                variant="ghost"
+                className="h-6 gap-1"
+              >
+                <span className="hidden sm:inline">Поиск</span>
+                <MagnifyingGlassIcon
+                  className="sm:hidden"
+                  data-icon="inline-start"
+                />
+              </Button>
+            </InputGroupAddon>
+          </InputGroup>
         </form>
 
-        <div className="flex rounded-md border border-border p-2">
-          <ButtonGroup className="flex-wrap">
-            {actions.map((action) => (
-              <Button
-                disabled={action.disabled}
-                key={action.label}
-                onClick={action.onClick}
-                size="sm"
-                title={action.title ?? action.label}
-                type="button"
-                variant={action.variant ?? "outline"}
-              >
-                {action.icon}
-                {action.hideLabel ? (
-                  <span className="sr-only">{action.label}</span>
-                ) : (
-                  action.label
-                )}
-              </Button>
-            ))}
-          </ButtonGroup>
-        </div>
+        <ButtonGroup className="flex-wrap">
+          {actions.map((action) => (
+            <Button
+              disabled={action.disabled}
+              key={action.label}
+              onClick={action.onClick}
+              size="sm"
+              title={action.title ?? action.label}
+              type="button"
+              variant={action.variant ?? "outline"}
+            >
+              {action.icon}
+              {action.hideLabel ? (
+                <span className="sr-only">{action.label}</span>
+              ) : (
+                action.label
+              )}
+            </Button>
+          ))}
+        </ButtonGroup>
       </div>
       {children}
     </div>

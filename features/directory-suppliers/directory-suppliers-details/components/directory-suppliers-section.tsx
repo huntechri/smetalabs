@@ -62,7 +62,7 @@ export function DirectorySuppliersSection() {
 
   return (
     <>
-      <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+      <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-muted/0 text-card-foreground shadow-sm">
         {supplierState.error ? (
           <div className="m-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs/relaxed text-destructive">
             {supplierState.error}

@@ -273,3 +273,22 @@ export function fetchProjectEstimateMaterialOptions({
     "справочника материалов"
   )
 }
+
+export function importProjectEstimateContent({
+  projectId,
+  recordId,
+  rows,
+}: {
+  projectId: string
+  recordId: string
+  rows: any[]
+}) {
+  return fetchJson<any>(
+    `/api/projects/${projectId}/estimate-records/${recordId}/import`,
+    "импорта сметы",
+    {
+      method: "POST",
+      body: JSON.stringify(rows),
+    }
+  )
+}

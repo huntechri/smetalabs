@@ -12,7 +12,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import {
   Popover,
   PopoverContent,
@@ -139,126 +143,130 @@ export function GlobalPurchasesToolbar({
   const dateButtonLabel = getDateButtonLabel(dateFrom, dateTo)
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border p-2 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
-      <form
-        className="min-w-0 flex-1 rounded-md border border-border p-2"
-        onSubmit={handleSearch}
-      >
-        <div className="flex min-w-0 items-center gap-2">
-          <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
-          <Input
+    <div className="flex flex-col gap-3 @4xl/main:flex-row @4xl/main:items-center @4xl/main:justify-between">
+      <form className="min-w-0 flex-1" onSubmit={handleSearch}>
+        <InputGroup className="h-8">
+          <InputGroupAddon align="inline-start">
+            <MagnifyingGlassIcon className="shrink-0 text-muted-foreground" />
+          </InputGroupAddon>
+          <InputGroupInput
             aria-label="Поиск закупок"
-            className="h-8"
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Поиск закупок"
             value={search}
           />
-          <Button type="submit" variant="outline">
-            <MagnifyingGlassIcon
-              className="sm:hidden"
-              data-icon="inline-start"
-            />
-            <span className="hidden sm:inline">Поиск</span>
-          </Button>
-        </div>
-      </form>
-      <div className="flex rounded-md border border-border p-2">
-        <ButtonGroup className="flex-wrap">
-          <Button
-            size="sm"
-            type="button"
-            variant="outline"
-            onClick={dispatchGlobalPurchasesCreateEvent}
-          >
-            <PlusIcon data-icon="inline-start" />
-            Закупка
-          </Button>
-          <Button
-            size="sm"
-            type="button"
-            variant="outline"
-            onClick={dispatchGlobalPurchasesImportEvent}
-            title="Импорт закупок из CSV"
-          >
-            <FileArrowDownIcon data-icon="inline-start" />
-            Импорт
-          </Button>
-          <Button
-            size="sm"
-            type="button"
-            variant="outline"
-            onClick={exportGlobalPurchases}
-            title="Экспорт закупок в Excel"
-          >
-            <ExportIcon data-icon="inline-start" />
-            Экспорт
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                aria-label="Фильтр по объектам"
-                size="icon-sm"
-                type="button"
-                variant={currentProjectId ? "default" : "outline"}
-                title={currentProjectTitle}
-              >
-                <FunnelIcon />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              className="max-h-72 w-72 overflow-y-auto"
+          <InputGroupAddon align="inline-end">
+            <Button
+              size="sm"
+              type="submit"
+              variant="ghost"
+              className="h-6 gap-1"
             >
-              <DropdownMenuItem
-                onClick={() => replaceParams({ projectId: null })}
-              >
-                Все объекты
-              </DropdownMenuItem>
-              {projects.map((project) => (
-                <DropdownMenuItem
-                  key={project.id}
-                  onClick={() => replaceParams({ projectId: project.id })}
-                >
-                  {project.title}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                size="icon-sm"
-                type="button"
-                variant="outline"
-                aria-label="Фильтр по датам"
-                title={dateButtonLabel}
-              >
-                <CalendarDots />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-auto p-0">
-              <Calendar
-                mode="range"
-                selected={selectedRange}
-                onSelect={handleDateRangeSelect}
-                numberOfMonths={2}
+              <span className="hidden sm:inline">Поиск</span>
+              <MagnifyingGlassIcon
+                className="sm:hidden"
+                data-icon="inline-start"
               />
-              <div className="flex justify-end border-t p-2">
-                <Button
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                  onClick={() =>
-                    replaceParams({ dateFrom: null, dateTo: null })
-                  }
-                >
-                  Сегодня
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </ButtonGroup>
-      </div>
+            </Button>
+          </InputGroupAddon>
+        </InputGroup>
+      </form>
+      <ButtonGroup className="flex-wrap">
+        <Button
+          size="sm"
+          type="button"
+          variant="outline"
+          onClick={dispatchGlobalPurchasesCreateEvent}
+        >
+          <PlusIcon data-icon="inline-start" />
+          Закупка
+        </Button>
+        <Button
+          size="sm"
+          type="button"
+          variant="outline"
+          onClick={dispatchGlobalPurchasesImportEvent}
+          title="Импорт закупок из CSV"
+        >
+          <FileArrowDownIcon data-icon="inline-start" />
+          Импорт
+        </Button>
+        <Button
+          size="sm"
+          type="button"
+          variant="outline"
+          onClick={exportGlobalPurchases}
+          title="Экспорт закупок в Excel"
+        >
+          <ExportIcon data-icon="inline-start" />
+          Экспорт
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              aria-label="Фильтр по объектам"
+              size="icon-sm"
+              type="button"
+              variant={currentProjectId ? "default" : "outline"}
+              title={currentProjectTitle}
+            >
+              <FunnelIcon />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            className="max-h-72 w-72 overflow-y-auto"
+          >
+            <DropdownMenuItem
+              onClick={() => replaceParams({ projectId: null })}
+            >
+              Все объекты
+            </DropdownMenuItem>
+            {projects.map((project) => (
+              <DropdownMenuItem
+                key={project.id}
+                onClick={() => replaceParams({ projectId: project.id })}
+              >
+                {project.title}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              size="icon-sm"
+              type="button"
+              variant="outline"
+              aria-label="Фильтр по датам"
+              title={dateButtonLabel}
+            >
+              <CalendarDots />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-auto p-0">
+            <Calendar
+              mode="range"
+              selected={selectedRange}
+              onSelect={handleDateRangeSelect}
+              numberOfMonths={2}
+            />
+            <div className="flex justify-end border-t p-2">
+              <Button
+                size="sm"
+                type="button"
+                variant="ghost"
+                onClick={() =>
+                  replaceParams({ dateFrom: null, dateTo: null })
+                }
+              >
+                Сегодня
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </ButtonGroup>
     </div>
   )
 }
+

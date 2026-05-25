@@ -33,6 +33,8 @@ import {
   fetchProjectEstimateWorkOptions,
   type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
+import { EstimateImportDialog } from "@/features/estimates/components/estimate-import-dialog"
+import { exportEstimateToExcel } from "@/features/estimates/lib/estimate-excel-exporter"
 import { CreateSectionDialog } from "@/features/estimates/estimate-details/components/create-section-dialog"
 import { EstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
 import { EstimateEmptyState } from "@/features/estimates/estimate-details/components/estimate-empty-state"
@@ -218,6 +220,8 @@ export function EstimateEditorView({
   const ensurePendingRef = useRef<Promise<string | null> | null>(null)
   const coefficientTriggered = useRef(false)
   const workReplacingRef = useRef(false)
+  const [importOpen, setImportOpen] = React.useState(false)
+  const importTriggered = useRef(false)
 
   const estimateSearch = searchParams.get("q")?.trim() ?? ""
   const searchActive = estimateSearch.length > 0
@@ -306,6 +310,33 @@ export function EstimateEditorView({
     const nextSearch = params.toString()
     router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
   }, [pathname, router, searchParams])
+
+  React.useEffect(() => {
+    if (searchParams.get("dialog") !== "import-estimate") {
+      importTriggered.current = false
+      return
+    }
+    if (importTriggered.current) return
+    importTriggered.current = true
+
+    setImportOpen(true)
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("dialog")
+    const nextSearch = params.toString()
+    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
+  }, [pathname, router, searchParams])
+
+  React.useEffect(() => {
+    const handleExport = () => {
+      if (content) {
+        exportEstimateToExcel(content)
+      }
+    }
+    window.addEventListener("project-estimate:export", handleExport)
+    return () => {
+      window.removeEventListener("project-estimate:export", handleExport)
+    }
+  }, [content])
 
   const nextValue = coefficientQuery.data?.data.coefficientPercent
   const [prevCoefficientOpen, setPrevCoefficientOpen] =
@@ -803,6 +834,14 @@ export function EstimateEditorView({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <EstimateImportDialog
+          projectId={projectId}
+          recordId={recordId}
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          onImportSuccess={refetch}
+        />
       </div>
     </EstimateEditorContext.Provider>
   )

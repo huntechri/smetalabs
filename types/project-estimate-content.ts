@@ -6,6 +6,11 @@ export type ProjectEstimateContentRecord = {
   status: "new" | "in_progress" | "completed"
   amount: number
   worksCoefficientPercent?: number
+  projectName?: string | null
+  customerName?: string | null
+  projectAddress?: string | null
+  workspaceName?: string | null
+  workspaceLogo?: string | null
 }
 
 export type ProjectEstimateContentMaterial = {

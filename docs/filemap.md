@@ -221,7 +221,8 @@ smetalabs/
 │   │       └── components/
 │   │           ├── purchase-section.tsx  #   Композиция + тулбар + loading/empty/error состояния
 │   │           ├── purchase-row.tsx      #   Строка закупки (read-only план, EditableBadge факт, архив)
-│   │           ├── purchase-name.tsx     #   Название + ед. измерения
+│   │           ├── purchase-name.tsx     #   Название (без ед. измерения)
+│   │           ├── purchase-unit.tsx     #   Единица измерения (w-full / sm:w-[76px])
 │   │           ├── purchase-value.tsx    #   Бейдж с formatMoney + цвет отклонения (зелёный/красный)
 │   │           ├── purchase-metric-group.tsx  # Группа Plan / Actual / Deviation
 │   │           └── add-purchase-dialog.tsx  # Диалог добавления закупки (поиск из справочника)
@@ -237,7 +238,8 @@ smetalabs/
 │   │       └── components/
 │   │           ├── execution-section.tsx  #   Композиция (хук → map → ExecutionRow)
 │   │           ├── execution-row.tsx      #   Строка выполнения — собирает всё вместе
-│   │           ├── execution-name.tsx     #   Название позиции
+│   │           ├── execution-name.tsx     #   Название позиции (без ед. измерения)
+│   │           ├── execution-unit.tsx     #   Единица измерения (w-full / sm:w-[76px])
 │   │           ├── execution-value.tsx    #   Бейдж «label: value»
 │   │           └── execution-metric-group.tsx  # Группа метрик
 │   │
@@ -521,7 +523,8 @@ features/purchases/
     └── components/                    #   Мелкие UI-компоненты поддомена
         ├── purchase-section.tsx        #     Композиция: тулбар + хук + map → PurchaseRow + диалог
         ├── purchase-row.tsx            #     Строка: имя + план(read-only) + факт(EditableBadge) + архив
-        ├── purchase-name.tsx           #     Название позиции (текст в рамке)
+        ├── purchase-name.tsx           #     Название позиции (без ед. измерения)
+        ├── purchase-unit.tsx           #     Единица измерения (карточка w-full / sm:w-[76px])
         ├── purchase-value.tsx          #     Бейдж «label: value» (использует Badge из ui/)
         ├── purchase-metric-group.tsx   #     Группа метрик (Plan / Actual / Deviation)
         └── add-purchase-dialog.tsx     #     Диалог добавления: поиск из справочника материалов
@@ -541,7 +544,8 @@ purchases-view.tsx                   ← page.tsx рендерит этот ко
         ├─→ AddPurchaseDialog          ← диалог: поиск материалов + добавление
         │     └─→ fetchGlobalPurchaseMaterialOptions() ← справочник материалов
         └─→ PurchaseRow (×N)          ← для каждой строки
-              ├─→ PurchaseName        ← чистое отображение
+              ├─→ PurchaseName        ← чистое отображение названия
+              ├─→ PurchaseUnit        ← отображение единицы измерения
               ├─→ PurchaseMetricGroup ← группировка метрик
               │     ├─→ PurchaseValue (×N, план)  ← статические бейджи
               │     └─→ EditableBadge (×N, факт)  ← редактируемые бейджи
@@ -921,6 +925,7 @@ features/execution/
     ├── execution-section.tsx
     ├── execution-row.tsx
     ├── execution-name.tsx
+    ├── execution-unit.tsx
     ├── execution-value.tsx
     └── execution-metric-group.tsx
 ```

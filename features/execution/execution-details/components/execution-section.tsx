@@ -7,8 +7,8 @@ export function ExecutionSection() {
   const { executions, updateExecution } = useExecution()
 
   return (
-    <section className="flex flex-col overflow-hidden rounded-lg border border-dashed border-gray-400 bg-card text-card-foreground shadow-sm">
-      <div className="flex flex-col">
+    <section className="flex flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-sm">
+      <div className="flex flex-col gap-3 p-3">
         {executions.map((row) => (
           <ExecutionRow key={row.id} row={row} onUpdate={updateExecution} />
         ))}

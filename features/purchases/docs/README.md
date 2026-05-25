@@ -1,6 +1,6 @@
 # Закупки сметы (purchases)
 
-> 2026-05-24 · статус: API-клиент реализован, React Query подключён, состояния loading/empty/error
+> 2026-05-25 · статус: API-клиент реализован, React Query подключён, адаптивная верстка с выносом ед. изм. в отдельную карточку, бэкенд переведен на FULL OUTER JOIN для поддержки внепланового факта.
 
 ---
 
@@ -19,9 +19,9 @@
 | Характеристика | `features/purchases/` | `features/global-purchases/` |
 |---|---|---|
 | **Контекст** | Внутри конкретной сметы | Уровень workspace (все проекты) |
-| **Данные** | Только чтение (статические бейджи) | Inline-редактирование (EditableBadge) |
+| **Данные** | Чтение + Inline-редактирование факта | Inline-редактирование (EditableBadge) |
 | **Тулбар** | Общий для всех вкладок сметы | Собственный (поиск + фильтры + действия) |
-| **Источник данных** | RPC `get_estimate_purchases` (агрегация плана + факта) | Таблица `global_purchases` |
+| **Источник данных** | RPC `get_estimate_purchases` (план + факт) | Таблица `global_purchases` |
 | **Роутинг** | `/projects/:pid/estimates/:eid/purchases` | `/procurements` |
 
 ---
@@ -43,7 +43,8 @@ features/purchases/
     └── components/
         ├── purchase-section.tsx                   # Композиция списка + состояния (loading/empty/error)
         ├── purchase-row.tsx                       # Строка закупки (план/факт/отклонение)
-        ├── purchase-name.tsx                      # Название материала + ед. измерения
+        ├── purchase-name.tsx                      # Карточка названия материала (без ед. измерения)
+        ├── purchase-unit.tsx                      # Вынесенная карточка единицы измерения (76px / w-full)
         ├── purchase-value.tsx                     # Бейдж с поддержкой денег и цвета отклонения
         └── purchase-metric-group.tsx              # Группа метрик с заголовком
 ```
@@ -119,58 +120,36 @@ export type PurchaseRow = {
 
 ### 5.1 `PurchasesView` — обёртка
 
-Принимает `estimateId` и `projectId`, передаёт в `PurchaseSection`.
+Принимает `estimateId` и `projectId`, передаёт в `PurchaseSection`. Использует стандартные CSS-переменные темы и имеет `p-1` для мягкого отступа по внешнему контуру скролла.
 
 ### 5.2 `PurchaseSection` — состояния
+
+Список строк и скелетонов загрузки выводится внутри контейнера с отступами `p-3 gap-3`. Это гарантирует, что межстрочные расстояния и отступы от краёв родительского контейнера составляют ровно `12px`.
 
 Четыре состояния:
 
 | Состояние | Условие | Отображение |
 |---|---|---|
-| **Loading** | `isLoading === true` | 5 скелетон-строк (`PurchaseRowSkeleton`) |
+| **Loading** | `isLoading === true` | 5 скелетон-строк (`PurchaseRowSkeleton`) в контейнере `p-3 gap-3` |
 | **Error** | `isError === true` | `<Empty>` с `WarningIcon`, текстом ошибки, кнопкой Retry |
 | **Empty** | `purchases.length === 0` | `<Empty>` с `ShoppingCartIcon`, «Нет закупок» |
-| **Data** | `purchases.length > 0` | Список `PurchaseRow` |
+| **Data** | `purchases.length > 0` | Список `PurchaseRow` в контейнере `p-3 gap-3` |
 
 ### 5.3 `PurchaseRow` — строка закупки
 
-Read-only: все значения через `PurchaseValue` (статический `Badge`).
+Состоит из левой части (название, единица измерения и действия) и правой части (группы плановых и фактических метрик).
 
-**Сетка:** `lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]`
+* **Сетка (Desktop):** `lg:grid-cols-[minmax(300px,1fr)_minmax(600px,1.3fr)] gap-3`
+* **Внутренний отступ:** `p-3` (`12px`) от внешних границ до вложенных карточек.
+* **Правая колонка (Метрики):** Три группы выстроены через `md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)] gap-3`. Зазор увеличен до `12px` для лучшей читаемости.
 
-**Три группы метрик:**
+### 5.4 `PurchaseName` — название
+Выделенный карточный элемент названия с заголовком `Наименование`. Не содержит внутри единицы измерения.
 
-| Группа | Поля | Компонент |
-|---|---|---|
-| **План** | Кол-во, Цена, Итого | `PurchaseValue` (Badge, readonly) |
-| **Факт** | Кол-во, Ср. цена, Итого | `PurchaseValue` (Badge, readonly) |
-| **Отклонение** | Итого (со знаком +/−) | `PurchaseValue` (deviation=true, цветной) |
-
-**Ключ строки:** `row.materialId ?? `purchase-${index}`` (fallback для null materialId)
-
-### 5.4 `PurchaseName` — название + ед. измерения
-
-```tsx
-export function PurchaseName({ title, unit }: { title: string; unit: string })
-```
-
-Показывает название материала жирным шрифтом, ниже — единицу измерения мелким muted-текстом.
-
-### 5.5 `PurchaseValue` — бейдж значения
-
-Новые возможности:
-- **`deviation`** (bool) — включает цветовое кодирование (зелёный/красный) и знак `+`
-- **`value`** — number | string | null (null → «—»)
-- **Форматирование денег:** автоматическое через `formatMoney()` для числовых значений
-
-**Цветовая кодировка отклонения:**
-- `> 0` (экономия) → зелёный оттенок (`border-emerald-200 bg-emerald-50 text-emerald-700`)
-- `< 0` (перерасход) → красный оттенок (`border-red-200 bg-red-50 text-red-700`)
-- `= 0` → нейтральный
-
-### 5.6 `PurchaseMetricGroup` — группа метрик
-
-Без изменений. Идентичен `ExecutionMetricGroup`.
+### 5.5 `PurchaseUnit` — единица измерения
+Отдельная карточка `Ед. изм` с адаптивной логикой:
+* **На мобильных устройствах (<640px):** Контейнер названия и ед. изм. перестраивается в `flex-col`, а карточка ед. изм. растягивается на всю ширину `w-full` под названием, создавая чистые строки без деформации сетки.
+* **На экранах от 640px (sm):** Карточки выстраиваются в строку `flex-row`, при этом ед. изм. имеет жесткую ширину `sm:w-[76px] shrink-0`.
 
 ---
 
@@ -189,22 +168,13 @@ export function usePurchases({ estimateId, projectId }: UsePurchasesInput)
 4. **Fallback:** при отсутствии данных от API использует моки из `__mocks__/purchases.ts`
 5. Клиентская фильтрация по `q` (дополнительный safety net)
 
-**Возвращает:**
-- `purchases: PurchaseRow[]`
-- `isLoading: boolean`
-- `isFetching: boolean`
-- `isError: boolean`
-- `error: string | null`
-- `search: string`
-- `refetch: () => Promise<void>`
-
 ---
 
 ## 7. БД и API (бэкенд)
 
 ### Таблица `project_estimate_purchases`
 
-Миграция 047 — фактические закупки на уровне сметы. Отдельная таблица (не `global_purchases`): каждая смета ведёт собственный учёт закупок материалов.
+Миграция 047 — фактические закупки на уровне сметы.
 
 | Колонка | Тип | Примечание |
 |---|---|---|
@@ -216,18 +186,19 @@ export function usePurchases({ estimateId, projectId }: UsePurchasesInput)
 | `title` / `unit` | text | NOT NULL |
 | `quantity` / `price` / `total` | numeric(14,3/14,2/14,2) | ≥ 0 |
 | `supplier_name` / `purchase_date` / `notes` | text | nullable |
-| `created_by` / `updated_by` | uuid FK | nullable (в отличие от глобальных закупок) |
+| `created_by` / `updated_by` | uuid FK | nullable |
 | `created_at` / `updated_at` / `archived_at` / `deleted_at` | timestamptz | Soft delete |
 
-**RLS:** `private.workspace_can_read` (SELECT) / `private.workspace_can_write_directory` (INSERT/UPDATE/DELETE) — идентично другим таблицам смет.
+### RPC `get_estimate_purchases` (v3)
 
-**Tenant boundary:** `(id, workspace_owner_id)` — изоляция через RLS + проверка в RPC.
+Миграция 050 — SECURITY DEFINER, STABLE. 
+Запрос выполняет **`FULL OUTER JOIN`** между плановыми материалами сметы (`project_estimate_materials`) и агрегированным фактом.
 
-**Ограничения:** `chk_pep_title_not_empty`, `chk_pep_unit_not_empty`, `chk_pep_quantity_non_negative`, `chk_pep_price_non_negative`, `chk_pep_total_non_negative`.
+Фактические закупки (`fact_raw`) собираются и суммируются из двух независимых таблиц:
+1. **`project_estimate_purchases`** — локальные закупки, записанные на уровне данной сметы.
+2. **`global_purchases`** — сводные закупки по всему воркспейсу, привязанные к родительскому проекту данной сметы (`project_id`).
 
-### RPC `get_estimate_purchases` (v2)
-
-Миграция 048 — SECURITY DEFINER, STABLE. Факт теперь из `project_estimate_purchases` (не `global_purchases`):
+Благодаря этому внеплановые закупки (не заложенные в смету изначально, но купленные в ходе проекта) отображаются в списке с `plan_quantity = 0` и отрицательным отклонением.
 
 ```sql
 public.get_estimate_purchases(
@@ -248,50 +219,12 @@ RETURNS TABLE (
 )
 ```
 
-### RPC для CRUD проектных закупок (v1)
-
-Миграция 049 — SECURITY DEFINER, plpgsql:
-
-- `add_project_estimate_purchase(p_estimate_record_id, p_workspace_owner_id, p_directory_material_id, ...)` → `jsonb` — создать запись, авторезолв title/unit из справочника
-- `update_project_estimate_purchase(p_purchase_id, p_workspace_owner_id, p_quantity, p_price, ...)` → `jsonb` — частичное обновление, авто-пересчёт `total`
-- `archive_project_estimate_purchase(p_purchase_id, p_workspace_owner_id, p_updated_by)` → `jsonb` (NULL) — soft delete
-
 ### Краевые случаи
 
 | Случай | Поведение |
 |---|---|
-| Материал в плане есть, в факте нет | `fact_*` = NULL, `deviation_total = plan_total` |
-| `directory_material_id IS NULL` | Строки исключаются из агрегации |
-| `archived_at` / `deleted_at` не NULL | Строки исключаются (soft delete) |
-| Несколько записей закупок с разными ценами | Взвешенная средняя цена: Σ(qty×price)/Σ(qty) |
-
----
-
-## 8. Поиск
-
-Поиск работает в двух слоях:
-1. **Серверный** (`?q=` в API route) — фильтрация по `title.toLowerCase().includes(q)`
-2. **Клиентский** (в хуке) — дополнительный safety net при использовании моков
-
-Тулбар (`EstimateTabToolbar`) шлёт `?q=...` в URL, хук читает из `useSearchParams()`.
-
----
-
-## 9. Мок-данные
-
-**Файл:** `features/purchases/__mocks__/purchases.ts`
-
-10 строк электротехнических материалов. Используются как fallback когда API ещё не отвечает или в процессе разработки. При появлении реальных данных от API — всегда показываются реальные данные.
-
----
-
-## 10. Связанные файлы
-
-- **Тип:** `types/purchase.ts` — `PurchaseRow`
-- **API клиент:** `features/purchases/api/purchases-client.ts`
-- **Query keys:** `features/purchases/api/purchases-query-keys.ts`
-- **API route:** `app/api/projects/[id]/estimate-records/[recordId]/purchases/route.ts`
-- **Хук:** `features/purchases/hooks/use-purchases.ts`
-- **Тулбар:** `features/estimates/estimate-tabs/components/estimate-tab-toolbar.tsx`
-- **Layout сметы:** `app/(main)/projects/[projectId]/estimates/[estimateId]/layout.tsx`
-- **Глобальные закупки:** `features/global-purchases/` (аналогичная структура, другой контекст)
+| Материал есть в смете, но не закупался | `fact_*` = NULL, `deviation_total = plan_total` |
+| Позиция не учтена в смете, но куплена (внеплановый факт) | `plan_* = 0`, отображаются значения факта, `deviation_total = -fact_total` (перерасход) |
+| `directory_material_id IS NULL` | Группировка по `title` и `unit`, позиция отображается как внеплановый факт |
+| `archived_at` / `deleted_at` не NULL | Закупки исключаются из подсчета (soft delete) |
+| Несколько закупок по разным ценам | Рассчитывается средневзвешенная цена: $\sum(qty \times price) / \sum(qty)$ |

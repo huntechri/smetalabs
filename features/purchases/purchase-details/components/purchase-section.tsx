@@ -26,35 +26,38 @@ const SKELETON_ROW_COUNT = 5
 
 function PurchaseRowSkeleton() {
   return (
-    <div className="border-b border-border last:border-b-0">
-      <div className="m-3 grid gap-3 rounded-md border border-border p-3 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]">
-        <div className="min-w-0 rounded-md border border-border p-2">
+    <div className="grid gap-3 rounded-lg border border-border p-3 lg:grid-cols-[minmax(300px,1fr)_minmax(600px,1.3fr)]">
+      <div className="flex flex-col sm:flex-row min-w-0 gap-3">
+        <div className="flex-1 min-w-0 rounded-md border border-border p-2">
           <Skeleton className="mb-1 h-3 w-20" />
-          <Skeleton className="mb-1 h-4 w-full max-w-md" />
-          <Skeleton className="h-3 w-8" />
+          <Skeleton className="h-4 w-full max-w-md" />
         </div>
-        <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)]">
-          <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
-            <Skeleton className="h-3 w-16" />
-            <div className="flex min-w-0 flex-wrap gap-1.5">
-              <Skeleton className="h-5 w-16 rounded-md" />
-              <Skeleton className="h-5 w-20 rounded-md" />
-              <Skeleton className="h-5 w-20 rounded-md" />
-            </div>
+        <div className="w-full sm:w-[76px] shrink-0 rounded-md border border-border p-2">
+          <Skeleton className="mb-1 h-3 w-10" />
+          <Skeleton className="h-4 w-8" />
+        </div>
+      </div>
+      <div className="grid min-w-0 gap-3 md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)]">
+        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border bg-muted/5 p-2">
+          <Skeleton className="h-3 w-16" />
+          <div className="flex min-w-0 flex-wrap gap-1.5">
+            <Skeleton className="h-5 w-16 rounded-md" />
+            <Skeleton className="h-5 w-20 rounded-md" />
+            <Skeleton className="h-5 w-20 rounded-md" />
           </div>
-          <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
-            <Skeleton className="h-3 w-16" />
-            <div className="flex min-w-0 flex-wrap gap-1.5">
-              <Skeleton className="h-5 w-16 rounded-md" />
-              <Skeleton className="h-5 w-20 rounded-md" />
-              <Skeleton className="h-5 w-20 rounded-md" />
-            </div>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border bg-muted/5 p-2">
+          <Skeleton className="h-3 w-16" />
+          <div className="flex min-w-0 flex-wrap gap-1.5">
+            <Skeleton className="h-5 w-16 rounded-md" />
+            <Skeleton className="h-5 w-20 rounded-md" />
+            <Skeleton className="h-5 w-20 rounded-md" />
           </div>
-          <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border p-1.5">
-            <Skeleton className="h-3 w-24" />
-            <div className="flex min-w-0 flex-wrap gap-1.5">
-              <Skeleton className="h-5 w-24 rounded-md" />
-            </div>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border bg-muted/5 p-2">
+          <Skeleton className="h-3 w-24" />
+          <div className="flex min-w-0 flex-wrap gap-1.5">
+            <Skeleton className="h-5 w-24 rounded-md" />
           </div>
         </div>
       </div>
@@ -80,6 +83,12 @@ export function PurchaseSection({
     params.delete("dialog")
     const next = params.toString()
     router.replace(next ? `?${next}` : window.location.pathname)
+  }, [router, searchParams])
+
+  const openAddDialog = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("dialog", "add-purchase")
+    router.replace(`?${params.toString()}`)
   }, [router, searchParams])
 
   const {
@@ -123,11 +132,11 @@ export function PurchaseSection({
   if (isLoading) {
     return (
       <section
-        className="flex flex-col overflow-hidden rounded-lg border border-dashed border-gray-400 bg-card text-card-foreground shadow-sm"
+        className="flex flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-sm"
         aria-label="Загрузка закупок"
         aria-busy="true"
       >
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-3 p-3">
           {Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
             <PurchaseRowSkeleton key={i} />
           ))}
@@ -157,15 +166,9 @@ export function PurchaseSection({
     )
   }
 
-  const openAddDialog = useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString())
-    params.set("dialog", "add-purchase")
-    router.replace(`?${params.toString()}`)
-  }, [router, searchParams])
-
   return (
     <>
-      <section className="flex flex-col overflow-hidden rounded-lg border border-dashed border-gray-400 bg-card text-card-foreground shadow-sm">
+      <section className="flex flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-sm">
         {purchases.length === 0 ? (
           <Empty>
             <EmptyHeader>
@@ -189,7 +192,7 @@ export function PurchaseSection({
             </EmptyContent>
           </Empty>
         ) : (
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-3 p-3">
             {purchases.map((row, index) => (
               <PurchaseRow
                 key={row.purchaseId ?? row.materialId ?? `purchase-${index}`}

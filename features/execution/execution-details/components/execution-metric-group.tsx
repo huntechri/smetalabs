@@ -6,7 +6,7 @@ export function ExecutionMetricGroup({
   title: string
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-dashed border-emerald-400 p-1.5">
+    <div className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border bg-muted/5 p-2">
       <div className="text-xs font-semibold text-muted-foreground uppercase">
         {title}
       </div>

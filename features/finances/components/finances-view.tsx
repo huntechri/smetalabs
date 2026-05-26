@@ -1,7 +1,6 @@
 "use client"
 
-import { Fragment, useEffect, useRef, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { Fragment, useEffect, useState } from "react"
 import {
   CaretDownIcon,
   CaretRightIcon,
@@ -297,10 +296,6 @@ interface FinancesViewProps {
 }
 
 export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
   const {
     sections,
     loading,
@@ -316,7 +311,6 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
   const [editingPayment, setEditingPayment] = useState<FinancePayment | null>(null)
-  const paymentTriggered = useRef(false)
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) => {
@@ -330,22 +324,17 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
     })
   }
 
-  // Watch searchParams for «add-payment» dialog
+  // Listen to toolbar action for adding a payment
   useEffect(() => {
-    if (searchParams.get("dialog") !== "add-payment") {
-      paymentTriggered.current = false
-      return
+    const handleAddPayment = () => {
+      setEditingPayment(null)
+      setPaymentDialogOpen(true)
     }
-    if (paymentTriggered.current) return
-    paymentTriggered.current = true
-
-    setEditingPayment(null)
-    setPaymentDialogOpen(true)
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete("dialog")
-    const nextSearch = params.toString()
-    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
-  }, [pathname, router, searchParams])
+    window.addEventListener("project-finances:add-payment", handleAddPayment)
+    return () => {
+      window.removeEventListener("project-finances:add-payment", handleAddPayment)
+    }
+  }, [])
 
   // Watch for Excel export custom event
   useEffect(() => {
@@ -389,23 +378,53 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-4 p-1">
+      <div className="flex flex-col gap-4 p-1 min-h-0 overflow-auto">
         {/* KPI skeleton */}
-        <div className="grid grid-cols-2 gap-4 @5xl/main:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-lg border border-border bg-card p-4">
-              <Skeleton className="mb-2 h-3 w-16" />
-              <Skeleton className="h-7 w-28" />
+            <div key={i} className="rounded-lg border border-border p-6 flex flex-col gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <Skeleton className="size-3.5 rounded-full" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+              <Skeleton className="h-8 w-32 mt-1" />
+              <Skeleton className="h-3.5 w-24 mt-1.5" />
             </div>
           ))}
         </div>
 
         {/* Table skeleton */}
-        <div className="rounded-lg border border-dashed border-border p-4 flex flex-col gap-3">
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
+        <div className="overflow-hidden rounded-lg border bg-background">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[30%]">Раздел / Платёж</TableHead>
+                <TableHead>План</TableHead>
+                <TableHead>Факт</TableHead>
+                <TableHead>Затраты</TableHead>
+                <TableHead>Баланс</TableHead>
+                <TableHead className="w-16">%</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-4 rounded" />
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-4 w-16 rounded-full" />
+                    </div>
+                  </TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </div>
     )
@@ -433,7 +452,7 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
       <FinancesKpiCards sections={sections} />
 
       {/* Таблица разделов + платежей */}
-      <div className="rounded-lg border border-dashed border-border bg-background">
+      <div className="overflow-hidden rounded-lg border">
         {sections.length === 0 ? (
           <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-4 text-center text-xs text-muted-foreground">
             <p>В смете пока нет разделов.</p>

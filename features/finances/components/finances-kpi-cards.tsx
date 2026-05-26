@@ -30,7 +30,10 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
     (sum, s) => sum + getSectionFactAmount(s),
     0
   )
-  const remainder = contractTotal - paidTotal
+  const totalBalance = sections.reduce(
+    (sum, s) => sum + (s.balance ?? 0),
+    0
+  )
   const deviationPercent =
     contractTotal > 0
       ? Math.round(((paidTotal - contractTotal) / contractTotal) * 100)
@@ -70,19 +73,19 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
         </CardFooter>
       </Card>
 
-      {/* Остаток */}
+      {/* Общий баланс */}
       <Card className="@container/card">
         <CardHeader>
           <CardDescription className="flex items-center gap-1.5">
             <ScalesIcon className="size-3.5 text-muted-foreground" />
-            Остаток
+            Общий баланс
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {formatMoney(remainder)}
+            {formatMoney(totalBalance)}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">Остаток к оплате</div>
+          <div className="text-muted-foreground">Факт − Затраты по всем разделам</div>
         </CardFooter>
       </Card>
 

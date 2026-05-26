@@ -401,8 +401,8 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
         </div>
 
         {/* Table skeleton */}
-        <div className="rounded-lg border border-dashed border-border p-4 flex flex-col gap-3">
-          <Skeleton className="h-8 w-full" />
+        <div className="rounded-lg border p-4 flex flex-col gap-3">
+          <Skeleton className="mb-2 h-8 w-full" />
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
@@ -433,7 +433,7 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
       <FinancesKpiCards sections={sections} />
 
       {/* Таблица разделов + платежей */}
-      <div className="rounded-lg border border-dashed border-border bg-background">
+      <div className="overflow-hidden rounded-lg border">
         {sections.length === 0 ? (
           <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-4 text-center text-xs text-muted-foreground">
             <p>В смете пока нет разделов.</p>

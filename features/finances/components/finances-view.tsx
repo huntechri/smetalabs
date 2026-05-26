@@ -1,7 +1,6 @@
 "use client"
 
-import { Fragment, useEffect, useRef, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { Fragment, useEffect, useState } from "react"
 import {
   CaretDownIcon,
   CaretRightIcon,
@@ -297,10 +296,6 @@ interface FinancesViewProps {
 }
 
 export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
   const {
     sections,
     loading,
@@ -316,7 +311,6 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
   const [editingPayment, setEditingPayment] = useState<FinancePayment | null>(null)
-  const paymentTriggered = useRef(false)
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) => {
@@ -330,22 +324,17 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
     })
   }
 
-  // Watch searchParams for «add-payment» dialog
+  // Listen to toolbar action for adding a payment
   useEffect(() => {
-    if (searchParams.get("dialog") !== "add-payment") {
-      paymentTriggered.current = false
-      return
+    const handleAddPayment = () => {
+      setEditingPayment(null)
+      setPaymentDialogOpen(true)
     }
-    if (paymentTriggered.current) return
-    paymentTriggered.current = true
-
-    setEditingPayment(null)
-    setPaymentDialogOpen(true)
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete("dialog")
-    const nextSearch = params.toString()
-    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
-  }, [pathname, router, searchParams])
+    window.addEventListener("project-finances:add-payment", handleAddPayment)
+    return () => {
+      window.removeEventListener("project-finances:add-payment", handleAddPayment)
+    }
+  }, [])
 
   // Watch for Excel export custom event
   useEffect(() => {

@@ -8,6 +8,13 @@
       "when": 1779653260430,
       "tag": "0000_misty_giant_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779776082341,
+      "tag": "0001_rare_old_lace",
+      "breakpoints": true
     }
   ]
 }

@@ -5,23 +5,7 @@ import { assignRole, removeRole } from "@/app/actions/access-control"
 import type { Role } from "@/types/roles"
 import { fetchAccessRoles } from "../api/access-control-client"
 import { accessControlQueryKeys } from "../api/access-control-query-keys"
-
-export type ApiPermission = {
-  id: string
-  key: string
-  label: string
-  groupName: string
-  description?: string | null
-}
-
-export type ApiRole = {
-  id: string
-  name: Role
-  label: string
-  locked: boolean
-  description?: string | null
-  permissions: ApiPermission[]
-}
+import type { ApiRole } from "../types"
 
 export function useRoles() {
   const query = useQuery({

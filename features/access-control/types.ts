@@ -39,3 +39,21 @@ export type PermissionDefinition = {
   label: string
   group: PermissionGroup
 }
+
+// API-типы для клиента и хуков (вынесены сюда чтобы разорвать цикл client ↔ hook)
+export type ApiPermission = {
+  id: string
+  key: string
+  label: string
+  groupName: string
+  description?: string | null
+}
+
+export type ApiRole = {
+  id: string
+  name: Role
+  label: string
+  locked: boolean
+  description?: string | null
+  permissions: ApiPermission[]
+}

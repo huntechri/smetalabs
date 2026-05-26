@@ -7,6 +7,7 @@ import {
   getProject,
   listProjects,
   updateProject,
+  getProjectDashboardStats,
 } from "./projects.service"
 import {
   parseProjectId,
@@ -95,3 +96,14 @@ export async function handleProjectArchiveRequest(id: string) {
     return handleProjectsRouteError(err, "[DELETE /api/projects/[id]]")
   }
 }
+
+export async function handleProjectDashboardStatsRequest(id: string) {
+  try {
+    const projectId = parseProjectId(id)
+    const response = await getProjectDashboardStats(projectId)
+    return NextResponse.json(response)
+  } catch (err) {
+    return handleProjectsRouteError(err, "[GET /api/projects/[id]/dashboard-stats]")
+  }
+}
+

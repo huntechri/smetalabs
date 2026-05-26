@@ -42,6 +42,8 @@ export const projectsQueryKeys = {
       "material-options",
       params,
     ] as const,
+  dashboardStats: (projectId: string) =>
+    [...projectsQueryKeys.detail(projectId), "dashboard-stats"] as const,
 }
 
 export const projectsCacheTags = {

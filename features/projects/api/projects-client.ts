@@ -3,6 +3,7 @@ import type {
   ProjectRow,
   ProjectsListParams,
   ProjectsListResponse,
+  ProjectDashboardStats,
 } from "@/types/project"
 import { throwProjectsApiError } from "./projects-errors"
 
@@ -90,3 +91,12 @@ export function archiveProject(id: string) {
     }
   )
 }
+
+export async function fetchProjectDashboardStats(id: string) {
+  const json = await fetchJson<{ data: ProjectDashboardStats }>(
+    `/api/projects/${id}/dashboard-stats`,
+    "статистики дашборда проекта"
+  )
+  return json.data
+}
+

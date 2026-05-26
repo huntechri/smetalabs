@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { ComposedChart, Area, Line, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useProjectDashboardStats } from "@/features/projects/hooks/use-project-dashboard-stats"
 import {
   Card,
   CardAction,
@@ -16,6 +17,8 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart"
 import {
@@ -26,29 +29,31 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-
-const chartData = [
-  { date: "2024-04-01", planned: 222, actual: 150 },
-  { date: "2024-04-15", planned: 300, actual: 210 },
-  { date: "2024-05-01", planned: 280, actual: 260 },
-  { date: "2024-05-15", planned: 420, actual: 360 },
-  { date: "2024-06-01", planned: 390, actual: 340 },
-  { date: "2024-06-15", planned: 480, actual: 430 },
-  { date: "2024-06-30", planned: 520, actual: 470 },
-]
+import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { formatMoney } from "@/lib/formatters"
 
 const chartConfig = {
-  planned: {
-    label: "План",
-    color: "var(--primary)",
+  inflow: {
+    label: "Приход",
+    color: "var(--chart-2)",
   },
-  actual: {
-    label: "Факт",
+  outflow: {
+    label: "Расход",
+    color: "var(--destructive)",
+  },
+  balance: {
+    label: "Баланс",
     color: "var(--primary)",
   },
 } satisfies ChartConfig
 
-export function ChartAreaInteractive() {
+interface ChartAreaInteractiveProps {
+  projectId: string
+}
+
+export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
   const isMobile = useIsMobile()
   const [timeRange, setTimeRange] = React.useState("90d")
 
@@ -56,15 +61,91 @@ export function ChartAreaInteractive() {
     if (isMobile) setTimeRange("7d")
   }, [isMobile])
 
+  const { chartData, loading, error, refetch } = useProjectDashboardStats(projectId, timeRange)
+
+  const balances = React.useMemo(() => chartData.map((d) => d.balance), [chartData])
+  
+  const { maxBalance, minBalance, off } = React.useMemo(() => {
+    const max = balances.length ? Math.max(...balances, 0) : 0
+    const min = balances.length ? Math.min(...balances, 0) : 0
+    let gradientOffset = 0.5
+    if (max - min > 0) {
+      gradientOffset = max / (max - min)
+    }
+    return { maxBalance: max, minBalance: min, off: gradientOffset }
+  }, [balances])
+
+  const formatYAxisTick = (value: number) => {
+    if (value === 0) return "0"
+    if (Math.abs(value) >= 1_000_000) {
+      return `${(value / 1_000_000).toFixed(1)} млн`
+    }
+    if (Math.abs(value) >= 1_000) {
+      return `${(value / 1_000).toFixed(0)} тыс`
+    }
+    return String(value)
+  }
+
+  if (loading) {
+    return (
+      <Card className="@container/card">
+        <CardHeader>
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+        </CardHeader>
+        <CardContent className="h-[280px] flex items-center justify-center">
+          <Skeleton className="w-full h-full rounded" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="@container/card">
+        <CardContent className="pt-6">
+          <Alert variant="destructive">
+            <AlertTitle>Ошибка загрузки графика</AlertTitle>
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
+          <Button className="mt-3" variant="outline" onClick={() => refetch()}>
+            Повторить
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (chartData.length === 0) {
+    return (
+      <Card className="@container/card">
+        <CardHeader>
+          <CardTitle>Динамика проекта</CardTitle>
+          <CardDescription>Поступления, расходы и баланс во времени</CardDescription>
+        </CardHeader>
+        <CardContent className="h-[280px] flex flex-col items-center justify-center text-center text-muted-foreground p-6 border border-dashed rounded-lg m-6">
+          <p className="text-sm font-medium">Нет транзакций для построения графика</p>
+          <p className="text-xs max-w-sm mt-1">
+            Для отображения динамики баланса и затрат проекта добавьте сметы, платежи или закупки.
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="@container/card">
       <CardHeader>
         <CardTitle>Динамика проекта</CardTitle>
         <CardDescription>
           <span className="hidden @[540px]/card:block">
-            Заготовка графика для будущих проектных показателей
+            Накопительный итог полученных авансов против расходов на закупки материалов
           </span>
-          <span className="@[540px]/card:hidden">Проектные показатели</span>
+          <span className="@[540px]/card:hidden">Денежный поток по дням</span>
         </CardDescription>
         <CardAction>
           <ToggleGroup
@@ -103,33 +184,13 @@ export function ChartAreaInteractive() {
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
+          className="aspect-auto h-[280px] w-full"
         >
-          <AreaChart data={chartData}>
+          <ComposedChart data={chartData} margin={{ left: -10, right: 10 }}>
             <defs>
-              <linearGradient id="fillActual" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-actual)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-actual)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="fillPlanned" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-planned)"
-                  stopOpacity={0.5}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-planned)"
-                  stopOpacity={0.1}
-                />
+              <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset={off} stopColor="var(--color-inflow)" stopOpacity={0.2} />
+                <stop offset={off} stopColor="var(--color-outflow)" stopOpacity={0.2} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
@@ -147,27 +208,68 @@ export function ChartAreaInteractive() {
                 })
               }}
             />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tickFormatter={formatYAxisTick}
+              className="text-muted-foreground"
+            />
             <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dot" />}
+              cursor={{ stroke: "var(--border)", strokeWidth: 1 }}
+              content={
+                <ChartTooltipContent
+                  indicator="dot"
+                  formatter={(value, name, item) => (
+                    <>
+                      <div
+                        className="shrink-0 h-2.5 w-2.5 rounded-[2px]"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <div className="flex flex-1 justify-between items-center gap-4 w-full">
+                        <span className="text-muted-foreground">
+                          {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
+                        </span>
+                        <span className="font-mono font-medium text-foreground tabular-nums">
+                          {formatMoney(Number(value))}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                />
+              }
             />
             <Area
-              dataKey="actual"
-              type="natural"
-              fill="url(#fillActual)"
-              stroke="var(--color-actual)"
-              stackId="a"
+              type="monotone"
+              dataKey="balance"
+              stroke="var(--color-balance)"
+              strokeWidth={2}
+              fill="url(#balanceGradient)"
+              name="balance"
             />
-            <Area
-              dataKey="planned"
-              type="natural"
-              fill="url(#fillPlanned)"
-              stroke="var(--color-planned)"
-              stackId="a"
+            <Line
+              type="monotone"
+              dataKey="inflow"
+              stroke="var(--color-inflow)"
+              strokeWidth={1.5}
+              dot={false}
+              name="inflow"
+              strokeDasharray="4 4"
             />
-          </AreaChart>
+            <Line
+              type="monotone"
+              dataKey="outflow"
+              stroke="var(--color-outflow)"
+              strokeWidth={1.5}
+              dot={false}
+              name="outflow"
+              strokeDasharray="4 4"
+            />
+            <ChartLegend content={<ChartLegendContent />} />
+          </ComposedChart>
         </ChartContainer>
       </CardContent>
     </Card>
   )
 }
+

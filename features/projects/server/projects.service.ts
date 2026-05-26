@@ -11,6 +11,7 @@ import {
   getProjectForWorkspace,
   listProjectsForWorkspace,
   updateProjectForWorkspace,
+  getProjectDashboardStatsForWorkspace,
 } from "./projects.repository"
 import { normalizeProjectsListParams } from "./projects.schemas"
 
@@ -150,3 +151,10 @@ export async function archiveProject(id: string) {
   revalidateProjectTags(context, project.id)
   return { data: project }
 }
+
+export async function getProjectDashboardStats(id: string) {
+  const context = await requireProjectsReadContext()
+  const stats = await getProjectDashboardStatsForWorkspace(context.workspaceOwnerId, id)
+  return { data: stats }
+}
+

@@ -382,3 +382,154 @@ export async function archiveProjectForWorkspace(
 
   return existing
 }
+
+export async function getProjectDashboardStatsForWorkspace(
+  workspaceOwnerId: string,
+  projectId: string
+): Promise<{
+  contractTotal: number
+  paidTotal: number
+  spentTotal: number
+  totalBalance: number
+  deviationPercent: number
+  transactions: {
+    type: "payment" | "purchase"
+    amount: number
+    date: string
+  }[]
+}> {
+  const toNumber = (val: any) => {
+    const parsed = typeof val === "number" ? val : Number(val ?? 0)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+  const roundMoney = (val: number) => Math.round(val * 100) / 100
+
+  // 1. Fetch estimate record IDs and amounts
+  const { data: estimates, error: estError } = await supabase
+    .from("project_estimate_records")
+    .select("id, amount")
+    .eq("project_id", projectId)
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .is("deleted_at", null)
+    .is("archived_at", null)
+
+  if (estError) throw estError
+
+  if (!estimates || estimates.length === 0) {
+    return {
+      contractTotal: 0,
+      paidTotal: 0,
+      spentTotal: 0,
+      totalBalance: 0,
+      deviationPercent: 0,
+      transactions: [],
+    }
+  }
+
+  const estimateIds = estimates.map((e) => e.id)
+  const contractTotal = roundMoney(estimates.reduce((sum, e) => sum + toNumber(e.amount), 0))
+
+  // 2. Fetch payments (with date)
+  const { data: payments, error: payError } = await supabase
+    .from("project_estimate_payments")
+    .select("amount, date")
+    .in("estimate_record_id", estimateIds)
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .is("deleted_at", null)
+    .in("status", ["conducted", "processing"])
+
+  if (payError) throw payError
+
+  const paidTotal = roundMoney((payments ?? []).reduce((sum, p) => sum + toNumber(p.amount), 0))
+
+  // 3. Fetch purchases (with purchase_date)
+  const { data: purchases, error: purError } = await supabase
+    .from("project_estimate_purchases")
+    .select("total, purchase_date")
+    .in("estimate_record_id", estimateIds)
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .is("deleted_at", null)
+    .is("archived_at", null)
+
+  if (purError) throw purError
+
+  const materialsSpent = (purchases ?? []).reduce((sum, p) => sum + toNumber(p.total), 0)
+
+  // 4. Fetch works (execution)
+  const { data: works, error: workError } = await supabase
+    .from("project_estimate_works")
+    .select("fact_quantity, fact_price, updated_at")
+    .in("estimate_record_id", estimateIds)
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .is("deleted_at", null)
+    .is("archived_at", null)
+
+  if (workError) throw workError
+
+  const worksSpent = (works ?? []).reduce(
+    (sum, w) => sum + toNumber(w.fact_quantity) * toNumber(w.fact_price),
+    0
+  )
+
+  const spentTotal = roundMoney(materialsSpent + worksSpent)
+  const totalBalance = roundMoney(paidTotal - spentTotal)
+  const deviationPercent =
+    contractTotal > 0
+      ? Math.round(((paidTotal - contractTotal) / contractTotal) * 100)
+      : 0
+
+  // 5. Build transaction history for dates
+  const transactions: { type: "payment" | "purchase"; amount: number; date: string }[] = []
+
+  ;(payments ?? []).forEach((p) => {
+    if (p.date) {
+      transactions.push({
+        type: "payment",
+        amount: toNumber(p.amount),
+        date: p.date,
+      })
+    }
+  })
+
+  ;(purchases ?? []).forEach((p) => {
+    if (p.purchase_date) {
+      transactions.push({
+        type: "purchase",
+        amount: toNumber(p.total),
+        date: p.purchase_date,
+      })
+    }
+  })
+
+  ;(works ?? []).forEach((w: any) => {
+    const qty = toNumber(w.fact_quantity)
+    const prc = toNumber(w.fact_price)
+    const amount = qty * prc
+    if (amount > 0 && w.updated_at) {
+      const d = new Date(w.updated_at)
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, "0")
+      const day = String(d.getDate()).padStart(2, "0")
+      const dateStr = `${y}-${m}-${day}`
+      transactions.push({
+        type: "purchase",
+        amount: roundMoney(amount),
+        date: dateStr,
+      })
+    }
+  })
+
+  // Sort chronologically by date
+  transactions.sort((a, b) => a.date.localeCompare(b.date))
+
+  return {
+    contractTotal,
+    paidTotal,
+    spentTotal,
+    totalBalance,
+    deviationPercent,
+    transactions,
+  }
+}
+
+

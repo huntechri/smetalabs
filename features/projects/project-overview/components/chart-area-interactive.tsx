@@ -209,6 +209,16 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
               }}
             />
             <YAxis
+              yAxisId="balance"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tickFormatter={formatYAxisTick}
+              className="text-muted-foreground"
+            />
+            <YAxis
+              yAxisId="bars"
+              orientation="right"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
@@ -240,6 +250,7 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
               }
             />
             <Area
+              yAxisId="balance"
               type="monotone"
               dataKey="balance"
               stroke="var(--color-balance)"
@@ -248,6 +259,7 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
               name="balance"
             />
             <Bar
+              yAxisId="bars"
               dataKey="inflow"
               fill="var(--color-inflow)"
               name="inflow"
@@ -255,6 +267,7 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
               opacity={0.7}
             />
             <Bar
+              yAxisId="bars"
               dataKey="outflow"
               fill="var(--color-outflow)"
               name="outflow"

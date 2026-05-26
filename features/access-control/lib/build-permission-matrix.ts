@@ -23,7 +23,7 @@ export function buildPermissionMatrix(roles: ApiRole[]) {
     locked: role.locked,
   }))
 
-  const permMap = new Map<string, PermissionDefinition>()
+  const permMap = new Map<PermissionKey, PermissionDefinition>()
   for (const role of roles) {
     for (const permission of role.permissions) {
       if (!permMap.has(permission.key)) {

@@ -48,3 +48,17 @@ export type ProjectMutationInput = {
   endDate?: string | null
   status?: ProjectStatus
 }
+
+export type ProjectDashboardStats = {
+  contractTotal: number
+  paidTotal: number
+  spentTotal: number
+  totalBalance: number
+  deviationPercent: number
+  transactions: {
+    type: "payment" | "purchase"
+    amount: number
+    date: string
+  }[]
+}
+

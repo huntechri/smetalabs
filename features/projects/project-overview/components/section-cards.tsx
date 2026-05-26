@@ -1,104 +1,131 @@
 "use client"
 
-import { TrendDown, TrendUp } from "@phosphor-icons/react"
-
-import { Badge } from "@/components/ui/badge"
 import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  CurrencyRubIcon,
+  CheckCircleIcon,
+  ScalesIcon,
+  ChartBarIcon,
+} from "@phosphor-icons/react"
 
-export function SectionCards() {
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { formatMoney } from "@/lib/formatters"
+import { useProjectDashboardStats } from "@/features/projects/hooks/use-project-dashboard-stats"
+
+interface SectionCardsProps {
+  projectId: string
+}
+
+export function SectionCards({ projectId }: SectionCardsProps) {
+  const { stats, loading, error, refetch } = useProjectDashboardStats(projectId)
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 gap-4 px-4 lg:px-6 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className="@container/card">
+            <CardHeader className="gap-1.5">
+              <div className="flex items-center gap-1.5">
+                <Skeleton className="size-3.5 rounded-full" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+              <Skeleton className="h-8 w-32 mt-1" />
+            </CardHeader>
+            <CardFooter className="mt-1.5">
+              <Skeleton className="h-3.5 w-24" />
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (error || !stats) {
+    return (
+      <div className="px-4 lg:px-6 flex flex-col gap-3">
+        <Alert variant="destructive">
+          <AlertTitle>Ошибка загрузки показателей</AlertTitle>
+          <AlertDescription>
+            {error ?? "Не удалось получить финансовые показатели проекта"}
+          </AlertDescription>
+        </Alert>
+        <Button className="w-fit" variant="outline" onClick={() => refetch()}>
+          Повторить
+        </Button>
+      </div>
+    )
+  }
+
+  const { contractTotal, paidTotal, spentTotal, totalBalance, deviationPercent } = stats
+
   return (
     <div className="grid grid-cols-2 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
+      {/* Договор */}
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Общая выручка</CardDescription>
+          <CardDescription className="flex items-center gap-1.5">
+            <CurrencyRubIcon className="size-3.5 text-muted-foreground" />
+            Договор
+          </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            $1,250.00
+            {formatMoney(contractTotal)}
           </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <TrendUp />
-              +12.5%
-            </Badge>
-          </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Trending up this month <TrendUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">
-            Посетители за последние 6 месяцев
-          </div>
+          <div className="text-muted-foreground">По сметам проекта</div>
         </CardFooter>
       </Card>
+
+      {/* Оплачено */}
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Новые клиенты</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            1,234
+          <CardDescription className="flex items-center gap-1.5">
+            <CheckCircleIcon className="size-3.5 text-chart-2" />
+            Оплачено
+          </CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums text-chart-2 @[250px]/card:text-3xl">
+            {formatMoney(paidTotal)}
           </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <TrendDown />
-              -20%
-            </Badge>
-          </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Down 20% this period <TrendDown className="size-4" />
-          </div>
-          <div className="text-muted-foreground">
-            Acquisition needs attention
-          </div>
+          <div className="text-muted-foreground">Фактически оплачено</div>
         </CardFooter>
       </Card>
+
+      {/* Общий баланс */}
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Активные аккаунты</CardDescription>
+          <CardDescription className="flex items-center gap-1.5">
+            <ScalesIcon className="size-3.5 text-muted-foreground" />
+            Общий баланс
+          </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            45,678
+            {formatMoney(totalBalance)}
           </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <TrendUp />
-              +12.5%
-            </Badge>
-          </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Strong user retention <TrendUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Engagement exceed targets</div>
+          <div className="text-muted-foreground">Оплачено − Расходы по проекту</div>
         </CardFooter>
       </Card>
+
+      {/* % Отклонения */}
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Темп роста</CardDescription>
+          <CardDescription className="flex items-center gap-1.5">
+            <ChartBarIcon className="size-3.5 text-muted-foreground" />
+            Отклонение
+          </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            4.5%
+            {deviationPercent > 0 ? `+${deviationPercent}` : deviationPercent}%
           </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <TrendUp />
-              +4.5%
-            </Badge>
-          </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Steady performance increase <TrendUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Meets growth projections</div>
+          <div className="text-muted-foreground">Отклонение оплат от сметы</div>
         </CardFooter>
       </Card>
     </div>
   )
 }
+

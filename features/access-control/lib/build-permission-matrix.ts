@@ -28,9 +28,9 @@ export function buildPermissionMatrix(roles: ApiRole[]) {
     for (const permission of role.permissions) {
       if (!permMap.has(permission.key)) {
         permMap.set(permission.key, {
-          key: permission.key as PermissionKey,
+          key: permission.key,
           label: permission.label,
-          group: permission.groupName as PermissionGroup,
+          group: permission.groupName,
         })
       }
     }
@@ -42,7 +42,7 @@ export function buildPermissionMatrix(roles: ApiRole[]) {
 
   for (const role of roles) {
     initialMatrix[role.name] = role.permissions.map(
-      (permission) => permission.key as PermissionKey
+      (permission) => permission.key
     )
   }
 

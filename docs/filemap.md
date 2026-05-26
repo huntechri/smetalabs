@@ -4,7 +4,7 @@
 >
 > **Состояние:** Фронтенд (вёрстка + моки) + Бэкенд (Supabase: DB, Auth, RBAC, API). Активная разработка.
 >
-> **Последнее обновление:** 2026-05-22
+> **Последнее обновление:** 2026-05-26
 >
 > **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
 
@@ -242,6 +242,27 @@ smetalabs/
 │   │           ├── execution-unit.tsx     #   Единица измерения (w-full / sm:w-[76px])
 │   │           ├── execution-value.tsx    #   Бейдж «label: value»
 │   │           └── execution-metric-group.tsx  # Группа метрик
+│   │
+│   ├── finances/                        # Фича «Финансы» (✅ бэкенд-интеграция, React Query)
+│   │   ├── __mocks__/
+│   │   │   └── finances.ts               #   Fallback-данные (используются если API недоступен)
+│   │   ├── api/
+│   │   │   └── finances-client.ts        #   API-клиент: GET/POST/PATCH/DELETE платежей
+│   │   ├── hooks/
+│   │   │   └── use-finances.ts           #   Хук (useQuery + useMutation + оптимистичный UI)
+│   │   │                                  #   Оркестрирует: платежи + разделы сметы + закупки
+│   │   ├── lib/
+│   │   │   ├── utils.ts                   #   getSectionFactAmount, getSectionStatus
+│   │   │   ├── date-utils.ts              #   toDateValue, toIsoDate, formatDisplayDate
+│   │   │   └── finances-excel-exporter.ts #   Экспорт в Excel (ExcelJS, 8 колонок)
+│   │   ├── types.ts                       #   PaymentStatus, SectionStatus, FinancePayment, FinanceSection
+│   │   ├── components/
+│   │   │   ├── finances-view.tsx          #   Основной view (KPI + таблица expandable-строки)
+│   │   │   │                              #   Колонки: План · Факт · Затраты · Баланс · Статус · %
+│   │   │   ├── finances-kpi-cards.tsx     #   4 KPI-карточки (Договор/Оплачено/Остаток/Закупки)
+│   │   │   └── payment-create-dialog.tsx  #   Диалог добавления/редактирования платежа
+│   │   └── docs/
+│   │       └── README.md                  #   Документация модуля
 │   │
 │   ├── global-purchases/                # Фича «Глобальные закупки»
 │   │   ├── api/

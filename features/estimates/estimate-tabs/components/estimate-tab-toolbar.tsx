@@ -20,7 +20,13 @@ import {
 type ToolbarAction = {
   label: string
   icon: React.ReactNode
-  action?: "workCoefficient" | "addPurchase" | "import" | "export" | "addWork"
+  action?:
+    | "workCoefficient"
+    | "addPurchase"
+    | "import"
+    | "export"
+    | "addWork"
+    | "addPayment"
   variant?: React.ComponentProps<typeof Button>["variant"]
 }
 
@@ -67,7 +73,11 @@ const tabActions: Record<string, ToolbarAction[]> = {
     },
   ],
   finances: [
-    { label: "Платёж", icon: <PlusIcon data-icon="inline-start" /> },
+    {
+      label: "Платёж",
+      icon: <PlusIcon data-icon="inline-start" />,
+      action: "addPayment",
+    },
     {
       label: "Экспорт",
       icon: <ExportIcon data-icon="inline-start" />,
@@ -166,6 +176,11 @@ export function EstimateTabToolbar() {
     if (action.action === "addPurchase") {
       const params = new URLSearchParams(searchParams.toString())
       params.set("dialog", "add-purchase")
+      replaceSearch(params)
+    }
+    if (action.action === "addPayment") {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set("dialog", "add-payment")
       replaceSearch(params)
     }
   }

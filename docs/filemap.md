@@ -259,7 +259,7 @@ smetalabs/
 │   │   ├── components/
 │   │   │   ├── finances-view.tsx          #   Основной view (KPI + таблица expandable-строки)
 │   │   │   │                              #   Колонки: План · Факт · Затраты · Баланс · Статус · %
-│   │   │   ├── finances-kpi-cards.tsx     #   4 KPI-карточки (Договор/Оплачено/Остаток/Закупки)
+│   │   │   ├── finances-kpi-cards.tsx     #   4 KPI-карточки (Договор/Оплачено/Общий баланс/Закупки)
 │   │   │   └── payment-create-dialog.tsx  #   Диалог добавления/редактирования платежа
 │   │   └── docs/
 │   │       └── README.md                  #   Документация модуля

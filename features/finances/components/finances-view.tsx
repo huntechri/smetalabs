@@ -32,7 +32,7 @@ import { formatMoney } from "@/lib/formatters"
 import { FinancesKpiCards } from "@/features/finances/components/finances-kpi-cards"
 import { PaymentCreateDialog } from "@/features/finances/components/payment-create-dialog"
 import { formatDisplayDate } from "@/features/finances/lib/date-utils"
-import { getSectionFactAmount, getSectionStatus } from "@/features/finances/lib/utils"
+import { buildSectionViewModel } from "@/features/finances/lib/finances-view-model"
 import { useFinances } from "@/features/finances/hooks/use-finances"
 import type {
   FinanceSection,
@@ -186,21 +186,8 @@ function SectionRow({
   onEditPayment,
   onDeletePayment,
 }: SectionRowProps) {
-  const factAmount = getSectionFactAmount(section)
-  const isGeneral = section.sectionId === "general_advance"
-  const expenses = section.expenses ?? 0
-  const balance = section.balance ?? 0
-  const percent =
-    section.planAmount > 0
-      ? Math.round((factAmount / section.planAmount) * 100)
-      : 0
-  const status = isGeneral
-    ? (factAmount > 0 ? "paid" : "unpaid")
-    : getSectionStatus(section)
-
-  const customLabelMap = isGeneral
-    ? { paid: "Внесено", unpaid: "Не внесено" }
-    : sectionStatusLabel
+  const { factAmount, isGeneral, expenses, balance, percent, status, customLabelMap } =
+    buildSectionViewModel(section)
 
   return (
     <Fragment>
@@ -232,7 +219,7 @@ function SectionRow({
             <StatusBadge
               status={status}
               variantMap={sectionStatusVariant}
-              labelMap={customLabelMap}
+              labelMap={customLabelMap ?? sectionStatusLabel}
             />
           </div>
         </TableCell>

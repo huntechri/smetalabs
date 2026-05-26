@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ComposedChart, Area, Line, CartesianGrid, XAxis, YAxis } from "recharts"
+import { ComposedChart, Area, Bar, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useProjectDashboardStats } from "@/features/projects/hooks/use-project-dashboard-stats"
@@ -143,7 +143,7 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
         <CardTitle>Динамика проекта</CardTitle>
         <CardDescription>
           <span className="hidden @[540px]/card:block">
-            Накопительный итог полученных авансов против расходов на закупки материалов
+            Ежедневные поступления и расходы, накопительный баланс проекта
           </span>
           <span className="@[540px]/card:hidden">Денежный поток по дням</span>
         </CardDescription>
@@ -247,23 +247,19 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
               fill="url(#balanceGradient)"
               name="balance"
             />
-            <Line
-              type="monotone"
+            <Bar
               dataKey="inflow"
-              stroke="var(--color-inflow)"
-              strokeWidth={1.5}
-              dot={false}
+              fill="var(--color-inflow)"
               name="inflow"
-              strokeDasharray="4 4"
+              radius={[2, 2, 0, 0]}
+              opacity={0.7}
             />
-            <Line
-              type="monotone"
+            <Bar
               dataKey="outflow"
-              stroke="var(--color-outflow)"
-              strokeWidth={1.5}
-              dot={false}
+              fill="var(--color-outflow)"
               name="outflow"
-              strokeDasharray="4 4"
+              radius={[2, 2, 0, 0]}
+              opacity={0.7}
             />
             <ChartLegend content={<ChartLegendContent />} />
           </ComposedChart>

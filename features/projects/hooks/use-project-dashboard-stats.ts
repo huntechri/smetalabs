@@ -100,15 +100,15 @@ function processChartData(
     }
   })
 
-  // 4. Build cumulative data points
+  // 4. Build data points: inflow/outflow are daily, balance is cumulative
   const points = dates.map((d) => {
     const daily = dailyTransactions.get(d)!
     cumulativeInflow += daily.inflow
     cumulativeOutflow += daily.outflow
     return {
       date: d,
-      inflow: Math.round(cumulativeInflow * 100) / 100,
-      outflow: Math.round(cumulativeOutflow * 100) / 100,
+      inflow: Math.round(daily.inflow * 100) / 100,
+      outflow: Math.round(daily.outflow * 100) / 100,
       balance: Math.round((cumulativeInflow - cumulativeOutflow) * 100) / 100,
     }
   })

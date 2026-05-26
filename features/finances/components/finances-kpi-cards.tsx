@@ -9,6 +9,7 @@ import {
 import {
   Card,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -36,7 +37,7 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
       : 0
 
   return (
-    <div className="grid grid-cols-2 gap-4 @5xl/main:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
       {/* Договор */}
       <Card className="@container/card">
         <CardHeader>
@@ -44,10 +45,13 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
             <CurrencyRubIcon className="size-3.5 text-muted-foreground" />
             Договор
           </CardDescription>
-          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {formatMoney(contractTotal)}
           </CardTitle>
         </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          <div className="text-muted-foreground">По смете</div>
+        </CardFooter>
       </Card>
 
       {/* Оплачено */}
@@ -57,10 +61,13 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
             <CheckCircleIcon className="size-3.5 text-chart-2" />
             Оплачено
           </CardDescription>
-          <CardTitle className="text-xl font-semibold tabular-nums text-chart-2 @[250px]/card:text-2xl">
+          <CardTitle className="text-2xl font-semibold tabular-nums text-chart-2 @[250px]/card:text-3xl">
             {formatMoney(paidTotal)}
           </CardTitle>
         </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          <div className="text-muted-foreground">Фактически оплачено</div>
+        </CardFooter>
       </Card>
 
       {/* Остаток */}
@@ -70,10 +77,13 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
             <ScalesIcon className="size-3.5 text-muted-foreground" />
             Остаток
           </CardDescription>
-          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {formatMoney(remainder)}
           </CardTitle>
         </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          <div className="text-muted-foreground">Остаток к оплате</div>
+        </CardFooter>
       </Card>
 
       {/* % готовности */}
@@ -83,10 +93,13 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
             <ChartBarIcon className="size-3.5 text-muted-foreground" />
             Готовность
           </CardDescription>
-          <CardTitle className="text-xl font-semibold tabular-nums @[250px]/card:text-2xl">
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {progressPercent}%
           </CardTitle>
         </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          <div className="text-muted-foreground">Доля выполненных работ</div>
+        </CardFooter>
       </Card>
     </div>
   )

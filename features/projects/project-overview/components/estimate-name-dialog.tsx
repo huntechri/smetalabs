@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -80,12 +81,14 @@ export function EstimateNameDialog({
                   <SelectValue placeholder="Выберите тип сметы" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
-                  <SelectItem value="Основная" className="rounded-lg">
-                    Основная
-                  </SelectItem>
-                  <SelectItem value="Дополнительная" className="rounded-lg">
-                    Дополнительная
-                  </SelectItem>
+                  <SelectGroup>
+                    <SelectItem value="Основная" className="rounded-lg">
+                      Основная
+                    </SelectItem>
+                    <SelectItem value="Дополнительная" className="rounded-lg">
+                      Дополнительная
+                    </SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </Field>
@@ -103,15 +106,17 @@ export function EstimateNameDialog({
                   <SelectValue placeholder="Выберите статус сметы" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
-                  <SelectItem value="new" className="rounded-lg">
-                    Новая
-                  </SelectItem>
-                  <SelectItem value="in_progress" className="rounded-lg">
-                    В работе
-                  </SelectItem>
-                  <SelectItem value="completed" className="rounded-lg">
-                    Завершена
-                  </SelectItem>
+                  <SelectGroup>
+                    <SelectItem value="new" className="rounded-lg">
+                      Новая
+                    </SelectItem>
+                    <SelectItem value="in_progress" className="rounded-lg">
+                      В работе
+                    </SelectItem>
+                    <SelectItem value="completed" className="rounded-lg">
+                      Завершена
+                    </SelectItem>
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </Field>

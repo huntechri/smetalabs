@@ -100,3 +100,11 @@ export async function fetchProjectDashboardStats(id: string) {
   return json.data
 }
 
+export async function fetchWorkspaceDashboardStats() {
+  const json = await fetchJson<{
+    data: ProjectDashboardStats
+  }>("/api/dashboard/stats", "статистики дашборда воркспейса")
+  return json.data
+}
+
+

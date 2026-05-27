@@ -186,7 +186,7 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
           config={chartConfig}
           className="aspect-auto h-[280px] w-full"
         >
-          <ComposedChart data={chartData} margin={{ left: -10, right: 10 }}>
+          <ComposedChart data={chartData} margin={{ left: 10, right: 10 }}>
             <defs>
               <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset={off} stopColor="var(--color-inflow)" stopOpacity={0.2} />

@@ -58,10 +58,10 @@ smetalabs/
 │   │   ├── layout.tsx                   # Layout с SidebarProvider, AppSidebar, SiteHeader
 │   │   ├── page.tsx                     # Редирект на /dashboard
 │   │   ├── dashboard/                   # Дашборд (главная страница после входа)
-│   │   │   ├── page.tsx                 # Страница дашборда
-│   │   │   └── data.json               # Мок-данные для таблицы
+│   │   │   ├── page.tsx                 # Страница дашборда (Server Component)
+│   │   │   └── data.json                # Мок-данные (архив/резервная копия)
 │   │   ├── projects/                    # Проекты
-│   │   │   ├── page.tsx                 # Список проектов
+│   │   │   ├── page.tsx                 # Список проектов (Server Component)
 │   │   │   └── [projectId]/            # Конкретный проект
 │   │   │       ├── page.tsx             # Детальная страница проекта
 │   │   │       └── estimates/          # Сметы проекта
@@ -167,16 +167,31 @@ smetalabs/
 │   │       └── forgot-password-form.tsx # Форма восстановления
 │   │
 │   ├── dashboard/                       # Фича «Дашборд»
+│   │   ├── hooks/                       # Кастомные хуки
+│   │   │   ├── use-workspace-dashboard-stats.ts # Сбор показателей и подготовка данных графика
+│   │   │   └── use-workspace-dashboard-projects.ts # Запрос проектов в работе
 │   │   ├── chart-area-client.tsx        # Клиентский график (Recharts, lazy-загрузка)
 │   │   ├── chart-area-interactive.tsx   # Интерактивный график
 │   │   ├── data-table.tsx              # Таблица данных
 │   │   └── section-cards-dashboard.tsx  # Карточки статистики
 │   │
 │   ├── projects/                        # Фича «Проекты»
-│   │   └── components/
-│   │       ├── projects-view.tsx        # Представление списка проектов
-│   │       ├── project-card.tsx         # Карточка одного проекта
-│   │       └── section-cards.tsx        # Карточки статистики (раздел проектов)
+│   │   ├── api/                         # Клиентские API-запросы и мутации
+│   │   ├── components/                  # UI-компоненты фичи
+│   │   │   ├── create-project-dialog.tsx # Диалог создания/редактирования (чистый UI)
+│   │   │   ├── project-card.tsx         # Карточка одного проекта (чистый UI)
+│   │   │   ├── projects-toolbar.tsx      # Тулбар списка проектов
+│   │   │   └── projects-view.tsx        # Представление списка проектов
+│   │   ├── hooks/                       # Кастомные хуки
+│   │   │   ├── use-projects.ts          # Состояние списка проектов и URL параметров
+│   │   │   ├── use-project-estimate-records.ts # Сметные записи проекта
+│   │   │   ├── use-project-customers.ts # Получение заказчиков
+│   │   │   └── use-project-dashboard-stats.ts # Метрики проекта и расчеты графика
+│   │   └── project-overview/            # Детальный просмотр проекта
+│   │       ├── components/
+│   │       │   ├── chart-area-interactive.tsx # Интерактивный график проекта
+│   │       │   ├── estimates-table.tsx   # Таблица смет проекта
+│   │       │   └── section-cards.tsx     # Карточки показателей проекта
 │   │
 │   ├── estimates/                       # Фича «Сметы» (✅ полная структура — декомпозирована)
 │   │   ├── __mocks__/
@@ -270,7 +285,9 @@ smetalabs/
 │   │   │   ├── global-purchases-errors.ts    # Типизированные API-ошибки
 │   │   │   └── global-purchases-query-keys.ts # Ключи запросов и теги кэша
 │   │   ├── hooks/
-│   │   │   └── use-global-purchases.ts  # Хук с состоянием и мутациями
+│   │   │   ├── use-global-purchases.ts  # Хук с состоянием и мутациями
+│   │   │   ├── use-global-purchases-projects.ts # Хук получения проектов для фильтрации закупок
+│   │   │   └── use-global-purchase-material-options.ts # Хук поиска материалов в каталоге
 │   │   ├── server/
 │   │   │   ├── global-purchases.repository.ts # Репозиторий (динамические планы из смет)
 │   │   │   ├── global-purchases.route-handlers.ts # Обработчики API-маршрутов

@@ -29,7 +29,7 @@
 | [access-control](../features/access-control/docs/README.md) | ✅ | production (бэкенд + интерактивная матрица) |
 | [account-settings](../features/account-settings/docs/README.md) | ✅ | production (настройки профиля, темы, уведомлений, пароля) |
 | [auth](../features/auth/docs/README.md) | ✅ | production (аутентификация, RBAC, сессии) |
-| [dashboard](../features/dashboard/docs/README.md) | ✅ | production (демо-данные, графики Recharts, DataTable) |
+| [dashboard](../features/dashboard/docs/README.md) | ✅ | production (RSC-страница, React Query, графики Recharts, DataTable) |
 | [directories](../features/directories/docs/README.md) | ✅ | production (общий макет справочников, поиск, категории) |
 | [directory-counterparties](../features/directory-counterparties/docs/README.md) | ✅ | production (справочник контрагентов, реквизиты, паспорта) |
 | [directory-materials](../features/directory-materials/docs/README.md) | ✅ | production (справочник материалов, категории, импорт/экспорт) |
@@ -39,7 +39,7 @@
 | [execution](../features/execution/docs/README.md) | ✅ | mock (план-факт вкладки «Выполнение» в смете) |
 | [global-purchases](../features/global-purchases/docs/README.md) | ✅ | production (сводные закупки, фильтры, API) |
 | [notifications](../features/notifications/docs/README.md) | ✅ | production (in-app, real-time, email-оповещения) |
-| [projects](../features/projects/docs/README.md) | ✅ | production (список проектов, детали, пагинация) |
+| [projects](../features/projects/docs/README.md) | ✅ | production (RSC-страницы, React Query, список проектов, детали, пагинация) |
 | [purchases](../features/purchases/docs/README.md) | ✅ | mock (план-факт вкладки «Закупки» в смете) |
 | [workspace-settings](../features/workspace-settings/docs/README.md) | ✅ | production (команда, инвайт-ссылки, разрешённые домены) |
 

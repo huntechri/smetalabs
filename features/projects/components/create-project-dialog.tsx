@@ -1,7 +1,6 @@
 "use client"
 
 import { type FormEvent, useEffect, useMemo, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 import { ru } from "react-day-picker/locale"
 import { CalendarBlank } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
@@ -33,14 +32,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { fetchDirectoryCounterparties } from "@/features/directory-counterparties/api/directory-counterparties-client"
-import { directoryCounterpartiesQueryKeys } from "@/features/directory-counterparties/api/directory-counterparties-query-keys"
 import { cn } from "@/lib/utils"
 import type {
   ProjectMutationInput,
   ProjectRow,
   ProjectStatus,
 } from "@/types/project"
+import { useProjectCustomers } from "@/features/projects/hooks/use-project-customers"
 
 const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [
   { label: "Новый", value: "new" },
@@ -49,12 +47,7 @@ const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [
 ]
 
 const NO_CUSTOMER_VALUE = "__no_customer__"
-const CUSTOMER_LIST_PARAMS = {
-  status: "active" as const,
-  limit: 100,
-  cursor: 0,
-  sort: "name_asc" as const,
-}
+
 
 type FormState = {
   title: string
@@ -147,20 +140,11 @@ export function CreateProjectDialog({
   const [error, setError] = useState<string | null>(null)
   const isEdit = Boolean(project)
 
-  const counterpartiesQuery = useQuery({
-    queryKey: directoryCounterpartiesQueryKeys.list(CUSTOMER_LIST_PARAMS),
-    queryFn: () => fetchDirectoryCounterparties(CUSTOMER_LIST_PARAMS),
-    enabled: open,
-    staleTime: 30_000,
-  })
-
-  const customers = useMemo(
-    () =>
-      (counterpartiesQuery.data?.data ?? []).filter(
-        (counterparty) => counterparty.type === "customer"
-      ),
-    [counterpartiesQuery.data?.data]
-  )
+  const {
+    customers,
+    loading: counterpartiesLoading,
+    error: counterpartiesError,
+  } = useProjectCustomers(open)
 
   const selectedCustomerMissing = Boolean(
     project?.customerCounterpartyId &&
@@ -199,7 +183,7 @@ export function CreateProjectDialog({
   }
 
   const customerSelectValue = form.customerCounterpartyId || NO_CUSTOMER_VALUE
-  const customerSelectDisabled = saving || counterpartiesQuery.isLoading
+  const customerSelectDisabled = saving || counterpartiesLoading
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -257,7 +241,7 @@ export function CreateProjectDialog({
                   ))}
                 </SelectContent>
               </Select>
-              {counterpartiesQuery.isLoading ? (
+              {counterpartiesLoading ? (
                 <p className="text-xs text-muted-foreground">
                   Загружаем заказчиков...
                 </p>
@@ -362,7 +346,7 @@ export function CreateProjectDialog({
             </Field>
           </FieldGroup>
 
-          {counterpartiesQuery.error ? (
+          {counterpartiesError ? (
             <FieldError>Не удалось загрузить список заказчиков</FieldError>
           ) : null}
           <FieldError>{error}</FieldError>

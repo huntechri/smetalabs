@@ -1,8 +1,4 @@
-"use client"
-
 import { ProjectsView } from "@/features/projects/components/projects-view"
-
-export const dynamic = "force-dynamic"
 
 export default function Page() {
   return (

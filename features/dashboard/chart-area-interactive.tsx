@@ -57,43 +57,16 @@ export function ChartAreaInteractive() {
     if (isMobile) setTimeRange("7d")
   }, [isMobile])
 
-  const { chartData, loading, error, refetch } = useWorkspaceDashboardStats(timeRange)
-
-  const processedChartData = React.useMemo(() => {
-    return chartData.map((d) => ({
-      ...d,
-      outflow: -Math.abs(d.outflow),
-    }))
-  }, [chartData])
-
-  const { minVal, maxVal, off } = React.useMemo(() => {
-    if (!processedChartData.length) {
-      return { minVal: 0, maxVal: 0, off: 0.5 }
-    }
-    const balances = processedChartData.map((d) => d.balance)
-    const inflows = processedChartData.map((d) => d.inflow)
-    const outflows = processedChartData.map((d) => d.outflow)
-
-    const maxBal = Math.max(...balances, 0)
-    const minBal = Math.min(...balances, 0)
-    const maxIn = Math.max(...inflows, 0)
-    const minOut = Math.min(...outflows, 0)
-
-    const absoluteMax = Math.max(maxBal, maxIn)
-    const absoluteMin = Math.min(minBal, minOut)
-
-    const range = absoluteMax - absoluteMin
-    const padding = range * 0.05
-    const domainMax = absoluteMax + padding
-    const domainMin = absoluteMin >= 0 ? 0 : absoluteMin - padding
-
-    let gradientOffset = 0.5
-    if (maxBal - minBal > 0) {
-      gradientOffset = maxBal / (maxBal - minBal)
-    }
-
-    return { minVal: domainMin, maxVal: domainMax, off: gradientOffset }
-  }, [processedChartData])
+  const {
+    chartData,
+    processedChartData,
+    minVal,
+    maxVal,
+    off,
+    loading,
+    error,
+    refetch,
+  } = useWorkspaceDashboardStats(timeRange)
 
   const formatYAxisTick = (value: number) => {
     if (value === 0) return "0"
@@ -105,6 +78,7 @@ export function ChartAreaInteractive() {
     }
     return String(value)
   }
+
 
   if (loading) {
     return (

@@ -1,7 +1,6 @@
 "use client"
 
 import { type FormEvent, useEffect, useMemo, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -21,19 +20,17 @@ import {
 import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { fetchGlobalPurchaseMaterialOptions } from "@/features/global-purchases/api/global-purchases-client"
 import type {
   GlobalPurchaseMaterialOption,
   GlobalPurchaseMutationInput,
 } from "@/types/global-purchases"
 import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
+import { formatMoney } from "@/lib/formatters"
+import { useGlobalPurchaseMaterialOptions } from "@/features/global-purchases/hooks/use-global-purchase-material-options"
 
 const MATERIAL_SEARCH_MIN_LENGTH = 2
 const MATERIAL_SEARCH_DELAY_MS = 250
 
-function formatMoney(value: number) {
-  return `${value.toLocaleString("ru-RU", { maximumFractionDigits: 2 })} ₽`
-}
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Не удалось сохранить закупку"
@@ -102,15 +99,12 @@ export function GlobalPurchaseMaterialDialog({
   const [quantity, setQuantity] = useState("1")
   const [quantityError, setQuantityError] = useState<string | null>(null)
   const normalizedSearch = search.trim().replace(/\s+/g, " ")
-  const canSearch = submittedSearch.length >= MATERIAL_SEARCH_MIN_LENGTH
-  const materialsQuery = useQuery({
-    queryKey: ["global-purchases", "material-options", submittedSearch],
-    queryFn: () => fetchGlobalPurchaseMaterialOptions(submittedSearch),
-    enabled: open && canSearch,
-    staleTime: 60_000,
-    gcTime: 5 * 60_000,
-    placeholderData: (previousData) => previousData,
-  })
+  const {
+    materials,
+    loading,
+    error: queryError,
+    canSearch,
+  } = useGlobalPurchaseMaterialOptions(submittedSearch, open)
 
   useEffect(() => {
     if (open) return
@@ -184,12 +178,6 @@ export function GlobalPurchaseMaterialDialog({
     }
   }
 
-  const materials = useMemo(
-    () => (canSearch ? (materialsQuery.data?.data ?? []) : []),
-    [canSearch, materialsQuery.data]
-  )
-  const loading =
-    canSearch && (materialsQuery.isLoading || materialsQuery.isFetching)
   const showSearchPrompt = !canSearch
   const showEmpty = canSearch && !loading && materials.length === 0
 
@@ -220,7 +208,7 @@ export function GlobalPurchaseMaterialDialog({
           </form>
 
           <FieldError>
-            {error ?? materialsQuery.error?.message ?? null}
+            {error ?? queryError ?? null}
           </FieldError>
 
           <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto rounded-md border border-border">

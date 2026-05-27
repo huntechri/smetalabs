@@ -1,10 +1,7 @@
-"use client"
-
 import { ChartAreaInteractive } from "@/features/dashboard/chart-area-interactive"
 import { DataTable } from "@/features/dashboard/data-table"
 import { SectionCards } from "@/features/dashboard/section-cards-dashboard"
 
-export const dynamic = "force-dynamic"
 
 export default function Page() {
   return (

@@ -1,5 +1,3 @@
-"use client"
-
 import Link from "next/link"
 import type { ProjectRow } from "@/types/project"
 import {
@@ -20,6 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { formatMoney, formatDateRange } from "@/lib/formatters"
 
 interface ProjectCardProps {
   project: ProjectRow
@@ -56,16 +55,6 @@ const STATUS_CONFIG: Record<
   },
 }
 
-function formatMoney(value: number | null): string {
-  if (value === null) return "Бюджет не указан"
-  return value.toLocaleString("ru-RU") + " ₽"
-}
-
-function formatDateRange(start?: string | null, end?: string | null): string {
-  if (!start && !end) return "Сроки не указаны"
-  if (start && end) return `${start} – ${end}`
-  return start || end || ""
-}
 
 export function ProjectCard({
   project,
@@ -112,7 +101,7 @@ export function ProjectCard({
                 <span>Бюджет</span>
               </div>
               <div className="w-full truncate text-xs font-medium">
-                {formatMoney(project.budgetAmount)}
+                {project.budgetAmount !== null ? formatMoney(project.budgetAmount) : "Бюджет не указан"}
               </div>
             </div>
           </div>

@@ -30,3 +30,19 @@ export function formatDate(date: Date | undefined): string {
   const y = date.getFullYear()
   return `${d}.${m}.${y}`
 }
+
+export function formatDateRange(start?: string | null, end?: string | null): string {
+  if (!start && !end) return "Сроки не указаны"
+  if (start && end) {
+    const format = (dateStr: string) => {
+      const parts = dateStr.split("-")
+      if (parts.length === 3) {
+        return `${parts[2]}.${parts[1]}.${parts[0]}`
+      }
+      return dateStr
+    }
+    return `${format(start)} – ${format(end)}`
+  }
+  return start || end || ""
+}
+

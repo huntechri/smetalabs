@@ -63,21 +63,28 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
 
   const { chartData, loading, error, refetch } = useProjectDashboardStats(projectId, timeRange)
 
+  const processedChartData = React.useMemo(() => {
+    return chartData.map((d) => ({
+      ...d,
+      outflow: -Math.abs(d.outflow),
+    }))
+  }, [chartData])
+
   const { minVal, maxVal, off } = React.useMemo(() => {
-    if (!chartData.length) {
+    if (!processedChartData.length) {
       return { minVal: 0, maxVal: 0, off: 0.5 }
     }
-    const balances = chartData.map((d) => d.balance)
-    const inflows = chartData.map((d) => d.inflow)
-    const outflows = chartData.map((d) => d.outflow)
+    const balances = processedChartData.map((d) => d.balance)
+    const inflows = processedChartData.map((d) => d.inflow)
+    const outflows = processedChartData.map((d) => d.outflow)
 
     const maxBal = Math.max(...balances, 0)
     const minBal = Math.min(...balances, 0)
     const maxIn = Math.max(...inflows, 0)
-    const maxOut = Math.max(...outflows, 0)
+    const minOut = Math.min(...outflows, 0)
 
-    const absoluteMax = Math.max(maxBal, maxIn, maxOut)
-    const absoluteMin = minBal
+    const absoluteMax = Math.max(maxBal, maxIn)
+    const absoluteMin = Math.min(minBal, minOut)
 
     const range = absoluteMax - absoluteMin
     const padding = range * 0.05
@@ -90,7 +97,7 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
     }
 
     return { minVal: domainMin, maxVal: domainMax, off: gradientOffset }
-  }, [chartData])
+  }, [processedChartData])
 
   const formatYAxisTick = (value: number) => {
     if (value === 0) return "0"
@@ -205,7 +212,7 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
         >
           <ComposedChart
             key={`${minVal}-${maxVal}`}
-            data={chartData}
+            data={processedChartData}
             margin={{ left: 12, right: 12, top: 5, bottom: 5 }}
           >
             <defs>
@@ -257,7 +264,7 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
                           {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
                         </span>
                         <span className="font-mono font-medium text-foreground tabular-nums">
-                          {formatMoney(Number(value))}
+                          {formatMoney(name === "outflow" ? Math.abs(Number(value)) : Number(value))}
                         </span>
                       </div>
                     </>

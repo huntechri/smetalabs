@@ -12,6 +12,8 @@ const projectEstimateRecordMutationSchema = z.object({
     .trim()
     .min(1, "Название сметы обязательно")
     .max(200, "Название сметы слишком длинное"),
+  type: z.enum(["Основная", "Дополнительная"]).optional(),
+  status: z.enum(["new", "in_progress", "completed"]).optional(),
 })
 
 function getNumberParam(params: URLSearchParams, key: string) {

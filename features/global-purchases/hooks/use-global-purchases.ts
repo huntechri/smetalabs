@@ -324,6 +324,7 @@ export function useGlobalPurchases() {
     onSuccess: (response) => {
       insertRowIntoCurrentList(queryClient, params, response.data)
       queryClient.invalidateQueries({ queryKey: ["estimatePurchases"] })
+      queryClient.invalidateQueries({ queryKey: ["projects"] })
     },
   })
 
@@ -332,6 +333,7 @@ export function useGlobalPurchases() {
     onSuccess: (response) => {
       replaceRowInCachedLists(queryClient, response.data)
       queryClient.invalidateQueries({ queryKey: ["estimatePurchases"] })
+      queryClient.invalidateQueries({ queryKey: ["projects"] })
     },
   })
 
@@ -340,6 +342,7 @@ export function useGlobalPurchases() {
     onSuccess: (response) => {
       removeRowFromCachedLists(queryClient, response.data)
       queryClient.invalidateQueries({ queryKey: ["estimatePurchases"] })
+      queryClient.invalidateQueries({ queryKey: ["projects"] })
     },
   })
 

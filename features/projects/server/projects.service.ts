@@ -12,6 +12,7 @@ import {
   listProjectsForWorkspace,
   updateProjectForWorkspace,
   getProjectDashboardStatsForWorkspace,
+  getWorkspaceDashboardStatsForWorkspace,
 } from "./projects.repository"
 import { normalizeProjectsListParams } from "./projects.schemas"
 
@@ -155,6 +156,12 @@ export async function archiveProject(id: string) {
 export async function getProjectDashboardStats(id: string) {
   const context = await requireProjectsReadContext()
   const stats = await getProjectDashboardStatsForWorkspace(context.workspaceOwnerId, id)
+  return { data: stats }
+}
+
+export async function getWorkspaceDashboardStats() {
+  const context = await requireProjectsReadContext()
+  const stats = await getWorkspaceDashboardStatsForWorkspace(context.workspaceOwnerId)
   return { data: stats }
 }
 

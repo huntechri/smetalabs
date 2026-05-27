@@ -24,7 +24,7 @@ function parseDateLocal(dateStr: string): Date {
   return new Date(y, m - 1, d)
 }
 
-function processChartData(
+export function processChartData(
   transactions: { type: "payment" | "purchase"; amount: number; date: string }[],
   timeRange: string
 ): ChartPoint[] {

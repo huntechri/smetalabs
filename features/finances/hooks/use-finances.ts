@@ -101,6 +101,7 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey })
+      queryClient.invalidateQueries({ queryKey: ["projects"] })
     },
     onSuccess: () => {
       toast.success("Платёж успешно добавлен")
@@ -135,6 +136,7 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey })
+      queryClient.invalidateQueries({ queryKey: ["projects"] })
     },
     onSuccess: () => {
       toast.success("Платёж сохранён")
@@ -164,6 +166,7 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey })
+      queryClient.invalidateQueries({ queryKey: ["projects"] })
     },
     onSuccess: () => {
       toast.success("Платёж удалён")

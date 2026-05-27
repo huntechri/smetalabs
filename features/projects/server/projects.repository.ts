@@ -442,8 +442,8 @@ export async function getProjectDashboardStatsForWorkspace(
 
   const paidTotal = roundMoney((payments ?? []).reduce((sum, p) => sum + toNumber(p.amount), 0))
 
-  // 3. Fetch purchases (with purchase_date)
-  const { data: purchases, error: purError } = await supabase
+  // 3. Fetch estimate-level purchases (with purchase_date)
+  const { data: estPurchases, error: purError } = await supabase
     .from("project_estimate_purchases")
     .select("total, purchase_date")
     .in("estimate_record_id", estimateIds)
@@ -453,7 +453,25 @@ export async function getProjectDashboardStatsForWorkspace(
 
   if (purError) throw purError
 
-  const materialsSpent = (purchases ?? []).reduce((sum, p) => sum + toNumber(p.total), 0)
+  // Fetch project-level global purchases (with purchase_date)
+  const { data: globPurchases, error: globPurError } = await supabase
+    .from("global_purchases")
+    .select("fact_quantity, fact_price, purchase_date")
+    .eq("project_id", projectId)
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .is("deleted_at", null)
+    .is("archived_at", null)
+
+  if (globPurError) throw globPurError
+
+  const materialsEstSpent = (estPurchases ?? []).reduce((sum, p) => sum + toNumber(p.total), 0)
+  const materialsGlobSpent = (globPurchases ?? []).reduce((sum, p) => {
+    const qty = toNumber(p.fact_quantity)
+    const price = toNumber(p.fact_price)
+    return sum + qty * price
+  }, 0)
+
+  const materialsSpent = materialsEstSpent + materialsGlobSpent
 
   // 4. Fetch works (execution)
   const { data: works, error: workError } = await supabase
@@ -491,11 +509,24 @@ export async function getProjectDashboardStatsForWorkspace(
     }
   })
 
-  ;(purchases ?? []).forEach((p) => {
+  ;(estPurchases ?? []).forEach((p) => {
     if (p.purchase_date) {
       transactions.push({
         type: "purchase",
         amount: toNumber(p.total),
+        date: p.purchase_date,
+      })
+    }
+  })
+
+  ;(globPurchases ?? []).forEach((p) => {
+    const qty = toNumber(p.fact_quantity)
+    const price = toNumber(p.fact_price)
+    const amount = qty * price
+    if (amount > 0 && p.purchase_date) {
+      transactions.push({
+        type: "purchase",
+        amount: roundMoney(amount),
         date: p.purchase_date,
       })
     }
@@ -531,5 +562,241 @@ export async function getProjectDashboardStatsForWorkspace(
     transactions,
   }
 }
+
+export async function getWorkspaceDashboardStatsForWorkspace(
+  workspaceOwnerId: string
+): Promise<{
+  contractTotal: number
+  paidTotal: number
+  spentTotal: number
+  totalBalance: number
+  deviationPercent: number
+  transactions: {
+    type: "payment" | "purchase"
+    amount: number
+    date: string
+  }[]
+}> {
+  const toNumber = (val: any) => {
+    const parsed = typeof val === "number" ? val : Number(val ?? 0)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+  const roundMoney = (val: number) => Math.round(val * 100) / 100
+
+  // 1. Fetch active projects in the workspace
+  const { data: projects, error: projError } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .is("archived_at", null)
+    .is("deleted_at", null)
+
+  if (projError) throw projError
+
+  if (!projects || projects.length === 0) {
+    return {
+      contractTotal: 0,
+      paidTotal: 0,
+      spentTotal: 0,
+      totalBalance: 0,
+      deviationPercent: 0,
+      transactions: [],
+    }
+  }
+
+  const projectIds = projects.map((p) => p.id)
+
+  // 2. Fetch estimate record IDs and amounts for active projects
+  const { data: estimates, error: estError } = await supabase
+    .from("project_estimate_records")
+    .select("id, amount")
+    .in("project_id", projectIds)
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .is("deleted_at", null)
+    .is("archived_at", null)
+
+  if (estError) throw estError
+
+  const estimateIds = estimates?.map((e) => e.id) ?? []
+  const contractTotal = roundMoney(
+    (estimates ?? []).reduce((sum, e) => sum + toNumber(e.amount), 0)
+  )
+
+  let paidTotal = 0
+  let spentTotal = 0
+  const transactions: { type: "payment" | "purchase"; amount: number; date: string }[] = []
+
+  if (estimateIds.length > 0) {
+    // 3. Fetch payments
+    const { data: payments, error: payError } = await supabase
+      .from("project_estimate_payments")
+      .select("amount, date")
+      .in("estimate_record_id", estimateIds)
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .is("deleted_at", null)
+      .in("status", ["conducted", "processing"])
+
+    if (payError) throw payError
+
+    paidTotal = roundMoney(
+      (payments ?? []).reduce((sum, p) => sum + toNumber(p.amount), 0)
+    )
+
+    // 4. Fetch estimate purchases
+    const { data: estPurchases, error: purError } = await supabase
+      .from("project_estimate_purchases")
+      .select("total, purchase_date")
+      .in("estimate_record_id", estimateIds)
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .is("deleted_at", null)
+      .is("archived_at", null)
+
+    if (purError) throw purError
+
+    const materialsEstSpent = (estPurchases ?? []).reduce(
+      (sum, p) => sum + toNumber(p.total),
+      0
+    )
+
+    // 5. Fetch works execution
+    const { data: works, error: workError } = await supabase
+      .from("project_estimate_works")
+      .select("fact_quantity, fact_price, updated_at")
+      .in("estimate_record_id", estimateIds)
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .is("deleted_at", null)
+      .is("archived_at", null)
+
+    if (workError) throw workError
+
+    const worksSpent = (works ?? []).reduce(
+      (sum, w) => sum + toNumber(w.fact_quantity) * toNumber(w.fact_price),
+      0
+    )
+
+    // Fetch project-level global purchases
+    const { data: globPurchases, error: globPurError } = await supabase
+      .from("global_purchases")
+      .select("fact_quantity, fact_price, purchase_date")
+      .in("project_id", projectIds)
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .is("deleted_at", null)
+      .is("archived_at", null)
+
+    if (globPurError) throw globPurError
+
+    const materialsGlobSpent = (globPurchases ?? []).reduce((sum, p) => {
+      const qty = toNumber(p.fact_quantity)
+      const price = toNumber(p.fact_price)
+      return sum + qty * price
+    }, 0)
+
+    const materialsSpent = materialsEstSpent + materialsGlobSpent
+    spentTotal = roundMoney(materialsSpent + worksSpent)
+
+    // Build transaction history
+    ;(payments ?? []).forEach((p) => {
+      if (p.date) {
+        transactions.push({
+          type: "payment",
+          amount: toNumber(p.amount),
+          date: p.date,
+        })
+      }
+    })
+
+    ;(estPurchases ?? []).forEach((p) => {
+      if (p.purchase_date) {
+        transactions.push({
+          type: "purchase",
+          amount: toNumber(p.total),
+          date: p.purchase_date,
+        })
+      }
+    })
+
+    ;(globPurchases ?? []).forEach((p) => {
+      const qty = toNumber(p.fact_quantity)
+      const price = toNumber(p.fact_price)
+      const amount = qty * price
+      if (amount > 0 && p.purchase_date) {
+        transactions.push({
+          type: "purchase",
+          amount: roundMoney(amount),
+          date: p.purchase_date,
+        })
+      }
+    })
+
+    ;(works ?? []).forEach((w: any) => {
+      const qty = toNumber(w.fact_quantity)
+      const prc = toNumber(w.fact_price)
+      const amount = qty * prc
+      if (amount > 0 && w.updated_at) {
+        const d = new Date(w.updated_at)
+        const y = d.getFullYear()
+        const m = String(d.getMonth() + 1).padStart(2, "0")
+        const day = String(d.getDate()).padStart(2, "0")
+        const dateStr = `${y}-${m}-${day}`
+        transactions.push({
+          type: "purchase",
+          amount: roundMoney(amount),
+          date: dateStr,
+        })
+      }
+    })
+  } else {
+    // If no estimates, check global purchases for active projects
+    const { data: globPurchases, error: globPurError } = await supabase
+      .from("global_purchases")
+      .select("fact_quantity, fact_price, purchase_date")
+      .in("project_id", projectIds)
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .is("deleted_at", null)
+      .is("archived_at", null)
+
+    if (globPurError) throw globPurError
+
+    const materialsGlobSpent = (globPurchases ?? []).reduce((sum, p) => {
+      const qty = toNumber(p.fact_quantity)
+      const price = toNumber(p.fact_price)
+      return sum + qty * price
+    }, 0)
+
+    spentTotal = roundMoney(materialsGlobSpent)
+
+    ;(globPurchases ?? []).forEach((p) => {
+      const qty = toNumber(p.fact_quantity)
+      const price = toNumber(p.fact_price)
+      const amount = qty * price
+      if (amount > 0 && p.purchase_date) {
+        transactions.push({
+          type: "purchase",
+          amount: roundMoney(amount),
+          date: p.purchase_date,
+        })
+      }
+    })
+  }
+
+  const totalBalance = roundMoney(paidTotal - spentTotal)
+  const deviationPercent =
+    contractTotal > 0
+      ? Math.round(((paidTotal - contractTotal) / contractTotal) * 100)
+      : 0
+
+  // Sort chronologically by date
+  transactions.sort((a, b) => a.date.localeCompare(b.date))
+
+  return {
+    contractTotal,
+    paidTotal,
+    spentTotal,
+    totalBalance,
+    deviationPercent,
+    transactions,
+  }
+}
+
 
 

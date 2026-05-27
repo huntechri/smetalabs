@@ -200,8 +200,8 @@ export async function createProjectEstimateRecordForWorkspace(
       project_id: projectId,
       name: input.name.trim().replace(/\s+/g, " "),
       normalized_name: "pending",
-      type: "Основная",
-      status: "new",
+      type: input.type ?? "Основная",
+      status: input.status ?? "new",
       amount: 0,
       created_by: userId,
       updated_by: userId,
@@ -249,6 +249,8 @@ export async function updateProjectEstimateRecordForWorkspace(
     .from("project_estimate_records")
     .update({
       name: input.name.trim().replace(/\s+/g, " "),
+      ...(input.type !== undefined ? { type: input.type } : {}),
+      ...(input.status !== undefined ? { status: input.status } : {}),
       updated_by: userId,
     })
     .eq("workspace_owner_id", workspaceOwnerId)

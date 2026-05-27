@@ -17,6 +17,8 @@ export type ProjectEstimateRecordRow = {
 
 export type ProjectEstimateRecordMutationInput = {
   name: string
+  type?: string
+  status?: ProjectEstimateRecordStatus
 }
 
 export type ProjectEstimateRecordsListParams = {

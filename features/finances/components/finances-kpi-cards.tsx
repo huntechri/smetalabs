@@ -78,14 +78,14 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
         <CardHeader>
           <CardDescription className="flex items-center gap-1.5">
             <ScalesIcon className="size-3.5 text-muted-foreground" />
-            Общий баланс
+            Баланс
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {formatMoney(totalBalance)}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">Факт − Затраты по всем разделам</div>
+          <div className="text-muted-foreground">Текущий баланс</div>
         </CardFooter>
       </Card>
 
@@ -101,7 +101,7 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">Отклонение факта от плана</div>
+          <div className="text-muted-foreground">Отклонение от плана</div>
         </CardFooter>
       </Card>
     </div>

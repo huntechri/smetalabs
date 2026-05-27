@@ -74,7 +74,7 @@ export function SectionCards({ projectId }: SectionCardsProps) {
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">По сметам проекта</div>
+          <div className="text-muted-foreground">По смете</div>
         </CardFooter>
       </Card>
 
@@ -106,7 +106,7 @@ export function SectionCards({ projectId }: SectionCardsProps) {
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">Оплачено − Расходы по проекту</div>
+          <div className="text-muted-foreground">Затраты по разделам</div>
         </CardFooter>
       </Card>
 
@@ -122,7 +122,7 @@ export function SectionCards({ projectId }: SectionCardsProps) {
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">Отклонение оплат от сметы</div>
+          <div className="text-muted-foreground">Отклонение от плана</div>
         </CardFooter>
       </Card>
     </div>

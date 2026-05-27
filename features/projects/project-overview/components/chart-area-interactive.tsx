@@ -179,7 +179,7 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
             variant="outline"
             className="hidden *:data-[slot=toggle-group-item]:px-4! @[767px]/card:flex"
           >
-            <ToggleGroupItem value="90d">Последние 3 месяца</ToggleGroupItem>
+            <ToggleGroupItem value="90d">3 месяца</ToggleGroupItem>
             <ToggleGroupItem value="30d">30 дней</ToggleGroupItem>
             <ToggleGroupItem value="7d">7 дней</ToggleGroupItem>
           </ToggleGroup>
@@ -189,11 +189,11 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
               size="sm"
               aria-label="Выбрать период"
             >
-              <SelectValue placeholder="Последние 3 месяца" />
+              <SelectValue placeholder="3 месяца" />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
               <SelectItem value="90d" className="rounded-lg">
-                Последние 3 месяца
+                3 месяца
               </SelectItem>
               <SelectItem value="30d" className="rounded-lg">
                 30 дней

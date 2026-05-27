@@ -85,7 +85,7 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">Факт − Затраты по всем разделам</div>
+          <div className="text-muted-foreground">Затраты по разделам</div>
         </CardFooter>
       </Card>
 
@@ -101,7 +101,7 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">Отклонение факта от плана</div>
+          <div className="text-muted-foreground">Отклонение от плана</div>
         </CardFooter>
       </Card>
     </div>

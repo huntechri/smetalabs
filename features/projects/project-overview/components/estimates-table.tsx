@@ -39,6 +39,8 @@ const EMPTY_DIALOG_STATE: EstimateDialogState = {
   open: false,
   estimate: null,
   name: "",
+  type: "Основная",
+  status: "new",
   error: null,
 }
 
@@ -77,11 +79,25 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
   }
 
   const openCreateDialog = () => {
-    setDialogState({ open: true, estimate: null, name: "", error: null })
+    setDialogState({
+      open: true,
+      estimate: null,
+      name: "",
+      type: "Основная",
+      status: "new",
+      error: null,
+    })
   }
 
   const openEditDialog = (estimate: EstimateRow) => {
-    setDialogState({ open: true, estimate, name: estimate.name, error: null })
+    setDialogState({
+      open: true,
+      estimate,
+      name: estimate.name,
+      type: estimate.type,
+      status: estimate.status,
+      error: null,
+    })
   }
 
   const openDeleteDialog = (estimate: EstimateRow) => {
@@ -125,12 +141,20 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
 
     try {
       if (dialogState.estimate) {
-        await updateRecord(dialogState.estimate.id, { name })
+        await updateRecord(dialogState.estimate.id, {
+          name,
+          type: dialogState.type,
+          status: dialogState.status,
+        })
         closeDialog()
         return
       }
 
-      await createRecord({ name })
+      await createRecord({
+        name,
+        type: dialogState.type,
+        status: dialogState.status,
+      })
       closeDialog()
     } catch (err) {
       setDialogState((current) => ({
@@ -322,6 +346,12 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
         saving={saving}
         onOpenChange={handleDialogOpenChange}
         onNameChange={handleDialogNameChange}
+        onTypeChange={(type) =>
+          setDialogState((current) => ({ ...current, type, error: null }))
+        }
+        onStatusChange={(status) =>
+          setDialogState((current) => ({ ...current, status, error: null }))
+        }
         onSubmit={handleDialogSubmit}
       />
       <EstimateDeleteDialog

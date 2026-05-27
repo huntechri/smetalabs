@@ -19,6 +19,6 @@ export function formatEstimateStatus(status: ProjectEstimateRecordStatus) {
     case "in_progress":
       return "В работе"
     case "completed":
-      return "Завершено"
+      return "Завершена"
   }
 }

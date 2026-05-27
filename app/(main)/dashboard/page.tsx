@@ -3,7 +3,6 @@
 import { ChartAreaInteractive } from "@/features/dashboard/chart-area-interactive"
 import { DataTable } from "@/features/dashboard/data-table"
 import { SectionCards } from "@/features/dashboard/section-cards-dashboard"
-import data from "./data.json"
 
 export const dynamic = "force-dynamic"
 
@@ -16,7 +15,7 @@ export default function Page() {
           <div className="px-4 lg:px-6">
             <ChartAreaInteractive />
           </div>
-          <DataTable data={data} />
+          <DataTable />
         </div>
       </div>
     </div>

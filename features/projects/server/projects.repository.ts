@@ -442,8 +442,8 @@ export async function getProjectDashboardStatsForWorkspace(
 
   const paidTotal = roundMoney((payments ?? []).reduce((sum, p) => sum + toNumber(p.amount), 0))
 
-  // 3. Fetch purchases (with purchase_date)
-  const { data: purchases, error: purError } = await supabase
+  // 3. Fetch estimate-level purchases (with purchase_date)
+  const { data: estPurchases, error: purError } = await supabase
     .from("project_estimate_purchases")
     .select("total, purchase_date")
     .in("estimate_record_id", estimateIds)
@@ -453,7 +453,25 @@ export async function getProjectDashboardStatsForWorkspace(
 
   if (purError) throw purError
 
-  const materialsSpent = (purchases ?? []).reduce((sum, p) => sum + toNumber(p.total), 0)
+  // Fetch project-level global purchases (with purchase_date)
+  const { data: globPurchases, error: globPurError } = await supabase
+    .from("global_purchases")
+    .select("fact_quantity, fact_price, purchase_date")
+    .eq("project_id", projectId)
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .is("deleted_at", null)
+    .is("archived_at", null)
+
+  if (globPurError) throw globPurError
+
+  const materialsEstSpent = (estPurchases ?? []).reduce((sum, p) => sum + toNumber(p.total), 0)
+  const materialsGlobSpent = (globPurchases ?? []).reduce((sum, p) => {
+    const qty = toNumber(p.fact_quantity)
+    const price = toNumber(p.fact_price)
+    return sum + qty * price
+  }, 0)
+
+  const materialsSpent = materialsEstSpent + materialsGlobSpent
 
   // 4. Fetch works (execution)
   const { data: works, error: workError } = await supabase
@@ -491,11 +509,24 @@ export async function getProjectDashboardStatsForWorkspace(
     }
   })
 
-  ;(purchases ?? []).forEach((p) => {
+  ;(estPurchases ?? []).forEach((p) => {
     if (p.purchase_date) {
       transactions.push({
         type: "purchase",
         amount: toNumber(p.total),
+        date: p.purchase_date,
+      })
+    }
+  })
+
+  ;(globPurchases ?? []).forEach((p) => {
+    const qty = toNumber(p.fact_quantity)
+    const price = toNumber(p.fact_price)
+    const amount = qty * price
+    if (amount > 0 && p.purchase_date) {
+      transactions.push({
+        type: "purchase",
+        amount: roundMoney(amount),
         date: p.purchase_date,
       })
     }

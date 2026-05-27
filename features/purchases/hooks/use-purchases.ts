@@ -61,6 +61,7 @@ export function usePurchases({ estimateId, projectId }: UsePurchasesInput) {
 
   const invalidateList = () => {
     queryClient.invalidateQueries({ queryKey: purchasesQueryKeys.all })
+    queryClient.invalidateQueries({ queryKey: ["projects"] })
   }
 
   const addMutation = useMutation({

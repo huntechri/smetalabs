@@ -63,17 +63,34 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
 
   const { chartData, loading, error, refetch } = useProjectDashboardStats(projectId, timeRange)
 
-  const balances = React.useMemo(() => chartData.map((d) => d.balance), [chartData])
-  
-  const { maxBalance, minBalance, off } = React.useMemo(() => {
-    const max = balances.length ? Math.max(...balances, 0) : 0
-    const min = balances.length ? Math.min(...balances, 0) : 0
-    let gradientOffset = 0.5
-    if (max - min > 0) {
-      gradientOffset = max / (max - min)
+  const { minVal, maxVal, off } = React.useMemo(() => {
+    if (!chartData.length) {
+      return { minVal: 0, maxVal: 0, off: 0.5 }
     }
-    return { maxBalance: max, minBalance: min, off: gradientOffset }
-  }, [balances])
+    const balances = chartData.map((d) => d.balance)
+    const inflows = chartData.map((d) => d.inflow)
+    const outflows = chartData.map((d) => d.outflow)
+
+    const maxBal = Math.max(...balances, 0)
+    const minBal = Math.min(...balances, 0)
+    const maxIn = Math.max(...inflows, 0)
+    const maxOut = Math.max(...outflows, 0)
+
+    const absoluteMax = Math.max(maxBal, maxIn, maxOut)
+    const absoluteMin = minBal
+
+    const range = absoluteMax - absoluteMin
+    const padding = range * 0.05
+    const domainMax = absoluteMax + padding
+    const domainMin = absoluteMin >= 0 ? 0 : absoluteMin - padding
+
+    let gradientOffset = 0.5
+    if (maxBal - minBal > 0) {
+      gradientOffset = maxBal / (maxBal - minBal)
+    }
+
+    return { minVal: domainMin, maxVal: domainMax, off: gradientOffset }
+  }, [chartData])
 
   const formatYAxisTick = (value: number) => {
     if (value === 0) return "0"
@@ -186,11 +203,17 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
           config={chartConfig}
           className="aspect-auto h-[280px] w-full"
         >
-          <ComposedChart data={chartData} margin={{ left: -10, right: 10 }}>
+          <ComposedChart
+            key={`${minVal}-${maxVal}`}
+            data={chartData}
+            margin={{ left: 12, right: 12, top: 5, bottom: 5 }}
+          >
             <defs>
               <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset={off} stopColor="var(--color-inflow)" stopOpacity={0.2} />
-                <stop offset={off} stopColor="var(--color-outflow)" stopOpacity={0.2} />
+                <stop offset="0%" stopColor="var(--color-inflow)" stopOpacity={0.2} />
+                <stop offset={`${off * 100}%`} stopColor="var(--color-inflow)" stopOpacity={0.2} />
+                <stop offset={`${off * 100}%`} stopColor="var(--color-outflow)" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="var(--color-outflow)" stopOpacity={0.2} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
@@ -209,16 +232,9 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
               }}
             />
             <YAxis
-              yAxisId="balance"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickFormatter={formatYAxisTick}
-              className="text-muted-foreground"
-            />
-            <YAxis
-              yAxisId="bars"
-              orientation="right"
+              key={`${minVal}-${maxVal}`}
+              domain={[minVal, maxVal]}
+              width={80}
               tickLine={false}
               axisLine={false}
               tickMargin={8}
@@ -250,16 +266,15 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
               }
             />
             <Area
-              yAxisId="balance"
               type="monotone"
               dataKey="balance"
               stroke="var(--color-balance)"
               strokeWidth={2}
               fill="url(#balanceGradient)"
               name="balance"
+              baseValue={0}
             />
             <Bar
-              yAxisId="bars"
               dataKey="inflow"
               fill="var(--color-inflow)"
               name="inflow"
@@ -267,7 +282,6 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
               opacity={0.7}
             />
             <Bar
-              yAxisId="bars"
               dataKey="outflow"
               fill="var(--color-outflow)"
               name="outflow"

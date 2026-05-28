@@ -17,17 +17,17 @@
       "Zod",
       "Vitest"
     ],
-    "gitCommit": "25092e15ec2f26d6898bff81463cb89d2fd2ac51",
-    "sourceAnalyzedAt": "2026-05-27T21:30:00Z",
-    "graphGeneratedAt": "2026-05-28T07:55:39.579Z",
-    "graphVersion": "2.7.0"
+    "gitCommit": "2367d71540ec30f99d6024c2c87b1c5d6649800a",
+    "sourceAnalyzedAt": "2026-05-28T07:55:39.579Z",
+    "graphGeneratedAt": "2026-05-28T08:03:27.785Z",
+    "graphVersion": "2.8.0"
   },
   "summary": {
     "totalFiles": 618,
     "totalConnections": 1492,
     "totalSections": 46,
     "layers": 20,
-    "edgeTypes": 18,
+    "edgeTypes": 20,
     "findings": 7
   },
   "files": [
@@ -14454,21 +14454,21 @@
     {
       "source": "app/(main)/layout.tsx",
       "target": "components/ui/sidebar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "app/(main)/layout.tsx",
       "target": "features/app-sidebar.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "app",
       "targetSection": "app"
     },
     {
       "source": "app/(main)/layout.tsx",
       "target": "features/site-header.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "app",
       "targetSection": "app"
     },
@@ -14482,7 +14482,7 @@
     {
       "source": "app/(main)/page.tsx",
       "target": "components/ui/sidebar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
@@ -14517,7 +14517,7 @@
     {
       "source": "app/(main)/projects/[projectId]/estimates/[estimateId]/execution/page.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
@@ -14531,7 +14531,7 @@
     {
       "source": "app/(main)/projects/[projectId]/estimates/[estimateId]/finances/page.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
@@ -14545,14 +14545,14 @@
     {
       "source": "app/(main)/projects/[projectId]/estimates/[estimateId]/layout.tsx",
       "target": "features/estimates/components/estimate-navigation-tabs.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "projects",
       "targetSection": "estimates"
     },
     {
       "source": "app/(main)/projects/[projectId]/estimates/[estimateId]/layout.tsx",
       "target": "features/estimates/estimate-tabs/components/estimate-tab-toolbar.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "projects",
       "targetSection": "estimates"
     },
@@ -14566,7 +14566,7 @@
     {
       "source": "app/(main)/projects/[projectId]/estimates/[estimateId]/purchases/page.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
@@ -16148,56 +16148,56 @@
     {
       "source": "app/layout.tsx",
       "target": "components/query-provider.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "app",
       "targetSection": "shared-components"
     },
     {
       "source": "app/layout.tsx",
       "target": "components/theme-provider.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "app",
       "targetSection": "shared-components"
     },
     {
       "source": "app/layout.tsx",
       "target": "components/ui/sonner.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "app/layout.tsx",
       "target": "components/ui/tooltip.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "app/page.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "components/nav-documents.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "shared-components",
       "targetSection": "design-system"
     },
     {
       "source": "components/nav-documents.tsx",
       "target": "components/ui/sidebar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "shared-components",
       "targetSection": "design-system"
     },
     {
       "source": "components/ui/alert-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
@@ -16239,7 +16239,7 @@
     {
       "source": "components/ui/button-group.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
@@ -16260,7 +16260,7 @@
     {
       "source": "components/ui/calendar.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
@@ -16295,7 +16295,7 @@
     {
       "source": "components/ui/dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
@@ -16323,14 +16323,14 @@
     {
       "source": "components/ui/editable-badge.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
     {
       "source": "components/ui/editable-badge.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
@@ -16351,14 +16351,14 @@
     {
       "source": "components/ui/field.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
     {
       "source": "components/ui/field.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
@@ -16379,35 +16379,35 @@
     {
       "source": "components/ui/framed-button.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
     {
       "source": "components/ui/framed-button.tsx",
       "target": "components/ui/frame.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
     {
       "source": "components/ui/input-group.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
     {
       "source": "components/ui/input-group.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
     {
       "source": "components/ui/input-group.tsx",
       "target": "components/ui/textarea.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
@@ -16456,7 +16456,7 @@
     {
       "source": "components/ui/sheet.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
@@ -16470,28 +16470,28 @@
     {
       "source": "components/ui/sidebar.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
     {
       "source": "components/ui/sidebar.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
     {
       "source": "components/ui/sidebar.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
     {
       "source": "components/ui/sidebar.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
@@ -16512,14 +16512,14 @@
     {
       "source": "components/ui/sidebar.tsx",
       "target": "components/ui/sheet.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
     {
       "source": "components/ui/sidebar.tsx",
       "target": "components/ui/tooltip.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
@@ -16568,7 +16568,7 @@
     {
       "source": "components/ui/toggle-group.tsx",
       "target": "components/ui/toggle.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "design-system",
       "targetSection": "design-system"
     },
@@ -16939,7 +16939,7 @@
     {
       "source": "docs/design-system.md",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "docs",
       "targetSection": "design-system"
     },
@@ -16953,21 +16953,21 @@
     {
       "source": "docs/directory-module-standard.md",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "docs",
       "targetSection": "design-system"
     },
     {
       "source": "docs/directory-module-standard.md",
       "target": "features/directory-works/directory-works-details/components/directory-works-row.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "docs",
       "targetSection": "directory-works"
     },
     {
       "source": "docs/directory-module-standard.md",
       "target": "features/directory-works/directory-works-details/components/directory-works-section.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "docs",
       "targetSection": "directory-works"
     },
@@ -17016,49 +17016,49 @@
     {
       "source": "features/access-control/components/__tests__/permissions-matrix-toolbar.test.tsx",
       "target": "features/access-control/components/permissions-matrix-toolbar.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "access-control",
       "targetSection": "access-control"
     },
     {
       "source": "features/access-control/components/permissions-matrix-error.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "access-control",
       "targetSection": "design-system"
     },
     {
       "source": "features/access-control/components/permissions-matrix-error.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "access-control",
       "targetSection": "design-system"
     },
     {
       "source": "features/access-control/components/permissions-matrix-skeleton.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "access-control",
       "targetSection": "design-system"
     },
     {
       "source": "features/access-control/components/permissions-matrix-skeleton.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "access-control",
       "targetSection": "design-system"
     },
     {
       "source": "features/access-control/components/permissions-matrix-table.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "access-control",
       "targetSection": "design-system"
     },
     {
       "source": "features/access-control/components/permissions-matrix-table.tsx",
       "target": "components/ui/checkbox.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "access-control",
       "targetSection": "design-system"
     },
@@ -17086,7 +17086,7 @@
     {
       "source": "features/access-control/components/permissions-matrix-table.tsx",
       "target": "components/ui/table.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "access-control",
       "targetSection": "design-system"
     },
@@ -17100,35 +17100,35 @@
     {
       "source": "features/access-control/components/permissions-matrix-toolbar.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "access-control",
       "targetSection": "design-system"
     },
     {
       "source": "features/access-control/components/permissions-matrix.tsx",
       "target": "features/access-control/components/permissions-matrix-error.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "access-control",
       "targetSection": "access-control"
     },
     {
       "source": "features/access-control/components/permissions-matrix.tsx",
       "target": "features/access-control/components/permissions-matrix-skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "access-control",
       "targetSection": "access-control"
     },
     {
       "source": "features/access-control/components/permissions-matrix.tsx",
       "target": "features/access-control/components/permissions-matrix-table.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "access-control",
       "targetSection": "access-control"
     },
     {
       "source": "features/access-control/components/permissions-matrix.tsx",
       "target": "features/access-control/components/permissions-matrix-toolbar.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "access-control",
       "targetSection": "access-control"
     },
@@ -17156,7 +17156,7 @@
     {
       "source": "features/access-control/components/permissions-matrix.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "access-control",
       "targetSection": "design-system"
     },
@@ -17338,63 +17338,63 @@
     {
       "source": "features/account-settings/components/__tests__/account-settings-disabled-contracts.test.tsx",
       "target": "features/account-settings/components/preferences-settings-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "account-settings",
       "targetSection": "account-settings"
     },
     {
       "source": "features/account-settings/components/__tests__/account-settings-disabled-contracts.test.tsx",
       "target": "features/account-settings/components/security-settings-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "account-settings",
       "targetSection": "account-settings"
     },
     {
       "source": "features/account-settings/components/account-settings-view.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/account-settings-view.tsx",
       "target": "features/account-settings/components/notification-settings-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "account-settings",
       "targetSection": "account-settings"
     },
     {
       "source": "features/account-settings/components/account-settings-view.tsx",
       "target": "features/account-settings/components/preferences-settings-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "account-settings",
       "targetSection": "account-settings"
     },
     {
       "source": "features/account-settings/components/account-settings-view.tsx",
       "target": "features/account-settings/components/profile-settings-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "account-settings",
       "targetSection": "account-settings"
     },
     {
       "source": "features/account-settings/components/account-settings-view.tsx",
       "target": "features/account-settings/components/security-settings-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "account-settings",
       "targetSection": "account-settings"
     },
     {
       "source": "features/account-settings/components/account-settings-view.tsx",
       "target": "features/account-settings/components/sensitive-actions-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "account-settings",
       "targetSection": "account-settings"
     },
     {
       "source": "features/account-settings/components/account-settings-view.tsx",
       "target": "features/account-settings/components/workspace-settings-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "account-settings",
       "targetSection": "account-settings"
     },
@@ -17408,28 +17408,28 @@
     {
       "source": "features/account-settings/components/notification-settings-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/notification-settings-card.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/notification-settings-card.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/notification-settings-card.tsx",
       "target": "components/ui/switch.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
@@ -17450,21 +17450,21 @@
     {
       "source": "features/account-settings/components/notification-settings-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/preferences-settings-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/preferences-settings-card.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
@@ -17478,56 +17478,56 @@
     {
       "source": "features/account-settings/components/preferences-settings-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/preferences-settings-card.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/profile-settings-card.tsx",
       "target": "components/ui/avatar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/profile-settings-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/profile-settings-card.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/profile-settings-card.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/profile-settings-card.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/profile-settings-card.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
@@ -17548,28 +17548,28 @@
     {
       "source": "features/account-settings/components/profile-settings-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/profile-settings-card.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/security-settings-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/security-settings-card.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
@@ -17583,7 +17583,7 @@
     {
       "source": "features/account-settings/components/security-settings-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
@@ -17597,21 +17597,21 @@
     {
       "source": "features/account-settings/components/sensitive-actions-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/sensitive-actions-card.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/sensitive-actions-card.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
@@ -17653,56 +17653,56 @@
     {
       "source": "features/account-settings/components/sensitive-actions-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/sensitive-actions-card.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/sensitive-actions-card.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/workspace-settings-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/workspace-settings-card.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/workspace-settings-card.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/workspace-settings-card.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/workspace-settings-card.tsx",
       "target": "components/ui/textarea.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
@@ -17723,14 +17723,14 @@
     {
       "source": "features/account-settings/components/workspace-settings-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/account-settings/components/workspace-settings-card.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "account-settings",
       "targetSection": "design-system"
     },
@@ -18052,49 +18052,49 @@
     {
       "source": "features/app-sidebar.tsx",
       "target": "features/nav-main.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "app",
       "targetSection": "app"
     },
     {
       "source": "features/app-sidebar.tsx",
       "target": "features/nav-user.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "app",
       "targetSection": "app"
     },
     {
       "source": "features/app-sidebar.tsx",
       "target": "components/ui/sidebar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/forgot-password-form.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/forgot-password-form.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/forgot-password-form.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/forgot-password-form.tsx",
       "target": "features/auth/components/auth-illustration.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "auth",
       "targetSection": "auth"
     },
@@ -18108,7 +18108,7 @@
     {
       "source": "features/auth/components/forgot-password-form.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
@@ -18122,21 +18122,21 @@
     {
       "source": "features/auth/components/invite-password-form.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/invite-password-form.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/invite-password-form.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
@@ -18157,35 +18157,35 @@
     {
       "source": "features/auth/components/invite-password-form.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/login-form.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/login-form.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/login-form.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/login-form.tsx",
       "target": "features/auth/components/auth-illustration.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "auth",
       "targetSection": "auth"
     },
@@ -18206,28 +18206,28 @@
     {
       "source": "features/auth/components/login-form.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/set-password-form.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/set-password-form.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/set-password-form.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
@@ -18248,35 +18248,35 @@
     {
       "source": "features/auth/components/set-password-form.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/signup-form.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/signup-form.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/signup-form.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/auth/components/signup-form.tsx",
       "target": "features/auth/components/auth-illustration.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "auth",
       "targetSection": "auth"
     },
@@ -18297,21 +18297,21 @@
     {
       "source": "features/auth/components/signup-form.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "auth",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/chart-area-client.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/chart-area-interactive.tsx",
       "target": "components/ui/toggle-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
@@ -18325,70 +18325,70 @@
     {
       "source": "features/dashboard/chart-area-interactive.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/chart-area-interactive.tsx",
       "target": "components/ui/chart.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/chart-area-interactive.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/checkbox.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/tabs.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
@@ -18402,140 +18402,140 @@
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/chart.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/drawer.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/data-table.tsx",
       "target": "components/ui/table.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/section-cards-dashboard.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/dashboard/section-cards-dashboard.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "dashboard",
       "targetSection": "design-system"
     },
     {
       "source": "features/directories/components/counterparties-toolbar.tsx",
       "target": "features/directories/components/directories-toolbar.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directories",
       "targetSection": "directories"
     },
     {
       "source": "features/directories/components/counterparties-toolbar.tsx",
       "target": "features/directory-counterparties/lib/directory-counterparties-events.ts",
-      "type": "listens-event",
+      "type": "dispatches-event",
       "sourceSection": "directories",
       "targetSection": "directory-counterparties"
     },
     {
       "source": "features/directories/components/directories-toolbar.tsx",
       "target": "components/ui/button-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directories",
       "targetSection": "design-system"
     },
     {
       "source": "features/directories/components/directories-toolbar.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directories",
       "targetSection": "design-system"
     },
     {
       "source": "features/directories/components/directories-toolbar.tsx",
       "target": "components/ui/input-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directories",
       "targetSection": "design-system"
     },
     {
       "source": "features/directories/components/materials-toolbar.tsx",
       "target": "features/directory-materials/components/directory-materials-category-filter.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directories",
       "targetSection": "directory-materials"
     },
     {
       "source": "features/directories/components/materials-toolbar.tsx",
       "target": "features/directories/components/directories-toolbar.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directories",
       "targetSection": "directories"
     },
     {
       "source": "features/directories/components/materials-toolbar.tsx",
       "target": "features/directory-materials/lib/directory-materials-events.ts",
-      "type": "listens-event",
+      "type": "dispatches-event",
       "sourceSection": "directories",
       "targetSection": "directory-materials"
     },
     {
       "source": "features/directories/components/suppliers-toolbar.tsx",
       "target": "features/directories/components/directories-toolbar.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directories",
       "targetSection": "directories"
     },
     {
       "source": "features/directories/components/suppliers-toolbar.tsx",
       "target": "features/directory-suppliers/lib/directory-suppliers-events.ts",
-      "type": "listens-event",
+      "type": "dispatches-event",
       "sourceSection": "directories",
       "targetSection": "directory-suppliers"
     },
     {
       "source": "features/directories/components/works-toolbar.tsx",
       "target": "features/directory-works/components/directory-works-category-filter.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directories",
       "targetSection": "directory-works"
     },
     {
       "source": "features/directories/components/works-toolbar.tsx",
       "target": "features/directories/components/directories-toolbar.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directories",
       "targetSection": "directories"
     },
     {
       "source": "features/directories/components/works-toolbar.tsx",
       "target": "features/directory-works/lib/directory-works-events.ts",
-      "type": "listens-event",
+      "type": "dispatches-event",
       "sourceSection": "directories",
       "targetSection": "directory-works"
     },
@@ -18563,21 +18563,21 @@
     {
       "source": "features/directory-counterparties/components/directory-counterparties-view.tsx",
       "target": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-counterparties",
       "targetSection": "directory-counterparties"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-create-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-create-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
@@ -18591,56 +18591,56 @@
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-create-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-create-dialog.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-create-dialog.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-row.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-row.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-row.tsx",
       "target": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-metric-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-counterparties",
       "targetSection": "directory-counterparties"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-row.tsx",
       "target": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-name.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-counterparties",
       "targetSection": "directory-counterparties"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-row.tsx",
       "target": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-value.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-counterparties",
       "targetSection": "directory-counterparties"
     },
@@ -18654,49 +18654,49 @@
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-row.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx",
       "target": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-create-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-counterparties",
       "targetSection": "directory-counterparties"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx",
       "target": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-row.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-counterparties",
       "targetSection": "directory-counterparties"
     },
@@ -18710,14 +18710,14 @@
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx",
       "target": "features/directory-counterparties/lib/directory-counterparties-events.ts",
-      "type": "listens-event",
+      "type": "dispatches-event",
       "sourceSection": "directory-counterparties",
       "targetSection": "directory-counterparties"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
@@ -18731,7 +18731,7 @@
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-value.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-counterparties",
       "targetSection": "design-system"
     },
@@ -18885,14 +18885,14 @@
     {
       "source": "features/directory-materials/components/directory-materials-category-filter.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/components/directory-materials-category-filter.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
@@ -18906,49 +18906,49 @@
     {
       "source": "features/directory-materials/components/directory-materials-category-filter.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/components/directory-materials-category-filter.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/components/directory-materials-view.tsx",
       "target": "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-materials",
       "targetSection": "directory-materials"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-material-form-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-material-form-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-material-form-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-material-form-dialog.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
@@ -18962,35 +18962,35 @@
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-material-import-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-material-import-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-material-import-dialog.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-material-import-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-material-import-dialog.tsx",
       "target": "components/ui/table.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
@@ -19011,14 +19011,14 @@
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-row.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-row.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
@@ -19032,56 +19032,56 @@
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-row.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx",
       "target": "features/directory-materials/directory-materials-details/components/directory-material-form-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-materials",
       "targetSection": "directory-materials"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx",
       "target": "features/directory-materials/directory-materials-details/components/directory-material-import-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-materials",
       "targetSection": "directory-materials"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx",
       "target": "features/directory-materials/directory-materials-details/components/directory-materials-row.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-materials",
       "targetSection": "directory-materials"
     },
@@ -19095,14 +19095,14 @@
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-materials",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx",
       "target": "features/directory-materials/lib/directory-materials-events.ts",
-      "type": "listens-event",
+      "type": "dispatches-event",
       "sourceSection": "directory-materials",
       "targetSection": "directory-materials"
     },
@@ -19396,35 +19396,35 @@
     {
       "source": "features/directory-suppliers/components/directory-suppliers-view.tsx",
       "target": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-suppliers",
       "targetSection": "directory-suppliers"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-create-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-create-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-create-dialog.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-create-dialog.tsx",
       "target": "components/ui/textarea.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
@@ -19438,49 +19438,49 @@
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-create-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-create-dialog.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-row.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-row.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-row.tsx",
       "target": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-metric-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-suppliers",
       "targetSection": "directory-suppliers"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-row.tsx",
       "target": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-name.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-suppliers",
       "targetSection": "directory-suppliers"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-row.tsx",
       "target": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-value.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-suppliers",
       "targetSection": "directory-suppliers"
     },
@@ -19494,35 +19494,35 @@
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-row.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section.tsx",
       "target": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-create-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-suppliers",
       "targetSection": "directory-suppliers"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section.tsx",
       "target": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-row.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-suppliers",
       "targetSection": "directory-suppliers"
     },
@@ -19536,7 +19536,7 @@
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section.tsx",
       "target": "features/directory-suppliers/lib/directory-suppliers-events.ts",
-      "type": "listens-event",
+      "type": "dispatches-event",
       "sourceSection": "directory-suppliers",
       "targetSection": "directory-suppliers"
     },
@@ -19550,7 +19550,7 @@
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-value.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-suppliers",
       "targetSection": "design-system"
     },
@@ -19739,7 +19739,7 @@
     {
       "source": "features/directory-works/components/directory-works-category-filter.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
@@ -19753,42 +19753,42 @@
     {
       "source": "features/directory-works/components/directory-works-category-filter.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-works/components/directory-works-view.tsx",
       "target": "features/directory-works/directory-works-details/components/directory-works-section.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-works",
       "targetSection": "directory-works"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-work-form-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-work-form-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-work-form-dialog.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-work-form-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
@@ -19802,35 +19802,35 @@
     {
       "source": "features/directory-works/directory-works-details/components/directory-work-import-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-work-import-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-work-import-dialog.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-work-import-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-work-import-dialog.tsx",
       "target": "components/ui/table.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
@@ -19851,35 +19851,35 @@
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-row.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-row.tsx",
       "target": "features/directory-works/directory-works-details/components/directory-works-code.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-works",
       "targetSection": "directory-works"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-row.tsx",
       "target": "features/directory-works/directory-works-details/components/directory-works-metric-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-works",
       "targetSection": "directory-works"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-row.tsx",
       "target": "features/directory-works/directory-works-details/components/directory-works-name.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-works",
       "targetSection": "directory-works"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-row.tsx",
       "target": "features/directory-works/directory-works-details/components/directory-works-value.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-works",
       "targetSection": "directory-works"
     },
@@ -19893,21 +19893,21 @@
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-row.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-section.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-section.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
@@ -19921,21 +19921,21 @@
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-section.tsx",
       "target": "features/directory-works/directory-works-details/components/directory-work-form-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-works",
       "targetSection": "directory-works"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-section.tsx",
       "target": "features/directory-works/directory-works-details/components/directory-work-import-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-works",
       "targetSection": "directory-works"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-section.tsx",
       "target": "features/directory-works/directory-works-details/components/directory-works-row.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "directory-works",
       "targetSection": "directory-works"
     },
@@ -19956,14 +19956,14 @@
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-section.tsx",
       "target": "features/directory-works/lib/directory-works-events.ts",
-      "type": "listens-event",
+      "type": "dispatches-event",
       "sourceSection": "directory-works",
       "targetSection": "directory-works"
     },
     {
       "source": "features/directory-works/directory-works-details/components/directory-works-value.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "directory-works",
       "targetSection": "design-system"
     },
@@ -20313,28 +20313,28 @@
     {
       "source": "features/estimates/components/estimate-import-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/components/estimate-import-dialog.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/components/estimate-import-dialog.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/components/estimate-import-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
@@ -20348,56 +20348,56 @@
     {
       "source": "features/estimates/components/estimate-import-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/components/estimate-import-dialog.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/components/estimate-navigation-tabs.tsx",
       "target": "components/ui/tabs.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/components/estimate-navigation-tabs.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/create-section-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/create-section-dialog.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/create-section-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/create-section-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
@@ -20425,84 +20425,84 @@
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "components/ui/alert.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "features/estimates/components/estimate-import-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "features/estimates/estimate-details/components/create-section-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "features/estimates/estimate-details/components/estimate-editor-context.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "features/estimates/estimate-details/components/estimate-empty-state.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "features/estimates/estimate-details/components/estimate-material-picker-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "features/estimates/estimate-details/components/estimate-section-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "features/estimates/estimate-details/components/estimate-work-picker-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
@@ -20530,14 +20530,14 @@
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "components/ui/alert-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-editor-view.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
@@ -20572,84 +20572,84 @@
     {
       "source": "features/estimates/estimate-details/components/estimate-empty-state.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-empty-state.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-actions.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-actions.tsx",
       "target": "components/ui/frame.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-actions.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-card.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-card.tsx",
       "target": "components/ui/editable-badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-card.tsx",
       "target": "components/ui/frame.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-card.tsx",
       "target": "features/estimates/estimate-details/components/estimate-editor-context.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-card.tsx",
       "target": "features/estimates/estimate-details/components/estimate-material-actions.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-card.tsx",
       "target": "features/estimates/estimate-details/components/estimate-material-name.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
@@ -20684,21 +20684,21 @@
     {
       "source": "features/estimates/estimate-details/components/estimate-material-name.tsx",
       "target": "components/ui/textarea.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-picker-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-picker-dialog.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
@@ -20726,77 +20726,77 @@
     {
       "source": "features/estimates/estimate-details/components/estimate-material-picker-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-picker-dialog.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-material-picker-dialog.tsx",
       "target": "components/ui/input-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-name.tsx",
       "target": "components/ui/textarea.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-section-card.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-section-card.tsx",
       "target": "components/ui/button-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-section-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-section-card.tsx",
       "target": "components/ui/frame.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-section-card.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-section-card.tsx",
       "target": "features/estimates/estimate-details/components/estimate-editor-context.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-section-card.tsx",
       "target": "features/estimates/estimate-details/components/estimate-work-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
@@ -20824,77 +20824,77 @@
     {
       "source": "features/estimates/estimate-details/components/estimate-section-card.tsx",
       "target": "components/ui/collapsible.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-card.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-card.tsx",
       "target": "components/ui/button-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-card.tsx",
       "target": "components/ui/editable-badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-card.tsx",
       "target": "components/ui/frame.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-card.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-card.tsx",
       "target": "features/estimates/estimate-details/components/estimate-editor-context.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-card.tsx",
       "target": "features/estimates/estimate-details/components/estimate-material-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-card.tsx",
       "target": "features/estimates/estimate-details/components/estimate-name.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-card.tsx",
       "target": "features/estimates/estimate-details/components/estimate-work-number.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "estimates",
       "targetSection": "estimates"
     },
@@ -20929,21 +20929,21 @@
     {
       "source": "features/estimates/estimate-details/components/estimate-work-card.tsx",
       "target": "components/ui/collapsible.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-picker-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-picker-dialog.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
@@ -20971,21 +20971,21 @@
     {
       "source": "features/estimates/estimate-details/components/estimate-work-picker-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-picker-dialog.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-details/components/estimate-work-picker-dialog.tsx",
       "target": "components/ui/input-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
@@ -21020,21 +21020,21 @@
     {
       "source": "features/estimates/estimate-tabs/components/estimate-tab-toolbar.tsx",
       "target": "components/ui/button-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-tabs/components/estimate-tab-toolbar.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
     {
       "source": "features/estimates/estimate-tabs/components/estimate-tab-toolbar.tsx",
       "target": "components/ui/input-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "estimates",
       "targetSection": "design-system"
     },
@@ -21097,21 +21097,21 @@
     {
       "source": "features/execution/components/execution-view.tsx",
       "target": "components/ui/alert.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
     {
       "source": "features/execution/components/execution-view.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
     {
       "source": "features/execution/components/execution-view.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
@@ -21125,14 +21125,14 @@
     {
       "source": "features/execution/components/execution-view.tsx",
       "target": "features/execution/execution-details/components/create-work-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "execution",
       "targetSection": "execution"
     },
     {
       "source": "features/execution/components/execution-view.tsx",
       "target": "features/execution/execution-details/components/execution-section-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "execution",
       "targetSection": "execution"
     },
@@ -21146,28 +21146,28 @@
     {
       "source": "features/execution/execution-details/components/create-work-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
     {
       "source": "features/execution/execution-details/components/create-work-dialog.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
     {
       "source": "features/execution/execution-details/components/create-work-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
     {
       "source": "features/execution/execution-details/components/create-work-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
@@ -21181,28 +21181,28 @@
     {
       "source": "features/execution/execution-details/components/execution-row.tsx",
       "target": "components/ui/editable-badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
     {
       "source": "features/execution/execution-details/components/execution-row.tsx",
       "target": "features/execution/execution-details/components/execution-metric-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "execution",
       "targetSection": "execution"
     },
     {
       "source": "features/execution/execution-details/components/execution-row.tsx",
       "target": "features/execution/execution-details/components/execution-name.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "execution",
       "targetSection": "execution"
     },
     {
       "source": "features/execution/execution-details/components/execution-row.tsx",
       "target": "features/execution/execution-details/components/execution-unit.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "execution",
       "targetSection": "execution"
     },
@@ -21230,21 +21230,21 @@
     {
       "source": "features/execution/execution-details/components/execution-section-card.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
     {
       "source": "features/execution/execution-details/components/execution-section-card.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
     {
       "source": "features/execution/execution-details/components/execution-section-card.tsx",
       "target": "features/execution/execution-details/components/execution-row.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "execution",
       "targetSection": "execution"
     },
@@ -21265,7 +21265,7 @@
     {
       "source": "features/execution/execution-details/components/execution-section-card.tsx",
       "target": "components/ui/collapsible.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
@@ -21286,7 +21286,7 @@
     {
       "source": "features/execution/execution-details/components/execution-value.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "execution",
       "targetSection": "design-system"
     },
@@ -21356,56 +21356,56 @@
     {
       "source": "features/finances/components/finances-kpi-cards.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/finances-view.tsx",
       "target": "components/ui/alert.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/finances-view.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/finances-view.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/finances-view.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/finances-view.tsx",
       "target": "components/ui/spinner.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/finances-view.tsx",
       "target": "features/finances/components/finances-kpi-cards.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "finances",
       "targetSection": "finances"
     },
     {
       "source": "features/finances/components/finances-view.tsx",
       "target": "features/finances/components/payment-create-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "finances",
       "targetSection": "finances"
     },
@@ -21447,14 +21447,14 @@
     {
       "source": "features/finances/components/finances-view.tsx",
       "target": "components/ui/table.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/finances-view.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
@@ -21468,35 +21468,35 @@
     {
       "source": "features/finances/components/payment-create-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/payment-create-dialog.tsx",
       "target": "components/ui/calendar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/payment-create-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/payment-create-dialog.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/payment-create-dialog.tsx",
       "target": "components/ui/textarea.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
@@ -21510,21 +21510,21 @@
     {
       "source": "features/finances/components/payment-create-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/payment-create-dialog.tsx",
       "target": "components/ui/popover.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
     {
       "source": "features/finances/components/payment-create-dialog.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "finances",
       "targetSection": "design-system"
     },
@@ -21615,7 +21615,7 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchase-archive-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
@@ -21629,42 +21629,42 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchase-archive-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchase-material-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchase-material-dialog.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchase-material-dialog.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchase-material-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchase-material-dialog.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
@@ -21678,14 +21678,14 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchase-material-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchase-material-dialog.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
@@ -21699,28 +21699,28 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-import-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-import-dialog.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-import-dialog.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-import-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
@@ -21741,14 +21741,14 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-import-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-import-dialog.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
@@ -21762,28 +21762,28 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-list.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-list.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-list.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-list.tsx",
       "target": "features/global-purchases/global-purchases-details/components/global-purchases-row.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
@@ -21797,7 +21797,7 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-list.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
@@ -21811,42 +21811,42 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-pagination.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-pagination.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-row.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-row.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-row.tsx",
       "target": "components/ui/calendar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-row.tsx",
       "target": "components/ui/editable-badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
@@ -21860,14 +21860,14 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-row.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-row.tsx",
       "target": "components/ui/popover.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
@@ -21881,14 +21881,14 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-screen.tsx",
       "target": "features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-screen.tsx",
       "target": "features/global-purchases/global-purchases-details/components/global-purchases-view.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
@@ -21909,49 +21909,49 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
       "target": "features/global-purchases/global-purchases-details/components/global-purchase-archive-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
       "target": "features/global-purchases/global-purchases-details/components/global-purchase-material-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
       "target": "features/global-purchases/global-purchases-details/components/global-purchases-import-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
       "target": "features/global-purchases/global-purchases-details/components/global-purchases-list.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
       "target": "features/global-purchases/global-purchases-details/components/global-purchases-pagination.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
@@ -21972,7 +21972,7 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
       "target": "features/global-purchases/lib/global-purchases-events.ts",
-      "type": "listens-event",
+      "type": "dispatches-event",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
@@ -21986,21 +21986,21 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx",
       "target": "components/ui/button-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx",
       "target": "components/ui/calendar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
@@ -22014,35 +22014,35 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx",
       "target": "components/ui/input-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx",
       "target": "components/ui/popover.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx",
       "target": "features/global-purchases/lib/global-purchases-events.ts",
-      "type": "listens-event",
+      "type": "dispatches-event",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-value.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "global-purchases",
       "targetSection": "design-system"
     },
@@ -22056,14 +22056,14 @@
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-view.tsx",
       "target": "features/global-purchases/global-purchases-details/components/global-purchases-list.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
     {
       "source": "features/global-purchases/global-purchases-details/components/global-purchases-view.tsx",
       "target": "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
     },
@@ -22245,42 +22245,42 @@
     {
       "source": "features/nav-main.tsx",
       "target": "components/ui/collapsible.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/nav-main.tsx",
       "target": "components/ui/sidebar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/nav-projects.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/nav-projects.tsx",
       "target": "components/ui/sidebar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/nav-secondary.tsx",
       "target": "components/ui/sidebar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/nav-user.tsx",
       "target": "components/ui/avatar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
@@ -22294,35 +22294,35 @@
     {
       "source": "features/nav-user.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/nav-user.tsx",
       "target": "components/ui/sidebar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/notifications/components/notification-bell.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "notifications",
       "targetSection": "design-system"
     },
     {
       "source": "features/notifications/components/notification-bell.tsx",
       "target": "features/notifications/components/notification-list.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "notifications",
       "targetSection": "notifications"
     },
     {
       "source": "features/notifications/components/notification-bell.tsx",
       "target": "components/ui/popover.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "notifications",
       "targetSection": "design-system"
     },
@@ -22336,7 +22336,7 @@
     {
       "source": "features/notifications/components/notification-item.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "notifications",
       "targetSection": "design-system"
     },
@@ -22364,35 +22364,35 @@
     {
       "source": "features/notifications/components/notification-list.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "notifications",
       "targetSection": "design-system"
     },
     {
       "source": "features/notifications/components/notification-list.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "notifications",
       "targetSection": "design-system"
     },
     {
       "source": "features/notifications/components/notification-list.tsx",
       "target": "components/ui/tabs.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "notifications",
       "targetSection": "design-system"
     },
     {
       "source": "features/notifications/components/notification-list.tsx",
       "target": "features/notifications/components/notification-item.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "notifications",
       "targetSection": "notifications"
     },
     {
       "source": "features/notifications/components/notification-list.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "notifications",
       "targetSection": "design-system"
     },
@@ -22490,21 +22490,21 @@
     {
       "source": "features/projects/components/create-project-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/create-project-dialog.tsx",
       "target": "components/ui/calendar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/create-project-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
@@ -22532,28 +22532,28 @@
     {
       "source": "features/projects/components/create-project-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/create-project-dialog.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/create-project-dialog.tsx",
       "target": "components/ui/popover.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/create-project-dialog.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
@@ -22567,21 +22567,21 @@
     {
       "source": "features/projects/components/project-card.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/project-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/project-card.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
@@ -22595,21 +22595,21 @@
     {
       "source": "features/projects/components/project-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/projects-toolbar.tsx",
       "target": "components/ui/button-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/projects-toolbar.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
@@ -22623,42 +22623,42 @@
     {
       "source": "features/projects/components/projects-toolbar.tsx",
       "target": "components/ui/input-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/projects-toolbar.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/projects-view.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/components/projects-view.tsx",
       "target": "features/projects/components/create-project-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "projects",
       "targetSection": "projects"
     },
     {
       "source": "features/projects/components/projects-view.tsx",
       "target": "features/projects/components/project-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "projects",
       "targetSection": "projects"
     },
     {
       "source": "features/projects/components/projects-view.tsx",
       "target": "features/projects/components/projects-toolbar.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "projects",
       "targetSection": "projects"
     },
@@ -22679,7 +22679,7 @@
     {
       "source": "features/projects/components/projects-view.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
@@ -22742,28 +22742,28 @@
     {
       "source": "features/projects/project-overview/components/chart-area-interactive.tsx",
       "target": "components/ui/alert.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/chart-area-interactive.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/chart-area-interactive.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/chart-area-interactive.tsx",
       "target": "components/ui/toggle-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
@@ -22791,28 +22791,28 @@
     {
       "source": "features/projects/project-overview/components/chart-area-interactive.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/chart-area-interactive.tsx",
       "target": "components/ui/chart.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/chart-area-interactive.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/estimate-delete-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
@@ -22826,21 +22826,21 @@
     {
       "source": "features/projects/project-overview/components/estimate-delete-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/estimate-name-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/estimate-name-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
@@ -22854,35 +22854,35 @@
     {
       "source": "features/projects/project-overview/components/estimate-name-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/estimate-name-dialog.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/estimates-table.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/estimates-table.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/estimates-table.tsx",
       "target": "components/ui/tabs.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
@@ -22896,28 +22896,28 @@
     {
       "source": "features/projects/project-overview/components/estimates-table.tsx",
       "target": "features/projects/project-overview/components/estimate-delete-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "projects",
       "targetSection": "projects"
     },
     {
       "source": "features/projects/project-overview/components/estimates-table.tsx",
       "target": "features/projects/project-overview/components/estimate-name-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "projects",
       "targetSection": "projects"
     },
     {
       "source": "features/projects/project-overview/components/estimates-table.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/estimates-table.tsx",
       "target": "components/ui/table.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
@@ -22938,28 +22938,28 @@
     {
       "source": "features/projects/project-overview/components/section-cards.tsx",
       "target": "components/ui/alert.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/section-cards.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/section-cards.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
     {
       "source": "features/projects/project-overview/components/section-cards.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "projects",
       "targetSection": "design-system"
     },
@@ -23344,7 +23344,7 @@
     {
       "source": "features/purchases/components/purchases-view.tsx",
       "target": "features/purchases/purchase-details/components/purchase-section.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "purchases",
       "targetSection": "purchases"
     },
@@ -23379,35 +23379,35 @@
     {
       "source": "features/purchases/purchase-details/components/add-purchase-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/purchases/purchase-details/components/add-purchase-dialog.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/purchases/purchase-details/components/add-purchase-dialog.tsx",
       "target": "components/ui/field.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/purchases/purchase-details/components/add-purchase-dialog.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/purchases/purchase-details/components/add-purchase-dialog.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
@@ -23428,14 +23428,14 @@
     {
       "source": "features/purchases/purchase-details/components/add-purchase-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/purchases/purchase-details/components/add-purchase-dialog.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
@@ -23456,42 +23456,42 @@
     {
       "source": "features/purchases/purchase-details/components/purchase-row.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/purchases/purchase-details/components/purchase-row.tsx",
       "target": "components/ui/editable-badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/purchases/purchase-details/components/purchase-row.tsx",
       "target": "features/purchases/purchase-details/components/purchase-metric-group.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "purchases",
       "targetSection": "purchases"
     },
     {
       "source": "features/purchases/purchase-details/components/purchase-row.tsx",
       "target": "features/purchases/purchase-details/components/purchase-name.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "purchases",
       "targetSection": "purchases"
     },
     {
       "source": "features/purchases/purchase-details/components/purchase-row.tsx",
       "target": "features/purchases/purchase-details/components/purchase-unit.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "purchases",
       "targetSection": "purchases"
     },
     {
       "source": "features/purchases/purchase-details/components/purchase-row.tsx",
       "target": "features/purchases/purchase-details/components/purchase-value.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "purchases",
       "targetSection": "purchases"
     },
@@ -23519,21 +23519,21 @@
     {
       "source": "features/purchases/purchase-details/components/purchase-row.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/purchases/purchase-details/components/purchase-section.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
     {
       "source": "features/purchases/purchase-details/components/purchase-section.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
@@ -23554,14 +23554,14 @@
     {
       "source": "features/purchases/purchase-details/components/purchase-section.tsx",
       "target": "features/purchases/purchase-details/components/add-purchase-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "purchases",
       "targetSection": "purchases"
     },
     {
       "source": "features/purchases/purchase-details/components/purchase-section.tsx",
       "target": "features/purchases/purchase-details/components/purchase-row.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "purchases",
       "targetSection": "purchases"
     },
@@ -23575,7 +23575,7 @@
     {
       "source": "features/purchases/purchase-details/components/purchase-section.tsx",
       "target": "components/ui/empty.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
@@ -23589,7 +23589,7 @@
     {
       "source": "features/purchases/purchase-details/components/purchase-value.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "purchases",
       "targetSection": "design-system"
     },
@@ -23610,49 +23610,49 @@
     {
       "source": "features/search-form.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/search-form.tsx",
       "target": "components/ui/sidebar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/site-header.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/site-header.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/site-header.tsx",
       "target": "components/ui/sidebar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
     {
       "source": "features/site-header.tsx",
       "target": "features/notifications/components/notification-bell.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "app",
       "targetSection": "notifications"
     },
     {
       "source": "features/site-header.tsx",
       "target": "components/ui/breadcrumb.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "app",
       "targetSection": "design-system"
     },
@@ -23708,42 +23708,42 @@
     {
       "source": "features/workspace-settings/components/allowed-domains-card.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/allowed-domains-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/allowed-domains-card.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/allowed-domains-card.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/allowed-domains-card.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/allowed-domains-card.tsx",
       "target": "components/ui/switch.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
@@ -23757,42 +23757,42 @@
     {
       "source": "features/workspace-settings/components/allowed-domains-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/invite-link-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/invite-link-card.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/invite-link-card.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/invite-link-card.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/invite-link-card.tsx",
       "target": "components/ui/switch.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
@@ -23813,42 +23813,42 @@
     {
       "source": "features/workspace-settings/components/invite-link-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/invite-link-card.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/invite-member-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/invite-member-card.tsx",
       "target": "components/ui/input.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/invite-member-card.tsx",
       "target": "components/ui/label.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/invite-member-card.tsx",
       "target": "components/ui/textarea.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
@@ -23869,14 +23869,14 @@
     {
       "source": "features/workspace-settings/components/invite-member-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/invite-member-card.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
@@ -23897,7 +23897,7 @@
     {
       "source": "features/workspace-settings/components/members/use-workspace-member-actions.ts",
       "target": "features/workspace-settings/components/members/member-utils.ts",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
@@ -23925,14 +23925,14 @@
     {
       "source": "features/workspace-settings/components/members/workspace-member-actions-menu.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-member-actions-menu.tsx",
       "target": "features/workspace-settings/components/members/member-utils.ts",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
@@ -23953,35 +23953,35 @@
     {
       "source": "features/workspace-settings/components/members/workspace-member-actions-menu.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-member-dialogs.tsx",
       "target": "features/workspace-settings/components/remove-member-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-member-dialogs.tsx",
       "target": "features/workspace-settings/components/reset-password-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-member-dialogs.tsx",
       "target": "features/workspace-settings/components/role-change-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-member-dialogs.tsx",
       "target": "features/workspace-settings/components/suspend-member-dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
@@ -24002,28 +24002,28 @@
     {
       "source": "features/workspace-settings/components/members/workspace-member-row.tsx",
       "target": "components/ui/avatar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-member-row.tsx",
       "target": "components/ui/table.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-member-row.tsx",
       "target": "features/workspace-settings/components/members/workspace-member-actions-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-member-row.tsx",
       "target": "features/workspace-settings/components/members/workspace-member-status-badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
@@ -24051,14 +24051,14 @@
     {
       "source": "features/workspace-settings/components/members/workspace-member-row.tsx",
       "target": "features/workspace-settings/components/members/member-utils.ts",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-member-status-badge.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
@@ -24079,42 +24079,42 @@
     {
       "source": "features/workspace-settings/components/members/workspace-members-error.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-error.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-mobile-list.tsx",
       "target": "components/ui/avatar.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-mobile-list.tsx",
       "target": "features/workspace-settings/components/members/member-utils.ts",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-mobile-list.tsx",
       "target": "features/workspace-settings/components/members/workspace-member-actions-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-mobile-list.tsx",
       "target": "features/workspace-settings/components/members/workspace-member-status-badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
@@ -24142,56 +24142,56 @@
     {
       "source": "features/workspace-settings/components/members/workspace-members-section.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-section.tsx",
       "target": "features/workspace-settings/components/members/use-workspace-member-actions.ts",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-section.tsx",
       "target": "features/workspace-settings/components/members/use-workspace-member-dialogs.ts",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-section.tsx",
       "target": "features/workspace-settings/components/members/workspace-member-dialogs.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-section.tsx",
       "target": "features/workspace-settings/components/members/workspace-members-error.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-section.tsx",
       "target": "features/workspace-settings/components/members/workspace-members-mobile-list.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-section.tsx",
       "target": "features/workspace-settings/components/members/workspace-members-skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-section.tsx",
       "target": "features/workspace-settings/components/members/workspace-members-table.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
@@ -24205,28 +24205,28 @@
     {
       "source": "features/workspace-settings/components/members/workspace-members-skeleton.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-skeleton.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-table.tsx",
       "target": "features/workspace-settings/components/members/member-utils.ts",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/members/workspace-members-table.tsx",
       "target": "features/workspace-settings/components/members/workspace-member-row.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
@@ -24240,35 +24240,35 @@
     {
       "source": "features/workspace-settings/components/members/workspace-members-table.tsx",
       "target": "components/ui/table.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/pending-invitations-table.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/pending-invitations-table.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/pending-invitations-table.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/pending-invitations-table.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
@@ -24296,49 +24296,49 @@
     {
       "source": "features/workspace-settings/components/pending-invitations-table.tsx",
       "target": "components/ui/dropdown-menu.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/pending-invitations-table.tsx",
       "target": "components/ui/table.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/remove-member-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/remove-member-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/reset-password-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/reset-password-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/role-change-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
@@ -24352,133 +24352,133 @@
     {
       "source": "features/workspace-settings/components/role-change-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/role-change-dialog.tsx",
       "target": "components/ui/select.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/suspend-member-dialog.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/suspend-member-dialog.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/team-management-view.tsx",
       "target": "features/workspace-settings/components/invite-member-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/team-management-view.tsx",
       "target": "features/workspace-settings/components/pending-invitations-table.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/team-management-view.tsx",
       "target": "features/workspace-settings/components/workspace-members-table.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/team-management-view.tsx",
       "target": "features/workspace-settings/components/workspace-overview-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/team-management-view.tsx",
       "target": "features/workspace-settings/components/workspace-roles-summary-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/workspace-actions-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/workspace-actions-card.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/workspace-actions-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/workspace-actions-card.tsx",
       "target": "components/ui/dialog.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/workspace-members-table.tsx",
       "target": "features/workspace-settings/components/members/workspace-members-section.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/workspace-overview-card.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/workspace-overview-card.tsx",
       "target": "components/ui/button.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/workspace-overview-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/workspace-overview-card.tsx",
       "target": "components/ui/separator.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/workspace-overview-card.tsx",
       "target": "components/ui/skeleton.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
@@ -24492,7 +24492,7 @@
     {
       "source": "features/workspace-settings/components/workspace-roles-summary-card.tsx",
       "target": "components/ui/badge.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
@@ -24506,63 +24506,63 @@
     {
       "source": "features/workspace-settings/components/workspace-roles-summary-card.tsx",
       "target": "components/ui/card.tsx",
-      "type": "composes-screen",
+      "type": "uses-ui",
       "sourceSection": "workspace-settings",
       "targetSection": "design-system"
     },
     {
       "source": "features/workspace-settings/components/workspace-settings-view.tsx",
       "target": "features/workspace-settings/components/allowed-domains-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/workspace-settings-view.tsx",
       "target": "features/workspace-settings/components/invite-link-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/workspace-settings-view.tsx",
       "target": "features/workspace-settings/components/invite-member-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/workspace-settings-view.tsx",
       "target": "features/workspace-settings/components/pending-invitations-table.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/workspace-settings-view.tsx",
       "target": "features/workspace-settings/components/workspace-actions-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/workspace-settings-view.tsx",
       "target": "features/workspace-settings/components/workspace-members-table.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/workspace-settings-view.tsx",
       "target": "features/workspace-settings/components/workspace-overview-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
     {
       "source": "features/workspace-settings/components/workspace-settings-view.tsx",
       "target": "features/workspace-settings/components/workspace-roles-summary-card.tsx",
-      "type": "composes-screen",
+      "type": "uses-component",
       "sourceSection": "workspace-settings",
       "targetSection": "workspace-settings"
     },
@@ -27166,8 +27166,7 @@
       "layersMatch": true,
       "unusedFiles": [
         "features/global-purchases/global-purchases-details/components/global-purchases-metric-group.tsx",
-        "features/global-purchases/global-purchases-details/components/global-purchases-name.tsx",
-        "features/global-purchases/lib/global-purchases-events.ts"
+        "features/global-purchases/global-purchases-details/components/global-purchases-name.tsx"
       ],
       "alternativePaths": [
         {
@@ -27179,10 +27178,7 @@
     "directory-materials": {
       "docExists": true,
       "hasDocFile": true,
-      "layersMatch": true,
-      "unusedFiles": [
-        "features/directory-materials/lib/directory-materials-events.ts"
-      ]
+      "layersMatch": true
     },
     "estimates": {
       "docExists": true,

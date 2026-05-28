@@ -17,59 +17,17 @@
       "Zod",
       "Vitest"
     ],
-    "gitCommit": "e319f032ec3f17dc45b2041428fcc803da17fd98",
+    "gitCommit": "1c3ec9576d9d9f7769f39b68fd7585054c6b6349",
     "sourceAnalyzedAt": "2026-05-27T21:30:00Z",
-    "graphGeneratedAt": "2026-05-28T07:12:35.118Z",
-    "graphVersion": "2.4.0"
+    "graphGeneratedAt": "2026-05-28T07:34:09.639Z",
+    "graphVersion": "2.5.0"
   },
   "summary": {
     "totalFiles": 618,
-    "totalConnections": 1156,
+    "totalConnections": 1162,
     "totalSections": 46,
     "layers": 20,
-    "layerNames": [
-      "api-client",
-      "api-routes",
-      "components",
-      "config",
-      "docs",
-      "edge-functions",
-      "hooks",
-      "lib",
-      "migrations",
-      "mocks",
-      "pages",
-      "schema",
-      "server",
-      "server-actions",
-      "shared-components",
-      "shared-lib",
-      "styles",
-      "tests",
-      "types",
-      "ui-components"
-    ],
     "edgeTypes": 18,
-    "edgeTypeNames": [
-      "api-call",
-      "calls-handler",
-      "calls-service",
-      "composes-screen",
-      "configures",
-      "imports",
-      "listens-event",
-      "queries-data",
-      "query-keys",
-      "uses-database",
-      "uses-errors",
-      "uses-hook",
-      "uses-lib",
-      "uses-mock",
-      "uses-schema",
-      "uses-server",
-      "uses-type",
-      "validates"
-    ],
     "findings": 7
   },
   "files": [
@@ -8829,7 +8787,7 @@
         "features/estimates/lib/estimate-excel-exporter.ts"
       ],
       "incomingCount": 1,
-      "outgoingCount": 16,
+      "outgoingCount": 15,
       "routeSection": "estimates",
       "featureSection": "estimates",
       "featureSections": [
@@ -9668,10 +9626,11 @@
         "features/finances/types.ts",
         "features/purchases/__mocks__/purchases.ts",
         "features/purchases/api/purchases-client.ts",
-        "types/purchase.ts"
+        "types/purchase.ts",
+        "features/finances/api/finances-client.ts"
       ],
       "incomingCount": 1,
-      "outgoingCount": 5,
+      "outgoingCount": 6,
       "routeSection": "finances",
       "featureSection": "finances",
       "featureSections": [
@@ -10163,10 +10122,12 @@
         "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx"
       ],
       "outgoingConnections": [
-        "features/global-purchases/api/global-purchases-query-keys.ts"
+        "features/global-purchases/api/global-purchases-query-keys.ts",
+        "features/global-purchases/api/global-purchases-client.ts",
+        "types/global-purchases.ts"
       ],
       "incomingCount": 1,
-      "outgoingCount": 1,
+      "outgoingCount": 3,
       "routeSection": "global-purchases",
       "featureSection": "global-purchases",
       "featureSections": [
@@ -10886,10 +10847,12 @@
         "features/projects/components/projects-view.tsx"
       ],
       "outgoingConnections": [
-        "features/projects/api/projects-query-keys.ts"
+        "features/projects/api/projects-query-keys.ts",
+        "features/projects/api/projects-client.ts",
+        "types/project.ts"
       ],
       "incomingCount": 1,
-      "outgoingCount": 1,
+      "outgoingCount": 3,
       "routeSection": "projects",
       "featureSection": "projects",
       "featureSections": [
@@ -11494,10 +11457,11 @@
       "outgoingConnections": [
         "features/purchases/__mocks__/purchases.ts",
         "features/purchases/api/purchases-query-keys.ts",
-        "types/purchase.ts"
+        "types/purchase.ts",
+        "features/purchases/api/purchases-client.ts"
       ],
       "incomingCount": 1,
-      "outgoingCount": 3,
+      "outgoingCount": 4,
       "routeSection": "purchases",
       "featureSection": "purchases",
       "featureSections": [
@@ -19395,6 +19359,13 @@
       "targetSection": "types"
     },
     {
+      "source": "features/finances/hooks/use-finances.ts",
+      "target": "features/finances/api/finances-client.ts",
+      "type": "api-call",
+      "sourceSection": "finances",
+      "targetSection": "finances"
+    },
+    {
       "source": "features/finances/lib/finances-excel-exporter.ts",
       "target": "features/finances/types.ts",
       "type": "uses-type",
@@ -19764,6 +19735,20 @@
       "type": "query-keys",
       "sourceSection": "global-purchases",
       "targetSection": "global-purchases"
+    },
+    {
+      "source": "features/global-purchases/hooks/use-global-purchases.ts",
+      "target": "features/global-purchases/api/global-purchases-client.ts",
+      "type": "api-call",
+      "sourceSection": "global-purchases",
+      "targetSection": "global-purchases"
+    },
+    {
+      "source": "features/global-purchases/hooks/use-global-purchases.ts",
+      "target": "types/global-purchases.ts",
+      "type": "uses-type",
+      "sourceSection": "global-purchases",
+      "targetSection": "types"
     },
     {
       "source": "features/global-purchases/lib/global-purchases-import-parser.ts",
@@ -20170,6 +20155,20 @@
       "type": "query-keys",
       "sourceSection": "projects",
       "targetSection": "projects"
+    },
+    {
+      "source": "features/projects/hooks/use-projects.ts",
+      "target": "features/projects/api/projects-client.ts",
+      "type": "api-call",
+      "sourceSection": "projects",
+      "targetSection": "projects"
+    },
+    {
+      "source": "features/projects/hooks/use-projects.ts",
+      "target": "types/project.ts",
+      "type": "uses-type",
+      "sourceSection": "projects",
+      "targetSection": "types"
     },
     {
       "source": "features/projects/project-overview/components/chart-area-interactive.tsx",
@@ -20590,6 +20589,13 @@
       "type": "uses-type",
       "sourceSection": "purchases",
       "targetSection": "types"
+    },
+    {
+      "source": "features/purchases/hooks/use-purchases.ts",
+      "target": "features/purchases/api/purchases-client.ts",
+      "type": "api-call",
+      "sourceSection": "purchases",
+      "targetSection": "purchases"
     },
     {
       "source": "features/purchases/purchase-details/components/add-purchase-dialog.tsx",
@@ -23699,9 +23705,9 @@
       ],
       "explanation": "3 файлов требуют проверки. Остальные 40 файлов — docs, tests, types, lib, configs (нормально).",
       "suspiciousFiles": [
-        "features/global-purchases/global-purchases-details/components/global-purchases-name.tsx",
+        "features/directories/lib/csv-import-batches.ts",
         "features/global-purchases/global-purchases-details/components/global-purchases-metric-group.tsx",
-        "components/nav-documents.tsx"
+        "features/global-purchases/global-purchases-details/components/global-purchases-name.tsx"
       ],
       "suspiciousCount": 3,
       "hiddenCategories": {
@@ -23763,17 +23769,8 @@
       "files": [
         "features/finances/hooks/use-finances.ts [finances] → features/purchases/__mocks__/purchases.ts [purchases] (uses-mock)"
       ],
-      "explanation": "1 проблемных связей. 17 межфичевых связей требуют обоснования (показаны первые 30).",
+      "explanation": "1 проблемных связей. 8 межфичевых связей (показаны первые 20). 8 связей между схемами БД (норма, в отдельной категории).",
       "needsJustification": [
-        "app/(main)/settings/access/page.tsx [workspace-settings] → features/access-control/components/permissions-matrix.tsx [access-control] (composes-screen)",
-        "db/schema/global-purchases.ts [global-purchases] → db/schema/directory-materials.ts [directory-materials] (uses-schema)",
-        "db/schema/global-purchases.ts [global-purchases] → db/schema/projects.ts [projects] (uses-schema)",
-        "db/schema/project-estimate-content.ts [estimates] → db/schema/directory-materials.ts [directory-materials] (uses-schema)",
-        "db/schema/project-estimate-content.ts [estimates] → db/schema/directory-works.ts [directory-works] (uses-schema)",
-        "db/schema/project-estimate-purchases.ts [purchases] → db/schema/directory-materials.ts [directory-materials] (uses-schema)",
-        "db/schema/projects.ts [projects] → db/schema/directory-counterparties.ts [directory-counterparties] (uses-schema)",
-        "db/schema/workspace-invitations.ts [workspace-settings] → db/schema/rbac.ts [access-control] (uses-schema)",
-        "db/schema/workspace-members.ts [workspace-settings] → db/schema/rbac.ts [access-control] (uses-schema)",
         "features/account-settings/components/sensitive-actions-card.tsx [account-settings] → features/workspace-settings/api/team-client.ts [workspace-settings] (api-call)",
         "features/account-settings/components/sensitive-actions-card.tsx [account-settings] → features/workspace-settings/types.ts [workspace-settings] (uses-type)",
         "features/finances/hooks/use-finances.ts [finances] → features/purchases/api/purchases-client.ts [purchases] (api-call)",
@@ -23784,7 +23781,18 @@
         "features/purchases/purchase-details/components/add-purchase-dialog.tsx [purchases] → features/global-purchases/api/global-purchases-client.ts [global-purchases] (api-call)"
       ],
       "displayedBadCount": 1,
-      "totalNeedsJustification": 17
+      "totalNeedsJustification": 8,
+      "dbRelations": [
+        "db/schema/global-purchases.ts [global-purchases] → db/schema/directory-materials.ts [directory-materials]",
+        "db/schema/global-purchases.ts [global-purchases] → db/schema/projects.ts [projects]",
+        "db/schema/project-estimate-content.ts [estimates] → db/schema/directory-materials.ts [directory-materials]",
+        "db/schema/project-estimate-content.ts [estimates] → db/schema/directory-works.ts [directory-works]",
+        "db/schema/project-estimate-purchases.ts [purchases] → db/schema/directory-materials.ts [directory-materials]",
+        "db/schema/projects.ts [projects] → db/schema/directory-counterparties.ts [directory-counterparties]",
+        "db/schema/workspace-invitations.ts [workspace-settings] → db/schema/rbac.ts [access-control]",
+        "db/schema/workspace-members.ts [workspace-settings] → db/schema/rbac.ts [access-control]"
+      ],
+      "totalDbRelations": 8
     },
     {
       "id": "MIGRATION-001",
@@ -24001,7 +24009,8 @@
       "db": true,
       "tests": false,
       "usesMocks": false,
-      "status": "production"
+      "status": "production",
+      "serverVia": "app/actions/access-control + app/api/access-control + lib/auth"
     }
   },
   "crossSectionRules": {
@@ -24105,16 +24114,6 @@
       "layersMatch": true,
       "unusedFiles": [
         "features/directory-materials/lib/directory-materials-events.ts"
-      ],
-      "missingLinks": [
-        {
-          "file": "features/directory-materials/components/directory-materials-view.tsx",
-          "expectedToConnect": [
-            "features/directory-materials/hooks/use-directory-materials.ts",
-            "features/directory-materials/api/directory-materials-client.ts",
-            "features/directory-materials/server/directory-materials.service.ts"
-          ]
-        }
       ]
     },
     "estimates": {

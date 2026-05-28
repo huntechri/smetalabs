@@ -1,6 +1,6 @@
 {
   "project": {
-    "name": "SmetaLab",
+    "name": "SmetaLabs",
     "description": "Мультиарендная SaaS для управления строительными сметами, проектами, закупками и командой",
     "stack": [
       "Next.js 16",
@@ -17105,14 +17105,41 @@
     {
       "id": "MOCK-001",
       "severity": "high",
-      "title": "Моки используются в production-коде",
+      "title": "Временные данные (моки) в production-коде",
       "files": [
         "features/estimates/hooks/use-estimates.ts",
         "features/execution/hooks/use-execution.ts",
         "features/finances/hooks/use-finances.ts",
         "features/purchases/hooks/use-purchases.ts"
       ],
-      "explanation": "4 файлов импортируют моки напрямую. На стадии вёрстки допустимо, но должно быть заменено на API перед продакшеном."
+      "explanation": "4 файла импортируют моки напрямую, а не получают данные через API. На стадии вёрстки допустимо, но ⚠️ finances использует моки закупок — это критично для достоверности финансовых данных.",
+      "type": "runtime-mock",
+      "details": [
+        {
+          "file": "features/estimates/hooks/use-estimates.ts",
+          "mockSource": "features/estimates/__mocks__/estimates.ts",
+          "reason": "Сметы используют моки — данные могут не соответствовать реальной БД",
+          "isCritical": false
+        },
+        {
+          "file": "features/execution/hooks/use-execution.ts",
+          "mockSource": "features/execution/__mocks__/execution.ts",
+          "reason": "Выполнение использует моки — данные о прогрессе работ не из БД",
+          "isCritical": false
+        },
+        {
+          "file": "features/finances/hooks/use-finances.ts",
+          "mockSource": "features/purchases/__mocks__/purchases.ts",
+          "reason": "⚠️ ФИНАНСЫ используют моки закупок — критично: неверная картина по деньгам и суммам",
+          "isCritical": true
+        },
+        {
+          "file": "features/purchases/hooks/use-purchases.ts",
+          "mockSource": "features/purchases/__mocks__/purchases.ts",
+          "reason": "Закупки сметы используют моки — данные о закупках не из БД",
+          "isCritical": false
+        }
+      ]
     },
     {
       "id": "STUB-001",
@@ -17192,7 +17219,70 @@
         "types/directory-counterparty.ts",
         "types/directory-supplier.ts"
       ],
-      "explanation": "Эти файлы не импортируют и не импортируются — возможно, мёртвый код."
+      "explanation": "5 runtime-файлов без связей (требуют проверки), 8 lib/утилит (используются динамически), 2 types (типы импортируются по требованию), 17 docs (нормально), 11 tests (нормально), 2 entrypoints (barrel/edge fn).",
+      "categories": {
+        "runtime": [
+          "components/ui/aspect-ratio.tsx",
+          "components/ui/collapsible.tsx",
+          "features/directories/lib/csv-import-batches.ts",
+          "features/global-purchases/global-purchases-details/components/global-purchases-metric-group.tsx",
+          "features/global-purchases/global-purchases-details/components/global-purchases-name.tsx"
+        ],
+        "docs": [
+          "features/access-control/docs/README.md",
+          "features/account-settings/docs/README.md",
+          "features/auth/docs/README.md",
+          "features/dashboard/docs/README.md",
+          "features/directories/docs/README.md",
+          "features/directory-counterparties/docs/README.md",
+          "features/directory-materials/docs/README.md",
+          "features/directory-suppliers/docs/README.md",
+          "features/directory-works/docs/README.md",
+          "features/estimates/docs/README.md",
+          "features/execution/docs/README.md",
+          "features/finances/docs/README.md",
+          "features/global-purchases/docs/README.md",
+          "features/notifications/docs/README.md",
+          "features/projects/docs/README.md",
+          "features/purchases/docs/README.md",
+          "features/workspace-settings/docs/README.md"
+        ],
+        "test": [
+          "app/actions/__tests__/settings.test.ts",
+          "app/api/access-control/roles/__tests__/route.test.ts",
+          "app/api/settings/__tests__/route.test.ts",
+          "app/api/team/__tests__/future-contracts.test.ts",
+          "features/directory-works/api/__tests__/directory-works-client.test.ts",
+          "features/directory-works/api/__tests__/directory-works-query-keys.test.ts",
+          "features/directory-works/server/__tests__/directory-works.schemas.test.ts",
+          "features/directory-works/server/__tests__/directory-works.service.test.ts",
+          "features/workspace-settings/api/__tests__/team-client.test.ts",
+          "lib/auth/__tests__/actions.test.ts",
+          "lib/auth/__tests__/team.test.ts"
+        ],
+        "config": [],
+        "migration": [],
+        "unused": [],
+        "types": [
+          "types/directory-counterparty.ts",
+          "types/directory-supplier.ts"
+        ],
+        "lib": [
+          "components/nav-documents.tsx",
+          "features/directory-materials/lib/directory-materials-events.ts",
+          "features/directory-works/lib/directory-works-events.ts",
+          "features/execution/lib/execution-excel-exporter.ts",
+          "features/global-purchases/lib/global-purchases-events.ts",
+          "features/nav-projects.tsx",
+          "features/nav-secondary.tsx",
+          "features/purchases/lib/purchases-excel-exporter.ts"
+        ]
+      },
+      "suspiciousFiles": [
+        "features/global-purchases/global-purchases-details/components/global-purchases-name.tsx",
+        "features/global-purchases/global-purchases-details/components/global-purchases-metric-group.tsx",
+        "components/nav-documents.tsx"
+      ]
     },
     {
       "id": "LARGE-001",
@@ -17218,6 +17308,326 @@
       "title": "Связи между чужими разделами",
       "files": [],
       "explanation": "190 связей между разными бизнес-разделами (без учёта shared-типов и дизайн-системы)."
+    },
+    {
+      "id": "MIGRATION-001",
+      "severity": "medium",
+      "title": "Повторяющиеся номера миграций",
+      "explanation": "4 пар миграций имеют одинаковые номера. Даже если БД применилась нормально, для поддержки проекта это создаёт путаницу. Номера миграций должны быть уникальными.",
+      "duplicates": [
+        {
+          "number": 17,
+          "files": [
+            "db/migrations/017_directory_materials_import.sql",
+            "db/migrations/017_fix_directory_works_search_ambiguous_id.sql"
+          ]
+        },
+        {
+          "number": 18,
+          "files": [
+            "db/migrations/018_directory_materials_ai_search.sql",
+            "db/migrations/018_directory_works_staged_search.sql"
+          ]
+        },
+        {
+          "number": 19,
+          "files": [
+            "db/migrations/019_directory_materials_foundation.sql",
+            "db/migrations/019_directory_works_manual_order.sql"
+          ]
+        },
+        {
+          "number": 42,
+          "files": [
+            "db/migrations/042_estimate_materials_image_url_rpc.sql",
+            "db/migrations/042_notifications_foundation.sql"
+          ]
+        }
+      ]
     }
-  ]
+  ],
+  "readiness": {
+    "projects": {
+      "page": true,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": true,
+      "server": true,
+      "db": false,
+      "tests": false,
+      "usesMocks": false,
+      "status": "production"
+    },
+    "estimates": {
+      "page": false,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": false,
+      "server": false,
+      "db": false,
+      "tests": true,
+      "usesMocks": true,
+      "status": "partial"
+    },
+    "global-purchases": {
+      "page": true,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": true,
+      "server": true,
+      "db": false,
+      "tests": false,
+      "usesMocks": false,
+      "status": "production"
+    },
+    "directory-materials": {
+      "page": false,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": true,
+      "server": true,
+      "db": false,
+      "tests": false,
+      "usesMocks": false,
+      "status": "production"
+    },
+    "directory-works": {
+      "page": false,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": true,
+      "server": true,
+      "db": false,
+      "tests": false,
+      "usesMocks": false,
+      "status": "production"
+    },
+    "directory-suppliers": {
+      "page": false,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": true,
+      "server": true,
+      "db": false,
+      "tests": false,
+      "usesMocks": false,
+      "status": "production"
+    },
+    "directory-counterparties": {
+      "page": false,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": true,
+      "server": true,
+      "db": false,
+      "tests": false,
+      "usesMocks": false,
+      "status": "production"
+    },
+    "purchases": {
+      "page": false,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": false,
+      "server": false,
+      "db": false,
+      "tests": false,
+      "usesMocks": true,
+      "status": "partial"
+    },
+    "execution": {
+      "page": false,
+      "ui": true,
+      "hook": true,
+      "client": false,
+      "api": false,
+      "server": false,
+      "db": false,
+      "tests": false,
+      "usesMocks": true,
+      "status": "partial"
+    },
+    "finances": {
+      "page": false,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": false,
+      "server": false,
+      "db": false,
+      "tests": false,
+      "usesMocks": true,
+      "status": "partial"
+    },
+    "team": {
+      "page": true,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": true,
+      "server": false,
+      "db": false,
+      "tests": false,
+      "usesMocks": false,
+      "status": "partial",
+      "notes": "UI/hooks/server находятся в разделе workspace-settings"
+    },
+    "settings": {
+      "page": true,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": true,
+      "server": true,
+      "db": true,
+      "tests": false,
+      "usesMocks": false,
+      "status": "production",
+      "notes": "UI/hooks/server разнесены по account-settings и workspace-settings"
+    },
+    "notifications": {
+      "page": false,
+      "ui": true,
+      "hook": true,
+      "client": true,
+      "api": true,
+      "server": true,
+      "db": false,
+      "tests": false,
+      "usesMocks": false,
+      "status": "production"
+    }
+  },
+  "crossSectionRules": {
+    "allowed": [
+      {
+        "from": "app/**",
+        "to": "features/**",
+        "reason": "Страницы собирают экраны из фич"
+      },
+      {
+        "from": "features/**",
+        "to": "components/ui/**",
+        "reason": "Фичи используют дизайн-систему"
+      },
+      {
+        "from": "features/**",
+        "to": "lib/**",
+        "reason": "Фичи используют общие утилиты"
+      },
+      {
+        "from": "features/**",
+        "to": "types/**",
+        "reason": "Фичи используют общие типы"
+      },
+      {
+        "from": "components/**",
+        "to": "lib/**",
+        "reason": "Компоненты используют общие утилиты"
+      },
+      {
+        "from": "features/**/api/**",
+        "to": "features/**/server/**",
+        "reason": "API-клиент вызывает серверные роуты"
+      },
+      {
+        "from": "features/**/server/**",
+        "to": "db/**",
+        "reason": "Серверный слой обращается к БД"
+      },
+      {
+        "from": "app/api/**",
+        "to": "features/**/server/**",
+        "reason": "API-роуты вызывают route-handlers"
+      },
+      {
+        "from": "app/api/**",
+        "to": "features/**/api/**",
+        "reason": "API-роуты импортируют shared ошибки"
+      }
+    ],
+    "suspicious": [
+      {
+        "from": "components/ui/**",
+        "to": "features/**",
+        "reason": "UI-компоненты не должны знать о фичах"
+      },
+      {
+        "from": "db/**",
+        "to": "features/**",
+        "reason": "Слой БД не должен зависеть от фич"
+      },
+      {
+        "from": "features/*/hooks/**",
+        "to": "features/*/__mocks__/**",
+        "reason": "Production-хук не должен импортировать моки"
+      }
+    ],
+    "requiresJustification": [
+      {
+        "from": "features/one-section/**",
+        "to": "features/another-section/**",
+        "reason": "Межфичевые зависимости должны иметь явный контракт"
+      }
+    ]
+  },
+  "docComparison": {
+    "projects": {
+      "docExists": true,
+      "hasDocFile": true,
+      "layersMatch": true
+    },
+    "global-purchases": {
+      "docExists": true,
+      "hasDocFile": true,
+      "layersMatch": true,
+      "missingFiles": [
+        "features/global-purchases/components/global-purchases-view.tsx"
+      ],
+      "unusedFiles": [
+        "features/global-purchases/global-purchases-details/components/global-purchases-metric-group.tsx",
+        "features/global-purchases/global-purchases-details/components/global-purchases-name.tsx",
+        "features/global-purchases/lib/global-purchases-events.ts"
+      ]
+    },
+    "directory-materials": {
+      "docExists": true,
+      "hasDocFile": true,
+      "layersMatch": true,
+      "unusedFiles": [
+        "features/directory-materials/lib/directory-materials-events.ts"
+      ],
+      "missingLinks": [
+        {
+          "file": "features/directory-materials/components/directory-materials-view.tsx",
+          "expectedToConnect": [
+            "features/directory-materials/hooks/use-directory-materials.ts",
+            "features/directory-materials/api/directory-materials-client.ts",
+            "features/directory-materials/server/directory-materials.service.ts"
+          ]
+        }
+      ]
+    },
+    "estimates": {
+      "docExists": true,
+      "hasDocFile": true,
+      "layersMatch": false,
+      "missingLayers": [
+        "server",
+        "pages"
+      ],
+      "missingFiles": [
+        "features/estimates/api/estimates-client.ts",
+        "features/estimates/server/estimates.service.ts"
+      ]
+    }
+  }
 }

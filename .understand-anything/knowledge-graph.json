@@ -17,17 +17,17 @@
       "Zod",
       "Vitest"
     ],
-    "gitCommit": "2367d71540ec30f99d6024c2c87b1c5d6649800a",
+    "gitCommit": "e2ee53613b6c492db5a98af5acda3f0ae315f207",
     "sourceAnalyzedAt": "2026-05-28T07:55:39.579Z",
-    "graphGeneratedAt": "2026-05-28T08:03:27.785Z",
-    "graphVersion": "2.8.0"
+    "graphGeneratedAt": "2026-05-28T08:21:08.401Z",
+    "graphVersion": "2.9.0"
   },
   "summary": {
     "totalFiles": 618,
-    "totalConnections": 1492,
+    "totalConnections": 1502,
     "totalSections": 46,
     "layers": 20,
-    "edgeTypes": 20,
+    "edgeTypes": 21,
     "findings": 7
   },
   "files": [
@@ -6636,13 +6636,14 @@
       "description": "Тулбар справочника контрагентов",
       "confidence": "high",
       "incomingConnections": [
-        "app/(main)/directories/counterparties/page.tsx"
+        "app/(main)/directories/counterparties/page.tsx",
+        "features/directory-counterparties/lib/directory-counterparties-events.ts"
       ],
       "outgoingConnections": [
         "features/directories/components/directories-toolbar.tsx",
         "features/directory-counterparties/lib/directory-counterparties-events.ts"
       ],
-      "incomingCount": 1,
+      "incomingCount": 2,
       "outgoingCount": 2,
       "routeSection": "directories",
       "featureSection": "directories",
@@ -6684,14 +6685,15 @@
       "description": "Тулбар справочника материалов",
       "confidence": "high",
       "incomingConnections": [
-        "app/(main)/directories/materials/page.tsx"
+        "app/(main)/directories/materials/page.tsx",
+        "features/directory-materials/lib/directory-materials-events.ts"
       ],
       "outgoingConnections": [
         "features/directory-materials/components/directory-materials-category-filter.tsx",
         "features/directories/components/directories-toolbar.tsx",
         "features/directory-materials/lib/directory-materials-events.ts"
       ],
-      "incomingCount": 1,
+      "incomingCount": 2,
       "outgoingCount": 3,
       "routeSection": "directories",
       "featureSection": "directories",
@@ -6707,13 +6709,14 @@
       "description": "Тулбар справочника поставщиков",
       "confidence": "high",
       "incomingConnections": [
-        "app/(main)/directories/suppliers/page.tsx"
+        "app/(main)/directories/suppliers/page.tsx",
+        "features/directory-suppliers/lib/directory-suppliers-events.ts"
       ],
       "outgoingConnections": [
         "features/directories/components/directories-toolbar.tsx",
         "features/directory-suppliers/lib/directory-suppliers-events.ts"
       ],
-      "incomingCount": 1,
+      "incomingCount": 2,
       "outgoingCount": 2,
       "routeSection": "directories",
       "featureSection": "directories",
@@ -6729,14 +6732,15 @@
       "description": "Тулбар справочника видов работ",
       "confidence": "high",
       "incomingConnections": [
-        "app/(main)/directories/works/page.tsx"
+        "app/(main)/directories/works/page.tsx",
+        "features/directory-works/lib/directory-works-events.ts"
       ],
       "outgoingConnections": [
         "features/directory-works/components/directory-works-category-filter.tsx",
         "features/directories/components/directories-toolbar.tsx",
         "features/directory-works/lib/directory-works-events.ts"
       ],
-      "incomingCount": 1,
+      "incomingCount": 2,
       "outgoingCount": 3,
       "routeSection": "directories",
       "featureSection": "directories",
@@ -6971,7 +6975,8 @@
       "description": "Детальный компонент справочника контрагентов: directory counterparties section",
       "confidence": "medium",
       "incomingConnections": [
-        "features/directory-counterparties/components/directory-counterparties-view.tsx"
+        "features/directory-counterparties/components/directory-counterparties-view.tsx",
+        "features/directory-counterparties/lib/directory-counterparties-events.ts"
       ],
       "outgoingConnections": [
         "components/ui/button.tsx",
@@ -6985,7 +6990,7 @@
         "components/ui/empty.tsx",
         "features/directory-counterparties/types.ts"
       ],
-      "incomingCount": 1,
+      "incomingCount": 2,
       "outgoingCount": 10,
       "routeSection": "directory-counterparties",
       "featureSection": "directory-counterparties",
@@ -7066,9 +7071,12 @@
         "features/directories/components/counterparties-toolbar.tsx",
         "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx"
       ],
-      "outgoingConnections": [],
+      "outgoingConnections": [
+        "features/directories/components/counterparties-toolbar.tsx",
+        "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx"
+      ],
       "incomingCount": 2,
-      "outgoingCount": 0,
+      "outgoingCount": 2,
       "routeSection": "directory-counterparties",
       "featureSection": "directory-counterparties",
       "featureSections": [
@@ -7416,7 +7424,8 @@
       "description": "Детальный компонент справочника материалов: directory materials section",
       "confidence": "medium",
       "incomingConnections": [
-        "features/directory-materials/components/directory-materials-view.tsx"
+        "features/directory-materials/components/directory-materials-view.tsx",
+        "features/directory-materials/lib/directory-materials-events.ts"
       ],
       "outgoingConnections": [
         "components/ui/button.tsx",
@@ -7431,7 +7440,7 @@
         "features/directory-materials/lib/directory-materials-events.ts",
         "features/directory-materials/types.ts"
       ],
-      "incomingCount": 1,
+      "incomingCount": 2,
       "outgoingCount": 11,
       "routeSection": "directory-materials",
       "featureSection": "directory-materials",
@@ -7513,9 +7522,12 @@
         "features/directories/components/materials-toolbar.tsx",
         "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx"
       ],
-      "outgoingConnections": [],
+      "outgoingConnections": [
+        "features/directories/components/materials-toolbar.tsx",
+        "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx"
+      ],
       "incomingCount": 2,
-      "outgoingCount": 0,
+      "outgoingCount": 2,
       "routeSection": "directory-materials",
       "featureSection": "directory-materials",
       "featureSections": [
@@ -7976,7 +7988,8 @@
       "description": "Детальный компонент справочника поставщиков: directory suppliers section",
       "confidence": "medium",
       "incomingConnections": [
-        "features/directory-suppliers/components/directory-suppliers-view.tsx"
+        "features/directory-suppliers/components/directory-suppliers-view.tsx",
+        "features/directory-suppliers/lib/directory-suppliers-events.ts"
       ],
       "outgoingConnections": [
         "components/ui/button.tsx",
@@ -7987,7 +8000,7 @@
         "features/directory-suppliers/lib/directory-suppliers-events.ts",
         "features/directory-suppliers/types.ts"
       ],
-      "incomingCount": 1,
+      "incomingCount": 2,
       "outgoingCount": 7,
       "routeSection": "directory-suppliers",
       "featureSection": "directory-suppliers",
@@ -8068,9 +8081,12 @@
         "features/directories/components/suppliers-toolbar.tsx",
         "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section.tsx"
       ],
-      "outgoingConnections": [],
+      "outgoingConnections": [
+        "features/directories/components/suppliers-toolbar.tsx",
+        "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section.tsx"
+      ],
       "incomingCount": 2,
-      "outgoingCount": 0,
+      "outgoingCount": 2,
       "routeSection": "directory-suppliers",
       "featureSection": "directory-suppliers",
       "featureSections": [
@@ -8577,7 +8593,8 @@
       "confidence": "medium",
       "incomingConnections": [
         "docs/directory-module-standard.md",
-        "features/directory-works/components/directory-works-view.tsx"
+        "features/directory-works/components/directory-works-view.tsx",
+        "features/directory-works/lib/directory-works-events.ts"
       ],
       "outgoingConnections": [
         "components/ui/button.tsx",
@@ -8590,7 +8607,7 @@
         "features/directory-works/types.ts",
         "features/directory-works/lib/directory-works-events.ts"
       ],
-      "incomingCount": 2,
+      "incomingCount": 3,
       "outgoingCount": 9,
       "routeSection": "directory-works",
       "featureSection": "directory-works",
@@ -8694,9 +8711,12 @@
         "features/directories/components/works-toolbar.tsx",
         "features/directory-works/directory-works-details/components/directory-works-section.tsx"
       ],
-      "outgoingConnections": [],
+      "outgoingConnections": [
+        "features/directories/components/works-toolbar.tsx",
+        "features/directory-works/directory-works-details/components/directory-works-section.tsx"
+      ],
       "incomingCount": 2,
-      "outgoingCount": 0,
+      "outgoingCount": 2,
       "routeSection": "directory-works",
       "featureSection": "directory-works",
       "featureSections": [
@@ -10559,7 +10579,8 @@
       "description": "Детальный компонент глобальных закупок",
       "confidence": "medium",
       "incomingConnections": [
-        "features/global-purchases/global-purchases-details/components/global-purchases-view.tsx"
+        "features/global-purchases/global-purchases-details/components/global-purchases-view.tsx",
+        "features/global-purchases/lib/global-purchases-events.ts"
       ],
       "outgoingConnections": [
         "components/ui/card.tsx",
@@ -10574,7 +10595,7 @@
         "features/global-purchases/lib/global-purchases-events.ts",
         "types/global-purchases.ts"
       ],
-      "incomingCount": 1,
+      "incomingCount": 2,
       "outgoingCount": 11,
       "routeSection": "global-purchases",
       "featureSection": "global-purchases",
@@ -10590,7 +10611,8 @@
       "description": "Детальный компонент глобальных закупок",
       "confidence": "medium",
       "incomingConnections": [
-        "features/global-purchases/global-purchases-details/components/global-purchases-screen.tsx"
+        "features/global-purchases/global-purchases-details/components/global-purchases-screen.tsx",
+        "features/global-purchases/lib/global-purchases-events.ts"
       ],
       "outgoingConnections": [
         "components/ui/button-group.tsx",
@@ -10602,7 +10624,7 @@
         "components/ui/popover.tsx",
         "features/global-purchases/lib/global-purchases-events.ts"
       ],
-      "incomingCount": 1,
+      "incomingCount": 2,
       "outgoingCount": 8,
       "routeSection": "global-purchases",
       "featureSection": "global-purchases",
@@ -10687,9 +10709,12 @@
         "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
         "features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx"
       ],
-      "outgoingConnections": [],
+      "outgoingConnections": [
+        "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
+        "features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx"
+      ],
       "incomingCount": 2,
-      "outgoingCount": 0,
+      "outgoingCount": 2,
       "routeSection": "global-purchases",
       "featureSection": "global-purchases",
       "featureSections": [
@@ -18764,6 +18789,20 @@
       "targetSection": "directory-counterparties"
     },
     {
+      "source": "features/directory-counterparties/lib/directory-counterparties-events.ts",
+      "target": "features/directories/components/counterparties-toolbar.tsx",
+      "type": "listens-event",
+      "sourceSection": "directory-counterparties",
+      "targetSection": "directories"
+    },
+    {
+      "source": "features/directory-counterparties/lib/directory-counterparties-events.ts",
+      "target": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx",
+      "type": "listens-event",
+      "sourceSection": "directory-counterparties",
+      "targetSection": "directory-counterparties"
+    },
+    {
       "source": "features/directory-counterparties/server/directory-counterparties.repository.ts",
       "target": "db/index.ts",
       "type": "uses-database",
@@ -19152,6 +19191,20 @@
       "source": "features/directory-materials/hooks/use-directory-materials.ts",
       "target": "features/directory-materials/types.ts",
       "type": "uses-type",
+      "sourceSection": "directory-materials",
+      "targetSection": "directory-materials"
+    },
+    {
+      "source": "features/directory-materials/lib/directory-materials-events.ts",
+      "target": "features/directories/components/materials-toolbar.tsx",
+      "type": "listens-event",
+      "sourceSection": "directory-materials",
+      "targetSection": "directories"
+    },
+    {
+      "source": "features/directory-materials/lib/directory-materials-events.ts",
+      "target": "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx",
+      "type": "listens-event",
       "sourceSection": "directory-materials",
       "targetSection": "directory-materials"
     },
@@ -19583,6 +19636,20 @@
       "targetSection": "directory-suppliers"
     },
     {
+      "source": "features/directory-suppliers/lib/directory-suppliers-events.ts",
+      "target": "features/directories/components/suppliers-toolbar.tsx",
+      "type": "listens-event",
+      "sourceSection": "directory-suppliers",
+      "targetSection": "directories"
+    },
+    {
+      "source": "features/directory-suppliers/lib/directory-suppliers-events.ts",
+      "target": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section.tsx",
+      "type": "listens-event",
+      "sourceSection": "directory-suppliers",
+      "targetSection": "directory-suppliers"
+    },
+    {
       "source": "features/directory-suppliers/server/directory-suppliers.repository.ts",
       "target": "db/index.ts",
       "type": "uses-database",
@@ -20006,6 +20073,20 @@
       "source": "features/directory-works/hooks/use-directory-works.ts",
       "target": "features/directory-works/types.ts",
       "type": "uses-type",
+      "sourceSection": "directory-works",
+      "targetSection": "directory-works"
+    },
+    {
+      "source": "features/directory-works/lib/directory-works-events.ts",
+      "target": "features/directories/components/works-toolbar.tsx",
+      "type": "listens-event",
+      "sourceSection": "directory-works",
+      "targetSection": "directories"
+    },
+    {
+      "source": "features/directory-works/lib/directory-works-events.ts",
+      "target": "features/directory-works/directory-works-details/components/directory-works-section.tsx",
+      "type": "listens-event",
       "sourceSection": "directory-works",
       "targetSection": "directory-works"
     },
@@ -22094,6 +22175,20 @@
       "type": "uses-type",
       "sourceSection": "global-purchases",
       "targetSection": "types"
+    },
+    {
+      "source": "features/global-purchases/lib/global-purchases-events.ts",
+      "target": "features/global-purchases/global-purchases-details/components/global-purchases-section.tsx",
+      "type": "listens-event",
+      "sourceSection": "global-purchases",
+      "targetSection": "global-purchases"
+    },
+    {
+      "source": "features/global-purchases/lib/global-purchases-events.ts",
+      "target": "features/global-purchases/global-purchases-details/components/global-purchases-toolbar.tsx",
+      "type": "listens-event",
+      "sourceSection": "global-purchases",
+      "targetSection": "global-purchases"
     },
     {
       "source": "features/global-purchases/lib/global-purchases-import-parser.ts",
@@ -26835,7 +26930,7 @@
       "files": [
         "features/finances/hooks/use-finances.ts [finances] → features/purchases/__mocks__/purchases.ts [purchases] (uses-mock)"
       ],
-      "explanation": "1 проблемных связей. 8 межфичевых связей (показаны первые 20). 8 связей между схемами БД (норма, в отдельной категории).",
+      "explanation": "1 проблемная связь. 0 спорных связей. 8 связей между схемами БД вынесены в dbRelations. Разрешённые бизнес-связи перечислены в allowedBusinessConnections.",
       "needsJustification": [],
       "displayedBadCount": 1,
       "totalNeedsJustification": 0,

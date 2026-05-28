@@ -17,14 +17,14 @@
       "Zod",
       "Vitest"
     ],
-    "gitCommit": "1c3ec9576d9d9f7769f39b68fd7585054c6b6349",
+    "gitCommit": "84cc610772915bf8a579aa100ee4252facbdde86",
     "sourceAnalyzedAt": "2026-05-27T21:30:00Z",
-    "graphGeneratedAt": "2026-05-28T07:34:09.639Z",
-    "graphVersion": "2.5.0"
+    "graphGeneratedAt": "2026-05-28T07:48:02.842Z",
+    "graphVersion": "2.6.0"
   },
   "summary": {
     "totalFiles": 618,
-    "totalConnections": 1162,
+    "totalConnections": 1172,
     "totalSections": 46,
     "layers": 20,
     "edgeTypes": 18,
@@ -6500,12 +6500,13 @@
       "description": "API-клиент справочника контрагентов",
       "confidence": "high",
       "incomingConnections": [
+        "features/directory-counterparties/hooks/use-directory-counterparties.ts",
         "features/projects/components/create-project-dialog.tsx"
       ],
       "outgoingConnections": [
         "features/directory-counterparties/api/directory-counterparties-errors.ts"
       ],
-      "incomingCount": 1,
+      "incomingCount": 2,
       "outgoingCount": 1,
       "routeSection": "directory-counterparties",
       "featureSection": "directory-counterparties",
@@ -6745,10 +6746,12 @@
         "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx"
       ],
       "outgoingConnections": [
-        "features/directory-counterparties/api/directory-counterparties-query-keys.ts"
+        "features/directory-counterparties/api/directory-counterparties-query-keys.ts",
+        "features/directory-counterparties/api/directory-counterparties-client.ts",
+        "features/directory-counterparties/types.ts"
       ],
       "incomingCount": 1,
-      "outgoingCount": 1,
+      "outgoingCount": 3,
       "routeSection": "directory-counterparties",
       "featureSection": "directory-counterparties",
       "featureSections": [
@@ -6871,10 +6874,11 @@
       "incomingConnections": [
         "features/directory-counterparties/api/directory-counterparties-query-keys.ts",
         "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-row.tsx",
+        "features/directory-counterparties/hooks/use-directory-counterparties.ts",
         "features/directory-counterparties/server/directory-counterparties.schemas.ts"
       ],
       "outgoingConnections": [],
-      "incomingCount": 3,
+      "incomingCount": 4,
       "outgoingCount": 0,
       "routeSection": "directory-counterparties",
       "featureSection": "directory-counterparties",
@@ -6890,12 +6894,13 @@
       "description": "API-клиент справочника материалов",
       "confidence": "high",
       "incomingConnections": [
-        "features/directory-materials/hooks/use-directory-material-categories.ts"
+        "features/directory-materials/hooks/use-directory-material-categories.ts",
+        "features/directory-materials/hooks/use-directory-materials.ts"
       ],
       "outgoingConnections": [
         "features/directory-materials/api/directory-materials-errors.ts"
       ],
-      "incomingCount": 1,
+      "incomingCount": 2,
       "outgoingCount": 1,
       "routeSection": "directory-materials",
       "featureSection": "directory-materials",
@@ -7156,10 +7161,12 @@
         "features/directory-materials/directory-materials-details/components/directory-materials-section.tsx"
       ],
       "outgoingConnections": [
-        "features/directory-materials/api/directory-materials-query-keys.ts"
+        "features/directory-materials/api/directory-materials-query-keys.ts",
+        "features/directory-materials/api/directory-materials-client.ts",
+        "features/directory-materials/types.ts"
       ],
       "incomingCount": 1,
-      "outgoingCount": 1,
+      "outgoingCount": 3,
       "routeSection": "directory-materials",
       "featureSection": "directory-materials",
       "featureSections": [
@@ -7397,10 +7404,11 @@
       "incomingConnections": [
         "features/directory-materials/directory-materials-details/components/directory-materials-row.tsx",
         "features/directory-materials/hooks/use-directory-material-categories.ts",
+        "features/directory-materials/hooks/use-directory-materials.ts",
         "features/directory-materials/server/directory-materials-ai.ts"
       ],
       "outgoingConnections": [],
-      "incomingCount": 3,
+      "incomingCount": 4,
       "outgoingCount": 0,
       "routeSection": "directory-materials",
       "featureSection": "directory-materials",
@@ -7415,11 +7423,13 @@
       "status": "production",
       "description": "API-клиент справочника поставщиков",
       "confidence": "high",
-      "incomingConnections": [],
+      "incomingConnections": [
+        "features/directory-suppliers/hooks/use-directory-suppliers.ts"
+      ],
       "outgoingConnections": [
         "features/directory-suppliers/api/directory-suppliers-errors.ts"
       ],
-      "incomingCount": 0,
+      "incomingCount": 1,
       "outgoingCount": 1,
       "routeSection": "directory-suppliers",
       "featureSection": "directory-suppliers",
@@ -7659,10 +7669,12 @@
         "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section.tsx"
       ],
       "outgoingConnections": [
-        "features/directory-suppliers/api/directory-suppliers-query-keys.ts"
+        "features/directory-suppliers/api/directory-suppliers-query-keys.ts",
+        "features/directory-suppliers/api/directory-suppliers-client.ts",
+        "features/directory-suppliers/types.ts"
       ],
       "incomingCount": 1,
-      "outgoingCount": 1,
+      "outgoingCount": 3,
       "routeSection": "directory-suppliers",
       "featureSection": "directory-suppliers",
       "featureSections": [
@@ -7786,10 +7798,11 @@
         "features/directory-suppliers/api/directory-suppliers-query-keys.ts",
         "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-row.tsx",
         "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section.tsx",
+        "features/directory-suppliers/hooks/use-directory-suppliers.ts",
         "features/directory-suppliers/server/directory-suppliers.schemas.ts"
       ],
       "outgoingConnections": [],
-      "incomingCount": 4,
+      "incomingCount": 5,
       "outgoingCount": 0,
       "routeSection": "directory-suppliers",
       "featureSection": "directory-suppliers",
@@ -7878,12 +7891,13 @@
       "confidence": "high",
       "incomingConnections": [
         "features/directory-works/directory-works-details/components/directory-works-section.tsx",
-        "features/directory-works/hooks/use-directory-work-categories.ts"
+        "features/directory-works/hooks/use-directory-work-categories.ts",
+        "features/directory-works/hooks/use-directory-works.ts"
       ],
       "outgoingConnections": [
         "features/directory-works/api/directory-works-errors.ts"
       ],
-      "incomingCount": 2,
+      "incomingCount": 3,
       "outgoingCount": 1,
       "routeSection": "directory-works",
       "featureSection": "directory-works",
@@ -8243,10 +8257,12 @@
         "features/directory-works/directory-works-details/components/directory-works-section.tsx"
       ],
       "outgoingConnections": [
-        "features/directory-works/api/directory-works-query-keys.ts"
+        "features/directory-works/api/directory-works-query-keys.ts",
+        "features/directory-works/api/directory-works-client.ts",
+        "features/directory-works/types.ts"
       ],
       "incomingCount": 2,
-      "outgoingCount": 1,
+      "outgoingCount": 3,
       "routeSection": "directory-works",
       "featureSection": "directory-works",
       "featureSections": [
@@ -8572,11 +8588,12 @@
       "confidence": "medium",
       "incomingConnections": [
         "features/directory-works/directory-works-details/components/directory-works-row.tsx",
+        "features/directory-works/hooks/use-directory-works.ts",
         "features/directory-works/server/directory-works.export.ts",
         "features/directory-works/server/directory-works.search.ts"
       ],
       "outgoingConnections": [],
-      "incomingCount": 3,
+      "incomingCount": 4,
       "outgoingCount": 0,
       "routeSection": "directory-works",
       "featureSection": "directory-works",
@@ -8635,12 +8652,13 @@
         "features/estimates/components/estimate-import-dialog.tsx",
         "features/estimates/estimate-details/components/estimate-editor-context.tsx",
         "features/estimates/estimate-details/lib/optimistic-update.ts",
-        "features/estimates/estimate-details/types.ts"
+        "features/estimates/estimate-details/types.ts",
+        "features/estimates/hooks/use-project-estimate-content.ts"
       ],
       "outgoingConnections": [
         "features/projects/api/projects-errors.ts"
       ],
-      "incomingCount": 4,
+      "incomingCount": 5,
       "outgoingCount": 1,
       "routeSection": "estimates",
       "featureSection": "estimates",
@@ -9185,10 +9203,12 @@
       ],
       "outgoingConnections": [
         "features/estimates/estimate-details/lib/optimistic-update.ts",
-        "features/projects/api/projects-query-keys.ts"
+        "features/projects/api/projects-query-keys.ts",
+        "features/estimates/api/project-estimate-content-client.ts",
+        "types/project-estimate-content.ts"
       ],
       "incomingCount": 4,
-      "outgoingCount": 2,
+      "outgoingCount": 4,
       "routeSection": "estimates",
       "featureSection": "estimates",
       "featureSections": [
@@ -9498,11 +9518,13 @@
       "status": "production",
       "description": "API-клиент фичи «finances»",
       "confidence": "medium",
-      "incomingConnections": [],
+      "incomingConnections": [
+        "features/finances/hooks/use-finances.ts"
+      ],
       "outgoingConnections": [
         "features/finances/types.ts"
       ],
-      "incomingCount": 0,
+      "incomingCount": 1,
       "outgoingCount": 1,
       "routeSection": "finances",
       "featureSection": "finances",
@@ -9732,12 +9754,13 @@
       "confidence": "high",
       "incomingConnections": [
         "features/global-purchases/global-purchases-details/components/global-purchase-material-dialog.tsx",
+        "features/global-purchases/hooks/use-global-purchases.ts",
         "features/purchases/purchase-details/components/add-purchase-dialog.tsx"
       ],
       "outgoingConnections": [
         "features/global-purchases/api/global-purchases-errors.ts"
       ],
-      "incomingCount": 2,
+      "incomingCount": 3,
       "outgoingCount": 1,
       "routeSection": "global-purchases",
       "featureSection": "global-purchases",
@@ -10589,12 +10612,13 @@
       "confidence": "high",
       "incomingConnections": [
         "features/global-purchases/global-purchases-details/components/global-purchases-screen.tsx",
-        "features/projects/hooks/use-project-dashboard-stats.ts"
+        "features/projects/hooks/use-project-dashboard-stats.ts",
+        "features/projects/hooks/use-projects.ts"
       ],
       "outgoingConnections": [
         "features/projects/api/projects-errors.ts"
       ],
-      "incomingCount": 2,
+      "incomingCount": 3,
       "outgoingCount": 1,
       "routeSection": "projects",
       "featureSection": "projects",
@@ -11374,10 +11398,11 @@
       "confidence": "medium",
       "incomingConnections": [
         "features/finances/hooks/use-finances.ts",
-        "features/purchases/api/purchases-query-keys.ts"
+        "features/purchases/api/purchases-query-keys.ts",
+        "features/purchases/hooks/use-purchases.ts"
       ],
       "outgoingConnections": [],
-      "incomingCount": 2,
+      "incomingCount": 3,
       "outgoingCount": 0,
       "routeSection": "purchases",
       "featureSection": "purchases",
@@ -13371,11 +13396,12 @@
         "features/global-purchases/api/global-purchases-query-keys.ts",
         "features/global-purchases/global-purchases-details/components/global-purchase-archive-dialog.tsx",
         "features/global-purchases/global-purchases-details/components/global-purchases-import-dialog.tsx",
+        "features/global-purchases/hooks/use-global-purchases.ts",
         "features/global-purchases/lib/global-purchases-import-parser.ts",
         "features/global-purchases/server/global-purchases-material-options.repository.ts"
       ],
       "outgoingConnections": [],
-      "incomingCount": 5,
+      "incomingCount": 6,
       "outgoingCount": 0,
       "routeSection": "types",
       "featureSection": "types",
@@ -13397,11 +13423,12 @@
         "features/estimates/estimate-details/components/estimate-section-card.tsx",
         "features/estimates/estimate-details/components/estimate-work-card.tsx",
         "features/estimates/estimate-details/components/estimate-work-picker-dialog.tsx",
+        "features/estimates/hooks/use-project-estimate-content.ts",
         "features/execution/components/execution-view.tsx",
         "features/execution/execution-details/components/execution-row.tsx"
       ],
       "outgoingConnections": [],
-      "incomingCount": 8,
+      "incomingCount": 9,
       "outgoingCount": 0,
       "routeSection": "types",
       "featureSection": "types",
@@ -13455,10 +13482,11 @@
         "features/projects/components/project-card.tsx",
         "features/projects/components/projects-toolbar.tsx",
         "features/projects/components/projects-view.tsx",
+        "features/projects/hooks/use-projects.ts",
         "features/projects/server/projects.service.ts"
       ],
       "outgoingConnections": [],
-      "incomingCount": 14,
+      "incomingCount": 15,
       "outgoingCount": 0,
       "routeSection": "types",
       "featureSection": "types",
@@ -17378,6 +17406,20 @@
       "targetSection": "directory-counterparties"
     },
     {
+      "source": "features/directory-counterparties/hooks/use-directory-counterparties.ts",
+      "target": "features/directory-counterparties/api/directory-counterparties-client.ts",
+      "type": "api-call",
+      "sourceSection": "directory-counterparties",
+      "targetSection": "directory-counterparties"
+    },
+    {
+      "source": "features/directory-counterparties/hooks/use-directory-counterparties.ts",
+      "target": "features/directory-counterparties/types.ts",
+      "type": "uses-type",
+      "sourceSection": "directory-counterparties",
+      "targetSection": "directory-counterparties"
+    },
+    {
       "source": "features/directory-counterparties/server/directory-counterparties.repository.ts",
       "target": "db/index.ts",
       "type": "uses-database",
@@ -17612,6 +17654,20 @@
       "source": "features/directory-materials/hooks/use-directory-materials.ts",
       "target": "features/directory-materials/api/directory-materials-query-keys.ts",
       "type": "query-keys",
+      "sourceSection": "directory-materials",
+      "targetSection": "directory-materials"
+    },
+    {
+      "source": "features/directory-materials/hooks/use-directory-materials.ts",
+      "target": "features/directory-materials/api/directory-materials-client.ts",
+      "type": "api-call",
+      "sourceSection": "directory-materials",
+      "targetSection": "directory-materials"
+    },
+    {
+      "source": "features/directory-materials/hooks/use-directory-materials.ts",
+      "target": "features/directory-materials/types.ts",
+      "type": "uses-type",
       "sourceSection": "directory-materials",
       "targetSection": "directory-materials"
     },
@@ -17896,6 +17952,20 @@
       "targetSection": "directory-suppliers"
     },
     {
+      "source": "features/directory-suppliers/hooks/use-directory-suppliers.ts",
+      "target": "features/directory-suppliers/api/directory-suppliers-client.ts",
+      "type": "api-call",
+      "sourceSection": "directory-suppliers",
+      "targetSection": "directory-suppliers"
+    },
+    {
+      "source": "features/directory-suppliers/hooks/use-directory-suppliers.ts",
+      "target": "features/directory-suppliers/types.ts",
+      "type": "uses-type",
+      "sourceSection": "directory-suppliers",
+      "targetSection": "directory-suppliers"
+    },
+    {
       "source": "features/directory-suppliers/server/directory-suppliers.repository.ts",
       "target": "db/index.ts",
       "type": "uses-database",
@@ -18165,6 +18235,20 @@
       "source": "features/directory-works/hooks/use-directory-works.ts",
       "target": "features/directory-works/api/directory-works-query-keys.ts",
       "type": "query-keys",
+      "sourceSection": "directory-works",
+      "targetSection": "directory-works"
+    },
+    {
+      "source": "features/directory-works/hooks/use-directory-works.ts",
+      "target": "features/directory-works/api/directory-works-client.ts",
+      "type": "api-call",
+      "sourceSection": "directory-works",
+      "targetSection": "directory-works"
+    },
+    {
+      "source": "features/directory-works/hooks/use-directory-works.ts",
+      "target": "features/directory-works/types.ts",
+      "type": "uses-type",
       "sourceSection": "directory-works",
       "targetSection": "directory-works"
     },
@@ -18937,6 +19021,20 @@
       "type": "query-keys",
       "sourceSection": "estimates",
       "targetSection": "projects"
+    },
+    {
+      "source": "features/estimates/hooks/use-project-estimate-content.ts",
+      "target": "features/estimates/api/project-estimate-content-client.ts",
+      "type": "api-call",
+      "sourceSection": "estimates",
+      "targetSection": "estimates"
+    },
+    {
+      "source": "features/estimates/hooks/use-project-estimate-content.ts",
+      "target": "types/project-estimate-content.ts",
+      "type": "uses-type",
+      "sourceSection": "estimates",
+      "targetSection": "types"
     },
     {
       "source": "features/execution/__mocks__/execution.ts",
@@ -23770,16 +23868,7 @@
         "features/finances/hooks/use-finances.ts [finances] → features/purchases/__mocks__/purchases.ts [purchases] (uses-mock)"
       ],
       "explanation": "1 проблемных связей. 8 межфичевых связей (показаны первые 20). 8 связей между схемами БД (норма, в отдельной категории).",
-      "needsJustification": [
-        "features/account-settings/components/sensitive-actions-card.tsx [account-settings] → features/workspace-settings/api/team-client.ts [workspace-settings] (api-call)",
-        "features/account-settings/components/sensitive-actions-card.tsx [account-settings] → features/workspace-settings/types.ts [workspace-settings] (uses-type)",
-        "features/finances/hooks/use-finances.ts [finances] → features/purchases/api/purchases-client.ts [purchases] (api-call)",
-        "features/global-purchases/global-purchases-details/components/global-purchases-screen.tsx [global-purchases] → features/projects/api/projects-client.ts [projects] (api-call)",
-        "features/global-purchases/global-purchases-details/components/global-purchases-screen.tsx [global-purchases] → features/projects/api/projects-query-keys.ts [projects] (query-keys)",
-        "features/projects/components/create-project-dialog.tsx [projects] → features/directory-counterparties/api/directory-counterparties-client.ts [directory-counterparties] (api-call)",
-        "features/projects/components/create-project-dialog.tsx [projects] → features/directory-counterparties/api/directory-counterparties-query-keys.ts [directory-counterparties] (query-keys)",
-        "features/purchases/purchase-details/components/add-purchase-dialog.tsx [purchases] → features/global-purchases/api/global-purchases-client.ts [global-purchases] (api-call)"
-      ],
+      "needsJustification": [],
       "displayedBadCount": 1,
       "totalNeedsJustification": 8,
       "dbRelations": [
@@ -23792,7 +23881,16 @@
         "db/schema/workspace-invitations.ts [workspace-settings] → db/schema/rbac.ts [access-control]",
         "db/schema/workspace-members.ts [workspace-settings] → db/schema/rbac.ts [access-control]"
       ],
-      "totalDbRelations": 8
+      "totalDbRelations": 8,
+      "allowedBusinessConnections": {
+        "projects→directory-counterparties": "Выбор заказчика для проекта",
+        "global-purchases→projects": "Привязка глобальной закупки к проекту",
+        "purchases→global-purchases": "Связь закупки сметы с глобальной закупкой",
+        "account-settings→workspace-settings": "Настройки аккаунта используют API команды",
+        "finances→purchases": "Финансы читают данные закупок",
+        "estimates→projects": "Сметы внутри проекта используют API проектов",
+        "execution→estimates": "Выполнение читает содержимое сметы"
+      }
     },
     {
       "id": "MIGRATION-001",
@@ -23997,7 +24095,9 @@
       "db": true,
       "tests": false,
       "usesMocks": false,
-      "status": "production"
+      "status": "production",
+      "embeddedOnly": true,
+      "notes": "Живут в шапке (notification-bell), не на отдельной странице"
     },
     "access-control": {
       "page": true,

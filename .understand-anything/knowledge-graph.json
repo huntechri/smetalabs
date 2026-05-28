@@ -17,9 +17,9 @@
       "Zod",
       "Vitest"
     ],
-    "gitCommit": "f30d4acfc9dcd408f3cf19b22caa82a1215ad4d4",
+    "gitCommit": "b7d978a4a7c4901694c91f8c5fdaf7594c9c7fb2",
     "sourceAnalyzedAt": "2026-05-28T07:55:39.579Z",
-    "graphGeneratedAt": "2026-05-28T11:46:24.049Z",
+    "graphGeneratedAt": "2026-05-28T11:53:25.960Z",
     "graphVersion": "1.0.0"
   },
   "summary": {

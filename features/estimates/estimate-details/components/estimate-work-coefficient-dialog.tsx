@@ -21,7 +21,7 @@ interface EstimateWorkCoefficientDialogProps {
   projectId: string
   recordId: string
   saving: boolean
-  applyWorkCoefficient: (coefficient: number) => Promise<any>
+  applyWorkCoefficient: (coefficient: number) => Promise<unknown>
 }
 
 function formatCoefficientInput(value: number) {

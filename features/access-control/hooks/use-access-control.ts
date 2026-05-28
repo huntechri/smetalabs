@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { assignRole, removeRole } from "@/app/actions/access-control"
 import { fetchAccessRoles } from "../api/access-control-client"
 import { accessControlQueryKeys } from "../api/access-control-query-keys"
-import type { ApiRole } from "../types"
 
 export function useRoles() {
   const query = useQuery({

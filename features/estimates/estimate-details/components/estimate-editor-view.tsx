@@ -179,7 +179,6 @@ export function EstimateEditorView({
     loading,
     loadError,
     mutationError,
-    clearMutationError,
     saving,
     savingIds,
     applyChange,

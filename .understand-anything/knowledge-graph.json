@@ -17,14 +17,14 @@
       "Zod",
       "Vitest"
     ],
-    "gitCommit": "b7d978a4a7c4901694c91f8c5fdaf7594c9c7fb2",
+    "gitCommit": "a95bd77db226c288408965bd0c946cb25d050910",
     "sourceAnalyzedAt": "2026-05-28T07:55:39.579Z",
-    "graphGeneratedAt": "2026-05-28T11:53:25.960Z",
+    "graphGeneratedAt": "2026-05-28T12:05:36.384Z",
     "graphVersion": "1.0.0"
   },
   "summary": {
     "totalFiles": 613,
-    "totalConnections": 974,
+    "totalConnections": 975,
     "totalSections": 14,
     "layers": 20,
     "edgeTypes": 17,
@@ -6344,10 +6344,11 @@
         "components/ui/badge.tsx",
         "components/ui/button.tsx",
         "components/ui/dropdown-menu.tsx",
-        "features/directory-counterparties/types.ts"
+        "features/directory-counterparties/types.ts",
+        "lib/utils.ts"
       ],
       "incomingCount": 0,
-      "outgoingCount": 4,
+      "outgoingCount": 5,
       "routeSection": "directory-counterparties",
       "featureSection": "directory-counterparties",
       "featureSections": [
@@ -12266,6 +12267,7 @@
         "features/auth/components/login-form.tsx",
         "features/auth/components/set-password-form.tsx",
         "features/auth/components/signup-form.tsx",
+        "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-row.tsx",
         "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-value.tsx",
         "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-value.tsx",
         "features/directory-works/directory-works-details/components/directory-works-value.tsx",
@@ -12288,7 +12290,7 @@
         "features/workspace-settings/components/members/workspace-members-mobile-list.tsx"
       ],
       "outgoingConnections": [],
-      "incomingCount": 62,
+      "incomingCount": 63,
       "outgoingCount": 0,
       "routeSection": "shared-lib",
       "featureSection": "shared-lib",
@@ -15629,6 +15631,13 @@
       "type": "uses-type",
       "sourceSection": "directory-counterparties",
       "targetSection": "directory-counterparties"
+    },
+    {
+      "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-row.tsx",
+      "target": "lib/utils.ts",
+      "type": "uses-lib",
+      "sourceSection": "directory-counterparties",
+      "targetSection": "shared-lib"
     },
     {
       "source": "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-section.tsx",

@@ -13,6 +13,7 @@ import {
   GearSixIcon,
   PencilSimpleIcon,
 } from "@phosphor-icons/react"
+import { cn } from "@/lib/utils"
 import { DirectoryCounterpartiesMetricGroup } from "./directory-counterparties-metric-group"
 import { DirectoryCounterpartiesName } from "./directory-counterparties-name"
 import { DirectoryCounterpartiesValue } from "./directory-counterparties-value"
@@ -31,7 +32,6 @@ export function DirectoryCounterpartiesRow({
   const typeLabel = row.type === "customer" ? "Заказчик" : "Подрядчик"
   const legalStatusLabel =
     row.legalStatus === "juridical" ? "Юр. лицо" : "Физ. лицо"
-  const extraLabel = row.legalStatus === "juridical" ? "Банк / БИК" : "Паспорт"
 
   return (
     <div className="mx-3 my-1.5 grid gap-3 rounded-md border border-border p-3 transition-colors hover:bg-muted/50 xl:grid-cols-[minmax(420px,1fr)_minmax(560px,0.95fr)]">
@@ -39,7 +39,12 @@ export function DirectoryCounterpartiesRow({
         <DirectoryCounterpartiesName value={row.name} />
       </div>
 
-      <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(150px,0.7fr)_minmax(150px,0.7fr)_minmax(220px,1fr)]">
+      <div className={cn(
+        "grid min-w-0 gap-1.5 rounded-md border border-border p-1.5",
+        row.legalStatus === "juridical"
+          ? "md:grid-cols-[minmax(150px,0.7fr)_minmax(150px,0.7fr)_minmax(220px,1fr)]"
+          : "md:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)]"
+      )}>
         <DirectoryCounterpartiesMetricGroup title="Тип">
           <Badge
             variant={row.type === "customer" ? "default" : "secondary"}
@@ -56,63 +61,51 @@ export function DirectoryCounterpartiesRow({
         </DirectoryCounterpartiesMetricGroup>
 
         <DirectoryCounterpartiesMetricGroup title="Контакты">
-          <DirectoryCounterpartiesValue label="ИНН" value={row.inn} />
-          <DirectoryCounterpartiesValue label="Тел." value={row.phone} />
+          <div className="flex items-center justify-between gap-1.5 w-full">
+            <DirectoryCounterpartiesValue label="Тел." value={row.phone} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  aria-label={`Действия для ${row.name}`}
+                  className="ml-auto"
+                  disabled={saving}
+                  size="icon-sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  <GearSixIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onClick={() => onEdit(row)}>
+                  <PencilSimpleIcon />
+                  Редактировать
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onArchive(row)}
+                  variant="destructive"
+                >
+                  <ArchiveIcon />
+                  Архивировать
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </DirectoryCounterpartiesMetricGroup>
 
-        <DirectoryCounterpartiesMetricGroup title={extraLabel}>
-          {row.legalStatus === "juridical" ? (
-            <>
-              <DirectoryCounterpartiesValue
-                label="Банк"
-                value={row.bankDetails.bankName}
-              />
-              <DirectoryCounterpartiesValue
-                label="БИК"
-                value={row.bankDetails.bik}
-              />
-            </>
-          ) : (
-            <>
-              <DirectoryCounterpartiesValue
-                label="Серия"
-                value={row.passport.series}
-              />
-              <DirectoryCounterpartiesValue
-                label="Номер"
-                value={row.passport.number}
-              />
-            </>
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                aria-label={`Действия для ${row.name}`}
-                className="ml-auto"
-                disabled={saving}
-                size="icon-sm"
-                type="button"
-                variant="ghost"
-              >
-                <GearSixIcon />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onClick={() => onEdit(row)}>
-                <PencilSimpleIcon />
-                Редактировать
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => onArchive(row)}
-                variant="destructive"
-              >
-                <ArchiveIcon />
-                Архивировать
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </DirectoryCounterpartiesMetricGroup>
+        {row.legalStatus === "juridical" && (
+          <DirectoryCounterpartiesMetricGroup title="Банк / БИК">
+            <DirectoryCounterpartiesValue
+              label="Банк"
+              value={row.bankDetails.bankName}
+            />
+            <DirectoryCounterpartiesValue
+              label="БИК"
+              value={row.bankDetails.bik}
+            />
+          </DirectoryCounterpartiesMetricGroup>
+        )}
       </div>
     </div>
   )

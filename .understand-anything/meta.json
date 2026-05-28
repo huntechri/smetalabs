@@ -1,8 +1,9 @@
 {
-  "lastAnalyzedAt": "2026-05-27T21:40:00Z",
-  "gitCommitHash": "1b76d7c6302f51d2ed82f15e6a28b98efaef2085",
-  "version": "2.0.0",
+  "lastAnalyzedAt": "2026-05-28T06:00:00Z",
+  "gitCommitHash": "8d53e1ccf7ea848fc106bb2095258685820b44af",
+  "version": "2.1.0",
   "analyzedFiles": 618,
-  "connections": 1036,
-  "findings": 7
+  "connections": 1149,
+  "findings": 7,
+  "description": "Knowledge graph v2.1 — all 7 issues fixed: descriptions filled, sections split, findings corrected, chains rebuilt, API connections added"
 }

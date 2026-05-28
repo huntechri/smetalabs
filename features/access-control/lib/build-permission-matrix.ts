@@ -1,6 +1,6 @@
 import type { Role } from "@/types/roles"
-import type { ApiRole } from "../hooks/use-access-control"
 import type {
+  ApiRole,
   PermissionDefinition,
   PermissionGroup,
   PermissionKey,

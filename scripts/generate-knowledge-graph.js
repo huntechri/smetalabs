@@ -18,15 +18,18 @@
  *   P6 — Findings generation (MOCK, STUB, CIRC, ISOL, LARGE, CROSS, MIGRATION)
  *   P7 — Readiness assessment (14 sections, aliases)
  *   P8 — SectionChains (layers per section, alias merging)
- *   P9 — DocComparison (cross-reference with features/*/docs/)
+ *   P9 — DocComparison (cross-reference with features/[feature]/docs/)
  *   P10 — CrossSectionRules, save & summary
  */
 
-const fs = require('fs');
-const path = require('path');
-const cp = require('child_process');
+import fs from 'fs';
+import path from 'path';
+import cp from 'child_process';
+import { fileURLToPath } from 'url';
 
 // ─── Config ──────────────────────────────────────────────────────────
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 const OUTPUT = path.join(PROJECT_ROOT, '.understand-anything', 'knowledge-graph.json');
 const INTERMEDIATE = path.join(PROJECT_ROOT, '.understand-anything', 'intermediate', 'assembled-graph.json');
@@ -57,7 +60,68 @@ if (mode === 'existing') {
   process.exit(1);
 }
 
+// Filter out any files that no longer exist on disk
+g.files = g.files.filter(f => {
+  if (f.path.endsWith('/')) return true;
+  return fs.existsSync(path.join(PROJECT_ROOT, f.path));
+});
+
+// Add newly created EstimateWorkCoefficientDialog component if not present
+const newComponent = 'features/estimates/estimate-details/components/estimate-work-coefficient-dialog.tsx';
+if (fs.existsSync(path.join(PROJECT_ROOT, newComponent)) && !g.files.some(f => f.path === newComponent)) {
+  g.files.push({
+    path: newComponent,
+    layer: 'components',
+    section: 'estimates',
+    status: 'production',
+    description: 'Компонент: диалоговое окно коэффициента работ сметы',
+    confidence: 'high',
+    incomingConnections: [],
+    outgoingConnections: [],
+    incomingCount: 0,
+    outgoingCount: 0,
+    routeSection: 'estimates',
+    featureSection: 'estimates',
+    featureSections: ['estimates']
+  });
+}
+
+// Scan db/migrations/ directory and add any new SQL files to g.files
+const migrationsDir = path.join(PROJECT_ROOT, 'db', 'migrations');
+if (fs.existsSync(migrationsDir)) {
+  const filesOnDisk = fs.readdirSync(migrationsDir);
+  filesOnDisk.forEach(filename => {
+    if (filename.endsWith('.sql')) {
+      const relPath = 'db/migrations/' + filename;
+      if (!g.files.some(f => f.path === relPath)) {
+        g.files.push({
+          path: relPath,
+          layer: 'migrations',
+          section: 'database',
+          status: 'production',
+          description: `Миграция БД: ${filename}`,
+          confidence: 'high',
+          incomingConnections: [],
+          outgoingConnections: [],
+          incomingCount: 0,
+          outgoingCount: 0,
+          routeSection: 'database',
+          featureSection: 'database',
+          featureSections: ['database']
+        });
+      }
+    }
+  });
+}
+
 const fileMap = new Map(g.files.map(f => [f.path, f]));
+
+// Clean up outgoing connections pointing to deleted files
+g.files.forEach(f => {
+  f.outgoingConnections = f.outgoingConnections.filter(target => fileMap.has(target));
+  f.outgoingCount = f.outgoingConnections.length;
+});
+
 console.log('[P1] ' + g.files.length + ' files loaded');
 
 // ─── P2 — Descriptions & confidence ──────────────────────────────────
@@ -447,9 +511,8 @@ g.files.forEach(fileEntry => {
     if (resolved && resolved !== fp) found.push(resolved);
   }
   
-  const missing = [...new Set(found)].filter(ip => !fileEntry.outgoingConnections.includes(ip));
-  missing.forEach(m => { fileEntry.outgoingConnections.push(m); totalImportsAdded++; });
-  if (missing.length > 0) fileEntry.outgoingCount = fileEntry.outgoingConnections.length;
+  fileEntry.outgoingConnections = [...new Set(found)];
+  fileEntry.outgoingCount = fileEntry.outgoingConnections.length;
 });
 
 console.log('[P4] ' + totalImportsAdded + ' missing imports added');
@@ -547,13 +610,19 @@ if (stubs.length > 0) {
   });
 }
 
-// CIRC-001 — circular dependencies (placeholder: already detected in source)
-g.findings.push({
-  id: 'CIRC-001', severity: 'high',
-  title: 'Круговые зависимости',
-  files: ['features/access-control/api/access-control-client.ts ↔ features/access-control/hooks/use-access-control.ts'],
-  explanation: 'Обнаружены циклические импорты — могут вызвать проблемы при сборке.',
-});
+// CIRC-001 — circular dependencies
+const pathA = 'features/access-control/api/access-control-client.ts';
+const pathB = 'features/access-control/hooks/use-access-control.ts';
+const hasAtoB = connections.some(c => c.source === pathA && c.target === pathB);
+const hasBtoA = connections.some(c => c.source === pathB && c.target === pathA);
+if (hasAtoB && hasBtoA) {
+  g.findings.push({
+    id: 'CIRC-001', severity: 'high',
+    title: 'Круговые зависимости',
+    files: [`${pathA} ↔ ${pathB}`],
+    explanation: 'Обнаружены циклические импорты — могут вызвать проблемы при сборке.',
+  });
+}
 
 // ISOL-001
 const TRULY_SUSPICIOUS = [

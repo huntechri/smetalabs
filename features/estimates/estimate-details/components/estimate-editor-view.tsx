@@ -15,24 +15,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Field, FieldLabel } from "@/components/ui/field"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import {
   fetchProjectEstimateMaterialOptions,
-  fetchProjectEstimateWorkCoefficient,
   fetchProjectEstimateWorkOptions,
   type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
+import { EstimateWorkCoefficientDialog } from "./estimate-work-coefficient-dialog"
 import { EstimateImportDialog } from "@/features/estimates/components/estimate-import-dialog"
 import { exportEstimateToExcel } from "@/features/estimates/lib/estimate-excel-exporter"
 import { CreateSectionDialog } from "@/features/estimates/estimate-details/components/create-section-dialog"
@@ -78,11 +68,6 @@ const SORT_ORDER_STEP = 1000
 
 type MoveDirection = "up" | "down"
 
-function formatCoefficientInput(value: number) {
-  return Number.isInteger(value)
-    ? String(value)
-    : String(value).replace(".", ",")
-}
 
 function normalizeSearchText(value: unknown) {
   return String(value ?? "")
@@ -204,10 +189,6 @@ export function EstimateEditorView({
   } = useProjectEstimateContent(projectId, recordId)
   const [sectionOpen, setSectionOpen] = React.useState(false)
   const [coefficientOpen, setCoefficientOpen] = React.useState(false)
-  const [coefficientValue, setCoefficientValue] = React.useState("0")
-  const [coefficientError, setCoefficientError] = React.useState<string | null>(
-    null
-  )
   const [workDialog, setWorkDialog] =
     React.useState<WorkDialogState>(EMPTY_WORK_DIALOG)
   const [materialDialog, setMaterialDialog] =
@@ -289,12 +270,7 @@ export function EstimateEditorView({
     return codes
   }, [materialDialog.work])
 
-  const coefficientQuery = useQuery({
-    queryKey: ["project-estimate-work-coefficient", projectId, recordId],
-    queryFn: () => fetchProjectEstimateWorkCoefficient({ projectId, recordId }),
-    enabled: coefficientOpen,
-    staleTime: 0,
-  })
+
 
   React.useEffect(() => {
     if (searchParams.get("dialog") !== WORK_COEFFICIENT_DIALOG_KEY) {
@@ -338,18 +314,7 @@ export function EstimateEditorView({
     }
   }, [content])
 
-  const nextValue = coefficientQuery.data?.data.coefficientPercent
-  const [prevCoefficientOpen, setPrevCoefficientOpen] =
-    React.useState(coefficientOpen)
-  const [prevNextValue, setPrevNextValue] = React.useState(nextValue)
 
-  if (coefficientOpen !== prevCoefficientOpen || nextValue !== prevNextValue) {
-    setPrevCoefficientOpen(coefficientOpen)
-    setPrevNextValue(nextValue)
-    if (coefficientOpen && nextValue !== undefined) {
-      setCoefficientValue(formatCoefficientInput(nextValue))
-    }
-  }
 
   const workOptions = useQuery({
     queryKey: projectsQueryKeys.estimateWorkOptions(
@@ -513,32 +478,7 @@ export function EstimateEditorView({
     [save]
   )
 
-  const applyCoefficient = useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault()
-      const parsed = Number(coefficientValue.trim().replace(",", "."))
 
-      if (!Number.isFinite(parsed) || parsed < 0) {
-        setCoefficientError("Введите коэффициент 0 или больше")
-        return
-      }
-
-      setCoefficientError(null)
-
-      try {
-        await applyWorkCoefficient(parsed)
-        await coefficientQuery.refetch()
-        setCoefficientOpen(false)
-      } catch (err) {
-        setCoefficientError(
-          err instanceof Error
-            ? err.message
-            : "Не удалось применить коэффициент"
-        )
-      }
-    },
-    [applyWorkCoefficient, coefficientQuery, coefficientValue]
-  )
 
   const addDirectoryWork = useCallback(
     async (
@@ -760,52 +700,14 @@ export function EstimateEditorView({
           onSelect={handleMaterialSelect}
           onDirectorySubmit={addDirectoryMaterial}
         />
-        <Dialog
+        <EstimateWorkCoefficientDialog
           open={coefficientOpen}
           onOpenChange={handleCoefficientOpenChange}
-        >
-          <DialogContent className="sm:max-w-sm">
-            <form className="flex flex-col gap-4" onSubmit={applyCoefficient}>
-              <DialogHeader>
-                <DialogTitle>Коэффициент работ</DialogTitle>
-                <DialogDescription>
-                  Коэффициент применяется только к работам. Цена округляется
-                  вверх до ближайших 10 ₽.
-                </DialogDescription>
-              </DialogHeader>
-              <Field>
-                <FieldLabel htmlFor="coefficient">Коэффициент (%)</FieldLabel>
-                <Input
-                  id="coefficient"
-                  autoFocus
-                  disabled={coefficientQuery.isLoading}
-                  inputMode="decimal"
-                  onChange={(event) => setCoefficientValue(event.target.value)}
-                  placeholder="10"
-                  value={coefficientValue}
-                />
-              </Field>
-              {coefficientError ? (
-                <p className="text-xs text-destructive">{coefficientError}</p>
-              ) : null}
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCoefficientOpen(false)}
-                >
-                  Отмена
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={saving || coefficientQuery.isLoading}
-                >
-                  Применить
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+          projectId={projectId}
+          recordId={recordId}
+          saving={saving}
+          applyWorkCoefficient={applyWorkCoefficient}
+        />
         <AlertDialog
           open={archiveRequest !== null}
           onOpenChange={handleArchiveOpenChange}

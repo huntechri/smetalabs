@@ -11,7 +11,6 @@ import {
   type EstimatePurchasesParams,
 } from "@/features/purchases/api/purchases-client"
 import { purchasesQueryKeys } from "@/features/purchases/api/purchases-query-keys"
-import { purchaseRows } from "@/features/purchases/__mocks__/purchases"
 import type { PurchaseRow, AddPurchaseInput, UpdatePurchaseInput } from "@/types/purchase"
 
 const ESTIMATE_PURCHASES_STALE_TIME_MS = 30_000
@@ -47,10 +46,10 @@ export function usePurchases({ estimateId, projectId }: UsePurchasesInput) {
     placeholderData: (previousData) => previousData,
   })
 
-  // Use mocks as fallback when API is not yet available (e.g. during development)
+  // Use empty array as fallback when API has no data
   const data = purchasesQuery.data?.data ?? null
   const fallbackRows: PurchaseRow[] =
-    data !== null ? data : purchaseRows
+    data !== null ? data : []
 
   // Client-side search filtering as additional safety net
   const filteredRows = useMemo(() => {

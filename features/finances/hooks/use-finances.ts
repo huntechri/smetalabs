@@ -11,7 +11,6 @@ import {
   deleteProjectEstimatePayment,
 } from "@/features/finances/api/finances-client"
 import { fetchEstimatePurchases } from "@/features/purchases/api/purchases-client"
-import { purchaseRows } from "@/features/purchases/__mocks__/purchases"
 import type { FinanceSection, FinancePayment } from "@/features/finances/types"
 import type { PurchaseRow } from "@/types/purchase"
 
@@ -72,7 +71,7 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
         ? rawPurchases
         : null
 
-  const fallbackPurchases: PurchaseRow[] = purchasesData !== null ? purchasesData : purchaseRows
+  const fallbackPurchases: PurchaseRow[] = purchasesData !== null ? purchasesData : []
   const totalPurchasesAmount = fallbackPurchases.reduce((sum: number, p: PurchaseRow) => sum + (p.factTotal ?? 0), 0)
 
   // Mutations with Optimistic UI updates

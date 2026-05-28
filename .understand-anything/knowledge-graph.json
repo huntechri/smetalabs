@@ -17,14 +17,14 @@
       "Zod",
       "Vitest"
     ],
-    "gitCommit": "a95bd77db226c288408965bd0c946cb25d050910",
+    "gitCommit": "2482449d547b9b730683d5cd1030c0e69aabb50f",
     "sourceAnalyzedAt": "2026-05-28T07:55:39.579Z",
-    "graphGeneratedAt": "2026-05-28T12:05:36.384Z",
+    "graphGeneratedAt": "2026-05-28T12:20:38.618Z",
     "graphVersion": "1.0.0"
   },
   "summary": {
     "totalFiles": 613,
-    "totalConnections": 975,
+    "totalConnections": 976,
     "totalSections": 14,
     "layers": 20,
     "edgeTypes": 17,
@@ -7119,6 +7119,7 @@
       "confidence": "high",
       "incomingConnections": [],
       "outgoingConnections": [
+        "lib/utils.ts",
         "features/directory-suppliers/types.ts",
         "components/ui/button.tsx",
         "components/ui/dialog.tsx",
@@ -7128,7 +7129,7 @@
         "components/ui/select.tsx"
       ],
       "incomingCount": 0,
-      "outgoingCount": 7,
+      "outgoingCount": 8,
       "routeSection": "directory-suppliers",
       "featureSection": "directory-suppliers",
       "featureSections": [
@@ -12269,6 +12270,7 @@
         "features/auth/components/signup-form.tsx",
         "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-row.tsx",
         "features/directory-counterparties/directory-counterparties-details/components/directory-counterparties-value.tsx",
+        "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-create-dialog.tsx",
         "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-value.tsx",
         "features/directory-works/directory-works-details/components/directory-works-value.tsx",
         "features/estimates/estimate-details/components/estimate-section-card.tsx",
@@ -12290,7 +12292,7 @@
         "features/workspace-settings/components/members/workspace-members-mobile-list.tsx"
       ],
       "outgoingConnections": [],
-      "incomingCount": 63,
+      "incomingCount": 64,
       "outgoingCount": 0,
       "routeSection": "shared-lib",
       "featureSection": "shared-lib",
@@ -15988,6 +15990,13 @@
       "type": "uses-component",
       "sourceSection": "directory-suppliers",
       "targetSection": "directory-suppliers"
+    },
+    {
+      "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-create-dialog.tsx",
+      "target": "lib/utils.ts",
+      "type": "uses-lib",
+      "sourceSection": "directory-suppliers",
+      "targetSection": "shared-lib"
     },
     {
       "source": "features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-create-dialog.tsx",

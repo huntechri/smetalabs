@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { cn } from "@/lib/utils"
 import type {
   DirectorySupplier,
   DirectorySupplierLegalStatus,
@@ -64,6 +65,7 @@ export function DirectorySuppliersFormDialog({
   const [address, setAddress] = useState("")
   const [notes, setNotes] = useState("")
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return
 
@@ -76,6 +78,7 @@ export function DirectorySuppliersFormDialog({
     setAddress(supplier?.address ?? "")
     setNotes(supplier?.notes ?? "")
   }, [open, supplier])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleSubmit = async () => {
     await onSubmit({
@@ -90,6 +93,8 @@ export function DirectorySuppliersFormDialog({
     })
   }
 
+  const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(color)
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -101,18 +106,18 @@ export function DirectorySuppliersFormDialog({
             Заполните основные данные поставщика.
           </DialogDescription>
         </DialogHeader>
-
+ 
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="supplier-name">Название или ФИО</Label>
+            <Label htmlFor="supplier-name">Наименование</Label>
             <Input
               id="supplier-name"
-              placeholder="Введите название"
+              placeholder="Введите наименование"
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
           </div>
-
+ 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="supplier-status">Тип</Label>
@@ -131,24 +136,55 @@ export function DirectorySuppliersFormDialog({
                 </SelectContent>
               </Select>
             </div>
-
+ 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="supplier-color">Цвет</Label>
-              <Select value={color} onValueChange={setColor}>
-                <SelectTrigger id="supplier-color" className="w-full">
-                  <SelectValue placeholder="Выберите цвет" />
-                </SelectTrigger>
-                <SelectContent>
-                  {colorPresets.map((preset) => (
-                    <SelectItem key={preset.value} value={preset.value}>
-                      {preset.label} {preset.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md border border-input">
+                  <input
+                    type="color"
+                    id="supplier-color-picker"
+                    className="absolute -inset-1 h-[calc(100%+8px)] w-[calc(100%+8px)] cursor-pointer bg-transparent p-0 border-0"
+                    value={color.startsWith("#") && color.length === 7 ? color : "#64748B"}
+                    onChange={(event) => setColor(event.target.value.toUpperCase())}
+                  />
+                </div>
+                <Input
+                  id="supplier-color"
+                  type="text"
+                  placeholder="#64748B"
+                  value={color}
+                  onChange={(event) => {
+                    let val = event.target.value
+                    if (val && !val.startsWith("#")) {
+                      val = "#" + val
+                    }
+                    setColor(val.toUpperCase())
+                  }}
+                  className="font-mono uppercase"
+                />
+              </div>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {colorPresets.map((preset) => (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    title={preset.label}
+                    className={cn(
+                      "h-6 w-6 rounded-full border border-muted-foreground/30 transition-transform hover:scale-110 focus:outline-none focus:ring-1 focus:ring-ring",
+                      color.toLowerCase() === preset.value.toLowerCase() && "ring-2 ring-ring scale-110"
+                    )}
+                    style={{ backgroundColor: preset.value }}
+                    onClick={() => setColor(preset.value)}
+                  />
+                ))}
+              </div>
+              {!isValidHex && color && (
+                <span className="text-xs text-destructive">Формат HEX: #RRGGBB</span>
+              )}
             </div>
           </div>
-
+ 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="supplier-inn">ИНН</Label>
@@ -169,7 +205,7 @@ export function DirectorySuppliersFormDialog({
               />
             </div>
           </div>
-
+ 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="supplier-email">Email</Label>
             <Input
@@ -198,7 +234,7 @@ export function DirectorySuppliersFormDialog({
             />
           </div>
         </div>
-
+ 
         <DialogFooter showCloseButton={false}>
           <Button
             variant="outline"
@@ -207,7 +243,7 @@ export function DirectorySuppliersFormDialog({
           >
             Отмена
           </Button>
-          <Button onClick={handleSubmit} disabled={saving || !name.trim()}>
+          <Button onClick={handleSubmit} disabled={saving || !name.trim() || !isValidHex}>
             {supplier ? "Сохранить" : "Создать"}
           </Button>
         </DialogFooter>

@@ -119,11 +119,13 @@ export function DirectoryCounterpartiesCreateDialog({
   const [form, setForm] = useState<FormState>(() => initialState(counterparty))
   const [error, setError] = useState<string | null>(null)
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return
     setForm(initialState(counterparty))
     setError(null)
   }, [counterparty, open])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const setField = (field: keyof FormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))

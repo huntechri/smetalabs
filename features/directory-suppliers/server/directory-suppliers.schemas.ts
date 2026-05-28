@@ -62,7 +62,7 @@ export const directorySuppliersListQuerySchema = z.object({
 
 export const directorySupplierMutationSchema = z
   .object({
-    name: requiredTrimmedString(240, "Название поставщика обязательно"),
+    name: requiredTrimmedString(240, "Наименование поставщика обязательно"),
     legalStatus: directorySupplierLegalStatusSchema,
     color: colorSchema,
     inn: nullableTrimmedString(32),

@@ -39,3 +39,20 @@ export type PermissionDefinition = {
   label: string
   group: PermissionGroup
 }
+
+export type ApiPermission = {
+  id: string
+  key: string
+  label: string
+  groupName: string
+  description?: string | null
+}
+
+export type ApiRole = {
+  id: string
+  name: Role
+  label: string
+  locked: boolean
+  description?: string | null
+  permissions: ApiPermission[]
+}

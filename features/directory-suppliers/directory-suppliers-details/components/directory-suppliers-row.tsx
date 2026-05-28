@@ -34,7 +34,7 @@ export function DirectorySuppliersRow({
         <DirectorySuppliersName value={row.name} />
       </div>
 
-      <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(160px,1fr)_minmax(140px,1fr)_minmax(140px,1fr)_minmax(180px,1fr)]">
+      <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(160px,1fr)_minmax(140px,1fr)_minmax(180px,1fr)]">
         <DirectorySuppliersMetricGroup title="Цвет">
           <div className="flex items-center gap-1.5">
             <div
@@ -59,41 +59,38 @@ export function DirectorySuppliersRow({
           </Badge>
         </DirectorySuppliersMetricGroup>
 
-        <DirectorySuppliersMetricGroup title="ИНН">
-          <DirectorySuppliersValue label="ИНН" value={row.inn} />
-        </DirectorySuppliersMetricGroup>
-
         <DirectorySuppliersMetricGroup title="Контакты">
-          <DirectorySuppliersValue label="Тел." value={row.phone} />
-          <DirectorySuppliersValue label="Email" value={row.email} />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                aria-label={`Действия для ${row.name}`}
-                className="ml-auto"
-                disabled={saving}
-                size="icon-sm"
-                type="button"
-                variant="ghost"
-              >
-                <GearSixIcon />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onClick={() => onEdit(row)}>
-                <PencilSimpleIcon />
-                Редактировать
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => onArchive(row)}
-                variant="destructive"
-              >
-                <ArchiveIcon />
-                Архивировать
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center justify-between gap-1.5 w-full">
+            <DirectorySuppliersValue label="Тел." value={row.phone} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  aria-label={`Действия для ${row.name}`}
+                  className="ml-auto"
+                  disabled={saving}
+                  size="icon-sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  <GearSixIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onClick={() => onEdit(row)}>
+                  <PencilSimpleIcon />
+                  Редактировать
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onArchive(row)}
+                  variant="destructive"
+                >
+                  <ArchiveIcon />
+                  Архивировать
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </DirectorySuppliersMetricGroup>
       </div>
     </div>

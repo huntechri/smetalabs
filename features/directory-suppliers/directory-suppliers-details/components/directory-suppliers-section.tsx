@@ -14,11 +14,24 @@ const DEFAULT_LIMIT = 50
 
 export function DirectorySuppliersRowsSkeleton() {
   return (
-    <div aria-label="Загрузка поставщиков" aria-busy="true" className="p-3">
+    <div aria-label="Загрузка поставщиков" aria-busy="true">
       {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="mb-2 rounded-md border border-border p-3">
-          <Skeleton className="mb-2 h-3 w-16" />
-          <Skeleton className="h-5 w-full max-w-lg" />
+        <div
+          key={index}
+          className="mx-3 my-1.5 grid gap-3 rounded-md border border-border p-3 lg:grid-cols-[minmax(320px,1fr)_minmax(560px,0.9fr)]"
+        >
+          <div className="flex min-w-0 flex-col gap-3 rounded-md border border-border p-2">
+            <div className="min-w-0 rounded-md border border-border p-2">
+              <Skeleton className="mb-2 h-3 w-24" />
+              <Skeleton className="h-4 w-full max-w-sm" />
+            </div>
+          </div>
+
+          <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-[minmax(160px,1fr)_minmax(140px,1fr)_minmax(180px,1fr)]">
+            <Skeleton className="h-16 rounded-md" />
+            <Skeleton className="h-16 rounded-md" />
+            <Skeleton className="h-16 rounded-md" />
+          </div>
         </div>
       ))}
     </div>

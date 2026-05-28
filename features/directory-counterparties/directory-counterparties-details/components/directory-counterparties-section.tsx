@@ -28,23 +28,22 @@ function DirectoryCounterpartiesRowsSkeleton() {
   return (
     <div aria-label="Загрузка контрагентов" aria-busy="true">
       {Array.from({ length: SKELETON_ROW_COUNT }).map((_, index) => (
-        <Card
+        <div
           key={index}
-          size="sm"
-          className="mx-3 my-1.5 rounded-md bg-transparent p-0"
+          className="mx-3 my-1.5 grid gap-3 rounded-md border border-border p-3 xl:grid-cols-[minmax(420px,1fr)_minmax(560px,0.95fr)]"
         >
-          <CardContent className="grid min-w-0 gap-3 p-3 xl:grid-cols-[minmax(420px,1fr)_minmax(560px,0.95fr)]">
+          <div className="grid min-w-0 gap-3 rounded-md border border-border p-2 sm:grid-cols-[minmax(0,1fr)]">
             <div className="min-w-0 rounded-md border border-border p-2">
               <Skeleton className="mb-2 h-3 w-24" />
               <Skeleton className="h-4 w-full max-w-sm" />
             </div>
-            <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-3">
-              <Skeleton className="h-16 rounded-md" />
-              <Skeleton className="h-16 rounded-md" />
-              <Skeleton className="h-16 rounded-md" />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="grid min-w-0 gap-1.5 rounded-md border border-border p-1.5 md:grid-cols-3">
+            <Skeleton className="h-16 rounded-md" />
+            <Skeleton className="h-16 rounded-md" />
+            <Skeleton className="h-16 rounded-md" />
+          </div>
+        </div>
       ))}
     </div>
   )

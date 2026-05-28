@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { buildPermissionMatrix } from "../build-permission-matrix"
-import type { ApiRole } from "../../hooks/use-access-control"
+import type { ApiRole } from "../../types"
 
 const roles = [
   {

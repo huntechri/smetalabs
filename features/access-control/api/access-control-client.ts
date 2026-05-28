@@ -1,4 +1,4 @@
-import type { ApiRole } from "../hooks/use-access-control"
+import type { ApiRole } from "../types"
 
 function resolveFetchError(
   status: number,

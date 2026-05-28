@@ -11,9 +11,9 @@ import {
   deleteProjectEstimatePayment,
 } from "@/features/finances/api/finances-client"
 import { fetchEstimatePurchases } from "@/features/purchases/api/purchases-client"
-import { purchaseRows } from "@/features/purchases/__mocks__/purchases"
 import type { FinanceSection, FinancePayment } from "@/features/finances/types"
 import type { PurchaseRow } from "@/types/purchase"
+import type { ProjectEstimateContentRecord } from "@/types/project-estimate-content"
 
 interface UseFinancesResult {
   sections: FinanceSection[]
@@ -24,7 +24,7 @@ interface UseFinancesResult {
   addPayment: (payment: Omit<FinancePayment, "paymentId">) => void
   updatePayment: (paymentId: string, updates: Partial<Omit<FinancePayment, "paymentId">>) => void
   deletePayment: (paymentId: string) => void
-  record: any
+  record: ProjectEstimateContentRecord | null
   totalPurchasesAmount: number
 }
 
@@ -33,6 +33,8 @@ const financesQueryKeys = {
   list: (projectId: string, estimateId: string) =>
     [...financesQueryKeys.all, "list", projectId, estimateId] as const,
 }
+
+const EMPTY_PURCHASES: PurchaseRow[] = []
 
 export function useFinances(projectId: string, estimateId: string): UseFinancesResult {
   const queryClient = useQueryClient()
@@ -55,7 +57,7 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
     staleTime: 10_000,
   })
 
-  const payments = paymentsQuery.data ?? []
+  const payments = useMemo(() => paymentsQuery.data ?? [], [paymentsQuery.data])
 
   // Fetch purchases list for actual materials sum
   const purchasesQuery = useQuery({
@@ -64,15 +66,9 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
     staleTime: 30_000,
   })
 
-  const rawPurchases = purchasesQuery.data
-  const purchasesData: PurchaseRow[] | null =
-    rawPurchases && typeof rawPurchases === "object" && "data" in rawPurchases && Array.isArray((rawPurchases as any).data)
-      ? (rawPurchases as any).data
-      : Array.isArray(rawPurchases)
-        ? rawPurchases
-        : null
+  const purchasesData: PurchaseRow[] | null = purchasesQuery.data?.data ?? null
 
-  const fallbackPurchases: PurchaseRow[] = purchasesData !== null ? purchasesData : purchaseRows
+  const fallbackPurchases: PurchaseRow[] = purchasesData !== null ? purchasesData : EMPTY_PURCHASES
   const totalPurchasesAmount = fallbackPurchases.reduce((sum: number, p: PurchaseRow) => sum + (p.factTotal ?? 0), 0)
 
   // Mutations with Optimistic UI updates

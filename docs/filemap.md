@@ -4,9 +4,11 @@
 >
 > **Состояние:** Фронтенд (вёрстка + моки) + Бэкенд (Supabase: DB, Auth, RBAC, API). Активная разработка.
 >
-> **Последнее обновление:** 2026-05-26
+> **Последнее обновление:** 2026-05-28
 >
 > **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
+>
+> **См. также:** [Knowledge Graph](knowledge-graph-methodology.md) — автоматическая карта связей (1502 связи, 20 типов, findings, readiness). [Скачать граф](https://raw.githubusercontent.com/huntechri/smetalabs/docs/update-knowledge-graph-v2/.understand-anything/knowledge-graph.json) (последняя версия из PR #190).
 
 ---
 

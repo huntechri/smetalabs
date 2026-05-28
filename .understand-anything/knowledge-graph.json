@@ -17,14 +17,14 @@
       "Zod",
       "Vitest"
     ],
-    "gitCommit": "1b418cf925c80ca4b47a66392c0d70de3e6b3877",
+    "gitCommit": "f30d4acfc9dcd408f3cf19b22caa82a1215ad4d4",
     "sourceAnalyzedAt": "2026-05-28T07:55:39.579Z",
-    "graphGeneratedAt": "2026-05-28T09:51:55.788Z",
+    "graphGeneratedAt": "2026-05-28T11:46:24.049Z",
     "graphVersion": "1.0.0"
   },
   "summary": {
     "totalFiles": 613,
-    "totalConnections": 973,
+    "totalConnections": 974,
     "totalSections": 14,
     "layers": 20,
     "edgeTypes": 17,
@@ -9124,10 +9124,11 @@
         "features/finances/api/finances-client.ts",
         "features/purchases/api/purchases-client.ts",
         "features/finances/types.ts",
-        "types/purchase.ts"
+        "types/purchase.ts",
+        "types/project-estimate-content.ts"
       ],
       "incomingCount": 1,
-      "outgoingCount": 5,
+      "outgoingCount": 6,
       "routeSection": "finances",
       "featureSection": "finances",
       "featureSections": [
@@ -12637,11 +12638,12 @@
         "features/execution/execution-details/components/execution-row.tsx",
         "features/execution/execution-details/components/execution-section-card.tsx",
         "features/execution/lib/execution-excel-exporter.ts",
+        "features/finances/hooks/use-finances.ts",
         "features/projects/server/project-estimate-content.repository.ts",
         "features/projects/server/project-estimate-options.repository.ts"
       ],
       "outgoingConnections": [],
-      "incomingCount": 17,
+      "incomingCount": 18,
       "outgoingCount": 0,
       "routeSection": "types",
       "featureSection": "types",
@@ -17556,6 +17558,13 @@
     {
       "source": "features/finances/hooks/use-finances.ts",
       "target": "types/purchase.ts",
+      "type": "uses-type",
+      "sourceSection": "finances",
+      "targetSection": "types"
+    },
+    {
+      "source": "features/finances/hooks/use-finances.ts",
+      "target": "types/project-estimate-content.ts",
       "type": "uses-type",
       "sourceSection": "finances",
       "targetSection": "types"

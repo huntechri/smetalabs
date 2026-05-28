@@ -21,6 +21,8 @@ type UsePurchasesInput = {
   projectId: string
 }
 
+const EMPTY_ROWS: PurchaseRow[] = []
+
 export function usePurchases({ estimateId, projectId }: UsePurchasesInput) {
   const searchParams = useSearchParams()
   const searchQuery = searchParams.get("q")?.trim() ?? ""
@@ -49,7 +51,7 @@ export function usePurchases({ estimateId, projectId }: UsePurchasesInput) {
   // Use empty array as fallback when API has no data
   const data = purchasesQuery.data?.data ?? null
   const fallbackRows: PurchaseRow[] =
-    data !== null ? data : []
+    data !== null ? data : EMPTY_ROWS
 
   // Client-side search filtering as additional safety net
   const filteredRows = useMemo(() => {

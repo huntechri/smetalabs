@@ -67,7 +67,7 @@ AS $$
     SELECT
       pem.directory_material_id,
       CASE
-        WHEN COUNT(DISTINCT pem.section_id) = 1 THEN MIN(pem.id)
+        WHEN COUNT(DISTINCT pem.section_id) = 1 THEN (array_agg(pem.id ORDER BY pem.sort_order, pem.id::text))[1]
         ELSE NULL::uuid
       END AS estimate_material_id,
       MIN(pem.title) AS title,
@@ -90,7 +90,7 @@ AS $$
     SELECT
       pep.directory_material_id,
       COUNT(*) AS purchase_count,
-      MIN(pep.id) AS purchase_id,
+      (array_agg(pep.id ORDER BY pep.created_at, pep.id::text))[1] AS purchase_id,
       MIN(pep.title) AS title,
       MIN(pep.unit) AS unit,
       SUM(pep.quantity) AS quantity,

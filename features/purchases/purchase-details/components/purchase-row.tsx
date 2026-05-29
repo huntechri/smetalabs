@@ -35,9 +35,9 @@ export function PurchaseRow({
   const editablePurchaseId = row.purchaseId
 
   const canEdit =
-    typeof onUpdate === "function" && editablePurchaseId !== null
+    row.editable && typeof onUpdate === "function" && editablePurchaseId !== null
   const canArchive =
-    typeof onArchive === "function" && editablePurchaseId !== null
+    row.editable && typeof onArchive === "function" && editablePurchaseId !== null
 
   return (
     <div className="grid gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50 lg:grid-cols-[minmax(300px,1fr)_minmax(600px,1.3fr)]">

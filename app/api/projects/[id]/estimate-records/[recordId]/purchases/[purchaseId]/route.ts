@@ -8,6 +8,13 @@ type RouteContext = {
   params: Promise<{ id: string; recordId: string; purchaseId: string }>
 }
 
+function parseNonNegativeNumber(value: unknown) {
+  if (value === undefined) return undefined
+
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+}
+
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     const { id: projectId, recordId, purchaseId } = await params
@@ -41,7 +48,6 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
     const workspaceOwnerId = await requireCurrentWorkspace(user.id)
 
-    // Verify the estimate record belongs to the project and workspace
     const { data: record, error: recordError } = await supabase
       .from("project_estimate_records")
       .select("id")
@@ -59,26 +65,68 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       )
     }
 
+    const { data: purchase, error: purchaseError } = await supabase
+      .from("project_estimate_purchases")
+      .select("id")
+      .eq("id", purchaseId)
+      .eq("estimate_record_id", recordId)
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .is("archived_at", null)
+      .is("deleted_at", null)
+      .maybeSingle()
+
+    if (purchaseError) {
+      console.error(
+        "[PATCH /api/projects/[id]/estimate-records/[recordId]/purchases/[purchaseId]] Purchase lookup error:",
+        purchaseError
+      )
+      return NextResponse.json(
+        { error: { code: "LOOKUP_ERROR", message: purchaseError.message } },
+        { status: 500 }
+      )
+    }
+
+    if (!purchase) {
+      return NextResponse.json(
+        {
+          error: { code: "NOT_FOUND", message: "Закупка сметы не найдена" },
+        },
+        { status: 404 }
+      )
+    }
+
     const body = (await request.json()) as {
       quantity?: number
       price?: number
     }
 
-    const params_: Record<string, unknown> = {
-      p_purchase_id: purchaseId,
-      p_workspace_owner_id: workspaceOwnerId,
+    const quantity = parseNonNegativeNumber(body.quantity)
+    const price = parseNonNegativeNumber(body.price)
+
+    if (quantity === null || price === null) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "BAD_REQUEST",
+            message: "Количество и цена должны быть не меньше 0",
+          },
+        },
+        { status: 400 }
+      )
     }
 
-    if (body.quantity !== undefined) {
-      params_.p_quantity = Number(body.quantity)
+    const rpcParams: Record<string, unknown> = {
+      p_purchase_id: purchaseId,
+      p_workspace_owner_id: workspaceOwnerId,
+      p_updated_by: user.id,
     }
-    if (body.price !== undefined) {
-      params_.p_price = Number(body.price)
-    }
+
+    if (quantity !== undefined) rpcParams.p_quantity = quantity
+    if (price !== undefined) rpcParams.p_price = price
 
     const { data, error } = await supabase.rpc(
       "update_project_estimate_purchase",
-      params_
+      rpcParams
     )
 
     if (error) {
@@ -94,13 +142,11 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json({ data })
   } catch (err) {
-    if (err instanceof Error) {
-      if (err.message === "WORKSPACE_MEMBER_REQUIRED") {
-        return NextResponse.json(
-          { error: { code: "FORBIDDEN", message: "Нет доступа к workspace" } },
-          { status: 403 }
-        )
-      }
+    if (err instanceof Error && err.message === "WORKSPACE_MEMBER_REQUIRED") {
+      return NextResponse.json(
+        { error: { code: "FORBIDDEN", message: "Нет доступа к workspace" } },
+        { status: 403 }
+      )
     }
 
     console.error(
@@ -155,7 +201,6 @@ export async function DELETE(
 
     const workspaceOwnerId = await requireCurrentWorkspace(user.id)
 
-    // Verify the estimate record belongs to the project and workspace
     const { data: record, error: recordError } = await supabase
       .from("project_estimate_records")
       .select("id")
@@ -173,9 +218,40 @@ export async function DELETE(
       )
     }
 
+    const { data: purchase, error: purchaseError } = await supabase
+      .from("project_estimate_purchases")
+      .select("id")
+      .eq("id", purchaseId)
+      .eq("estimate_record_id", recordId)
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .is("archived_at", null)
+      .is("deleted_at", null)
+      .maybeSingle()
+
+    if (purchaseError) {
+      console.error(
+        "[DELETE /api/projects/[id]/estimate-records/[recordId]/purchases/[purchaseId]] Purchase lookup error:",
+        purchaseError
+      )
+      return NextResponse.json(
+        { error: { code: "LOOKUP_ERROR", message: purchaseError.message } },
+        { status: 500 }
+      )
+    }
+
+    if (!purchase) {
+      return NextResponse.json(
+        {
+          error: { code: "NOT_FOUND", message: "Закупка сметы не найдена" },
+        },
+        { status: 404 }
+      )
+    }
+
     const { data, error } = await supabase.rpc("archive_project_estimate_purchase", {
       p_purchase_id: purchaseId,
       p_workspace_owner_id: workspaceOwnerId,
+      p_updated_by: user.id,
     })
 
     if (error) {
@@ -191,13 +267,11 @@ export async function DELETE(
 
     return NextResponse.json({ data })
   } catch (err) {
-    if (err instanceof Error) {
-      if (err.message === "WORKSPACE_MEMBER_REQUIRED") {
-        return NextResponse.json(
-          { error: { code: "FORBIDDEN", message: "Нет доступа к workspace" } },
-          { status: 403 }
-        )
-      }
+    if (err instanceof Error && err.message === "WORKSPACE_MEMBER_REQUIRED") {
+      return NextResponse.json(
+        { error: { code: "FORBIDDEN", message: "Нет доступа к workspace" } },
+        { status: 403 }
+      )
     }
 
     console.error(

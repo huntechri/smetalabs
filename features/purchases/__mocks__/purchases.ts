@@ -3,7 +3,9 @@ import type { PurchaseRow } from "@/types/purchase"
 export const purchaseRows: PurchaseRow[] = [
   {
     purchaseId: "pep-1",
-    materialId: "material-1",
+    materialId: "directory-material-1",
+    estimateMaterialId: null,
+    directoryMaterialId: "directory-material-1",
     title:
       "Автоматический выключатель EKF PROxima BA-45-2000 3P 1000A 80 кА 690 В",
     unit: "шт",
@@ -19,7 +21,9 @@ export const purchaseRows: PurchaseRow[] = [
   },
   {
     purchaseId: "pep-2",
-    materialId: "material-2",
+    materialId: "directory-material-2",
+    estimateMaterialId: "material-2",
+    directoryMaterialId: "directory-material-2",
     title: "Кабель ВВГнг-LS 5x10",
     unit: "м",
     planQuantity: 120,
@@ -34,7 +38,9 @@ export const purchaseRows: PurchaseRow[] = [
   },
   {
     purchaseId: "pep-3",
-    materialId: "material-3",
+    materialId: "directory-material-3",
+    estimateMaterialId: "material-3",
+    directoryMaterialId: "directory-material-3",
     title: "Лоток металлический перфорированный 100x50",
     unit: "шт",
     planQuantity: 34,
@@ -49,7 +55,9 @@ export const purchaseRows: PurchaseRow[] = [
   },
   {
     purchaseId: "pep-4",
-    materialId: "material-4",
+    materialId: "directory-material-4",
+    estimateMaterialId: "material-4",
+    directoryMaterialId: "directory-material-4",
     title: "Розетка силовая промышленная 32А",
     unit: "шт",
     planQuantity: 18,
@@ -64,7 +72,9 @@ export const purchaseRows: PurchaseRow[] = [
   },
   {
     purchaseId: "pep-5",
-    materialId: "material-5",
+    materialId: "directory-material-5",
+    estimateMaterialId: "material-5",
+    directoryMaterialId: "directory-material-5",
     title: "Щит распределительный навесной IP54",
     unit: "шт",
     planQuantity: 4,
@@ -79,7 +89,9 @@ export const purchaseRows: PurchaseRow[] = [
   },
   {
     purchaseId: "pep-6",
-    materialId: "material-6",
+    materialId: "directory-material-6",
+    estimateMaterialId: "material-6",
+    directoryMaterialId: "directory-material-6",
     title: "DIN-рейка оцинкованная 35 мм",
     unit: "шт",
     planQuantity: 45,
@@ -94,7 +106,9 @@ export const purchaseRows: PurchaseRow[] = [
   },
   {
     purchaseId: "pep-7",
-    materialId: "material-7",
+    materialId: "directory-material-7",
+    estimateMaterialId: "material-7",
+    directoryMaterialId: "directory-material-7",
     title: "Автоматический выключатель 1P 16А",
     unit: "шт",
     planQuantity: 96,
@@ -109,7 +123,9 @@ export const purchaseRows: PurchaseRow[] = [
   },
   {
     purchaseId: "pep-8",
-    materialId: "material-8",
+    materialId: "directory-material-8",
+    estimateMaterialId: "material-8",
+    directoryMaterialId: "directory-material-8",
     title: "Клемма проходная винтовая 4 мм2",
     unit: "шт",
     planQuantity: 320,
@@ -124,7 +140,9 @@ export const purchaseRows: PurchaseRow[] = [
   },
   {
     purchaseId: "pep-9",
-    materialId: "material-9",
+    materialId: "directory-material-9",
+    estimateMaterialId: "material-9",
+    directoryMaterialId: "directory-material-9",
     title: "Труба гофрированная ПВХ 25 мм",
     unit: "м",
     planQuantity: 250,
@@ -139,7 +157,9 @@ export const purchaseRows: PurchaseRow[] = [
   },
   {
     purchaseId: "pep-10",
-    materialId: "material-10",
+    materialId: "directory-material-10",
+    estimateMaterialId: "material-10",
+    directoryMaterialId: "directory-material-10",
     title: "Маркировочная бирка кабельная",
     unit: "шт",
     planQuantity: 1000,

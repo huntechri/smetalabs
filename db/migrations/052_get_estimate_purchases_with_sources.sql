@@ -19,6 +19,7 @@ RETURNS TABLE (
 )
 LANGUAGE sql
 STABLE
+SECURITY DEFINER
 SET search_path = 'public'
 AS $$
   WITH target_record AS (

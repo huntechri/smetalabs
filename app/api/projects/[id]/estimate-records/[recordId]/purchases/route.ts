@@ -71,6 +71,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       {
         p_estimate_record_id: recordId,
         p_workspace_owner_id: workspaceOwnerId,
+        p_current_user_id: user.id,
       }
     )
 
@@ -89,6 +90,8 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       (raw: Record<string, unknown>) => ({
         purchaseId: (raw.purchase_id as string) ?? null,
         materialId: (raw.material_id as string) ?? null,
+        estimateMaterialId: (raw.estimate_material_id as string) ?? null,
+        directoryMaterialId: (raw.directory_material_id as string) ?? null,
         title: (raw.title as string) ?? "",
         unit: (raw.unit as string) ?? "",
         planQuantity: Number(raw.plan_quantity ?? 0),

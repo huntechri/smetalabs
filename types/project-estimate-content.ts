@@ -17,6 +17,7 @@ export type ProjectEstimateContentMaterial = {
   id: string
   workId: string
   sectionId: string
+  directoryMaterialId: string | null
   number: string
   code: string | null
   title: string

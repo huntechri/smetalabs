@@ -101,13 +101,20 @@ function applyUpdateWork(
   data: ProjectEstimateContentData,
   input: Extract<EstimateContentChangeInput, { action: "update_work" }>
 ): ProjectEstimateContentData | null {
-  const { workId, quantity, price, factQuantity, factPrice, sectionId } = input.payload
+  const { workId, quantity, price, factQuantity, factPrice, sectionId } =
+    input.payload
 
   // Section move combined with quantity/price is too complex for optimistic update
   if (sectionId !== undefined) return null
 
   // Only optimistically handle quantity, price, factQuantity, or factPrice changes
-  if (quantity === undefined && price === undefined && factQuantity === undefined && factPrice === undefined) return null
+  if (
+    quantity === undefined &&
+    price === undefined &&
+    factQuantity === undefined &&
+    factPrice === undefined
+  )
+    return null
 
   // Find the work and its parent section
   let foundSection: ProjectEstimateContentSection | null = null
@@ -128,7 +135,8 @@ function applyUpdateWork(
   const newPrice = price !== undefined ? price : foundWork.price
   const newTotalAmount = roundMoney(newQuantity * newPrice)
 
-  const newFactQuantity = factQuantity !== undefined ? factQuantity : foundWork.factQuantity
+  const newFactQuantity =
+    factQuantity !== undefined ? factQuantity : foundWork.factQuantity
   const newFactPrice = factPrice !== undefined ? factPrice : foundWork.factPrice
   const newFactTotalAmount = roundMoney(newFactQuantity * newFactPrice)
 

@@ -29,9 +29,9 @@ function FinancesSkeleton() {
             key={i}
             className="flex items-center gap-4 border-b border-border px-4 py-3 last:border-b-0"
           >
-            <div className="flex items-center gap-2 w-[40%]">
+            <div className="flex w-[40%] items-center gap-2">
               <Skeleton className="size-4 shrink-0" />
-              <Skeleton className="h-4 flex-1 max-w-64" />
+              <Skeleton className="h-4 max-w-64 flex-1" />
               <Skeleton className="h-4 w-16" />
             </div>
             <Skeleton className="h-4 w-24" />
@@ -56,7 +56,7 @@ export default async function EstimateFinancesPage({
 
   return (
     <Suspense fallback={<FinancesSkeleton />}>
-      <div className="flex-1 min-h-0 flex flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
         <FinancesView estimateId={estimateId} projectId={projectId} />
       </div>
     </Suspense>

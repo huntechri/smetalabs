@@ -76,25 +76,22 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     }
 
     // Map DB columns to frontend PurchaseRow type
-    const rows = (data ?? []).map(
-      (raw: Record<string, unknown>) => ({
-        purchaseId: (raw.purchase_id as string) ?? null,
-        materialId: (raw.material_id as string) ?? null,
-        title: (raw.title as string) ?? "",
-        unit: (raw.unit as string) ?? "",
-        planQuantity: Number(raw.plan_quantity ?? 0),
-        planPrice: Number(raw.plan_price ?? 0),
-        planTotal: Number(raw.plan_total ?? 0),
-        factQuantity:
-          raw.fact_quantity != null ? Number(raw.fact_quantity) : null,
-        factAvgPrice:
-          raw.fact_avg_price != null ? Number(raw.fact_avg_price) : null,
-        factTotal:
-          raw.fact_total != null ? Number(raw.fact_total) : null,
-        deviationTotal:
-          raw.deviation_total != null ? Number(raw.deviation_total) : null,
-      })
-    )
+    const rows = (data ?? []).map((raw: Record<string, unknown>) => ({
+      purchaseId: (raw.purchase_id as string) ?? null,
+      materialId: (raw.material_id as string) ?? null,
+      title: (raw.title as string) ?? "",
+      unit: (raw.unit as string) ?? "",
+      planQuantity: Number(raw.plan_quantity ?? 0),
+      planPrice: Number(raw.plan_price ?? 0),
+      planTotal: Number(raw.plan_total ?? 0),
+      factQuantity:
+        raw.fact_quantity != null ? Number(raw.fact_quantity) : null,
+      factAvgPrice:
+        raw.fact_avg_price != null ? Number(raw.fact_avg_price) : null,
+      factTotal: raw.fact_total != null ? Number(raw.fact_total) : null,
+      deviationTotal:
+        raw.deviation_total != null ? Number(raw.deviation_total) : null,
+    }))
 
     // Apply search filter if provided
     const searchQuery = request.nextUrl.searchParams.get("q")?.trim() ?? ""
@@ -218,13 +215,16 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       )
     }
 
-    const { data, error } = await supabase.rpc("add_project_estimate_purchase", {
-      p_estimate_record_id: recordId,
-      p_workspace_owner_id: workspaceOwnerId,
-      p_directory_material_id: body.directoryMaterialId,
-      p_quantity: quantity,
-      p_price: price,
-    })
+    const { data, error } = await supabase.rpc(
+      "add_project_estimate_purchase",
+      {
+        p_estimate_record_id: recordId,
+        p_workspace_owner_id: workspaceOwnerId,
+        p_directory_material_id: body.directoryMaterialId,
+        p_quantity: quantity,
+        p_price: price,
+      }
+    )
 
     if (error) {
       console.error(

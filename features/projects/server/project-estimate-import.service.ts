@@ -221,9 +221,7 @@ export async function importProjectEstimateContent(
             price_amount: row.price ?? 0,
             currency_code: "RUB",
             category:
-              row.sectionTitle?.trim() ||
-              currentSection?.title ||
-              "Материалы",
+              row.sectionTitle?.trim() || currentSection?.title || "Материалы",
             code: code,
             image_url: importedImageUrl,
             dedupe_fingerprint: dedupe,

@@ -39,12 +39,14 @@ export function DirectoryCounterpartiesRow({
         <DirectoryCounterpartiesName value={row.name} />
       </div>
 
-      <div className={cn(
-        "grid min-w-0 gap-1.5 rounded-md border border-border p-1.5",
-        row.legalStatus === "juridical"
-          ? "md:grid-cols-[minmax(150px,0.7fr)_minmax(150px,0.7fr)_minmax(220px,1fr)]"
-          : "md:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)]"
-      )}>
+      <div
+        className={cn(
+          "grid min-w-0 gap-1.5 rounded-md border border-border p-1.5",
+          row.legalStatus === "juridical"
+            ? "md:grid-cols-[minmax(150px,0.7fr)_minmax(150px,0.7fr)_minmax(220px,1fr)]"
+            : "md:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)]"
+        )}
+      >
         <DirectoryCounterpartiesMetricGroup title="Тип">
           <Badge
             variant={row.type === "customer" ? "default" : "secondary"}
@@ -61,7 +63,7 @@ export function DirectoryCounterpartiesRow({
         </DirectoryCounterpartiesMetricGroup>
 
         <DirectoryCounterpartiesMetricGroup title="Контакты">
-          <div className="flex items-center justify-between gap-1.5 w-full">
+          <div className="flex w-full items-center justify-between gap-1.5">
             <DirectoryCounterpartiesValue label="Тел." value={row.phone} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

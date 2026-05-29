@@ -8,7 +8,9 @@ export function PurchaseUnit({
   className?: string
 }) {
   return (
-    <div className={cn("min-w-0 rounded-md border border-border p-2", className)}>
+    <div
+      className={cn("min-w-0 rounded-md border border-border p-2", className)}
+    >
       <span className="mb-1 block text-xs text-muted-foreground uppercase">
         Ед. изм
       </span>

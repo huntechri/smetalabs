@@ -25,7 +25,7 @@ export function SectionCards() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-4 px-4 lg:px-6 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
+      <div className="grid grid-cols-2 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i} className="@container/card">
             <CardHeader className="gap-1.5">
@@ -33,7 +33,7 @@ export function SectionCards() {
                 <Skeleton className="size-3.5 rounded-full" />
                 <Skeleton className="h-3 w-16" />
               </div>
-              <Skeleton className="h-8 w-32 mt-1" />
+              <Skeleton className="mt-1 h-8 w-32" />
             </CardHeader>
             <CardFooter className="mt-1.5">
               <Skeleton className="h-3.5 w-24" />
@@ -46,7 +46,7 @@ export function SectionCards() {
 
   if (error || !stats) {
     return (
-      <div className="px-4 lg:px-6 flex flex-col gap-3">
+      <div className="flex flex-col gap-3 px-4 lg:px-6">
         <Alert variant="destructive">
           <AlertTitle>Ошибка загрузки показателей воркспейса</AlertTitle>
           <AlertDescription>
@@ -60,7 +60,13 @@ export function SectionCards() {
     )
   }
 
-  const { contractTotal, paidTotal, spentTotal, totalBalance, deviationPercent } = stats
+  const {
+    contractTotal,
+    paidTotal,
+    spentTotal,
+    totalBalance,
+    deviationPercent,
+  } = stats
 
   return (
     <div className="grid grid-cols-2 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
@@ -87,7 +93,7 @@ export function SectionCards() {
             <CheckCircleIcon className="size-3.5 text-chart-2" />
             Оплачено
           </CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums text-chart-2 @[250px]/card:text-3xl">
+          <CardTitle className="text-2xl font-semibold text-chart-2 tabular-nums @[250px]/card:text-3xl">
             {formatMoney(paidTotal)}
           </CardTitle>
         </CardHeader>
@@ -130,4 +136,3 @@ export function SectionCards() {
     </div>
   )
 }
-

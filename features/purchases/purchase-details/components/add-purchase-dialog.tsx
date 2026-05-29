@@ -21,9 +21,7 @@ import { FieldError } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { fetchGlobalPurchaseMaterialOptions } from "@/features/global-purchases/api/global-purchases-client"
-import type {
-  GlobalPurchaseMaterialOption,
-} from "@/types/global-purchases"
+import type { GlobalPurchaseMaterialOption } from "@/types/global-purchases"
 import type { AddPurchaseInput } from "@/types/purchase"
 import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 
@@ -119,8 +117,8 @@ export function AddPurchaseDialog({
         <DialogHeader className="shrink-0">
           <DialogTitle>Добавить закупку из материалов</DialogTitle>
           <DialogDescription>
-            Выберите материал из справочника. Количество по умолчанию — 1,
-            цену можно изменить после добавления.
+            Выберите материал из справочника. Количество по умолчанию — 1, цену
+            можно изменить после добавления.
           </DialogDescription>
         </DialogHeader>
 

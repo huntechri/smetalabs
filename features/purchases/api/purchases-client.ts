@@ -79,10 +79,7 @@ function buildPurchaseUrl(
 export function fetchEstimatePurchases(
   params: EstimatePurchasesParams
 ): Promise<EstimatePurchasesResponse> {
-  return fetchJson<EstimatePurchasesResponse>(
-    buildUrl(params),
-    "закупок сметы"
-  )
+  return fetchJson<EstimatePurchasesResponse>(buildUrl(params), "закупок сметы")
 }
 
 export function addProjectEstimatePurchase(

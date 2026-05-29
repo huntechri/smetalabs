@@ -37,12 +37,8 @@ export const projectEstimatePurchases = pgTable(
     quantity: numeric("quantity", { precision: 14, scale: 3 })
       .notNull()
       .default("0"),
-    price: numeric("price", { precision: 14, scale: 2 })
-      .notNull()
-      .default("0"),
-    total: numeric("total", { precision: 14, scale: 2 })
-      .notNull()
-      .default("0"),
+    price: numeric("price", { precision: 14, scale: 2 }).notNull().default("0"),
+    total: numeric("total", { precision: 14, scale: 2 }).notNull().default("0"),
     supplierName: text("supplier_name"),
     purchaseDate: text("purchase_date"),
     notes: text("notes"),
@@ -62,36 +58,15 @@ export const projectEstimatePurchases = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (t) => [
-    index("idx_pep_estimate").on(
-      t.estimateRecordId,
-      t.workspaceOwnerId
-    ),
+    index("idx_pep_estimate").on(t.estimateRecordId, t.workspaceOwnerId),
     index("idx_pep_material")
       .on(t.estimateRecordId, t.directoryMaterialId)
       .where(sql`${t.directoryMaterialId} IS NOT NULL`),
-    index("idx_pep_archived").on(
-      t.workspaceOwnerId,
-      t.archivedAt
-    ),
-    check(
-      "chk_pep_title_not_empty",
-      sql`btrim(${t.title}) <> ''`
-    ),
-    check(
-      "chk_pep_unit_not_empty",
-      sql`btrim(${t.unit}) <> ''`
-    ),
-    check(
-      "chk_pep_quantity_non_negative",
-      sql`${t.quantity} >= 0`
-    ),
-    check(
-      "chk_pep_price_non_negative",
-      sql`${t.price} >= 0`
-    ),
-    check(
-      "chk_pep_total_non_negative",
-      sql`${t.total} >= 0`
-    ),
+    index("idx_pep_archived").on(t.workspaceOwnerId, t.archivedAt),
+    check("chk_pep_title_not_empty", sql`btrim(${t.title}) <> ''`),
+    check("chk_pep_unit_not_empty", sql`btrim(${t.unit}) <> ''`),
+    check("chk_pep_quantity_non_negative", sql`${t.quantity} >= 0`),
+    check("chk_pep_price_non_negative", sql`${t.price} >= 0`),
+    check("chk_pep_total_non_negative", sql`${t.total} >= 0`),
   ]
 )

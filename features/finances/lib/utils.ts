@@ -3,7 +3,10 @@ import type { FinanceSection, SectionStatus } from "@/features/finances/types"
 /** Вычисляет сумму проведённых и в обработке платежей для секции */
 export function getSectionFactAmount(section: FinanceSection): number {
   return section.payments
-    .filter((p) => !p.isDeleting && (p.status === "conducted" || p.status === "processing"))
+    .filter(
+      (p) =>
+        !p.isDeleting && (p.status === "conducted" || p.status === "processing")
+    )
     .reduce((sum, p) => sum + p.amount, 0)
 }
 

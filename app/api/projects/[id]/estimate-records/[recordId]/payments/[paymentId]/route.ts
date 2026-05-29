@@ -108,9 +108,17 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       .single()
 
     if (updateError || !updated) {
-      console.error("[PATCH /api/projects/[id]/estimate-records/[recordId]/payments/[paymentId]] DB error:", updateError)
+      console.error(
+        "[PATCH /api/projects/[id]/estimate-records/[recordId]/payments/[paymentId]] DB error:",
+        updateError
+      )
       return NextResponse.json(
-        { error: { code: "DATABASE_ERROR", message: updateError?.message ?? "Не удалось обновить платёж" } },
+        {
+          error: {
+            code: "DATABASE_ERROR",
+            message: updateError?.message ?? "Не удалось обновить платёж",
+          },
+        },
         { status: 500 }
       )
     }
@@ -133,7 +141,10 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       )
     }
 
-    console.error("[PATCH /api/projects/[id]/estimate-records/[recordId]/payments/[paymentId]] Unexpected error:", err)
+    console.error(
+      "[PATCH /api/projects/[id]/estimate-records/[recordId]/payments/[paymentId]] Unexpected error:",
+      err
+    )
     return NextResponse.json(
       {
         error: {
@@ -146,10 +157,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: RouteContext
-) {
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   try {
     const { id: projectId, recordId, paymentId } = await params
 
@@ -209,7 +217,10 @@ export async function DELETE(
       .eq("workspace_owner_id", workspaceOwnerId)
 
     if (deleteError) {
-      console.error("[DELETE /api/projects/[id]/estimate-records/[recordId]/payments/[paymentId]] DB error:", deleteError)
+      console.error(
+        "[DELETE /api/projects/[id]/estimate-records/[recordId]/payments/[paymentId]] DB error:",
+        deleteError
+      )
       return NextResponse.json(
         { error: { code: "DATABASE_ERROR", message: deleteError.message } },
         { status: 500 }
@@ -225,7 +236,10 @@ export async function DELETE(
       )
     }
 
-    console.error("[DELETE /api/projects/[id]/estimate-records/[recordId]/payments/[paymentId]] Unexpected error:", err)
+    console.error(
+      "[DELETE /api/projects/[id]/estimate-records/[recordId]/payments/[paymentId]] Unexpected error:",
+      err
+    )
     return NextResponse.json(
       {
         error: {

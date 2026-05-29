@@ -60,7 +60,7 @@ export function DirectorySuppliersRow({
         </DirectorySuppliersMetricGroup>
 
         <DirectorySuppliersMetricGroup title="Контакты">
-          <div className="flex items-center justify-between gap-1.5 w-full">
+          <div className="flex w-full items-center justify-between gap-1.5">
             <DirectorySuppliersValue label="Тел." value={row.phone} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

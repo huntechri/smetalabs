@@ -263,13 +263,17 @@ export async function exportFinancesToExcel(content: {
       isGeneral ? "" : section.planAmount,
       factFormula ? { formula: factFormula, result: conductedFact } : 0,
       section.expenses || "",
-      { formula: `N(D${secRowIdx})-N(E${secRowIdx})`, result: conductedFact - (section.expenses ?? 0) },
+      {
+        formula: `N(D${secRowIdx})-N(E${secRowIdx})`,
+        result: conductedFact - (section.expenses ?? 0),
+      },
       statusText,
       isGeneral
         ? ""
         : {
             formula: `(C${secRowIdx}>0)*D${secRowIdx}/(C${secRowIdx}+(C${secRowIdx}=0))`,
-            result: section.planAmount > 0 ? conductedFact / section.planAmount : 0,
+            result:
+              section.planAmount > 0 ? conductedFact / section.planAmount : 0,
           },
     ])
 
@@ -352,7 +356,12 @@ export async function exportFinancesToExcel(content: {
       emptyRow.height = 20
       for (let col = 1; col <= 8; col++) {
         const cell = emptyRow.getCell(col)
-        cell.font = { name: "Arial", size: 9, italic: true, color: { argb: "94A3B8" } }
+        cell.font = {
+          name: "Arial",
+          size: 9,
+          italic: true,
+          color: { argb: "94A3B8" },
+        }
         cell.border = {
           top: { style: "thin", color: { argb: "F1F5F9" } },
           bottom: { style: "thin", color: { argb: "F1F5F9" } },
@@ -366,7 +375,10 @@ export async function exportFinancesToExcel(content: {
   // Grand Total Row
   const grandTotalRowIdx = worksheet.lastRow!.number + 1
 
-  const contractTotal = content.sections.reduce((sum, s) => sum + s.planAmount, 0)
+  const contractTotal = content.sections.reduce(
+    (sum, s) => sum + s.planAmount,
+    0
+  )
   const paidTotal = content.sections.reduce(
     (sum, s) =>
       sum +
@@ -394,8 +406,13 @@ export async function exportFinancesToExcel(content: {
     "",
     planSumFormula ? { formula: planSumFormula, result: contractTotal } : 0,
     factSumFormula ? { formula: factSumFormula, result: paidTotal } : 0,
-    expensesSumFormula ? { formula: expensesSumFormula, result: content.totalPurchasesAmount } : 0,
-    { formula: `N(D${grandTotalRowIdx})-N(E${grandTotalRowIdx})`, result: paidTotal - content.totalPurchasesAmount },
+    expensesSumFormula
+      ? { formula: expensesSumFormula, result: content.totalPurchasesAmount }
+      : 0,
+    {
+      formula: `N(D${grandTotalRowIdx})-N(E${grandTotalRowIdx})`,
+      result: paidTotal - content.totalPurchasesAmount,
+    },
     "",
     {
       formula: `(N(C${grandTotalRowIdx})>0)*N(D${grandTotalRowIdx})/(N(C${grandTotalRowIdx})+(N(C${grandTotalRowIdx})=0))`,
@@ -428,7 +445,10 @@ export async function exportFinancesToExcel(content: {
     }
   }
 
-  grandTotalRow.getCell(1).alignment = { horizontal: "right", vertical: "middle" }
+  grandTotalRow.getCell(1).alignment = {
+    horizontal: "right",
+    vertical: "middle",
+  }
   grandTotalRow.getCell(3).numFmt = '#,##0.00" ₽"'
   grandTotalRow.getCell(4).numFmt = '#,##0.00" ₽"'
   grandTotalRow.getCell(5).numFmt = '#,##0.00" ₽"'

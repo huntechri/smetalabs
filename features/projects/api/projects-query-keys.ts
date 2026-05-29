@@ -44,8 +44,7 @@ export const projectsQueryKeys = {
     ] as const,
   dashboardStats: (projectId: string) =>
     [...projectsQueryKeys.detail(projectId), "dashboard-stats"] as const,
-  workspaceStats: () =>
-    [...projectsQueryKeys.all, "workspace-stats"] as const,
+  workspaceStats: () => [...projectsQueryKeys.all, "workspace-stats"] as const,
 }
 
 export const projectsCacheTags = {

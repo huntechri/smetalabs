@@ -106,5 +106,3 @@ export async function fetchWorkspaceDashboardStats() {
   }>("/api/dashboard/stats", "статистики дашборда воркспейса")
   return json.data
 }
-
-

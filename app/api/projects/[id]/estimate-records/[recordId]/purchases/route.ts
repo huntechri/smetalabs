@@ -6,6 +6,16 @@ export const dynamic = "force-dynamic"
 
 type RouteContext = { params: Promise<{ id: string; recordId: string }> }
 
+function parsePositiveNumber(value: unknown) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+function parseNonNegativeNumber(value: unknown) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+}
+
 export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
     const { id: projectId, recordId } = await params
@@ -37,10 +47,8 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       )
     }
 
-    // Get workspace context — follows the same pattern as requireProjectsReadContext()
     const workspaceOwnerId = await requireCurrentWorkspace(user.id)
 
-    // Verify the estimate record belongs to the project and workspace
     const { data: record, error: recordError } = await supabase
       .from("project_estimate_records")
       .select("id")
@@ -58,11 +66,14 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       )
     }
 
-    // Call RPC function
-    const { data, error } = await supabase.rpc("get_estimate_purchases", {
-      p_estimate_record_id: recordId,
-      p_workspace_owner_id: workspaceOwnerId,
-    })
+    const { data, error } = await supabase.rpc(
+      "get_estimate_purchases_with_sources",
+      {
+        p_estimate_record_id: recordId,
+        p_workspace_owner_id: workspaceOwnerId,
+        p_current_user_id: user.id,
+      }
+    )
 
     if (error) {
       console.error(
@@ -75,11 +86,12 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       )
     }
 
-    // Map DB columns to frontend PurchaseRow type
     const rows = (data ?? []).map(
       (raw: Record<string, unknown>) => ({
         purchaseId: (raw.purchase_id as string) ?? null,
         materialId: (raw.material_id as string) ?? null,
+        estimateMaterialId: (raw.estimate_material_id as string) ?? null,
+        directoryMaterialId: (raw.directory_material_id as string) ?? null,
         title: (raw.title as string) ?? "",
         unit: (raw.unit as string) ?? "",
         planQuantity: Number(raw.plan_quantity ?? 0),
@@ -93,10 +105,11 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
           raw.fact_total != null ? Number(raw.fact_total) : null,
         deviationTotal:
           raw.deviation_total != null ? Number(raw.deviation_total) : null,
+        source: (raw.source as "estimate" | "global" | "mixed" | null) ?? null,
+        editable: Boolean(raw.editable),
       })
     )
 
-    // Apply search filter if provided
     const searchQuery = request.nextUrl.searchParams.get("q")?.trim() ?? ""
     let filtered = rows
     if (searchQuery) {
@@ -108,7 +121,6 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json({ data: filtered })
   } catch (err) {
-    // Handle known error types
     if (err instanceof Error) {
       if (err.message === "WORKSPACE_MEMBER_REQUIRED") {
         return NextResponse.json(
@@ -167,7 +179,6 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
     const workspaceOwnerId = await requireCurrentWorkspace(user.id)
 
-    // Verify the estimate record belongs to the project and workspace
     const { data: record, error: recordError } = await supabase
       .from("project_estimate_records")
       .select("id")
@@ -203,15 +214,15 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       )
     }
 
-    const quantity = Number(body.quantity ?? 1)
-    const price = Number(body.price ?? 0)
+    const quantity = parsePositiveNumber(body.quantity ?? 1)
+    const price = parseNonNegativeNumber(body.price ?? 0)
 
-    if (quantity <= 0) {
+    if (quantity === null || price === null) {
       return NextResponse.json(
         {
           error: {
             code: "BAD_REQUEST",
-            message: "quantity должен быть больше 0",
+            message: "Количество должно быть больше 0, цена — не меньше 0",
           },
         },
         { status: 400 }
@@ -224,6 +235,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       p_directory_material_id: body.directoryMaterialId,
       p_quantity: quantity,
       p_price: price,
+      p_created_by: user.id,
     })
 
     if (error) {

@@ -47,7 +47,6 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
     refetch: refetchEstimate,
   } = useProjectEstimateContent(projectId, estimateId)
 
-  // Fetch payments list
   const paymentsQuery = useQuery({
     queryKey,
     queryFn: async () => {
@@ -59,7 +58,6 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
 
   const payments = useMemo(() => paymentsQuery.data ?? [], [paymentsQuery.data])
 
-  // Fetch purchases list for actual materials sum
   const purchasesQuery = useQuery({
     queryKey: ["estimatePurchases", "list", { projectId, estimateId }],
     queryFn: () => fetchEstimatePurchases({ projectId, estimateId }),
@@ -71,7 +69,6 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
   const fallbackPurchases: PurchaseRow[] = purchasesData !== null ? purchasesData : EMPTY_PURCHASES
   const totalPurchasesAmount = fallbackPurchases.reduce((sum: number, p: PurchaseRow) => sum + (p.factTotal ?? 0), 0)
 
-  // Mutations with Optimistic UI updates
   const addMutation = useMutation({
     mutationFn: (input: Omit<FinancePayment, "paymentId">) =>
       addProjectEstimatePayment(projectId, estimateId, input),
@@ -194,35 +191,35 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
     deleteMutation.mutate(paymentId)
   }
 
-  // Merge database estimate sections with payments from the DB
   const sections = useMemo<FinanceSection[]>(() => {
     const dbSections = content?.sections ?? []
 
-    // Build a set of all stage material IDs and map each material ID to its section ID
-    const materialIdToSectionId = new Map<string, string>()
+    const estimateMaterialIdToSectionId = new Map<string, string>()
     dbSections.forEach((sec) => {
       sec.works?.forEach((w) => {
         w.materials?.forEach((mat) => {
           if (mat.id) {
-            materialIdToSectionId.set(mat.id, sec.id)
+            estimateMaterialIdToSectionId.set(mat.id, sec.id)
           }
         })
       })
     })
 
-    // Map normal stages
+    const getPurchaseSectionId = (purchase: PurchaseRow) => {
+      if (!purchase.estimateMaterialId) return null
+      return estimateMaterialIdToSectionId.get(purchase.estimateMaterialId) ?? null
+    }
+
     const mappedSections: FinanceSection[] = dbSections.map((sec) => {
       const secPayments = payments.filter((p) => p.sectionId === sec.id)
       const factAmount = secPayments
         .filter((p) => !p.isDeleting && (p.status === "conducted" || p.status === "processing"))
         .reduce((sum, p) => sum + p.amount, 0)
 
-      // Work execution expenses
       const workExecutionExpenses = sec.works?.reduce((sum, w) => sum + (w.factTotalAmount ?? 0), 0) ?? 0
 
-      // Purchases expenses (materials belonging to this section)
       const materialPurchasesExpenses = fallbackPurchases
-        .filter((p: PurchaseRow) => p.materialId && materialIdToSectionId.get(p.materialId) === sec.id)
+        .filter((p: PurchaseRow) => getPurchaseSectionId(p) === sec.id)
         .reduce((sum: number, p: PurchaseRow) => sum + (p.factTotal ?? 0), 0)
 
       const totalExpenses = workExecutionExpenses + materialPurchasesExpenses
@@ -237,7 +234,6 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
       }
     })
 
-    // Always append virtual section for general payments
     const generalPayments = payments.filter(
       (p) => p.sectionId === null || p.sectionId === undefined || p.sectionId === "general_advance"
     )
@@ -245,9 +241,8 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
       .filter((p) => !p.isDeleting && (p.status === "conducted" || p.status === "processing"))
       .reduce((sum, p) => sum + p.amount, 0)
 
-    // General expenses = total purchases minus the ones associated with specific stages
     const stageSpecificPurchasesAmount = fallbackPurchases
-      .filter((p: PurchaseRow) => p.materialId && materialIdToSectionId.has(p.materialId))
+      .filter((p: PurchaseRow) => getPurchaseSectionId(p) !== null)
       .reduce((sum: number, p: PurchaseRow) => sum + (p.factTotal ?? 0), 0)
 
     const generalExpenses = Math.max(0, totalPurchasesAmount - stageSpecificPurchasesAmount)
@@ -276,7 +271,7 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
   return {
     sections,
     payments,
-    loading: estimateLoading || (paymentsQuery.isLoading && !paymentsQuery.data) || (purchasesQuery.isLoading && !purchasesQuery.data), // Prevent loading skeleton on refetch/mutate
+    loading: estimateLoading || (paymentsQuery.isLoading && !paymentsQuery.data) || (purchasesQuery.isLoading && !purchasesQuery.data),
     loadError,
     refetch,
     addPayment,

@@ -66,10 +66,13 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       )
     }
 
-    const { data, error } = await supabase.rpc("get_estimate_purchases", {
-      p_estimate_record_id: recordId,
-      p_workspace_owner_id: workspaceOwnerId,
-    })
+    const { data, error } = await supabase.rpc(
+      "get_estimate_purchases_with_sources",
+      {
+        p_estimate_record_id: recordId,
+        p_workspace_owner_id: workspaceOwnerId,
+      }
+    )
 
     if (error) {
       console.error(

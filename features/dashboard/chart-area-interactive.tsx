@@ -57,7 +57,8 @@ export function ChartAreaInteractive() {
     if (isMobile) setTimeRange("7d")
   }, [isMobile])
 
-  const { chartData, loading, error, refetch } = useWorkspaceDashboardStats(timeRange)
+  const { chartData, loading, error, refetch } =
+    useWorkspaceDashboardStats(timeRange)
 
   const processedChartData = React.useMemo(() => {
     return chartData.map((d) => ({
@@ -115,8 +116,8 @@ export function ChartAreaInteractive() {
             <Skeleton className="h-4 w-72" />
           </div>
         </CardHeader>
-        <CardContent className="h-[280px] flex items-center justify-center">
-          <Skeleton className="w-full h-full rounded" />
+        <CardContent className="flex h-[280px] items-center justify-center">
+          <Skeleton className="h-full w-full rounded" />
         </CardContent>
       </Card>
     )
@@ -128,9 +129,7 @@ export function ChartAreaInteractive() {
         <CardContent className="pt-6">
           <Alert variant="destructive">
             <AlertTitle>Ошибка загрузки графика</AlertTitle>
-            <AlertDescription>
-              {error}
-            </AlertDescription>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
           <Button className="mt-3" variant="outline" onClick={() => refetch()}>
             Повторить
@@ -145,12 +144,17 @@ export function ChartAreaInteractive() {
       <Card className="@container/card">
         <CardHeader>
           <CardTitle>Динамика показателей</CardTitle>
-          <CardDescription>Поступления, расходы и баланс во времени</CardDescription>
+          <CardDescription>
+            Поступления, расходы и баланс во времени
+          </CardDescription>
         </CardHeader>
-        <CardContent className="h-[280px] flex flex-col items-center justify-center text-center text-muted-foreground p-6 border border-dashed rounded-lg m-6">
-          <p className="text-sm font-medium">Нет транзакций для построения графика</p>
-          <p className="text-xs max-w-sm mt-1">
-            Для отображения динамики баланса и затрат воркспейса добавьте сметы, платежи или закупки в проектах.
+        <CardContent className="m-6 flex h-[280px] flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center text-muted-foreground">
+          <p className="text-sm font-medium">
+            Нет транзакций для построения графика
+          </p>
+          <p className="mt-1 max-w-sm text-xs">
+            Для отображения динамики баланса и затрат воркспейса добавьте сметы,
+            платежи или закупки в проектах.
           </p>
         </CardContent>
       </Card>
@@ -213,10 +217,26 @@ export function ChartAreaInteractive() {
           >
             <defs>
               <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--color-inflow)" stopOpacity={0.2} />
-                <stop offset={`${off * 100}%`} stopColor="var(--color-inflow)" stopOpacity={0.2} />
-                <stop offset={`${off * 100}%`} stopColor="var(--color-outflow)" stopOpacity={0.2} />
-                <stop offset="100%" stopColor="var(--color-outflow)" stopOpacity={0.2} />
+                <stop
+                  offset="0%"
+                  stopColor="var(--color-inflow)"
+                  stopOpacity={0.2}
+                />
+                <stop
+                  offset={`${off * 100}%`}
+                  stopColor="var(--color-inflow)"
+                  stopOpacity={0.2}
+                />
+                <stop
+                  offset={`${off * 100}%`}
+                  stopColor="var(--color-outflow)"
+                  stopOpacity={0.2}
+                />
+                <stop
+                  offset="100%"
+                  stopColor="var(--color-outflow)"
+                  stopOpacity={0.2}
+                />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
@@ -252,15 +272,20 @@ export function ChartAreaInteractive() {
                   formatter={(value, name, item) => (
                     <>
                       <div
-                        className="shrink-0 h-2.5 w-2.5 rounded-[2px]"
+                        className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
                         style={{ backgroundColor: item.color }}
                       />
-                      <div className="flex flex-1 justify-between items-center gap-4 w-full">
+                      <div className="flex w-full flex-1 items-center justify-between gap-4">
                         <span className="text-muted-foreground">
-                          {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
+                          {chartConfig[name as keyof typeof chartConfig]
+                            ?.label ?? name}
                         </span>
                         <span className="font-mono font-medium text-foreground tabular-nums">
-                          {formatMoney(name === "outflow" ? Math.abs(Number(value)) : Number(value))}
+                          {formatMoney(
+                            name === "outflow"
+                              ? Math.abs(Number(value))
+                              : Number(value)
+                          )}
                         </span>
                       </div>
                     </>

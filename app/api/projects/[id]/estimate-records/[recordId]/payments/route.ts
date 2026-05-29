@@ -66,7 +66,10 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       .order("date", { ascending: true })
 
     if (paymentsError) {
-      console.error("[GET /api/projects/[id]/estimate-records/[recordId]/payments] DB error:", paymentsError)
+      console.error(
+        "[GET /api/projects/[id]/estimate-records/[recordId]/payments] DB error:",
+        paymentsError
+      )
       return NextResponse.json(
         { error: { code: "DATABASE_ERROR", message: paymentsError.message } },
         { status: 500 }
@@ -92,7 +95,10 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       )
     }
 
-    console.error("[GET /api/projects/[id]/estimate-records/[recordId]/payments] Unexpected error:", err)
+    console.error(
+      "[GET /api/projects/[id]/estimate-records/[recordId]/payments] Unexpected error:",
+      err
+    )
     return NextResponse.json(
       {
         error: {
@@ -205,9 +211,17 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       .single()
 
     if (insertError || !inserted) {
-      console.error("[POST /api/projects/[id]/estimate-records/[recordId]/payments] DB error:", insertError)
+      console.error(
+        "[POST /api/projects/[id]/estimate-records/[recordId]/payments] DB error:",
+        insertError
+      )
       return NextResponse.json(
-        { error: { code: "DATABASE_ERROR", message: insertError?.message ?? "Не удалось создать платёж" } },
+        {
+          error: {
+            code: "DATABASE_ERROR",
+            message: insertError?.message ?? "Не удалось создать платёж",
+          },
+        },
         { status: 500 }
       )
     }
@@ -230,7 +244,10 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       )
     }
 
-    console.error("[POST /api/projects/[id]/estimate-records/[recordId]/payments] Unexpected error:", err)
+    console.error(
+      "[POST /api/projects/[id]/estimate-records/[recordId]/payments] Unexpected error:",
+      err
+    )
     return NextResponse.json(
       {
         error: {

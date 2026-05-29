@@ -23,8 +23,9 @@ export const projectEstimatePayments = pgTable(
     estimateRecordId: uuid("estimate_record_id")
       .notNull()
       .references(() => projectEstimateRecords.id, { onDelete: "cascade" }),
-    sectionId: uuid("section_id")
-      .references(() => projectEstimateSections.id, { onDelete: "cascade" }),
+    sectionId: uuid("section_id").references(() => projectEstimateSections.id, {
+      onDelete: "cascade",
+    }),
     amount: numeric("amount", { precision: 14, scale: 2 })
       .notNull()
       .default("0"),
@@ -46,16 +47,8 @@ export const projectEstimatePayments = pgTable(
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (t) => [
-    index("idx_pepay_estimate").on(
-      t.estimateRecordId,
-      t.workspaceOwnerId
-    ),
-    index("idx_pepay_section").on(
-      t.sectionId
-    ),
-    check(
-      "chk_pepay_amount_non_negative",
-      sql`${t.amount} >= 0`
-    ),
+    index("idx_pepay_estimate").on(t.estimateRecordId, t.workspaceOwnerId),
+    index("idx_pepay_section").on(t.sectionId),
+    check("chk_pepay_amount_non_negative", sql`${t.amount} >= 0`),
   ]
 )

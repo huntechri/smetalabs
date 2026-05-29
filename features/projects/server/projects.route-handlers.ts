@@ -103,7 +103,9 @@ export async function handleProjectDashboardStatsRequest(id: string) {
     const response = await getProjectDashboardStats(projectId)
     return NextResponse.json(response)
   } catch (err) {
-    return handleProjectsRouteError(err, "[GET /api/projects/[id]/dashboard-stats]")
+    return handleProjectsRouteError(
+      err,
+      "[GET /api/projects/[id]/dashboard-stats]"
+    )
   }
 }
-

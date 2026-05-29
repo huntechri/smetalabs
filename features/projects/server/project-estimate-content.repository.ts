@@ -106,8 +106,15 @@ function roundConsumption(value: number) {
 
 function mapRecord(
   row: RecordRow,
-  projectDetails?: { title: string; customer_name: string | null; address: string | null } | null,
-  profileDetails?: { workspace_name: string | null; workspace_logo: string | null } | null
+  projectDetails?: {
+    title: string
+    customer_name: string | null
+    address: string | null
+  } | null,
+  profileDetails?: {
+    workspace_name: string | null
+    workspace_logo: string | null
+  } | null
 ) {
   return {
     id: row.id,
@@ -484,11 +491,7 @@ export async function getProjectEstimateContentForWorkspace(
 
   return {
     data: {
-      record: mapRecord(
-        record,
-        projectDetails as any,
-        profileDetails as any
-      ),
+      record: mapRecord(record, projectDetails as any, profileDetails as any),
       sections,
       summary,
     },
@@ -796,25 +799,23 @@ export async function applyProjectEstimateContentChangeForWorkspace(
           estimate_record_id: recordId,
           section_id: input.payload.sectionId,
         }))
-      const { error } = await supabase
-        .from("project_estimate_works")
-        .insert({
-          workspace_owner_id: workspaceOwnerId,
-          project_id: projectId,
-          estimate_record_id: recordId,
-          section_id: input.payload.sectionId,
-          number,
-          title: input.payload.title,
-          unit_code: input.payload.unitCode,
-          unit_label: input.payload.unitLabel,
-          quantity: input.payload.quantity,
-          price: input.payload.price,
-          category: input.payload.category ?? null,
-          notes: input.payload.notes,
-          sort_order: sortOrder,
-          created_by: userId,
-          updated_by: userId,
-        })
+      const { error } = await supabase.from("project_estimate_works").insert({
+        workspace_owner_id: workspaceOwnerId,
+        project_id: projectId,
+        estimate_record_id: recordId,
+        section_id: input.payload.sectionId,
+        number,
+        title: input.payload.title,
+        unit_code: input.payload.unitCode,
+        unit_label: input.payload.unitLabel,
+        quantity: input.payload.quantity,
+        price: input.payload.price,
+        category: input.payload.category ?? null,
+        notes: input.payload.notes,
+        sort_order: sortOrder,
+        created_by: userId,
+        updated_by: userId,
+      })
       if (error) throw error
       {
         const record = await assertRecord(workspaceOwnerId, projectId, recordId)

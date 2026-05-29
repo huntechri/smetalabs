@@ -119,10 +119,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   }
 }
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: RouteContext
-) {
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   try {
     const { id: projectId, recordId, purchaseId } = await params
 
@@ -173,10 +170,13 @@ export async function DELETE(
       )
     }
 
-    const { data, error } = await supabase.rpc("archive_project_estimate_purchase", {
-      p_purchase_id: purchaseId,
-      p_workspace_owner_id: workspaceOwnerId,
-    })
+    const { data, error } = await supabase.rpc(
+      "archive_project_estimate_purchase",
+      {
+        p_purchase_id: purchaseId,
+        p_workspace_owner_id: workspaceOwnerId,
+      }
+    )
 
     if (error) {
       console.error(

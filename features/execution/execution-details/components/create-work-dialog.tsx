@@ -58,7 +58,8 @@ export function CreateWorkDialog({
           <DialogHeader>
             <DialogTitle>Добавить дополнительную работу</DialogTitle>
             <DialogDescription>
-              Введите параметры новой работы. Она будет создана в первом разделе сметы.
+              Введите параметры новой работы. Она будет создана в первом разделе
+              сметы.
             </DialogDescription>
           </DialogHeader>
           <FieldGroup>

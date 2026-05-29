@@ -32,7 +32,11 @@ import {
   toIsoDate,
   formatDisplayDate,
 } from "@/features/finances/lib/date-utils"
-import type { FinancePayment, FinanceSection, PaymentStatus } from "@/features/finances/types"
+import type {
+  FinancePayment,
+  FinanceSection,
+  PaymentStatus,
+} from "@/features/finances/types"
 
 const paymentStatusOptions: { value: PaymentStatus; label: string }[] = [
   { value: "conducted", label: "Проведён" },
@@ -46,7 +50,9 @@ interface PaymentCreateDialogProps {
   onOpenChange: (open: boolean) => void
   sections: FinanceSection[]
   editingPayment?: FinancePayment | null
-  onSave: (payment: Omit<FinancePayment, "paymentId"> & { paymentId?: string }) => void
+  onSave: (
+    payment: Omit<FinancePayment, "paymentId"> & { paymentId?: string }
+  ) => void
 }
 
 export function PaymentCreateDialog({
@@ -112,15 +118,27 @@ export function PaymentCreateDialog({
               <Select
                 name="sectionId"
                 required
-                defaultValue={editingPayment?.sectionId === null ? "general_advance" : (editingPayment?.sectionId ?? (hasSections ? sections[0].sectionId : undefined))}
+                defaultValue={
+                  editingPayment?.sectionId === null
+                    ? "general_advance"
+                    : (editingPayment?.sectionId ??
+                      (hasSections ? sections[0].sectionId : undefined))
+                }
                 disabled={!hasSections}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={hasSections ? "Выберите раздел" : "Нет доступных разделов"} />
+                  <SelectValue
+                    placeholder={
+                      hasSections ? "Выберите раздел" : "Нет доступных разделов"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {sections.map((section) => (
-                    <SelectItem key={section.sectionId} value={section.sectionId}>
+                    <SelectItem
+                      key={section.sectionId}
+                      value={section.sectionId}
+                    >
                       {section.title}
                     </SelectItem>
                   ))}

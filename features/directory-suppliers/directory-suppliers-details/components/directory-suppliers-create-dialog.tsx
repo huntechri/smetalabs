@@ -106,7 +106,7 @@ export function DirectorySuppliersFormDialog({
             Заполните основные данные поставщика.
           </DialogDescription>
         </DialogHeader>
- 
+
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="supplier-name">Наименование</Label>
@@ -117,7 +117,7 @@ export function DirectorySuppliersFormDialog({
               onChange={(event) => setName(event.target.value)}
             />
           </div>
- 
+
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="supplier-status">Тип</Label>
@@ -136,7 +136,7 @@ export function DirectorySuppliersFormDialog({
                 </SelectContent>
               </Select>
             </div>
- 
+
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="supplier-color">Цвет</Label>
               <div className="flex gap-2">
@@ -144,9 +144,15 @@ export function DirectorySuppliersFormDialog({
                   <input
                     type="color"
                     id="supplier-color-picker"
-                    className="absolute -inset-1 h-[calc(100%+8px)] w-[calc(100%+8px)] cursor-pointer bg-transparent p-0 border-0"
-                    value={color.startsWith("#") && color.length === 7 ? color : "#64748B"}
-                    onChange={(event) => setColor(event.target.value.toUpperCase())}
+                    className="absolute -inset-1 h-[calc(100%+8px)] w-[calc(100%+8px)] cursor-pointer border-0 bg-transparent p-0"
+                    value={
+                      color.startsWith("#") && color.length === 7
+                        ? color
+                        : "#64748B"
+                    }
+                    onChange={(event) =>
+                      setColor(event.target.value.toUpperCase())
+                    }
                   />
                 </div>
                 <Input
@@ -164,15 +170,16 @@ export function DirectorySuppliersFormDialog({
                   className="font-mono uppercase"
                 />
               </div>
-              <div className="flex flex-wrap gap-1.5 mt-1">
+              <div className="mt-1 flex flex-wrap gap-1.5">
                 {colorPresets.map((preset) => (
                   <button
                     key={preset.value}
                     type="button"
                     title={preset.label}
                     className={cn(
-                      "h-6 w-6 rounded-full border border-muted-foreground/30 transition-transform hover:scale-110 focus:outline-none focus:ring-1 focus:ring-ring",
-                      color.toLowerCase() === preset.value.toLowerCase() && "ring-2 ring-ring scale-110"
+                      "h-6 w-6 rounded-full border border-muted-foreground/30 transition-transform hover:scale-110 focus:ring-1 focus:ring-ring focus:outline-none",
+                      color.toLowerCase() === preset.value.toLowerCase() &&
+                        "scale-110 ring-2 ring-ring"
                     )}
                     style={{ backgroundColor: preset.value }}
                     onClick={() => setColor(preset.value)}
@@ -180,11 +187,13 @@ export function DirectorySuppliersFormDialog({
                 ))}
               </div>
               {!isValidHex && color && (
-                <span className="text-xs text-destructive">Формат HEX: #RRGGBB</span>
+                <span className="text-xs text-destructive">
+                  Формат HEX: #RRGGBB
+                </span>
               )}
             </div>
           </div>
- 
+
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="supplier-inn">ИНН</Label>
@@ -205,7 +214,7 @@ export function DirectorySuppliersFormDialog({
               />
             </div>
           </div>
- 
+
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="supplier-email">Email</Label>
             <Input
@@ -234,7 +243,7 @@ export function DirectorySuppliersFormDialog({
             />
           </div>
         </div>
- 
+
         <DialogFooter showCloseButton={false}>
           <Button
             variant="outline"
@@ -243,7 +252,10 @@ export function DirectorySuppliersFormDialog({
           >
             Отмена
           </Button>
-          <Button onClick={handleSubmit} disabled={saving || !name.trim() || !isValidHex}>
+          <Button
+            onClick={handleSubmit}
+            disabled={saving || !name.trim() || !isValidHex}
+          >
             {supplier ? "Сохранить" : "Создать"}
           </Button>
         </DialogFooter>

@@ -11,7 +11,10 @@ export function ExecutionRow({
   onUpdate,
 }: {
   row: ProjectEstimateContentWork
-  onUpdate: (id: string, updates: { factQuantity?: number; factPrice?: number }) => void
+  onUpdate: (
+    id: string,
+    updates: { factQuantity?: number; factPrice?: number }
+  ) => void
 }) {
   const planTotal = row.totalAmount
   const factTotal = row.factTotalAmount
@@ -29,17 +32,17 @@ export function ExecutionRow({
 
   return (
     <div className="grid gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:bg-muted/50 lg:grid-cols-[minmax(300px,1fr)_minmax(600px,1.3fr)]">
-      <div className="flex flex-col sm:flex-row min-w-0 gap-3">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row">
         <ExecutionName value={row.title} className="flex-1" />
-        <ExecutionUnit unit={row.unitLabel} className="w-full sm:w-[76px] shrink-0" />
+        <ExecutionUnit
+          unit={row.unitLabel}
+          className="w-full shrink-0 sm:w-[76px]"
+        />
       </div>
 
       <div className="grid min-w-0 gap-3 md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)]">
         <ExecutionMetricGroup title="План">
-          <EditableBadge
-            label="Кол-во"
-            value={row.quantity}
-          />
+          <EditableBadge label="Кол-во" value={row.quantity} />
           <EditableBadge
             label="Цена"
             value={row.price}

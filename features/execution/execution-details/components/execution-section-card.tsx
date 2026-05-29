@@ -22,7 +22,10 @@ export function ExecutionSectionCard({
   onUpdate,
 }: {
   section: ProjectEstimateContentSection
-  onUpdate: (id: string, updates: { factQuantity?: number; factPrice?: number }) => void
+  onUpdate: (
+    id: string,
+    updates: { factQuantity?: number; factPrice?: number }
+  ) => void
 }) {
   const [expandedSection, setExpandedSection] = useState(true)
 
@@ -96,7 +99,7 @@ export function ExecutionSectionCard({
               <Badge
                 variant="outline"
                 className={cn(
-                  "h-auto rounded-md px-2.5 py-1 text-xs font-medium border tabular-nums",
+                  "h-auto rounded-md border px-2.5 py-1 text-xs font-medium tabular-nums",
                   deviationVariant
                 )}
               >
@@ -104,7 +107,8 @@ export function ExecutionSectionCard({
                   Отклонение:
                 </span>
                 <span className="font-semibold">
-                  {sign}{formatMoney(deviationTotal)}
+                  {sign}
+                  {formatMoney(deviationTotal)}
                 </span>
               </Badge>
             </div>
@@ -121,14 +125,10 @@ export function ExecutionSectionCard({
           >
             {section.works.length ? (
               section.works.map((work) => (
-                <ExecutionRow
-                  key={work.id}
-                  row={work}
-                  onUpdate={onUpdate}
-                />
+                <ExecutionRow key={work.id} row={work} onUpdate={onUpdate} />
               ))
             ) : (
-              <div className="p-4 text-xs text-muted-foreground text-center">
+              <div className="p-4 text-center text-xs text-muted-foreground">
                 В разделе пока нет работ.
               </div>
             )}

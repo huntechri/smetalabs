@@ -61,4 +61,3 @@ export type ProjectDashboardStats = {
     date: string
   }[]
 }
-

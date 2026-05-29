@@ -11,7 +11,11 @@ import {
   type EstimatePurchasesParams,
 } from "@/features/purchases/api/purchases-client"
 import { purchasesQueryKeys } from "@/features/purchases/api/purchases-query-keys"
-import type { PurchaseRow, AddPurchaseInput, UpdatePurchaseInput } from "@/types/purchase"
+import type {
+  PurchaseRow,
+  AddPurchaseInput,
+  UpdatePurchaseInput,
+} from "@/types/purchase"
 
 const ESTIMATE_PURCHASES_STALE_TIME_MS = 30_000
 const ESTIMATE_PURCHASES_GC_TIME_MS = 5 * 60_000
@@ -50,8 +54,7 @@ export function usePurchases({ estimateId, projectId }: UsePurchasesInput) {
 
   // Use empty array as fallback when API has no data
   const data = purchasesQuery.data?.data ?? null
-  const fallbackRows: PurchaseRow[] =
-    data !== null ? data : EMPTY_ROWS
+  const fallbackRows: PurchaseRow[] = data !== null ? data : EMPTY_ROWS
 
   // Client-side search filtering as additional safety net
   const filteredRows = useMemo(() => {

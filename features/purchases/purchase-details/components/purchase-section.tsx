@@ -28,12 +28,12 @@ const SKELETON_ROW_COUNT = 5
 function PurchaseRowSkeleton() {
   return (
     <div className="grid gap-3 rounded-lg border border-border p-3 lg:grid-cols-[minmax(300px,1fr)_minmax(600px,1.3fr)]">
-      <div className="flex flex-col sm:flex-row min-w-0 gap-3">
-        <div className="flex-1 min-w-0 rounded-md border border-border p-2">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row">
+        <div className="min-w-0 flex-1 rounded-md border border-border p-2">
           <Skeleton className="mb-1 h-3 w-20" />
           <Skeleton className="h-4 w-full max-w-md" />
         </div>
-        <div className="w-full sm:w-[76px] shrink-0 rounded-md border border-border p-2">
+        <div className="w-full shrink-0 rounded-md border border-border p-2 sm:w-[76px]">
           <Skeleton className="mb-1 h-3 w-10" />
           <Skeleton className="h-4 w-8" />
         </div>
@@ -113,9 +113,8 @@ export function PurchaseSection({
   useEffect(() => {
     const handleExport = async () => {
       if (purchases && content?.record) {
-        const { exportPurchasesToExcel } = await import(
-          "@/features/purchases/lib/purchases-excel-exporter"
-        )
+        const { exportPurchasesToExcel } =
+          await import("@/features/purchases/lib/purchases-excel-exporter")
         await exportPurchasesToExcel({
           record: content.record,
           purchases,
@@ -134,7 +133,9 @@ export function PurchaseSection({
       await addPurchase(input)
       closeDialog()
     } catch (err) {
-      setAddError(err instanceof Error ? err.message : "Не удалось добавить закупку")
+      setAddError(
+        err instanceof Error ? err.message : "Не удалось добавить закупку"
+      )
       throw err
     }
   }
@@ -202,11 +203,7 @@ export function PurchaseSection({
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={openAddDialog}
-              >
+              <Button variant="outline" size="sm" onClick={openAddDialog}>
                 <PlusIcon data-icon="inline-start" />
                 Добавить закупку
               </Button>

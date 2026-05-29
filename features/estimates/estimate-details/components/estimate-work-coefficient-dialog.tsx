@@ -79,9 +79,7 @@ export function EstimateWorkCoefficientDialog({
       onOpenChange(false)
     } catch (err) {
       setCoefficientError(
-          err instanceof Error
-              ? err.message
-              : "Не удалось применить коэффициент"
+        err instanceof Error ? err.message : "Не удалось применить коэффициент"
       )
     }
   }
@@ -93,8 +91,8 @@ export function EstimateWorkCoefficientDialog({
           <DialogHeader>
             <DialogTitle>Коэффициент работ</DialogTitle>
             <DialogDescription>
-              Коэффициент применяется только к работам. Цена округляется
-              вверх до ближайших 10 ₽.
+              Коэффициент применяется только к работам. Цена округляется вверх
+              до ближайших 10 ₽.
             </DialogDescription>
           </DialogHeader>
           <Field>

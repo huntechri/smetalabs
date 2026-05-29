@@ -437,34 +437,30 @@ async function insertTerms(
   row: DirectoryWorkImportNormalizedRow
 ) {
   if (row.aliases.length > 0) {
-    const { error } = await supabase
-      .from("work_aliases")
-      .insert(
-        row.aliases.map((alias) => ({
-          workspace_owner_id: workspaceOwnerId,
-          work_id: workId,
-          alias,
-          source: "import",
-          weight: 1,
-          created_by: userId,
-        }))
-      )
+    const { error } = await supabase.from("work_aliases").insert(
+      row.aliases.map((alias) => ({
+        workspace_owner_id: workspaceOwnerId,
+        work_id: workId,
+        alias,
+        source: "import",
+        weight: 1,
+        created_by: userId,
+      }))
+    )
     if (error) throw error
   }
 
   if (row.keywords.length > 0) {
-    const { error } = await supabase
-      .from("work_keywords")
-      .insert(
-        row.keywords.map((keyword) => ({
-          workspace_owner_id: workspaceOwnerId,
-          work_id: workId,
-          keyword,
-          source: "import",
-          weight: 1,
-          created_by: userId,
-        }))
-      )
+    const { error } = await supabase.from("work_keywords").insert(
+      row.keywords.map((keyword) => ({
+        workspace_owner_id: workspaceOwnerId,
+        work_id: workId,
+        keyword,
+        source: "import",
+        weight: 1,
+        created_by: userId,
+      }))
+    )
     if (error) throw error
   }
 }

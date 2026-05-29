@@ -68,7 +68,6 @@ const SORT_ORDER_STEP = 1000
 
 type MoveDirection = "up" | "down"
 
-
 function normalizeSearchText(value: unknown) {
   return String(value ?? "")
     .toLocaleLowerCase("ru-RU")
@@ -269,8 +268,6 @@ export function EstimateEditorView({
     return codes
   }, [materialDialog.work])
 
-
-
   React.useEffect(() => {
     if (searchParams.get("dialog") !== WORK_COEFFICIENT_DIALOG_KEY) {
       coefficientTriggered.current = false
@@ -312,8 +309,6 @@ export function EstimateEditorView({
       window.removeEventListener("project-estimate:export", handleExport)
     }
   }, [content])
-
-
 
   const workOptions = useQuery({
     queryKey: projectsQueryKeys.estimateWorkOptions(
@@ -476,8 +471,6 @@ export function EstimateEditorView({
     },
     [save]
   )
-
-
 
   const addDirectoryWork = useCallback(
     async (

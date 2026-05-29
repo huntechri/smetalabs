@@ -39,9 +39,12 @@ export function PurchaseRow({
   return (
     <div className="grid gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50 lg:grid-cols-[minmax(300px,1fr)_minmax(600px,1.3fr)]">
       <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="flex flex-col sm:flex-row flex-1 min-w-0 gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row">
           <PurchaseName title={row.title} className="flex-1" />
-          <PurchaseUnit unit={row.unit} className="w-full sm:w-[76px] shrink-0" />
+          <PurchaseUnit
+            unit={row.unit}
+            className="w-full shrink-0 sm:w-[76px]"
+          />
         </div>
         {canArchive && (
           <DropdownMenu>
@@ -70,13 +73,13 @@ export function PurchaseRow({
 
       <div className="grid min-w-0 gap-3 md:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(80px,0.4fr)]">
         <PurchaseMetricGroup title="План">
-          <PurchaseValue label="Кол-во" isMoney={false} value={row.planQuantity} />
-          <PurchaseValue label="Цена" value={row.planPrice} />
           <PurchaseValue
-            label="Итого"
-            strong
-            value={planTotal}
+            label="Кол-во"
+            isMoney={false}
+            value={row.planQuantity}
           />
+          <PurchaseValue label="Цена" value={row.planPrice} />
+          <PurchaseValue label="Итого" strong value={planTotal} />
         </PurchaseMetricGroup>
 
         <PurchaseMetricGroup title="Факт">

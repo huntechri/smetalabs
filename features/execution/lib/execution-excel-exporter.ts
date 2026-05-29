@@ -1,6 +1,4 @@
-import type {
-  ProjectEstimateContentSection,
-} from "@/types/project-estimate-content"
+import type { ProjectEstimateContentSection } from "@/types/project-estimate-content"
 
 export async function exportExecutionToExcel(content: {
   record: {
@@ -81,7 +79,11 @@ export async function exportExecutionToExcel(content: {
         imageBuffers[content.record.workspaceLogo] = { buffer: buf, extension }
       }
     } catch (err) {
-      console.error("Failed to fetch workspace logo:", content.record.workspaceLogo, err)
+      console.error(
+        "Failed to fetch workspace logo:",
+        content.record.workspaceLogo,
+        err
+      )
     }
   }
 
@@ -233,7 +235,11 @@ export async function exportExecutionToExcel(content: {
   worksheet.addRow([]) // Spacer
 
   // Title row
-  const titleRow = worksheet.addRow(["", "", "ПЛАН-ФАКТНЫЙ АНАЛИЗ ВЫПОЛНЕНИЯ РАБОТ"])
+  const titleRow = worksheet.addRow([
+    "",
+    "",
+    "ПЛАН-ФАКТНЫЙ АНАЛИЗ ВЫПОЛНЕНИЯ РАБОТ",
+  ])
   worksheet.mergeCells(titleRow.number, 3, titleRow.number, 10)
   titleRow.height = 28
   titleRow.getCell(3).font = {
@@ -298,7 +304,9 @@ export async function exportExecutionToExcel(content: {
 
   const activeSections = content.sections
     .map((section) => {
-      const activeWorks = section.works.filter((work) => (work.factQuantity ?? 0) !== 0)
+      const activeWorks = section.works.filter(
+        (work) => (work.factQuantity ?? 0) !== 0
+      )
       return {
         ...section,
         works: activeWorks,
@@ -311,10 +319,7 @@ export async function exportExecutionToExcel(content: {
 
     // Section Header Row
     const sectionText = `Раздел ${secRowNumber}. ${section.title}`
-    const sectionRow = worksheet.addRow([
-      String(secRowNumber),
-      sectionText,
-    ])
+    const sectionRow = worksheet.addRow([String(secRowNumber), sectionText])
     sectionRow.height = calculateRowHeight(sectionText, 60, 24, 11)
 
     const sectionRowNum = sectionRow.number
@@ -322,7 +327,12 @@ export async function exportExecutionToExcel(content: {
 
     for (let col = 1; col <= 10; col++) {
       const cell = sectionRow.getCell(col)
-      cell.font = { name: "Arial", size: 11, bold: true, color: { argb: "1E293B" } }
+      cell.font = {
+        name: "Arial",
+        size: 11,
+        bold: true,
+        color: { argb: "1E293B" },
+      }
       cell.fill = {
         type: "pattern",
         pattern: "solid",
@@ -358,14 +368,20 @@ export async function exportExecutionToExcel(content: {
         work.factQuantity ?? 0,
         work.factPrice ?? 0,
         { formula: `G${rowIdx}*H${rowIdx}` },
-        { formula: `F${rowIdx}-I${rowIdx}` }
+        { formula: `F${rowIdx}-I${rowIdx}` },
       ])
 
       dataRow.height = calculateRowHeight(work.title, 60, 20, 10)
 
-      dataRow.getCell(1).alignment = { horizontal: "center", vertical: "middle" }
+      dataRow.getCell(1).alignment = {
+        horizontal: "center",
+        vertical: "middle",
+      }
       dataRow.getCell(2).alignment = { vertical: "middle", wrapText: true }
-      dataRow.getCell(3).alignment = { horizontal: "center", vertical: "middle" }
+      dataRow.getCell(3).alignment = {
+        horizontal: "center",
+        vertical: "middle",
+      }
 
       // Numbers & Currency formats
       dataRow.getCell(4).numFmt = "#,##0.00"
@@ -409,7 +425,7 @@ export async function exportExecutionToExcel(content: {
         "",
         "",
         { formula: `SUM(I${startWorkRow}:I${endWorkRow})` },
-        { formula: `F${secTotalRowNum}-I${secTotalRowNum}` }
+        { formula: `F${secTotalRowNum}-I${secTotalRowNum}` },
       ])
       sectionTotalRow.height = 22
 
@@ -463,7 +479,9 @@ export async function exportExecutionToExcel(content: {
   grandTotalRow.height = 26
 
   const grandRowNum = grandTotalRow.number
-  grandTotalRow.getCell(10).value = { formula: `F${grandRowNum}-I${grandRowNum}` }
+  grandTotalRow.getCell(10).value = {
+    formula: `F${grandRowNum}-I${grandRowNum}`,
+  }
 
   worksheet.mergeCells(grandRowNum, 2, grandRowNum, 5) // Merge B to E
   worksheet.mergeCells(grandRowNum, 7, grandRowNum, 8) // Merge G and H

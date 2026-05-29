@@ -427,7 +427,9 @@ export async function getProjectDashboardStatsForWorkspace(
   }
 
   const estimateIds = estimates.map((e) => e.id)
-  const contractTotal = roundMoney(estimates.reduce((sum, e) => sum + toNumber(e.amount), 0))
+  const contractTotal = roundMoney(
+    estimates.reduce((sum, e) => sum + toNumber(e.amount), 0)
+  )
 
   // 2. Fetch payments (with date)
   const { data: payments, error: payError } = await supabase
@@ -440,7 +442,9 @@ export async function getProjectDashboardStatsForWorkspace(
 
   if (payError) throw payError
 
-  const paidTotal = roundMoney((payments ?? []).reduce((sum, p) => sum + toNumber(p.amount), 0))
+  const paidTotal = roundMoney(
+    (payments ?? []).reduce((sum, p) => sum + toNumber(p.amount), 0)
+  )
 
   // 3. Fetch estimate-level purchases (with purchase_date)
   const { data: estPurchases, error: purError } = await supabase
@@ -464,7 +468,10 @@ export async function getProjectDashboardStatsForWorkspace(
 
   if (globPurError) throw globPurError
 
-  const materialsEstSpent = (estPurchases ?? []).reduce((sum, p) => sum + toNumber(p.total), 0)
+  const materialsEstSpent = (estPurchases ?? []).reduce(
+    (sum, p) => sum + toNumber(p.total),
+    0
+  )
   const materialsGlobSpent = (globPurchases ?? []).reduce((sum, p) => {
     const qty = toNumber(p.fact_quantity)
     const price = toNumber(p.fact_price)
@@ -497,7 +504,11 @@ export async function getProjectDashboardStatsForWorkspace(
       : 0
 
   // 5. Build transaction history for dates
-  const transactions: { type: "payment" | "purchase"; amount: number; date: string }[] = []
+  const transactions: {
+    type: "payment" | "purchase"
+    amount: number
+    date: string
+  }[] = []
 
   ;(payments ?? []).forEach((p) => {
     if (p.date) {
@@ -508,7 +519,6 @@ export async function getProjectDashboardStatsForWorkspace(
       })
     }
   })
-
   ;(estPurchases ?? []).forEach((p) => {
     if (p.purchase_date) {
       transactions.push({
@@ -518,7 +528,6 @@ export async function getProjectDashboardStatsForWorkspace(
       })
     }
   })
-
   ;(globPurchases ?? []).forEach((p) => {
     const qty = toNumber(p.fact_quantity)
     const price = toNumber(p.fact_price)
@@ -531,7 +540,6 @@ export async function getProjectDashboardStatsForWorkspace(
       })
     }
   })
-
   ;(works ?? []).forEach((w: any) => {
     const qty = toNumber(w.fact_quantity)
     const prc = toNumber(w.fact_price)
@@ -624,7 +632,11 @@ export async function getWorkspaceDashboardStatsForWorkspace(
 
   let paidTotal = 0
   let spentTotal = 0
-  const transactions: { type: "payment" | "purchase"; amount: number; date: string }[] = []
+  const transactions: {
+    type: "payment" | "purchase"
+    amount: number
+    date: string
+  }[] = []
 
   if (estimateIds.length > 0) {
     // 3. Fetch payments
@@ -704,7 +716,6 @@ export async function getWorkspaceDashboardStatsForWorkspace(
         })
       }
     })
-
     ;(estPurchases ?? []).forEach((p) => {
       if (p.purchase_date) {
         transactions.push({
@@ -714,7 +725,6 @@ export async function getWorkspaceDashboardStatsForWorkspace(
         })
       }
     })
-
     ;(globPurchases ?? []).forEach((p) => {
       const qty = toNumber(p.fact_quantity)
       const price = toNumber(p.fact_price)
@@ -727,7 +737,6 @@ export async function getWorkspaceDashboardStatsForWorkspace(
         })
       }
     })
-
     ;(works ?? []).forEach((w: any) => {
       const qty = toNumber(w.fact_quantity)
       const prc = toNumber(w.fact_price)
@@ -764,7 +773,6 @@ export async function getWorkspaceDashboardStatsForWorkspace(
     }, 0)
 
     spentTotal = roundMoney(materialsGlobSpent)
-
     ;(globPurchases ?? []).forEach((p) => {
       const qty = toNumber(p.fact_quantity)
       const price = toNumber(p.fact_price)
@@ -797,6 +805,3 @@ export async function getWorkspaceDashboardStatsForWorkspace(
     transactions,
   }
 }
-
-
-

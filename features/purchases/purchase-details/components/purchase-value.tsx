@@ -40,8 +40,10 @@ export function PurchaseValue({
     if (!deviation || !hasValue) return ""
     const num = Number(value)
     if (isNaN(num)) return ""
-    if (num > 0) return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-    if (num < 0) return "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400"
+    if (num > 0)
+      return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+    if (num < 0)
+      return "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400"
     return "border-transparent"
   })()
 

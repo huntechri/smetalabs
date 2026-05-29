@@ -256,9 +256,7 @@ export function GlobalPurchasesToolbar({
                 size="sm"
                 type="button"
                 variant="ghost"
-                onClick={() =>
-                  replaceParams({ dateFrom: null, dateTo: null })
-                }
+                onClick={() => replaceParams({ dateFrom: null, dateTo: null })}
               >
                 Сегодня
               </Button>
@@ -269,4 +267,3 @@ export function GlobalPurchasesToolbar({
     </div>
   )
 }
-

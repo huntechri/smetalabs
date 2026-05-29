@@ -1,7 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react"
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
 import { useSearchParams } from "next/navigation"
 import { useProjectEstimateContent } from "@/features/estimates/hooks/use-project-estimate-content"
 import { ExecutionSectionCard } from "@/features/execution/execution-details/components/execution-section-card"
@@ -117,7 +123,10 @@ export function ExecutionView({
   )
 
   const handleUpdateWork = useCallback(
-    async (id: string, updates: { factQuantity?: number; factPrice?: number }) => {
+    async (
+      id: string,
+      updates: { factQuantity?: number; factPrice?: number }
+    ) => {
       try {
         await applyChange({
           action: "update_work",
@@ -157,9 +166,8 @@ export function ExecutionView({
           toast.error("Нет работ с фактическим выполнением для экспорта")
           return
         }
-        const { exportExecutionToExcel } = await import(
-          "@/features/execution/lib/execution-excel-exporter"
-        )
+        const { exportExecutionToExcel } =
+          await import("@/features/execution/lib/execution-excel-exporter")
         await exportExecutionToExcel({
           record: content.record,
           sections: content.sections,
@@ -252,7 +260,7 @@ export function ExecutionView({
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       {mutationError && (
         <Alert variant="destructive" className="mx-1 mb-3">
           <AlertTitle>Ошибка сохранения</AlertTitle>
@@ -263,7 +271,11 @@ export function ExecutionView({
         {content.sections.length === 0 ? (
           <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-4 text-center text-xs text-muted-foreground">
             <p>В смете пока нет разделов и работ.</p>
-            <Button size="sm" variant="outline" onClick={() => setCreateWorkOpen(true)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setCreateWorkOpen(true)}
+            >
               Добавить работу
             </Button>
           </div>

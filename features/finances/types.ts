@@ -1,12 +1,12 @@
 /** Статус отдельного платежа */
-export type PaymentStatus = "conducted" | "processing" | "cancelled" | "expected"
+export type PaymentStatus =
+  | "conducted"
+  | "processing"
+  | "cancelled"
+  | "expected"
 
 /** Автостатус раздела (план/факт) */
-export type SectionStatus =
-  | "paid"
-  | "partial"
-  | "unpaid"
-  | "overpaid"
+export type SectionStatus = "paid" | "partial" | "unpaid" | "overpaid"
 
 /** Отдельный платёж */
 export interface FinancePayment {

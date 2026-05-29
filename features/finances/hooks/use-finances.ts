@@ -22,7 +22,10 @@ interface UseFinancesResult {
   loadError: string | null
   refetch: () => Promise<void>
   addPayment: (payment: Omit<FinancePayment, "paymentId">) => void
-  updatePayment: (paymentId: string, updates: Partial<Omit<FinancePayment, "paymentId">>) => void
+  updatePayment: (
+    paymentId: string,
+    updates: Partial<Omit<FinancePayment, "paymentId">>
+  ) => void
   deletePayment: (paymentId: string) => void
   record: ProjectEstimateContentRecord | null
   totalPurchasesAmount: number
@@ -36,7 +39,10 @@ const financesQueryKeys = {
 
 const EMPTY_PURCHASES: PurchaseRow[] = []
 
-export function useFinances(projectId: string, estimateId: string): UseFinancesResult {
+export function useFinances(
+  projectId: string,
+  estimateId: string
+): UseFinancesResult {
   const queryClient = useQueryClient()
   const queryKey = financesQueryKeys.list(projectId, estimateId)
 
@@ -68,8 +74,12 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
 
   const purchasesData: PurchaseRow[] | null = purchasesQuery.data?.data ?? null
 
-  const fallbackPurchases: PurchaseRow[] = purchasesData !== null ? purchasesData : EMPTY_PURCHASES
-  const totalPurchasesAmount = fallbackPurchases.reduce((sum: number, p: PurchaseRow) => sum + (p.factTotal ?? 0), 0)
+  const fallbackPurchases: PurchaseRow[] =
+    purchasesData !== null ? purchasesData : EMPTY_PURCHASES
+  const totalPurchasesAmount = fallbackPurchases.reduce(
+    (sum: number, p: PurchaseRow) => sum + (p.factTotal ?? 0),
+    0
+  )
 
   // Mutations with Optimistic UI updates
   const addMutation = useMutation({
@@ -77,7 +87,8 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
       addProjectEstimatePayment(projectId, estimateId, input),
     onMutate: async (newPaymentData) => {
       await queryClient.cancelQueries({ queryKey })
-      const previousPayments = queryClient.getQueryData<FinancePayment[]>(queryKey) || []
+      const previousPayments =
+        queryClient.getQueryData<FinancePayment[]>(queryKey) || []
 
       const tempPayment: FinancePayment = {
         ...newPaymentData,
@@ -85,7 +96,10 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
         isPending: true,
       }
 
-      queryClient.setQueryData<FinancePayment[]>(queryKey, [...previousPayments, tempPayment])
+      queryClient.setQueryData<FinancePayment[]>(queryKey, [
+        ...previousPayments,
+        tempPayment,
+      ])
 
       return { previousPayments }
     },
@@ -114,7 +128,8 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
     }) => updateProjectEstimatePayment(projectId, estimateId, paymentId, input),
     onMutate: async ({ paymentId, input }) => {
       await queryClient.cancelQueries({ queryKey })
-      const previousPayments = queryClient.getQueryData<FinancePayment[]>(queryKey) || []
+      const previousPayments =
+        queryClient.getQueryData<FinancePayment[]>(queryKey) || []
 
       const updatedPayments = previousPayments.map((p) =>
         p.paymentId === paymentId ? { ...p, ...input, isUpdating: true } : p
@@ -144,7 +159,8 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
       deleteProjectEstimatePayment(projectId, estimateId, paymentId),
     onMutate: async (paymentId) => {
       await queryClient.cancelQueries({ queryKey })
-      const previousPayments = queryClient.getQueryData<FinancePayment[]>(queryKey) || []
+      const previousPayments =
+        queryClient.getQueryData<FinancePayment[]>(queryKey) || []
 
       const updatedPayments = previousPayments.map((p) =>
         p.paymentId === paymentId ? { ...p, isDeleting: true } : p
@@ -172,7 +188,10 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
   const addPayment = (paymentData: Omit<FinancePayment, "paymentId">) => {
     const mappedData = {
       ...paymentData,
-      sectionId: paymentData.sectionId === "general_advance" ? null : paymentData.sectionId,
+      sectionId:
+        paymentData.sectionId === "general_advance"
+          ? null
+          : paymentData.sectionId,
     }
     addMutation.mutate(mappedData)
   }
@@ -184,7 +203,12 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
     const mappedUpdates = {
       ...updates,
       ...(updates.sectionId !== undefined
-        ? { sectionId: updates.sectionId === "general_advance" ? null : updates.sectionId }
+        ? {
+            sectionId:
+              updates.sectionId === "general_advance"
+                ? null
+                : updates.sectionId,
+          }
         : {}),
     }
     updateMutation.mutate({ paymentId, input: mappedUpdates })
@@ -214,15 +238,23 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
     const mappedSections: FinanceSection[] = dbSections.map((sec) => {
       const secPayments = payments.filter((p) => p.sectionId === sec.id)
       const factAmount = secPayments
-        .filter((p) => !p.isDeleting && (p.status === "conducted" || p.status === "processing"))
+        .filter(
+          (p) =>
+            !p.isDeleting &&
+            (p.status === "conducted" || p.status === "processing")
+        )
         .reduce((sum, p) => sum + p.amount, 0)
 
       // Work execution expenses
-      const workExecutionExpenses = sec.works?.reduce((sum, w) => sum + (w.factTotalAmount ?? 0), 0) ?? 0
+      const workExecutionExpenses =
+        sec.works?.reduce((sum, w) => sum + (w.factTotalAmount ?? 0), 0) ?? 0
 
       // Purchases expenses (materials belonging to this section)
       const materialPurchasesExpenses = fallbackPurchases
-        .filter((p: PurchaseRow) => p.materialId && materialIdToSectionId.get(p.materialId) === sec.id)
+        .filter(
+          (p: PurchaseRow) =>
+            p.materialId && materialIdToSectionId.get(p.materialId) === sec.id
+        )
         .reduce((sum: number, p: PurchaseRow) => sum + (p.factTotal ?? 0), 0)
 
       const totalExpenses = workExecutionExpenses + materialPurchasesExpenses
@@ -239,18 +271,31 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
 
     // Always append virtual section for general payments
     const generalPayments = payments.filter(
-      (p) => p.sectionId === null || p.sectionId === undefined || p.sectionId === "general_advance"
+      (p) =>
+        p.sectionId === null ||
+        p.sectionId === undefined ||
+        p.sectionId === "general_advance"
     )
     const generalFactAmount = generalPayments
-      .filter((p) => !p.isDeleting && (p.status === "conducted" || p.status === "processing"))
+      .filter(
+        (p) =>
+          !p.isDeleting &&
+          (p.status === "conducted" || p.status === "processing")
+      )
       .reduce((sum, p) => sum + p.amount, 0)
 
     // General expenses = total purchases minus the ones associated with specific stages
     const stageSpecificPurchasesAmount = fallbackPurchases
-      .filter((p: PurchaseRow) => p.materialId && materialIdToSectionId.has(p.materialId))
+      .filter(
+        (p: PurchaseRow) =>
+          p.materialId && materialIdToSectionId.has(p.materialId)
+      )
       .reduce((sum: number, p: PurchaseRow) => sum + (p.factTotal ?? 0), 0)
 
-    const generalExpenses = Math.max(0, totalPurchasesAmount - stageSpecificPurchasesAmount)
+    const generalExpenses = Math.max(
+      0,
+      totalPurchasesAmount - stageSpecificPurchasesAmount
+    )
 
     mappedSections.push({
       sectionId: "general_advance",
@@ -270,13 +315,22 @@ export function useFinances(projectId: string, estimateId: string): UseFinancesR
     await purchasesQuery.refetch()
   }
 
-  const purchasesError = purchasesQuery.error instanceof Error ? purchasesQuery.error.message : null
-  const loadError = estimateError || (paymentsQuery.error instanceof Error ? paymentsQuery.error.message : null) || purchasesError
+  const purchasesError =
+    purchasesQuery.error instanceof Error ? purchasesQuery.error.message : null
+  const loadError =
+    estimateError ||
+    (paymentsQuery.error instanceof Error
+      ? paymentsQuery.error.message
+      : null) ||
+    purchasesError
 
   return {
     sections,
     payments,
-    loading: estimateLoading || (paymentsQuery.isLoading && !paymentsQuery.data) || (purchasesQuery.isLoading && !purchasesQuery.data), // Prevent loading skeleton on refetch/mutate
+    loading:
+      estimateLoading ||
+      (paymentsQuery.isLoading && !paymentsQuery.data) ||
+      (purchasesQuery.isLoading && !purchasesQuery.data), // Prevent loading skeleton on refetch/mutate
     loadError,
     refetch,
     addPayment,

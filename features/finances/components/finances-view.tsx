@@ -32,7 +32,10 @@ import { formatMoney } from "@/lib/formatters"
 import { FinancesKpiCards } from "@/features/finances/components/finances-kpi-cards"
 import { PaymentCreateDialog } from "@/features/finances/components/payment-create-dialog"
 import { formatDisplayDate } from "@/features/finances/lib/date-utils"
-import { getSectionFactAmount, getSectionStatus } from "@/features/finances/lib/utils"
+import {
+  getSectionFactAmount,
+  getSectionStatus,
+} from "@/features/finances/lib/utils"
 import { useFinances } from "@/features/finances/hooks/use-finances"
 import type {
   FinanceSection,
@@ -102,14 +105,20 @@ interface PaymentRowProps {
 }
 
 function PaymentRow({ payment, onEdit, onDelete }: PaymentRowProps) {
-  const isPending = payment.isPending || payment.isUpdating || payment.isDeleting
+  const isPending =
+    payment.isPending || payment.isUpdating || payment.isDeleting
 
   return (
-    <TableRow className={cn("bg-muted/30 transition-opacity duration-200", isPending && "opacity-60")}>
+    <TableRow
+      className={cn(
+        "bg-muted/30 transition-opacity duration-200",
+        isPending && "opacity-60"
+      )}
+    >
       {/* 1. Назначение платежа + Дата (с отступом) */}
       <TableCell className="pl-12">
         <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-          <span className="font-medium text-foreground truncate max-w-[280px]">
+          <span className="max-w-[280px] truncate font-medium text-foreground">
             {payment.purpose || "Без назначения"}
           </span>
           <span className="text-xs text-muted-foreground tabular-nums">
@@ -119,15 +128,15 @@ function PaymentRow({ payment, onEdit, onDelete }: PaymentRowProps) {
       </TableCell>
 
       {/* 2. План -> Прочерк */}
-      <TableCell className="text-muted-foreground text-xs">—</TableCell>
+      <TableCell className="text-xs text-muted-foreground">—</TableCell>
 
       {/* 3. Факт -> Сумма */}
-      <TableCell className="tabular-nums font-medium text-chart-2">
+      <TableCell className="font-medium text-chart-2 tabular-nums">
         {formatMoney(payment.amount)}
       </TableCell>
 
       {/* 4. Затраты -> Прочерк */}
-      <TableCell className="text-muted-foreground text-xs">—</TableCell>
+      <TableCell className="text-xs text-muted-foreground">—</TableCell>
 
       {/* 5. Баланс -> Статус платежа */}
       <TableCell>
@@ -153,14 +162,14 @@ function PaymentRow({ payment, onEdit, onDelete }: PaymentRowProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(payment)}>
-                <PencilSimpleIcon className="size-3.5 mr-2" />
+                <PencilSimpleIcon className="mr-2 size-3.5" />
                 Редактировать
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={() => onDelete(payment.paymentId)}
               >
-                <TrashIcon className="size-3.5 mr-2" />
+                <TrashIcon className="mr-2 size-3.5" />
                 Удалить
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -195,7 +204,9 @@ function SectionRow({
       ? Math.round((factAmount / section.planAmount) * 100)
       : 0
   const status = isGeneral
-    ? (factAmount > 0 ? "paid" : "unpaid")
+    ? factAmount > 0
+      ? "paid"
+      : "unpaid"
     : getSectionStatus(section)
 
   const customLabelMap = isGeneral
@@ -238,32 +249,45 @@ function SectionRow({
         </TableCell>
         <TableCell className="tabular-nums">
           {isGeneral ? (
-            <span className="text-muted-foreground text-xs">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           ) : (
             formatMoney(section.planAmount)
           )}
         </TableCell>
-        <TableCell className="tabular-nums">{formatMoney(factAmount)}</TableCell>
+        <TableCell className="tabular-nums">
+          {formatMoney(factAmount)}
+        </TableCell>
         {/* Затраты */}
         <TableCell className="tabular-nums">
           {expenses > 0 ? (
             formatMoney(expenses)
           ) : (
-            <span className="text-muted-foreground text-xs">—</span>
+            <span className="text-xs text-muted-foreground">—</span>
           )}
         </TableCell>
         {/* Баланс */}
         <TableCell className="tabular-nums">
           {balance !== 0 ? (
-            <span className={cn("font-medium", balance > 0 ? "text-chart-2" : "text-destructive")}>
-              {balance > 0 ? `+${formatMoney(balance)}` : `-${formatMoney(Math.abs(balance))}`}
+            <span
+              className={cn(
+                "font-medium",
+                balance > 0 ? "text-chart-2" : "text-destructive"
+              )}
+            >
+              {balance > 0
+                ? `+${formatMoney(balance)}`
+                : `-${formatMoney(Math.abs(balance))}`}
             </span>
           ) : (
             formatMoney(0)
           )}
         </TableCell>
         <TableCell className="tabular-nums">
-          {isGeneral ? <span className="text-muted-foreground text-xs">—</span> : `${percent}%`}
+          {isGeneral ? (
+            <span className="text-xs text-muted-foreground">—</span>
+          ) : (
+            `${percent}%`
+          )}
         </TableCell>
       </TableRow>
 
@@ -281,7 +305,10 @@ function SectionRow({
       {/* Если нет платежей */}
       {isExpanded && section.payments.length === 0 && (
         <TableRow className="bg-muted/30">
-          <TableCell colSpan={6} className="pl-12 text-muted-foreground text-xs">
+          <TableCell
+            colSpan={6}
+            className="pl-12 text-xs text-muted-foreground"
+          >
             Платежей пока нет
           </TableCell>
         </TableRow>
@@ -308,9 +335,13 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
     totalPurchasesAmount,
   } = useFinances(projectId, estimateId)
 
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set()
+  )
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
-  const [editingPayment, setEditingPayment] = useState<FinancePayment | null>(null)
+  const [editingPayment, setEditingPayment] = useState<FinancePayment | null>(
+    null
+  )
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) => {
@@ -332,7 +363,10 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
     }
     window.addEventListener("project-finances:add-payment", handleAddPayment)
     return () => {
-      window.removeEventListener("project-finances:add-payment", handleAddPayment)
+      window.removeEventListener(
+        "project-finances:add-payment",
+        handleAddPayment
+      )
     }
   }, [])
 
@@ -340,9 +374,8 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
   useEffect(() => {
     const handleExport = async () => {
       if (record && sections) {
-        const { exportFinancesToExcel } = await import(
-          "@/features/finances/lib/finances-excel-exporter"
-        )
+        const { exportFinancesToExcel } =
+          await import("@/features/finances/lib/finances-excel-exporter")
         await exportFinancesToExcel({
           record,
           sections,
@@ -378,17 +411,20 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-4 p-1 min-h-0 overflow-auto">
+      <div className="flex min-h-0 flex-col gap-4 overflow-auto p-1">
         {/* KPI skeleton */}
         <div className="grid grid-cols-2 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-lg border border-border p-6 flex flex-col gap-1.5">
+            <div
+              key={i}
+              className="flex flex-col gap-1.5 rounded-lg border border-border p-6"
+            >
               <div className="flex items-center gap-1.5">
                 <Skeleton className="size-3.5 rounded-full" />
                 <Skeleton className="h-3 w-16" />
               </div>
-              <Skeleton className="h-8 w-32 mt-1" />
-              <Skeleton className="h-3.5 w-24 mt-1.5" />
+              <Skeleton className="mt-1 h-8 w-32" />
+              <Skeleton className="mt-1.5 h-3.5 w-24" />
             </div>
           ))}
         </div>
@@ -416,11 +452,21 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
                       <Skeleton className="h-4 w-16 rounded-full" />
                     </div>
                   </TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton className="h-4 w-8" />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -436,7 +482,8 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
         <Alert variant="destructive">
           <AlertTitle>Ошибка</AlertTitle>
           <AlertDescription>
-            {loadError ?? "Не удалось загрузить данные сметы для раздела Финансы"}
+            {loadError ??
+              "Не удалось загрузить данные сметы для раздела Финансы"}
           </AlertDescription>
         </Alert>
         <Button className="w-fit" variant="outline" onClick={() => refetch()}>
@@ -447,7 +494,7 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-1 min-h-0 overflow-auto">
+    <div className="flex min-h-0 flex-col gap-4 overflow-auto p-1">
       {/* KPI-шапка */}
       <FinancesKpiCards sections={sections} />
 
@@ -462,9 +509,9 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[30%]">Раздел / Платёж</TableHead>
-                 <TableHead>План</TableHead>
-                 <TableHead>Факт</TableHead>
-                 <TableHead>Затраты</TableHead>
+                <TableHead>План</TableHead>
+                <TableHead>Факт</TableHead>
+                <TableHead>Затраты</TableHead>
                 <TableHead>Баланс</TableHead>
                 <TableHead className="w-16">%</TableHead>
               </TableRow>
@@ -484,8 +531,6 @@ export function FinancesView({ estimateId, projectId }: FinancesViewProps) {
           </Table>
         )}
       </div>
-
-
 
       <PaymentCreateDialog
         open={paymentDialogOpen}

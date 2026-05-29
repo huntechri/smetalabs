@@ -22,18 +22,12 @@ interface FinancesKpiCardsProps {
 }
 
 export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
-  const contractTotal = sections.reduce(
-    (sum, s) => sum + s.planAmount,
-    0
-  )
+  const contractTotal = sections.reduce((sum, s) => sum + s.planAmount, 0)
   const paidTotal = sections.reduce(
     (sum, s) => sum + getSectionFactAmount(s),
     0
   )
-  const totalBalance = sections.reduce(
-    (sum, s) => sum + (s.balance ?? 0),
-    0
-  )
+  const totalBalance = sections.reduce((sum, s) => sum + (s.balance ?? 0), 0)
   const deviationPercent =
     contractTotal > 0
       ? Math.round(((paidTotal - contractTotal) / contractTotal) * 100)
@@ -64,7 +58,7 @@ export function FinancesKpiCards({ sections }: FinancesKpiCardsProps) {
             <CheckCircleIcon className="size-3.5 text-chart-2" />
             Оплачено
           </CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums text-chart-2 @[250px]/card:text-3xl">
+          <CardTitle className="text-2xl font-semibold text-chart-2 tabular-nums @[250px]/card:text-3xl">
             {formatMoney(paidTotal)}
           </CardTitle>
         </CardHeader>

@@ -25,7 +25,11 @@ function parseDateLocal(dateStr: string): Date {
 }
 
 export function processChartData(
-  transactions: { type: "payment" | "purchase"; amount: number; date: string }[],
+  transactions: {
+    type: "payment" | "purchase"
+    amount: number
+    date: string
+  }[],
   timeRange: string
 ): ChartPoint[] {
   if (!transactions || transactions.length === 0) return []
@@ -71,7 +75,7 @@ export function processChartData(
   const dates: string[] = []
   const current = new Date(startDate.getTime())
   const todayStr = formatDateLocal(today)
-  
+
   let safety = 0
   if (startDate.getTime() <= today.getTime()) {
     while (safety < 1000) {
@@ -86,7 +90,10 @@ export function processChartData(
   }
 
   // 3. Map daily transactions
-  const dailyTransactions = new Map<string, { inflow: number; outflow: number }>()
+  const dailyTransactions = new Map<
+    string,
+    { inflow: number; outflow: number }
+  >()
   dates.forEach((d) => dailyTransactions.set(d, { inflow: 0, outflow: 0 }))
 
   transactions.forEach((t) => {
@@ -116,7 +123,10 @@ export function processChartData(
   return points
 }
 
-export function useProjectDashboardStats(projectId: string, timeRange: string = "90d") {
+export function useProjectDashboardStats(
+  projectId: string,
+  timeRange: string = "90d"
+) {
   const query = useQuery({
     queryKey: projectsQueryKeys.dashboardStats(projectId),
     queryFn: () => fetchProjectDashboardStats(projectId),

@@ -13,11 +13,7 @@ import {
   type PaginationState,
   type SortingState,
 } from "@tanstack/react-table"
-import {
-  CaretLeft,
-  CaretRight,
-  ArrowSquareOut,
-} from "@phosphor-icons/react"
+import { CaretLeft, CaretRight, ArrowSquareOut } from "@phosphor-icons/react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -55,7 +51,7 @@ const columns: ColumnDef<ProjectRow>[] = [
       <div className="flex items-center gap-2 font-medium">
         <Link
           href={`/projects/${row.original.id}`}
-          className="hover:underline text-foreground"
+          className="text-foreground hover:underline"
         >
           {row.original.title}
         </Link>
@@ -66,7 +62,10 @@ const columns: ColumnDef<ProjectRow>[] = [
     accessorKey: "address",
     header: "Адрес",
     cell: ({ row }) => (
-      <div className="text-muted-foreground truncate max-w-[250px]" title={row.original.address ?? ""}>
+      <div
+        className="max-w-[250px] truncate text-muted-foreground"
+        title={row.original.address ?? ""}
+      >
         {row.original.address ?? "—"}
       </div>
     ),
@@ -75,7 +74,7 @@ const columns: ColumnDef<ProjectRow>[] = [
     id: "dates",
     header: "Сроки",
     cell: ({ row }) => (
-      <div className="text-muted-foreground whitespace-nowrap">
+      <div className="whitespace-nowrap text-muted-foreground">
         {formatDateRange(row.original.startDate, row.original.endDate)}
       </div>
     ),
@@ -101,7 +100,11 @@ export function DataTable() {
     pageSize: 10,
   })
 
-  const { data: projectsData, isLoading, error } = useQuery({
+  const {
+    data: projectsData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["projects", "dashboard-in-progress"],
     queryFn: () => fetchProjects({ status: "in_progress", limit: 100 }),
     staleTime: 30_000,
@@ -132,7 +135,7 @@ export function DataTable() {
           <Skeleton className="h-6 w-48" />
         </div>
         <div className="overflow-hidden rounded-lg border">
-          <div className="p-8 flex flex-col gap-4">
+          <div className="flex flex-col gap-4 p-8">
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-8 w-full" />
@@ -147,7 +150,8 @@ export function DataTable() {
     return (
       <div className="px-4 lg:px-6">
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-          Не удалось загрузить список проектов в работе: {error instanceof Error ? error.message : "Неизвестная ошибка"}
+          Не удалось загрузить список проектов в работе:{" "}
+          {error instanceof Error ? error.message : "Неизвестная ошибка"}
         </div>
       </div>
     )
@@ -156,7 +160,9 @@ export function DataTable() {
   return (
     <div className="flex flex-col gap-4 px-4 lg:px-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Проекты в работе</h3>
+        <h3 className="text-sm font-semibold text-foreground">
+          Проекты в работе
+        </h3>
       </div>
       <div className="overflow-hidden rounded-lg border bg-card">
         <Table>
@@ -207,7 +213,8 @@ export function DataTable() {
       {table.getPageCount() > 1 && (
         <div className="flex items-center justify-between px-2">
           <div className="text-xs text-muted-foreground">
-            Показано {table.getRowModel().rows.length} из {projects.length} проектов
+            Показано {table.getRowModel().rows.length} из {projects.length}{" "}
+            проектов
           </div>
           <div className="flex items-center gap-2">
             <Button

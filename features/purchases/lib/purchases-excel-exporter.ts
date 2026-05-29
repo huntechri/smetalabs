@@ -77,7 +77,11 @@ export async function exportPurchasesToExcel(content: {
         imageBuffers[content.record.workspaceLogo] = { buffer: buf, extension }
       }
     } catch (err) {
-      console.error("Failed to fetch workspace logo:", content.record.workspaceLogo, err)
+      console.error(
+        "Failed to fetch workspace logo:",
+        content.record.workspaceLogo,
+        err
+      )
     }
   }
 
@@ -307,7 +311,7 @@ export async function exportPurchasesToExcel(content: {
       purchase.factQuantity !== null && purchase.factAvgPrice !== null
         ? { formula: `G${rowIdx}*H${rowIdx}` }
         : null,
-      { formula: `F${rowIdx}-IF(ISBLANK(I${rowIdx}),0,I${rowIdx})` }
+      { formula: `F${rowIdx}-IF(ISBLANK(I${rowIdx}),0,I${rowIdx})` },
     ])
 
     dataRow.height = calculateRowHeight(purchase.title, 60, 20, 10)
@@ -354,12 +358,14 @@ export async function exportPurchasesToExcel(content: {
     "",
     "",
     { formula: `SUM(I${startRow}:I${endRow})` },
-    ""
+    "",
   ])
   grandTotalRow.height = 26
 
   const grandRowNum = grandTotalRow.number
-  grandTotalRow.getCell(10).value = { formula: `F${grandRowNum}-I${grandRowNum}` }
+  grandTotalRow.getCell(10).value = {
+    formula: `F${grandRowNum}-I${grandRowNum}`,
+  }
 
   worksheet.mergeCells(grandRowNum, 2, grandRowNum, 5) // Merge B to E
   worksheet.mergeCells(grandRowNum, 7, grandRowNum, 8) // Merge G and H

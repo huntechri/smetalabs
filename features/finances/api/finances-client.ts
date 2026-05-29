@@ -63,10 +63,7 @@ function buildPaymentUrl(
 export function fetchEstimatePayments(
   params: EstimatePaymentsParams
 ): Promise<EstimatePaymentsResponse> {
-  return fetchJson<EstimatePaymentsResponse>(
-    buildUrl(params),
-    "платежи сметы"
-  )
+  return fetchJson<EstimatePaymentsResponse>(buildUrl(params), "платежи сметы")
 }
 
 export function addProjectEstimatePayment(

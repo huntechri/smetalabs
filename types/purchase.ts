@@ -10,6 +10,8 @@ export type PurchaseRow = {
   factAvgPrice: number | null
   factTotal: number | null
   deviationTotal: number | null
+  source: "estimate" | "global" | "mixed" | null
+  editable: boolean
 }
 
 export type AddPurchaseInput = {

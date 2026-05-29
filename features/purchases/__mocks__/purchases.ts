@@ -14,6 +14,8 @@ export const purchaseRows: PurchaseRow[] = [
     factAvgPrice: 355784,
     factTotal: 355784,
     deviationTotal: -355784,
+    source: "estimate",
+    editable: true,
   },
   {
     purchaseId: "pep-2",
@@ -27,6 +29,8 @@ export const purchaseRows: PurchaseRow[] = [
     factAvgPrice: 720,
     factTotal: 84960,
     deviationTotal: -3360,
+    source: "estimate",
+    editable: true,
   },
   {
     purchaseId: "pep-3",
@@ -40,6 +44,8 @@ export const purchaseRows: PurchaseRow[] = [
     factAvgPrice: 1190,
     factTotal: 42840,
     deviationTotal: -340,
+    source: "estimate",
+    editable: true,
   },
   {
     purchaseId: "pep-4",
@@ -53,6 +59,8 @@ export const purchaseRows: PurchaseRow[] = [
     factAvgPrice: 2630,
     factTotal: 47340,
     deviationTotal: -4140,
+    source: "estimate",
+    editable: true,
   },
   {
     purchaseId: "pep-5",
@@ -66,6 +74,8 @@ export const purchaseRows: PurchaseRow[] = [
     factAvgPrice: 17900,
     factTotal: 89500,
     deviationTotal: -15500,
+    source: "estimate",
+    editable: true,
   },
   {
     purchaseId: "pep-6",
@@ -79,6 +89,8 @@ export const purchaseRows: PurchaseRow[] = [
     factAvgPrice: 176,
     factTotal: 7920,
     deviationTotal: 180,
+    source: "estimate",
+    editable: true,
   },
   {
     purchaseId: "pep-7",
@@ -92,6 +104,8 @@ export const purchaseRows: PurchaseRow[] = [
     factAvgPrice: 415,
     factTotal: 41500,
     deviationTotal: -1180,
+    source: "estimate",
+    editable: true,
   },
   {
     purchaseId: "pep-8",
@@ -105,6 +119,8 @@ export const purchaseRows: PurchaseRow[] = [
     factAvgPrice: 52,
     factTotal: 15600,
     deviationTotal: -240,
+    source: "estimate",
+    editable: true,
   },
   {
     purchaseId: "pep-9",
@@ -118,6 +134,8 @@ export const purchaseRows: PurchaseRow[] = [
     factAvgPrice: 41,
     factTotal: 10660,
     deviationTotal: -1160,
+    source: "estimate",
+    editable: true,
   },
   {
     purchaseId: "pep-10",
@@ -131,5 +149,7 @@ export const purchaseRows: PurchaseRow[] = [
     factAvgPrice: 5,
     factTotal: 6000,
     deviationTotal: 0,
+    source: "estimate",
+    editable: true,
   },
 ]

@@ -32,9 +32,12 @@ export function PurchaseRow({
   const deviationTotal = planTotal - factTotal
 
   const hasFact = row.factQuantity !== null && row.factQuantity > 0
+  const editablePurchaseId = row.purchaseId
 
-  const canEdit = typeof onUpdate === "function"
-  const canArchive = typeof onArchive === "function" && row.purchaseId !== null
+  const canEdit =
+    typeof onUpdate === "function" && editablePurchaseId !== null
+  const canArchive =
+    typeof onArchive === "function" && editablePurchaseId !== null
 
   return (
     <div className="grid gap-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50 lg:grid-cols-[minmax(300px,1fr)_minmax(600px,1.3fr)]">
@@ -58,7 +61,7 @@ export function PurchaseRow({
             <DropdownMenuContent align="end">
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
-                onClick={() => onArchive(row.purchaseId!)}
+                onClick={() => onArchive(editablePurchaseId)}
               >
                 <TrashIcon data-icon="inline-start" />
                 Удалить факт
@@ -88,7 +91,7 @@ export function PurchaseRow({
                 onChange={
                   canEdit
                     ? (v) =>
-                        onUpdate(row.purchaseId!, {
+                        onUpdate(editablePurchaseId, {
                           quantity: Number(v),
                         })
                     : undefined
@@ -100,7 +103,7 @@ export function PurchaseRow({
                 onChange={
                   canEdit
                     ? (v) =>
-                        onUpdate(row.purchaseId!, {
+                        onUpdate(editablePurchaseId, {
                           price: Number(v),
                         })
                     : undefined
@@ -120,9 +123,9 @@ export function PurchaseRow({
                 label="Кол-во"
                 value={0}
                 onChange={
-                  canEdit && row.purchaseId
+                  canEdit
                     ? (v) =>
-                        onUpdate(row.purchaseId!, {
+                        onUpdate(editablePurchaseId, {
                           quantity: Number(v),
                         })
                     : undefined
@@ -132,9 +135,9 @@ export function PurchaseRow({
                 label="Ср. цена"
                 value={0}
                 onChange={
-                  canEdit && row.purchaseId
+                  canEdit
                     ? (v) =>
-                        onUpdate(row.purchaseId!, {
+                        onUpdate(editablePurchaseId, {
                           price: Number(v),
                         })
                     : undefined

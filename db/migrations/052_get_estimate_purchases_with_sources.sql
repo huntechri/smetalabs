@@ -33,6 +33,7 @@ AS $$
   plan AS (
     SELECT
       pem.directory_material_id,
+      MIN(pem.id) AS estimate_material_id,
       MIN(pem.title) AS title,
       MIN(pem.unit_label) AS unit,
       SUM(pem.quantity) AS plan_quantity,
@@ -81,7 +82,7 @@ AS $$
   )
   SELECT
     fact.purchase_id,
-    COALESCE(plan.directory_material_id, fact.directory_material_id) AS material_id,
+    COALESCE(plan.estimate_material_id, fact.directory_material_id) AS material_id,
     COALESCE(plan.title, fact.title, 'Без названия') AS title,
     COALESCE(plan.unit, fact.unit, '') AS unit,
     COALESCE(plan.plan_quantity, 0) AS plan_quantity,

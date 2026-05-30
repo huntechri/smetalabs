@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useQuery } from "@tanstack/react-query"
 import {
   flexRender,
   getCoreRowModel,
@@ -28,24 +27,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { fetchProjects } from "@/features/projects/api/projects-client"
+import { useActiveProjects } from "../application/use-active-projects"
+import { formatDateRange } from "../model/dashboard-model"
 import type { ProjectRow } from "@/types/project"
 import { Skeleton } from "@/components/ui/skeleton"
-
-function formatDateRange(start?: string | null, end?: string | null): string {
-  if (!start && !end) return "Сроки не указаны"
-  if (start && end) {
-    const format = (dateStr: string) => {
-      const parts = dateStr.split("-")
-      if (parts.length === 3) {
-        return `${parts[2]}.${parts[1]}.${parts[0]}`
-      }
-      return dateStr
-    }
-    return `${format(start)} – ${format(end)}`
-  }
-  return start || end || ""
-}
 
 const columns: ColumnDef<ProjectRow>[] = [
   {
@@ -101,15 +86,7 @@ export function DataTable() {
     pageSize: 10,
   })
 
-  const { data: projectsData, isLoading, error } = useQuery({
-    queryKey: ["projects", "dashboard-in-progress"],
-    queryFn: () => fetchProjects({ status: "in_progress", limit: 100 }),
-    staleTime: 30_000,
-  })
-
-  const projects = React.useMemo(() => {
-    return projectsData?.data ?? []
-  }, [projectsData])
+  const { projects, loading: isLoading, error } = useActiveProjects()
 
   const table = useReactTable({
     data: projects,
@@ -147,7 +124,7 @@ export function DataTable() {
     return (
       <div className="px-4 lg:px-6">
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-          Не удалось загрузить список проектов в работе: {error instanceof Error ? error.message : "Неизвестная ошибка"}
+          Не удалось загрузить список проектов в работе: {error}
         </div>
       </div>
     )

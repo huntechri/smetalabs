@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 const ChartAreaInteractive = dynamic(
   () =>
-    import("@/features/dashboard/chart-area-interactive").then((mod) => ({
+    import("./chart-area-interactive").then((mod) => ({
       default: mod.ChartAreaInteractive,
     })),
   {

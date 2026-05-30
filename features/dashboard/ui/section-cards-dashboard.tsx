@@ -18,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { formatMoney } from "@/lib/formatters"
-import { useWorkspaceDashboardStats } from "./hooks/use-workspace-dashboard-stats"
+import { useWorkspaceDashboardStats } from "../application/use-workspace-dashboard-stats"
 
 export function SectionCards() {
   const { stats, loading, error, refetch } = useWorkspaceDashboardStats()
@@ -130,4 +130,3 @@ export function SectionCards() {
     </div>
   )
 }
-

@@ -4,7 +4,12 @@ import * as React from "react"
 import { ComposedChart, Area, Bar, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useWorkspaceDashboardStats } from "@/features/dashboard/hooks/use-workspace-dashboard-stats"
+import { useWorkspaceDashboardStats } from "../application/use-workspace-dashboard-stats"
+import {
+  prepareChartData,
+  calculateChartBounds,
+  formatYAxisTick,
+} from "../model/dashboard-model"
 import {
   Card,
   CardAction,
@@ -60,51 +65,12 @@ export function ChartAreaInteractive() {
   const { chartData, loading, error, refetch } = useWorkspaceDashboardStats(timeRange)
 
   const processedChartData = React.useMemo(() => {
-    return chartData.map((d) => ({
-      ...d,
-      outflow: -Math.abs(d.outflow),
-    }))
+    return prepareChartData(chartData)
   }, [chartData])
 
   const { minVal, maxVal, off } = React.useMemo(() => {
-    if (!processedChartData.length) {
-      return { minVal: 0, maxVal: 0, off: 0.5 }
-    }
-    const balances = processedChartData.map((d) => d.balance)
-    const inflows = processedChartData.map((d) => d.inflow)
-    const outflows = processedChartData.map((d) => d.outflow)
-
-    const maxBal = Math.max(...balances, 0)
-    const minBal = Math.min(...balances, 0)
-    const maxIn = Math.max(...inflows, 0)
-    const minOut = Math.min(...outflows, 0)
-
-    const absoluteMax = Math.max(maxBal, maxIn)
-    const absoluteMin = Math.min(minBal, minOut)
-
-    const range = absoluteMax - absoluteMin
-    const padding = range * 0.05
-    const domainMax = absoluteMax + padding
-    const domainMin = absoluteMin >= 0 ? 0 : absoluteMin - padding
-
-    let gradientOffset = 0.5
-    if (maxBal - minBal > 0) {
-      gradientOffset = maxBal / (maxBal - minBal)
-    }
-
-    return { minVal: domainMin, maxVal: domainMax, off: gradientOffset }
+    return calculateChartBounds(processedChartData)
   }, [processedChartData])
-
-  const formatYAxisTick = (value: number) => {
-    if (value === 0) return "0"
-    if (Math.abs(value) >= 1_000_000) {
-      return `${(value / 1_000_000).toFixed(1)} млн`
-    }
-    if (Math.abs(value) >= 1_000) {
-      return `${(value / 1_000).toFixed(0)} тыс`
-    }
-    return String(value)
-  }
 
   if (loading) {
     return (

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { fetchWorkspaceDashboardStats } from "@/features/projects/api/projects-client"
+import { fetchWorkspaceDashboardStats } from "../api/dashboard-api"
 import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
 import { processChartData } from "@/features/projects/hooks/use-project-dashboard-stats"
 

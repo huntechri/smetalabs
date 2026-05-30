@@ -9,9 +9,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { buildPermissionMatrix } from "../lib/build-permission-matrix"
-import { useRoles } from "../hooks/use-access-control"
-import { usePermissionMatrixState } from "../hooks/use-permission-matrix-state"
+import { buildPermissionMatrix } from "../model/access-control-model"
+import { useRoles } from "../application/use-access-control"
+import { usePermissionMatrixState } from "../application/use-permission-matrix-state"
 import { PermissionsMatrixError } from "./permissions-matrix-error"
 import { PermissionsMatrixSkeleton } from "./permissions-matrix-skeleton"
 import { PermissionsMatrixTable } from "./permissions-matrix-table"

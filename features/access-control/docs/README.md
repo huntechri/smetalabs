@@ -21,22 +21,18 @@ features/access-control/
 ├── api/
 │   ├── access-control-client.ts             # Клиент для выполнения запросов к API ролей
 │   └── access-control-query-keys.ts         # Ключи кэширования React Query
-├── components/
-│   ├── permissions-matrix.tsx               # Основной контейнер матрицы прав доступа
-│   ├── permissions-matrix-table.tsx         # Таблица прав доступа по ролям (матрица)
-│   ├── permissions-matrix-toolbar.tsx       # Панель инструментов матрицы
-│   ├── permissions-matrix-skeleton.tsx      # Загрузочный скелетон таблицы
-│   └── permissions-matrix-error.tsx         # Отображение ошибок
-├── hooks/
+├── application/
 │   ├── use-access-control.ts                # Хуки управления ролями (useRoles, useAssignRole, useRemoveRole)
-│   └── use-permission-matrix-state.ts       # Хук состояния изменений матрицы
-├── lib/
-│   └── build-permission-matrix.ts           # Построитель матрицы прав на клиенте
-├── server/
-│   ├── access-control.repository.ts         # Доступ к БД через Drizzle ORM
-│   ├── access-control.service.ts            # Сервисный слой ролей и прав
-│   └── access-control.schemas.ts            # Zod-схемы валидации
-└── types.ts                                 # Типы модуля
+│   ├── use-permission-matrix-state.ts       # Хук состояния изменений матрицы
+│   └── use-update-permission-matrix.ts      # Хук сохранения/обновления матрицы
+├── model/
+│   └── access-control-model.ts              # Модель: типы, хелперы построения матрицы и групп
+└── ui/
+    ├── permissions-matrix.tsx               # Основной контейнер матрицы прав доступа
+    ├── permissions-matrix-table.tsx         # Таблица прав доступа по ролям (матрица)
+    ├── permissions-matrix-toolbar.tsx       # Панель инструментов матрицы
+    ├── permissions-matrix-skeleton.tsx      # Загрузочный скелетон таблицы
+    └── permissions-matrix-error.tsx         # Отображение ошибок
 ```
 
 ### Связанные файлы за пределами модуля:

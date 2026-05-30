@@ -19,8 +19,8 @@ import type {
   PermissionDefinition,
   PermissionKey,
   RoleDefinition,
-} from "../types"
-import type { PermissionGroupDefinition } from "../lib/permission-groups"
+  PermissionGroupDefinition,
+} from "../model/access-control-model"
 
 type PermissionsMatrixTableProps = {
   accessRoles: RoleDefinition[]

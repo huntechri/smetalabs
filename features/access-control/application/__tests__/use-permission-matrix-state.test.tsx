@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { usePermissionMatrixState } from "../use-permission-matrix-state"
 import type { Role } from "@/types/roles"
-import type { PermissionKey } from "../../types"
+import type { PermissionKey } from "../../model/access-control-model"
 
 const initialMatrix: Record<Role, PermissionKey[]> = {
   owner: ["projects.read", "team.read"],

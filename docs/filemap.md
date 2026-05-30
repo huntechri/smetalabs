@@ -162,6 +162,28 @@ smetalabs/
 │   ├── nav-secondary.tsx                # Вторичная навигация sidebar
 │   ├── nav-user.tsx                     # Меню пользователя в sidebar
 │   │
+│   ├── access-control/                  # Фича «Управление доступом» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   ├── access-control-client.ts     #   Клиент для выполнения запросов к API ролей
+│   │   │   └── access-control-query-keys.ts #   Ключи кэширования React Query
+│   │   ├── model/
+│   │   │   ├── access-control-model.ts      #   Бизнес-логика, типы, построение групп и матрицы прав
+│   │   │   └── access-control-model.test.ts #   Тесты модели
+│   │   ├── application/
+│   │   │   ├── use-access-control.ts        #   Хуки управления ролями (useRoles, useAssignRole, useRemoveRole)
+│   │   │   ├── use-permission-matrix-state.ts # Хук локального состояния матрицы
+│   │   │   ├── use-update-permission-matrix.ts # Хук сохранения/обновления матрицы
+│   │   │   └── __tests__/
+│   │   │       └── use-permission-matrix-state.test.tsx # Тесты хука состояния матрицы
+│   │   └── ui/
+│   │       ├── permissions-matrix.tsx       #   Основной контейнер матрицы прав доступа
+│   │       ├── permissions-matrix-table.tsx #   Таблица прав доступа по ролям
+│   │       ├── permissions-matrix-toolbar.tsx # Панель инструментов матрицы
+│   │       ├── permissions-matrix-skeleton.tsx # Загрузочный скелетон таблицы
+│   │       ├── permissions-matrix-error.tsx #   Отображение ошибок
+│   │       └── __tests__/
+│   │           └── permissions-matrix-toolbar.test.tsx # Тесты тулбара
+│   │
 │   ├── account-settings/                # Фича «Настройки аккаунта» (✅ декомпозирована по 4-слойному стандарту)
 │   │   ├── api/
 │   │   │   ├── settings-actions.ts      #   Серверные экшены мутаций

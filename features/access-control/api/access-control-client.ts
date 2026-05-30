@@ -1,4 +1,4 @@
-import type { ApiRole } from "../types"
+import type { ApiRole } from "../model/access-control-model"
 
 function resolveFetchError(
   status: number,

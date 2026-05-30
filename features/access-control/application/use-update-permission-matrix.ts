@@ -1,7 +1,7 @@
 "use client"
 
 import type { Role } from "@/types/roles"
-import type { PermissionKey } from "../types"
+import type { PermissionKey } from "../model/access-control-model"
 
 export function useUpdatePermissionMatrix() {
   async function updatePermissionMatrix(

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import type { Role } from "@/types/roles"
-import type { PermissionKey } from "../types"
+import type { PermissionKey } from "../model/access-control-model"
 
 type MatrixState = {
   source: Record<Role, PermissionKey[]>

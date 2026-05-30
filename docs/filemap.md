@@ -162,6 +162,30 @@ smetalabs/
 │   ├── nav-secondary.tsx                # Вторичная навигация sidebar
 │   ├── nav-user.tsx                     # Меню пользователя в sidebar
 │   │
+│   ├── account-settings/                # Фича «Настройки аккаунта» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   ├── settings-actions.ts      #   Серверные экшены мутаций
+│   │   │   ├── settings-client.ts       #   Клиент получения настроек (fetch)
+│   │   │   └── settings-query-keys.ts   #   Ключи кэширования React Query
+│   │   ├── model/
+│   │   │   └── account-settings-model.ts #  Валидация, инициалы, часовые пояса, кандидаты
+│   │   ├── application/
+│   │   │   ├── use-settings.ts          #   Хук загрузки настроек
+│   │   │   ├── use-update-profile.ts    #   Хук обновления профиля
+│   │   │   ├── use-update-workspace.ts  #   Хук обновления воркспейса
+│   │   │   ├── use-update-preferences.ts #  Хук обновления предпочтений
+│   │   │   ├── use-update-notifications.ts # Хук обновления уведомлений
+│   │   │   ├── use-security-actions.ts  #   Хук действий безопасности
+│   │   │   └── use-sensitive-actions.ts #   Хук опасных действий воркспейса
+│   │   └── ui/
+│   │       ├── account-settings-view.tsx #  Основной экран настроек
+│   │       ├── profile-settings-card.tsx #  Карточка настроек профиля
+│   │       ├── workspace-settings-card.tsx # Карточка настроек воркспейса
+│   │       ├── preferences-settings-card.tsx # Карточка настроек предпочтений
+│   │       ├── notification-settings-card.tsx # Карточка настроек уведомлений
+│   │       ├── security-settings-card.tsx # Карточка настроек безопасности
+│   │       └── sensitive-actions-card.tsx # Карточка опасных действий
+│   │
 │   ├── auth/                            # Фича «Авторизация»
 │   │   └── components/
 │   │       ├── login-form.tsx           # Форма входа

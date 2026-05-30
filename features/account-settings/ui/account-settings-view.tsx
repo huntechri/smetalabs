@@ -7,7 +7,7 @@ import { ProfileSettingsCard } from "./profile-settings-card"
 import { SecuritySettingsCard } from "./security-settings-card"
 import { SensitiveActionsCard } from "./sensitive-actions-card"
 import { WorkspaceSettingsCard } from "./workspace-settings-card"
-import { useSettings } from "../hooks/use-settings"
+import { useSettings } from "../application/use-account-settings"
 
 export function AccountSettingsView() {
   const { settings, loading, error, refetch } = useSettings()

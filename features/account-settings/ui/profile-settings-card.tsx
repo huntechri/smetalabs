@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useUpdateProfile } from "../hooks/use-account-settings"
+import { useUpdateProfile } from "../application/use-account-settings"
+import { getProfileInitials } from "../model/account-settings-model"
 import type { AccountProfile } from "../types"
 
 const languages = [
@@ -139,12 +140,7 @@ export function ProfileSettingsCard({
     )
   }
 
-  const initials = displayName
-    ? displayName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-    : "?"
+  const initials = getProfileInitials(displayName)
 
   return (
     <Card>

@@ -14,7 +14,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useUpdateNotifications } from "../hooks/use-account-settings"
+import { useUpdateNotifications } from "../application/use-account-settings"
 import type { NotificationSettings } from "../types"
 
 type SettingsStateProps = {

@@ -1,9 +1,6 @@
 "use client"
 
-import { useState } from "react"
 import { Spinner } from "@phosphor-icons/react"
-import { toast } from "sonner"
-
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -13,11 +10,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-
 import {
-  revokeOtherSessionsAction,
-  sendOwnPasswordResetEmailAction,
-} from "@/app/actions/settings"
+  useResetPassword,
+  useRevokeOtherSessions,
+} from "../application/use-account-settings"
+import { formatLastLogin } from "../model/account-settings-model"
 import type { SecurityInfo } from "../types"
 
 type SettingsStateProps = {
@@ -33,47 +30,17 @@ export function SecuritySettingsCard({
   error,
   refetch,
 }: SettingsStateProps) {
-  const [resettingPassword, setResettingPassword] = useState(false)
-  const [revokingSessions, setRevokingSessions] = useState(false)
+  const { resetPassword, loading: resettingPassword } = useResetPassword()
+  const { revokeOtherSessions, loading: revokingSessions } = useRevokeOtherSessions()
 
-  const formattedLastLogin = security?.lastLogin
-    ? new Date(security.lastLogin).toLocaleString("ru-RU", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "—"
+  const formattedLastLogin = formatLastLogin(security?.lastLogin)
 
   async function handleResetPassword() {
-    setResettingPassword(true)
-    try {
-      const result = await sendOwnPasswordResetEmailAction()
-      toast.success(result.message ?? "Ссылка для сброса пароля отправлена")
-    } catch (err) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "Ошибка отправки ссылки для сброса пароля"
-      )
-    } finally {
-      setResettingPassword(false)
-    }
+    await resetPassword()
   }
 
   async function handleRevokeOtherSessions() {
-    setRevokingSessions(true)
-    try {
-      const result = await revokeOtherSessionsAction()
-      toast.success(result.message ?? "Другие сессии завершены")
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Ошибка завершения других сессий"
-      )
-    } finally {
-      setRevokingSessions(false)
-    }
+    await revokeOtherSessions()
   }
 
   if (loading) {

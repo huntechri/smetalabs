@@ -1,15 +1,8 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { Spinner } from "@phosphor-icons/react"
-import { toast } from "sonner"
 
-import {
-  deactivateAccountAction,
-  deleteWorkspaceAction,
-  leaveWorkspaceAction,
-  transferWorkspaceOwnershipAction,
-} from "@/app/actions/settings"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -37,10 +30,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createClient } from "@/lib/supabase/client"
-import { fetchWorkspaceMembers } from "@/features/workspace-settings/api/team-client"
+import { useWorkspaceMembers } from "@/features/workspace-settings/hooks/use-workspace-members"
+import {
+  useLeaveWorkspace,
+  useTransferOwnership,
+  useDeactivateAccount,
+  useDeleteWorkspace,
+} from "../application/use-account-settings"
+import { getOwnerTransferCandidates } from "../model/account-settings-model"
 import type { WorkspaceAccessInfo } from "../types"
-import type { WorkspaceMember } from "@/features/workspace-settings/types"
 
 type SensitiveActionsCardProps = {
   workspaceAccess: WorkspaceAccessInfo | null | undefined
@@ -48,29 +46,16 @@ type SensitiveActionsCardProps = {
   refetch?: () => Promise<void>
 }
 
-type PendingAction = "leave" | "transfer" | "deactivate" | "delete" | null
-
-function getErrorMessage(err: unknown, fallback: string) {
-  return err instanceof Error ? err.message : fallback
-}
-
-async function followActionResult(result: { redirectTo?: string }) {
-  if (result.redirectTo) {
-    window.location.href = result.redirectTo
-    return
-  }
-
-  window.location.reload()
-}
-
 export function SensitiveActionsCard({
   workspaceAccess,
   workspaceName,
-  refetch,
 }: SensitiveActionsCardProps) {
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
-  const [members, setMembers] = useState<WorkspaceMember[]>([])
-  const [membersLoading, setMembersLoading] = useState(false)
+  const { members, loading: membersLoading } = useWorkspaceMembers()
+  const leaveWorkspace = useLeaveWorkspace()
+  const transferOwnership = useTransferOwnership()
+  const deactivateAccount = useDeactivateAccount()
+  const deleteWorkspace = useDeleteWorkspace()
+
   const [selectedOwnerId, setSelectedOwnerId] = useState("")
   const [deleteConfirmation, setDeleteConfirmation] = useState("")
 
@@ -78,104 +63,47 @@ export function SensitiveActionsCard({
   const isWorkspaceMember = Boolean(workspaceAccess?.role)
   const displayWorkspaceName = workspaceName?.trim() || "workspace"
 
+  const isPending =
+    leaveWorkspace.isPending ||
+    transferOwnership.isPending ||
+    deactivateAccount.isPending ||
+    deleteWorkspace.isPending
+
   const ownerCandidates = useMemo(
-    () =>
-      members.filter(
-        (member) => member.status === "active" && member.role !== "owner"
-      ),
+    () => getOwnerTransferCandidates(members),
     [members]
   )
 
-  useEffect(() => {
-    if (!isOwner) return
-
-    let cancelled = false
-    setMembersLoading(true)
-
-    fetchWorkspaceMembers()
-      .then((items) => {
-        if (!cancelled) setMembers(items)
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          toast.error(
-            getErrorMessage(err, "Ошибка загрузки участников workspace")
-          )
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setMembersLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [isOwner])
-
   async function handleLeaveWorkspace() {
-    setPendingAction("leave")
     try {
-      const result = await leaveWorkspaceAction()
-      toast.success(result.message)
-      await refetch?.()
-      await followActionResult(result)
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Ошибка выхода из workspace"))
-    } finally {
-      setPendingAction(null)
+      await leaveWorkspace.mutateAsync()
+    } catch {
+      // toast is already handled by hook
     }
   }
 
   async function handleTransferOwnership() {
-    if (!selectedOwnerId) {
-      toast.error("Выберите нового владельца")
-      return
-    }
-
-    setPendingAction("transfer")
+    if (!selectedOwnerId) return
     try {
-      const result = await transferWorkspaceOwnershipAction({
-        targetUserId: selectedOwnerId,
-      })
-      toast.success(result.message)
-      await refetch?.()
-      await followActionResult(result)
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Ошибка передачи прав владельца"))
-    } finally {
-      setPendingAction(null)
+      await transferOwnership.mutateAsync({ targetUserId: selectedOwnerId })
+    } catch {
+      // toast is already handled by hook
     }
   }
 
   async function handleDeactivateAccount() {
-    setPendingAction("deactivate")
     try {
-      const result = await deactivateAccountAction()
-      toast.success(result.message)
-
-      const supabase = createClient()
-      await supabase.auth.signOut()
-      await followActionResult(result)
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Ошибка деактивации аккаунта"))
-    } finally {
-      setPendingAction(null)
+      await deactivateAccount.mutateAsync()
+    } catch {
+      // toast is already handled by hook
     }
   }
 
   async function handleDeleteWorkspace() {
-    setPendingAction("delete")
     try {
-      const result = await deleteWorkspaceAction({
-        confirmation: deleteConfirmation,
-      })
-      toast.success(result.message)
-      await refetch?.()
-      await followActionResult(result)
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Ошибка удаления workspace"))
-    } finally {
-      setPendingAction(null)
+      await deleteWorkspace.mutateAsync({ confirmation: deleteConfirmation })
+    } catch {
+      // toast is already handled by hook
     }
   }
 
@@ -201,9 +129,7 @@ export function SensitiveActionsCard({
             <DialogTrigger asChild>
               <Button
                 variant="destructive"
-                disabled={
-                  !isWorkspaceMember || isOwner || pendingAction !== null
-                }
+                disabled={!isWorkspaceMember || isOwner || isPending}
                 title={
                   isOwner
                     ? "Владелец должен передать права или удалить workspace"
@@ -224,20 +150,20 @@ export function SensitiveActionsCard({
               </DialogHeader>
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button variant="outline" disabled={pendingAction !== null}>
+                  <Button variant="outline" disabled={isPending}>
                     Отмена
                   </Button>
                 </DialogClose>
                 <Button
                   variant="destructive"
                   onClick={handleLeaveWorkspace}
-                  disabled={pendingAction !== null}
+                  disabled={isPending}
                   className="gap-1.5"
                 >
-                  {pendingAction === "leave" ? (
+                  {leaveWorkspace.isPending ? (
                     <Spinner className="size-3.5 animate-spin" />
                   ) : null}
-                  {pendingAction === "leave" ? "Выход..." : "Покинуть"}
+                  {leaveWorkspace.isPending ? "Выход..." : "Покинуть"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -257,7 +183,7 @@ export function SensitiveActionsCard({
             <DialogTrigger asChild>
               <Button
                 variant="outline"
-                disabled={!isOwner || pendingAction !== null}
+                disabled={!isOwner || isPending}
                 title={
                   !isOwner ? "Доступно только владельцу workspace" : undefined
                 }
@@ -280,7 +206,7 @@ export function SensitiveActionsCard({
                 <Select
                   value={selectedOwnerId}
                   onValueChange={setSelectedOwnerId}
-                  disabled={membersLoading || pendingAction !== null}
+                  disabled={membersLoading || isPending}
                 >
                   <SelectTrigger id="new-owner" className="w-full">
                     <SelectValue
@@ -308,21 +234,19 @@ export function SensitiveActionsCard({
               </div>
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button variant="outline" disabled={pendingAction !== null}>
+                  <Button variant="outline" disabled={isPending}>
                     Отмена
                   </Button>
                 </DialogClose>
                 <Button
                   onClick={handleTransferOwnership}
-                  disabled={
-                    pendingAction !== null || membersLoading || !selectedOwnerId
-                  }
+                  disabled={isPending || membersLoading || !selectedOwnerId}
                   className="gap-1.5"
                 >
-                  {pendingAction === "transfer" ? (
+                  {transferOwnership.isPending ? (
                     <Spinner className="size-3.5 animate-spin" />
                   ) : null}
-                  {pendingAction === "transfer"
+                  {transferOwnership.isPending
                     ? "Передача..."
                     : "Подтвердить передачу"}
                 </Button>
@@ -343,9 +267,7 @@ export function SensitiveActionsCard({
             <DialogTrigger asChild>
               <Button
                 variant="destructive"
-                disabled={
-                  !isWorkspaceMember || isOwner || pendingAction !== null
-                }
+                disabled={!isWorkspaceMember || isOwner || isPending}
                 title={
                   isOwner
                     ? "Владелец должен передать права или удалить workspace"
@@ -366,20 +288,20 @@ export function SensitiveActionsCard({
               </DialogHeader>
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button variant="outline" disabled={pendingAction !== null}>
+                  <Button variant="outline" disabled={isPending}>
                     Отмена
                   </Button>
                 </DialogClose>
                 <Button
                   variant="destructive"
                   onClick={handleDeactivateAccount}
-                  disabled={pendingAction !== null}
+                  disabled={isPending}
                   className="gap-1.5"
                 >
-                  {pendingAction === "deactivate" ? (
+                  {deactivateAccount.isPending ? (
                     <Spinner className="size-3.5 animate-spin" />
                   ) : null}
-                  {pendingAction === "deactivate"
+                  {deactivateAccount.isPending
                     ? "Деактивация..."
                     : "Деактивировать"}
                 </Button>
@@ -400,7 +322,7 @@ export function SensitiveActionsCard({
             <DialogTrigger asChild>
               <Button
                 variant="destructive"
-                disabled={!isOwner || pendingAction !== null}
+                disabled={!isOwner || isPending}
                 title={
                   !isOwner ? "Доступно только владельцу workspace" : undefined
                 }
@@ -431,7 +353,7 @@ export function SensitiveActionsCard({
                     setDeleteConfirmation(event.target.value)
                   }
                   placeholder={displayWorkspaceName}
-                  disabled={pendingAction !== null}
+                  disabled={isPending}
                 />
                 <p className="text-xs text-muted-foreground">
                   Текущее название: {displayWorkspaceName}
@@ -439,22 +361,20 @@ export function SensitiveActionsCard({
               </div>
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button variant="outline" disabled={pendingAction !== null}>
+                  <Button variant="outline" disabled={isPending}>
                     Отмена
                   </Button>
                 </DialogClose>
                 <Button
                   variant="destructive"
                   onClick={handleDeleteWorkspace}
-                  disabled={
-                    pendingAction !== null || !deleteConfirmation.trim()
-                  }
+                  disabled={isPending || !deleteConfirmation.trim()}
                   className="gap-1.5"
                 >
-                  {pendingAction === "delete" ? (
+                  {deleteWorkspace.isPending ? (
                     <Spinner className="size-3.5 animate-spin" />
                   ) : null}
-                  {pendingAction === "delete" ? "Удаление..." : "Удалить"}
+                  {deleteWorkspace.isPending ? "Удаление..." : "Удалить"}
                 </Button>
               </DialogFooter>
             </DialogContent>

@@ -3,9 +3,17 @@ import { describe, expect, it, vi } from "vitest"
 import { PreferencesSettingsCard } from "../preferences-settings-card"
 import { SecuritySettingsCard } from "../security-settings-card"
 
-vi.mock("@/app/actions/settings", () => ({
-  revokeOtherSessionsAction: vi.fn(),
-  sendOwnPasswordResetEmailAction: vi.fn(),
+vi.mock("../../application/use-account-settings", () => ({
+  useResetPassword: vi.fn(() => ({
+    resetPassword: vi.fn(),
+    loading: false,
+    error: null,
+  })),
+  useRevokeOtherSessions: vi.fn(() => ({
+    revokeOtherSessions: vi.fn(),
+    loading: false,
+    error: null,
+  })),
 }))
 
 vi.mock("sonner", () => ({

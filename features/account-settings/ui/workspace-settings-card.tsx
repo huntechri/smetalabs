@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useUpdateWorkspace } from "../hooks/use-account-settings"
+import { useUpdateWorkspace } from "../application/use-account-settings"
 import type { WorkspaceAccessInfo, WorkspaceSettings } from "../types"
 
 const companyTypes = [

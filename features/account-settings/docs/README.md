@@ -18,18 +18,29 @@
 ```
 features/account-settings/
 ├── api/
-│   ├── account-settings-client.ts          # API-клиент запросов к API настроек
-│   └── account-settings-query-keys.ts      # Ключи кэширования React Query
-├── components/
+│   ├── settings-actions.ts                 # Обертка над серверными экшенами для мутаций
+│   ├── settings-client.ts                  # Клиент загрузки настроек (fetch)
+│   └── settings-query-keys.ts              # Ключи кэширования React Query
+├── application/
+│   ├── use-settings.ts                     # Хук загрузки настроек
+│   ├── use-update-profile.ts               # Хук обновления профиля
+│   ├── use-update-workspace.ts             # Хук обновления воркспейса
+│   ├── use-update-preferences.ts           # Хук обновления предпочтений
+│   ├── use-update-notifications.ts         # Хук обновления уведомлений
+│   ├── use-security-actions.ts             # Мутации для безопасности (сброс пароля, сессии)
+│   ├── use-sensitive-actions.ts            # Мутации для опасных действий (выход, передача прав, деактивация, удаление)
+│   └── use-account-settings.ts             # Единый файл реэкспорта прикладных хуков
+├── model/
+│   ├── account-settings-model.ts           # Чистая бизнес-логика (инициалы, даты, кандидаты)
+│   └── account-settings-model.test.ts      # Юнит-тесты модели
+├── ui/
 │   ├── account-settings-view.tsx           # Основное представление (сетка карточек настроек)
 │   ├── profile-settings-card.tsx           # Карточка настроек профиля (ФИО, телефон, должность)
-│   ├── workspace-settings-card.tsx         # Карточка настроек воркспейса (имя, логотип)
+│   ├── workspace-settings-card.tsx         # Карточка настроек воркспейса (имя, реквизиты)
 │   ├── preferences-settings-card.tsx        # Карточка предпочтений (тема, язык, формат дат)
 │   ├── notification-settings-card.tsx     # Настройки почтовых и in-app уведомлений
 │   ├── security-settings-card.tsx          # Смена пароля и управление сессиями
 │   └── sensitive-actions-card.tsx          # Удаление аккаунта / воркспейса (опасные действия)
-├── hooks/
-│   └── use-account-settings.ts             # React Query хук работы с настройками
 ├── server/
 │   ├── settings.repository.ts              # Доступ к БД через Drizzle ORM
 │   ├── settings.service.ts                 # Сервис работы с настройками аккаунта
@@ -104,6 +115,6 @@ features/account-settings/
 |---|---|---|
 | **БД-схема и RLS** | ✅ Готова | Таблица `user_settings` с RLS по `user_id`. |
 | **API Route Handler** | ✅ Готов | Обработчик `app/api/settings/route.ts` работает с сессией. |
-| **Клиентский хук** | ✅ Готов | `useAccountSettings` интегрирован с React Query. |
+| **Прикладные хуки** | ✅ Готовы | `useSettings` и мутации настроек интегрированы с React Query и вынесены в `application/`. |
 | **Интерфейс настроек** | ✅ Готов | Все формы настроек профиля, темы, уведомлений и пароля работают. |
 | **Опасные действия** | ✅ Готовы | Внедрена модальная верификация для удаления аккаунта/данных. |

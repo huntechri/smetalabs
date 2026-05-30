@@ -168,11 +168,19 @@ smetalabs/
 │   │       ├── signup-form.tsx          # Форма регистрации
 │   │       └── forgot-password-form.tsx # Форма восстановления
 │   │
-│   ├── dashboard/                       # Фича «Дашборд»
-│   │   ├── chart-area-client.tsx        # Клиентский график (Recharts, lazy-загрузка)
-│   │   ├── chart-area-interactive.tsx   # Интерактивный график
-│   │   ├── data-table.tsx              # Таблица данных
-│   │   └── section-cards-dashboard.tsx  # Карточки статистики
+│   ├── dashboard/                       # Фича «Дашборд» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   └── dashboard-api.ts         #   Реэкспорт запросов к проектам
+│   │   ├── model/
+│   │   │   └── dashboard-model.ts       #   Вычисления, диапазоны дат, границы графиков
+│   │   ├── application/
+│   │   │   ├── use-workspace-dashboard-stats.ts # Хук статистики TanStack Query
+│   │   │   └── use-active-projects.ts   #   Хук проектов в работе
+│   │   └── ui/
+│   │       ├── chart-area-client.tsx    #   Ленивая загрузка
+│   │       ├── chart-area-interactive.tsx # Интерактивный график Recharts
+│   │       ├── data-table.tsx           #   Таблица проектов в работе
+│   │       └── section-cards-dashboard.tsx # Карточки KPI воркспейса
 │   │
 │   ├── projects/                        # Фича «Проекты»
 │   │   └── components/

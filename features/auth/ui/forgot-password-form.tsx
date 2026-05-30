@@ -1,6 +1,5 @@
 "use client"
 
-import { useActionState } from "react"
 import { Spinner } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -14,18 +13,32 @@ import {
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { AuthIllustration } from "./auth-illustration"
-import { loginAction, type LoginState } from "@/lib/auth/actions"
+import { useForgotPassword } from "../application/use-forgot-password"
 
-const initialState: LoginState = {}
-
-export function LoginForm({
+export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [state, formAction, isPending] = useActionState(
-    loginAction,
-    initialState
-  )
+  const { state, formAction, isPending } = useForgotPassword()
+
+  if (state.success) {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <Card className="overflow-hidden p-0">
+          <CardContent className="flex flex-col items-center gap-4 p-6 md:p-8">
+            <h1 className="text-2xl font-bold">Проверьте почту</h1>
+            <p className="text-center text-muted-foreground">
+              Мы отправили ссылку для сброса пароля на{" "}
+              <strong>{state.email}</strong>. Перейдите по ссылке в письме.
+            </p>
+            <Button asChild variant="outline">
+              <Link href="/login">Вернуться ко входу</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -34,9 +47,9 @@ export function LoginForm({
           <form action={formAction} className="p-6 md:p-8">
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
-                <h1 className="text-2xl font-bold">С возвращением</h1>
+                <h1 className="text-2xl font-bold">Восстановление пароля</h1>
                 <p className="text-balance text-muted-foreground">
-                  Войдите в аккаунт SmetaLab
+                  Укажите email, и мы отправим ссылку для сброса пароля.
                 </p>
               </div>
               <Field>
@@ -50,18 +63,6 @@ export function LoginForm({
                   defaultValue={state.email}
                 />
               </Field>
-              <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Пароль</FieldLabel>
-                  <Link
-                    href="/forgot-password"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    Забыли пароль?
-                  </Link>
-                </div>
-                <Input id="password" name="password" type="password" required />
-              </Field>
               {state.error && (
                 <p className="text-sm text-destructive">{state.error}</p>
               )}
@@ -70,20 +71,17 @@ export function LoginForm({
                   {isPending ? (
                     <>
                       <Spinner className="size-4 animate-spin" />
-                      Вход...
+                      Отправка...
                     </>
                   ) : (
-                    "Войти"
+                    "Отправить ссылку"
                   )}
                 </Button>
               </Field>
-              <FieldDescription className="text-center text-muted-foreground">
-                Социальный вход пока не подключён. Используйте email и пароль.
-              </FieldDescription>
               <FieldDescription className="text-center">
-                Нет аккаунта?{" "}
-                <Link href="/signup" className="underline underline-offset-4">
-                  Зарегистрироваться
+                Вспомнили пароль?{" "}
+                <Link href="/login" className="underline underline-offset-4">
+                  Войти
                 </Link>
               </FieldDescription>
             </FieldGroup>

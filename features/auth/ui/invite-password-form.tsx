@@ -1,9 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Spinner } from "@phosphor-icons/react"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -14,60 +12,31 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { createClient } from "@/lib/supabase/client"
+import { useInvitePassword } from "../application/use-invite-password"
 
-export function SetPasswordForm({
+export function InvitePasswordForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const router = useRouter()
-  const supabase = createClient()
+  const { submitInvitePassword, error, isPending } = useInvitePassword()
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [isPending, setIsPending] = useState(false)
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setError(null)
-
-    if (password.length < 8) {
-      setError("Пароль должен быть не менее 8 символов")
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError("Пароли не совпадают")
-      return
-    }
-
-    setIsPending(true)
-
-    const { error } = await supabase.auth.updateUser({ password })
-
-    setIsPending(false)
-
-    if (error) {
-      setError(
-        "Не удалось сохранить пароль. Откройте ссылку из приглашения ещё раз или запросите новое приглашение."
-      )
-      return
-    }
-
-    router.replace("/dashboard")
+    submitInvitePassword(password, confirmPassword)
   }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="p-6 md:p-8">
-          <form onSubmit={onSubmit}>
+          <form onSubmit={handleSubmit}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Придумайте пароль</h1>
                 <p className="text-balance text-muted-foreground">
-                  Установите пароль для входа в SmetaLab после принятия
-                  приглашения.
+                  Установите или обновите пароль для входа в SmetaLab.
                 </p>
               </div>
 

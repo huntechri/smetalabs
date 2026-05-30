@@ -1,6 +1,5 @@
 "use client"
 
-import { useActionState } from "react"
 import { Spinner } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -14,18 +13,13 @@ import {
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { AuthIllustration } from "./auth-illustration"
-import { signupAction, type SignupState } from "@/lib/auth/actions"
-
-const initialState: SignupState = {}
+import { useSignup } from "../application/use-signup"
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [state, formAction, isPending] = useActionState(
-    signupAction,
-    initialState
-  )
+  const { state, formAction, isPending } = useSignup()
 
   if (state.success) {
     return (

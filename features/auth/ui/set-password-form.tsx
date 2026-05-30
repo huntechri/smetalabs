@@ -1,9 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Spinner } from "@phosphor-icons/react"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -13,106 +11,33 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
+import { useSetPassword } from "../application/use-set-password"
 
-function isAlreadySaved(error: { code?: string; message?: string }) {
-  return (
-    error.code === "same_password" ||
-    error.message?.toLowerCase().includes("different from the old password")
-  )
-}
-
-function hasInvitationMetadata(metadata: Record<string, unknown> | undefined) {
-  return (
-    typeof metadata?.invitation_id === "string" &&
-    metadata.invitation_id.length > 0
-  )
-}
-
-export function InvitePasswordForm({
+export function SetPasswordForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const router = useRouter()
-  const supabase = createClient()
+  const { submitSetPassword, error, isPending } = useSetPassword()
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [isPending, setIsPending] = useState(false)
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setError(null)
-
-    if (password.length < 8) {
-      setError("Пароль должен быть не менее 8 символов")
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError("Пароли не совпадают")
-      return
-    }
-
-    setIsPending(true)
-
-    const { error: updateError } = await supabase.auth.updateUser({ password })
-
-    if (updateError && !isAlreadySaved(updateError)) {
-      setIsPending(false)
-      setError(
-        updateError.message ??
-          "Не удалось сохранить пароль. Попробуйте ещё раз."
-      )
-      return
-    }
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      setIsPending(false)
-      setError(
-        "Пароль сохранён, но не удалось проверить сессию. Войдите с новым паролем."
-      )
-      return
-    }
-
-    if (!hasInvitationMetadata(user.user_metadata)) {
-      setIsPending(false)
-      router.replace("/dashboard")
-      return
-    }
-
-    const acceptResponse = await fetch("/api/team/invitations/accept", {
-      method: "POST",
-    })
-
-    setIsPending(false)
-
-    if (!acceptResponse.ok) {
-      setError(
-        "Пароль сохранён, но приглашение не удалось принять. Обратитесь к администратору workspace."
-      )
-      return
-    }
-
-    router.replace("/dashboard")
+    submitSetPassword(password, confirmPassword)
   }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="p-6 md:p-8">
-          <form onSubmit={onSubmit}>
+          <form onSubmit={handleSubmit}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Придумайте пароль</h1>
                 <p className="text-balance text-muted-foreground">
-                  Установите или обновите пароль для входа в SmetaLab.
+                  Установите пароль для входа в SmetaLab после принятия
+                  приглашения.
                 </p>
               </div>
 

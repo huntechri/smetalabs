@@ -186,11 +186,23 @@ smetalabs/
 │   │       ├── security-settings-card.tsx # Карточка настроек безопасности
 │   │       └── sensitive-actions-card.tsx # Карточка опасных действий
 │   │
-│   ├── auth/                            # Фича «Авторизация»
-│   │   └── components/
-│   │       ├── login-form.tsx           # Форма входа
-│   │       ├── signup-form.tsx          # Форма регистрации
-│   │       └── forgot-password-form.tsx # Форма восстановления
+│   ├── auth/                            # Фича «Авторизация» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── model/
+│   │   │   ├── auth-model.ts            #   Чистая бизнес-логика (валидация, нормализация ошибок, проверки метаданных)
+│   │   │   └── auth-model.test.ts       #   Тесты для доменных хелперов
+│   │   ├── application/
+│   │   │   ├── use-login.ts             #   Хук входа через Server Action
+│   │   │   ├── use-signup.ts            #   Хук регистрации через Server Action
+│   │   │   ├── use-forgot-password.ts   #   Хук восстановления пароля через Server Action
+│   │   │   ├── use-invite-password.ts   #   Хук установки пароля для приглашённых пользователей
+│   │   │   └── use-set-password.ts      #   Хук установки пароля
+│   │   └── ui/
+│   │       ├── auth-illustration.tsx    #   Декоративная иллюстрация
+│   │       ├── login-form.tsx           #   Форма входа
+│   │       ├── signup-form.tsx          #   Форма регистрации
+│   │       ├── forgot-password-form.tsx #   Форма восстановления пароля
+│   │       ├── invite-password-form.tsx #   Форма для приглашённых
+│   │       └── set-password-form.tsx    #   Форма сброса пароля
 │   │
 │   ├── dashboard/                       # Фича «Дашборд» (✅ декомпозирована по 4-слойному стандарту)
 │   │   ├── api/

@@ -1,4 +1,4 @@
-import { TeamManagementView } from "@/features/workspace-settings/components/team-management-view"
+import { TeamManagementView } from "@/features/workspace-settings/ui/team-management-view"
 
 export default function TeamPage() {
   return (

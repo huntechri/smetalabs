@@ -4,8 +4,7 @@ import { useMemo } from "react"
 import { toast } from "sonner"
 
 import { ROLE_LABELS, type Role } from "@/types/roles"
-import type { WorkspaceMember } from "../../types"
-import type { MemberActions } from "./member-utils"
+import type { WorkspaceMember, MemberActions } from "../model/workspace-settings-model"
 
 type WorkspaceMemberMutations = {
   updateRole: (userId: string, role: Role) => Promise<unknown>

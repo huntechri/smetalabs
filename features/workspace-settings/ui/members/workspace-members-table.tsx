@@ -7,8 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { WorkspaceMember } from "../../types"
-import type { MemberActions } from "./member-utils"
+import type { WorkspaceMember, MemberActions } from "../../model/workspace-settings-model"
 import { WorkspaceMemberRow } from "./workspace-member-row"
 
 export function WorkspaceMembersTableView({

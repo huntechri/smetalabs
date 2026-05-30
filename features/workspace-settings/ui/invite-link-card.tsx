@@ -25,7 +25,7 @@ import { Switch } from "@/components/ui/switch"
 
 import type { Role } from "@/types/roles"
 import { ROLE_LABELS } from "@/types/roles"
-import { useInviteLink } from "../hooks/use-workspace-settings"
+import { useInviteLink } from "../application/use-workspace-settings"
 
 const roles: Role[] = ["admin", "manager", "estimator", "viewer"]
 

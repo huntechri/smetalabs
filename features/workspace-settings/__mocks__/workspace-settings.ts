@@ -3,7 +3,7 @@ import type {
   WorkspaceInvitation,
   WorkspaceMember,
   WorkspaceOverview,
-} from "../types"
+} from "../model/workspace-settings-model"
 
 export const workspaceOverview: WorkspaceOverview = {
   name: "SmetaLabs Studio",

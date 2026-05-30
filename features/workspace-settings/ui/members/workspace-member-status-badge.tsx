@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { STATUS_LABELS, type WorkspaceMember } from "../../types"
+import { STATUS_LABELS, type WorkspaceMember } from "../../model/workspace-settings-model"
 
 export function WorkspaceMemberStatusBadge({
   status,

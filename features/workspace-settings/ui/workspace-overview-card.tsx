@@ -1,6 +1,5 @@
 "use client"
 
-import { useMemo } from "react"
 import { Buildings, LockKey, Users, CheckCircle } from "@phosphor-icons/react"
 
 import { Badge } from "@/components/ui/badge"
@@ -9,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { useWorkspaceOverview } from "../hooks/use-workspace-settings"
+import { useWorkspaceOverview } from "../application/use-workspace-settings"
 
 // ── Plan constants (из одного места) ──
 const PLAN_NAME = "Pro"
@@ -96,7 +95,7 @@ export function WorkspaceOverviewCard() {
         </div>
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground">Slug</span>
-          <p className="font-mono text-sm text-xs text-muted-foreground">
+          <p className="font-mono text-xs text-muted-foreground">
             {overview.slug}
           </p>
         </div>

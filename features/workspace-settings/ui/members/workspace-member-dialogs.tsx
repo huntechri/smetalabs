@@ -4,7 +4,7 @@ import { RemoveMemberDialog } from "../remove-member-dialog"
 import { ResetPasswordDialog } from "../reset-password-dialog"
 import { RoleChangeDialog } from "../role-change-dialog"
 import { SuspendMemberDialog } from "../suspend-member-dialog"
-import type { WorkspaceMember } from "../../types"
+import type { WorkspaceMember } from "../../model/workspace-settings-model"
 import type { Role } from "@/types/roles"
 
 type WorkspaceMemberDialogsProps = {

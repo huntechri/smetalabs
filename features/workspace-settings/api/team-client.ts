@@ -3,7 +3,7 @@ import type {
   AllowedDomain,
   WorkspaceInvitation,
   WorkspaceOverview,
-} from "../types"
+} from "../model/workspace-settings-model"
 import { getApiMessage, throwTeamApiError } from "./team-errors"
 import { mapApiMember, type ApiMember } from "./team-mappers"
 

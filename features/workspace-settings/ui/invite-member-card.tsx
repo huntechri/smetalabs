@@ -26,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 import type { Role } from "@/types/roles"
 import { ROLE_LABELS } from "@/types/roles"
-import { useInviteMember } from "../hooks/use-workspace-settings"
+import { useInviteMember } from "../application/use-workspace-settings"
 
 const roles: Role[] = ["admin", "manager", "estimator", "viewer"]
 

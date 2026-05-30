@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import type { WorkspaceMember } from "../../types"
+import type { WorkspaceMember } from "../model/workspace-settings-model"
 
 export function useWorkspaceMemberDialogs() {
   const [roleChangeTarget, setRoleChangeTarget] =

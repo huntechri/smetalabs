@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useWorkspaceMembers } from "@/features/workspace-settings/hooks/use-workspace-members"
+import { useWorkspaceMembers } from "@/features/workspace-settings/application/use-workspace-members"
 import {
   useLeaveWorkspace,
   useTransferOwnership,

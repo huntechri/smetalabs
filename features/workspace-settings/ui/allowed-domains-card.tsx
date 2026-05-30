@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 
-import { useDomains } from "../hooks/use-workspace-settings"
+import { useDomains } from "../application/use-workspace-settings"
 
 export function AllowedDomainsCard() {
   const {

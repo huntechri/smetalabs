@@ -33,9 +33,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-import { useInvitations } from "../hooks/use-workspace-settings"
+import { useInvitations } from "../application/use-workspace-settings"
 import { ROLE_LABELS } from "@/types/roles"
-import type { WorkspaceInvitation } from "../types"
+import type { WorkspaceInvitation } from "../model/workspace-settings-model"
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("ru-RU", {

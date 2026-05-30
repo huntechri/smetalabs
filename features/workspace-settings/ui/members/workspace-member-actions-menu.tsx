@@ -12,8 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import type { WorkspaceMember } from "../../types"
-import type { MemberActions } from "./member-utils"
+import type { WorkspaceMember, MemberActions } from "../../model/workspace-settings-model"
 
 export function WorkspaceMemberActionsMenu({
   member,

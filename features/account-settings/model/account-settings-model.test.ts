@@ -5,7 +5,7 @@ import {
   getOwnerTransferCandidates,
   getErrorMessage,
 } from "./account-settings-model"
-import type { WorkspaceMember } from "@/features/workspace-settings/types"
+import type { WorkspaceMember } from "@/features/workspace-settings/model/workspace-settings-model"
 
 describe("account-settings-model", () => {
   describe("getProfileInitials", () => {

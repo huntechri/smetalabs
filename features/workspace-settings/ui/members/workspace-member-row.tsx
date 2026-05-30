@@ -6,12 +6,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 import { ROLE_LABELS } from "@/types/roles"
-import type { WorkspaceMember } from "../../types"
+import type { WorkspaceMember, MemberActions } from "../../model/workspace-settings-model"
 import {
   formatMemberActivity,
   getInitials,
-  type MemberActions,
-} from "./member-utils"
+} from "../../model/workspace-settings-model"
 import { WorkspaceMemberActionsMenu } from "./workspace-member-actions-menu"
 import { WorkspaceMemberStatusBadge } from "./workspace-member-status-badge"
 

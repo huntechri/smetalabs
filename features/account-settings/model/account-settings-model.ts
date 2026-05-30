@@ -1,4 +1,4 @@
-import type { WorkspaceMember } from "@/features/workspace-settings/types"
+import type { WorkspaceMember } from "@/features/workspace-settings/model/workspace-settings-model"
 
 /**
  * Computes initials from a display name for the avatar fallback.

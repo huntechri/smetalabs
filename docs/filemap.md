@@ -435,22 +435,25 @@ smetalabs/
 │   │           ├── directory-suppliers-metric-group.tsx  # Группа метрик
 │   │           └── directory-suppliers-create-dialog.tsx  # Диалог создания (5 полей + Select цвета)
 │   │
-│   ├── directory-counterparties/        # Фича «Справочник контрагентов» (✅ эталонная структура)
-│   │   ├── __mocks__/
-│   │   │   └── directory-counterparties.ts  #   Мок-данные контрагентов (10: 5 юрлиц + 5 физлиц)
-│   │   ├── components/
-│   │   │   └── directory-counterparties-view.tsx  # Обёртка со скроллом
-│   │   ├── hooks/
-│   │   │   └── use-directory-counterparties.ts    # Хук (моки → API)
-│   │   └── directory-counterparties-details/
-│   │       └── components/
-│   │           ├── directory-counterparties-section.tsx     # Композиция
-│   │           ├── directory-counterparties-row.tsx         # Строка: название + тип + статус + ИНН + телефон
-│   │           ├── directory-counterparties-name.tsx        # Название контрагента
-│   │           ├── directory-counterparties-value.tsx       # Бейдж «label: value»
-│   │           ├── directory-counterparties-metric-group.tsx  # Группа метрик
-│   │           └── directory-counterparties-create-dialog.tsx  # Диалог создания с условными полями
-│   │                                                           # (юрлицо → реквизиты, физлицо → паспорт)
+│   ├── directory-counterparties/        # Фича «Справочник контрагентов» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   ├── directory-counterparties-client.ts       #   HTTP-клиент (fetch → /api/directory-counterparties)
+│   │   │   ├── directory-counterparties-query-keys.ts   #   Ключи кэширования React Query
+│   │   │   └── directory-counterparties-errors.ts       #   Типизированные ошибки API
+│   │   ├── model/
+│   │   │   ├── directory-counterparties-model.ts        #   Типы, события, доменные хелперы, парсеры URL-параметров
+│   │   │   └── directory-counterparties-model.test.ts   #   Unit-тесты (22 теста)
+│   │   ├── application/
+│   │   │   └── use-directory-counterparties.ts          #   TanStack Query: useQuery + useMutation (create/update/archive)
+│   │   ├── ui/
+│   │   │   ├── directory-counterparties-view.tsx         #   Layout-обёртка со скроллом
+│   │   │   ├── directory-counterparties-section.tsx      #   "use client" — список + пагинация + диалоги
+│   │   │   ├── directory-counterparties-row.tsx          #   Строка: имя + тип + статус + телефон + банк
+│   │   │   ├── directory-counterparties-name.tsx         #   Отображение наименования
+│   │   │   ├── directory-counterparties-value.tsx        #   Бейдж «label: value»
+│   │   │   ├── directory-counterparties-metric-group.tsx #   Группа метрик с заголовком
+│   │   │   └── directory-counterparties-create-dialog.tsx#   Диалог с условными полями (юр/физ)
+│   │   └── server/                                      #   Серверный слой (Repository, Service, Route Handlers)
 │   │
 │   ├── workspace-settings/              # Фича «Настройки воркспейса» (✅ декомпозирована по 4-слойному стандарту)
 │   │   ├── api/

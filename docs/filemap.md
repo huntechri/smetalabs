@@ -4,7 +4,7 @@
 >
 > **Состояние:** Фронтенд (вёрстка + моки) + Бэкенд (Supabase: DB, Auth, RBAC, API). Активная разработка.
 >
-> **Последнее обновление:** 2026-05-28
+> **Последнее обновление:** 2026-05-30
 >
 > **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
 >
@@ -375,12 +375,18 @@ smetalabs/
 │   │   │   └── notification-list.tsx    #   Список и табы (Непрочитанные / Все)
 │   │   └── server/                      #   Бэкенд-слой (Repository, Service)
 │   │
-│   ├── directories/                     # Фича «Справочники» (общие тулбары для страниц справочников)
-│   │   └── components/
-│   │       ├── directories-toolbar.tsx   # Общий тулбар (search + actions)
-│   │       ├── materials-toolbar.tsx     # Тулбар справочника материалов
-│   │       ├── works-toolbar.tsx         # Тулбар справочника работ
-│   │       ├── suppliers-toolbar.tsx     # Тулбар справочника поставщиков (+ Dialog)
+│   ├── directories/                     # Фича «Справочники» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── model/
+│   │   │   ├── csv-import.ts            #   Нормализаторы CSV (normalizeHeader, normalizeCellValue)
+│   │   │   ├── csv-import.test.ts       #   Unit-тесты нормализаторов
+│   │   │   └── directories-model.ts    #   Общие типы (DirectoryAction, DirectoriesToolbarProps)
+│   │   ├── application/
+│   │   │   └── csv-parser.ts           #   AsyncGenerator-парсер CSV для пошагового импорта
+│   │   └── ui/
+│   │       ├── directories-toolbar.tsx  #   Базовый тулбар (search + actions + children)
+│   │       ├── materials-toolbar.tsx    #   Тулбар справочника материалов (+ категориальный фильтр)
+│   │       ├── works-toolbar.tsx        #   Тулбар справочника работ (+ категориальный фильтр)
+│   │       ├── suppliers-toolbar.tsx    #   Тулбар справочника поставщиков (+ Dialog)
 │   │       └── counterparties-toolbar.tsx  # Тулбар справочника контрагентов (+ Dialog)
 │   │
 │   ├── directory-materials/             # Фича «Справочник материалов» (✅ эталонная структура)
@@ -445,6 +451,55 @@ smetalabs/
 │   │           ├── directory-counterparties-metric-group.tsx  # Группа метрик
 │   │           └── directory-counterparties-create-dialog.tsx  # Диалог создания с условными полями
 │   │                                                           # (юрлицо → реквизиты, физлицо → паспорт)
+│   │
+│   ├── workspace-settings/              # Фича «Настройки воркспейса» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   ├── team-client.ts           #   HTTP-клиент (fetch → /api/team/*)
+│   │   │   ├── team-errors.ts           #   Типизированные ошибки API
+│   │   │   ├── team-mappers.ts          #   Адаптеры ответов API → внутренние типы
+│   │   │   ├── team-query-keys.ts       #   Ключи кэширования React Query
+│   │   │   └── __tests__/
+│   │   │       └── team-client.test.ts  #   Unit-тесты клиента
+│   │   ├── model/
+│   │   │   ├── workspace-settings-model.ts      #   Типы, статусы участников, бизнес-хелперы
+│   │   │   └── workspace-settings-model.test.ts #   Unit-тесты модели
+│   │   ├── application/
+│   │   │   ├── use-workspace-settings.ts        #   Общий хук настроек воркспейса
+│   │   │   ├── use-workspace-members.ts         #   Хук получения/управления участниками
+│   │   │   ├── use-workspace-overview.ts        #   Хук сводных показателей воркспейса
+│   │   │   ├── use-workspace-member-actions.ts  #   Хук действий над участником
+│   │   │   ├── use-workspace-member-dialogs.ts  #   Хук управления диалогами
+│   │   │   ├── use-domains.ts                   #   Хук разрешенных доменов
+│   │   │   ├── use-invitations.ts               #   Хук email-приглашений
+│   │   │   ├── use-invite-link.ts               #   Хук публичных инвайт-ссылок
+│   │   │   └── use-invite-member.ts             #   Хук отправки приглашений
+│   │   ├── ui/
+│   │   │   ├── workspace-settings-view.tsx      #   Входная точка (табы)
+│   │   │   ├── team-management-view.tsx         #   Представление управления командой
+│   │   │   ├── workspace-overview-card.tsx      #   Карточка обзора воркспейса
+│   │   │   ├── workspace-roles-summary-card.tsx #   Сводка ролей команды
+│   │   │   ├── workspace-members-table.tsx      #   Таблица участников (десктоп)
+│   │   │   ├── allowed-domains-card.tsx         #   Разрешенные почтовые домены
+│   │   │   ├── invite-link-card.tsx             #   Управление публичной инвайт-ссылкой
+│   │   │   ├── invite-member-card.tsx           #   Форма email-приглашения
+│   │   │   ├── pending-invitations-table.tsx    #   Таблица ожидающих приглашений
+│   │   │   ├── remove-member-dialog.tsx         #   Диалог исключения участника
+│   │   │   ├── suspend-member-dialog.tsx        #   Диалог блокировки доступа
+│   │   │   ├── reset-password-dialog.tsx        #   Диалог сброса пароля
+│   │   │   ├── role-change-dialog.tsx           #   Диалог смены роли
+│   │   │   ├── workspace-actions-card.tsx       #   Дополнительные настройки воркспейса
+│   │   │   └── members/                         #   Составные компоненты таблицы участников
+│   │   │       ├── workspace-members-section.tsx    # Секция (загрузка / ошибка / данные)
+│   │   │       ├── workspace-members-table.tsx      # Таблица десктоп
+│   │   │       ├── workspace-members-mobile-list.tsx # Список мобайл
+│   │   │       ├── workspace-member-row.tsx         # Строка участника
+│   │   │       ├── workspace-member-status-badge.tsx # Бейдж статуса
+│   │   │       ├── workspace-member-actions-menu.tsx # Меню действий
+│   │   │       ├── workspace-members-skeleton.tsx   # Скелетон загрузки
+│   │   │       ├── workspace-members-error.tsx      # Ошибки загрузки
+│   │   │       └── workspace-member-dialogs.tsx     # Модальные окна действий
+│   │   └── __mocks__/
+│   │       └── workspace-settings.ts    #   Мок-данные для тестов
 │   │
 │   └── ... (новые фичи создавать здесь по доменному принципу)
 │

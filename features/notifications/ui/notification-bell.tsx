@@ -12,7 +12,7 @@ import { NotificationList } from "./notification-list"
 import {
   useNotificationsCount,
   useNotificationsRealtime,
-} from "../hooks/use-notifications"
+} from "../application/use-notifications"
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false)

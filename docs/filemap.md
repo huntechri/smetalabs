@@ -303,6 +303,20 @@ smetalabs/
 │   │           ├── global-purchase-material-dialog.tsx # Выбор материала из каталога
 │   │           └── global-purchases-import-dialog.tsx # Диалог импорта закупок
 │   │
+│   ├── notifications/                   # Фича «Уведомления» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   ├── notifications-client.ts  #   API-клиент (GET/POST → /api/notifications)
+│   │   │   └── notifications-query-keys.ts # Ключи кэширования React Query
+│   │   ├── model/
+│   │   │   └── notifications-model.ts   #   Типы, относительное время, визуальный маппинг
+│   │   ├── application/
+│   │   │   └── use-notifications.ts     #   Хуки запросов, мутаций и realtime
+│   │   ├── ui/
+│   │   │   ├── notification-bell.tsx    #   Компонент колокольчика в шапке
+│   │   │   ├── notification-item.tsx    #   Отображение одного события
+│   │   │   └── notification-list.tsx    #   Список и табы (Непрочитанные / Все)
+│   │   └── server/                      #   Бэкенд-слой (Repository, Service)
+│   │
 │   ├── directories/                     # Фича «Справочники» (общие тулбары для страниц справочников)
 │   │   └── components/
 │   │       ├── directories-toolbar.tsx   # Общий тулбар (search + actions)

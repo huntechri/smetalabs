@@ -17,72 +17,32 @@ import type { ClientNotification } from "../api/notifications-client"
 import {
   useMarkNotificationsRead,
   useArchiveNotifications,
-} from "../hooks/use-notifications"
+} from "../application/use-notifications"
+import {
+  getNotificationVisualType,
+  formatRelativeTime,
+  type NotificationIconType,
+} from "../model/notifications-model"
 
 interface NotificationItemProps {
   notification: ClientNotification
   onClosePopover?: () => void
 }
 
-/**
- * Простой хелпер для вычисления относительного времени на русском языке.
- */
-export function formatRelativeTime(dateString: string): string {
-  const now = new Date()
-  const date = new Date(dateString)
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
-
-  if (diffMins < 1) return "Только что"
-  if (diffMins < 60) return `${diffMins} мин. назад`
-  if (diffHours < 24) return `${diffHours} ч. назад`
-  if (diffDays < 7) return `${diffDays} дн. назад`
-
-  return date.toLocaleDateString("ru-RU", { day: "numeric", month: "short" })
-}
-
-/**
- * Возвращает иконку и цвет фона в зависимости от типа уведомления.
- */
-function getNotificationVisuals(type: string) {
-  const baseIconClass = "size-4.5"
-
-  if (type.startsWith("project_")) {
-    return {
-      icon: <Briefcase className={baseIconClass} />,
-      bgClass: "bg-blue-500/10 text-blue-500 dark:bg-blue-500/20",
-    }
-  }
-  if (type.startsWith("estimate_")) {
-    return {
-      icon: <Calculator className={baseIconClass} />,
-      bgClass: "bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20",
-    }
-  }
-  if (type.startsWith("procurement_")) {
-    return {
-      icon: <ShoppingCart className={baseIconClass} />,
-      bgClass: "bg-amber-500/10 text-amber-500 dark:bg-amber-500/20",
-    }
-  }
-  if (type.startsWith("team_")) {
-    return {
-      icon: <Users className={baseIconClass} />,
-      bgClass: "bg-purple-500/10 text-purple-500 dark:bg-purple-500/20",
-    }
-  }
-  if (type.startsWith("billing_")) {
-    return {
-      icon: <CreditCard className={baseIconClass} />,
-      bgClass: "bg-rose-500/10 text-rose-500 dark:bg-rose-500/20",
-    }
-  }
-
-  return {
-    icon: <Bell className={baseIconClass} />,
-    bgClass: "bg-muted text-muted-foreground",
+function renderIcon(iconType: NotificationIconType, className: string) {
+  switch (iconType) {
+    case "briefcase":
+      return <Briefcase className={className} />
+    case "calculator":
+      return <Calculator className={className} />
+    case "shopping-cart":
+      return <ShoppingCart className={className} />
+    case "users":
+      return <Users className={className} />
+    case "credit-card":
+      return <CreditCard className={className} />
+    default:
+      return <Bell className={className} />
   }
 }
 
@@ -95,7 +55,7 @@ export function NotificationItem({
   const { mutate: archive } = useArchiveNotifications()
 
   const isUnread = !notification.read_at
-  const { icon, bgClass } = getNotificationVisuals(notification.type)
+  const { iconType, bgClass } = getNotificationVisualType(notification.type)
 
   const handleItemClick = () => {
     // 1. Помечаем как прочитанное
@@ -132,7 +92,7 @@ export function NotificationItem({
           bgClass
         )}
       >
-        {icon}
+        {renderIcon(iconType, "size-4.5")}
       </div>
 
       {/* Контент уведомления */}

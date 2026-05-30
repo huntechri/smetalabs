@@ -17,7 +17,7 @@ import { NotificationItem } from "./notification-item"
 import {
   useNotifications,
   useMarkNotificationsRead,
-} from "../hooks/use-notifications"
+} from "../application/use-notifications"
 
 interface NotificationListProps {
   onClosePopover?: () => void

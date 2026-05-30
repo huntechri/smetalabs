@@ -1,10 +1,8 @@
 "use client"
 
 import { Suspense, useState } from "react"
-import {
-  DirectoriesToolbar,
-  type DirectoryAction,
-} from "@/features/directories/components/directories-toolbar"
+import { DirectoriesToolbar } from "./directories-toolbar"
+import type { DirectoryAction } from "../model/directories-model"
 import { DirectoryMaterialsCategoryFilter } from "@/features/directory-materials/components/directory-materials-category-filter"
 import {
   dispatchDirectoryMaterialsCreateEvent,

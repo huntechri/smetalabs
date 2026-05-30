@@ -1,4 +1,4 @@
-import { SuppliersToolbar } from "@/features/directories/components/suppliers-toolbar"
+import { SuppliersToolbar } from "@/features/directories/ui/suppliers-toolbar"
 import { DirectorySuppliersView } from "@/features/directory-suppliers/components/directory-suppliers-view"
 
 export default function SuppliersDirectoryPage() {

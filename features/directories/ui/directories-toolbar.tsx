@@ -10,23 +10,7 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group"
 import { MagnifyingGlassIcon } from "@phosphor-icons/react"
-
-export type DirectoryAction = {
-  label: string
-  icon: React.ReactNode
-  variant?: React.ComponentProps<typeof Button>["variant"]
-  disabled?: boolean
-  title?: string
-  hideLabel?: boolean
-  onClick?: () => void
-}
-
-export type DirectoriesToolbarProps = {
-  searchPlaceholder: string
-  searchAriaLabel: string
-  actions: DirectoryAction[]
-  children?: React.ReactNode
-}
+import type { DirectoryAction, DirectoriesToolbarProps } from "../model/directories-model"
 
 export function DirectoriesToolbar({
   searchPlaceholder,

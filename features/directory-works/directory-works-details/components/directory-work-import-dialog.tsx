@@ -20,10 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  parseCsvFileInBatches,
-  type CsvImportBatch,
-} from "@/features/directories/lib/csv-import-batches"
+import { parseCsvFileInBatches } from "@/features/directories/application/csv-parser"
+import type { CsvImportBatch } from "@/features/directories/model/csv-import"
 import type {
   DirectoryWorkImportApplyInput,
   DirectoryWorkImportApplyResponse,

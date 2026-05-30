@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense } from "react"
-import { DirectoriesToolbar } from "@/features/directories/components/directories-toolbar"
+import { DirectoriesToolbar } from "./directories-toolbar"
 import { DIRECTORY_COUNTERPARTIES_CREATE_EVENT } from "@/features/directory-counterparties/lib/directory-counterparties-events"
 import { PlusIcon } from "@phosphor-icons/react"
 

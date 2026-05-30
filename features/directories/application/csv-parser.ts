@@ -1,61 +1,17 @@
-export type CsvImportHeaderAliases = Record<string, string>
-
-export type CsvImportBatch = {
-  batchNumber: number
-  rowOffset: number
-  rows: Array<Record<string, unknown>>
-}
-
-export type CsvImportProgress = {
-  rowsRead: number
-  batchesRead: number
-}
+import {
+  type CsvImportHeaderAliases,
+  type CsvImportBatch,
+  type CsvImportProgress,
+  normalizeHeader,
+  detectDelimiter,
+  toRecord,
+} from "../model/csv-import"
 
 type ParseCsvFileInBatchesOptions = {
   file: File
   headerAliases: CsvImportHeaderAliases
   batchSize: number
   onProgress?: (progress: CsvImportProgress) => void
-}
-
-function normalizeHeader(header: string, aliases: CsvImportHeaderAliases) {
-  const key = header
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .replace(/-/g, "_")
-  return aliases[key] ?? key.replace(/\s+/g, "_")
-}
-
-function detectDelimiter(sample: string) {
-  const firstLine = sample.split(/\r?\n/, 1)[0] ?? ""
-  const candidates = [
-    { delimiter: "\t", count: (firstLine.match(/\t/g) ?? []).length },
-    { delimiter: ";", count: (firstLine.match(/;/g) ?? []).length },
-    { delimiter: ",", count: (firstLine.match(/,/g) ?? []).length },
-  ]
-
-  return candidates.sort((a, b) => b.count - a.count)[0]?.delimiter ?? ","
-}
-
-function normalizeCellValue(header: string, value: string) {
-  if (header !== "currencyCode" && header !== "currency_code") return value
-
-  const normalized = value.trim().toLowerCase().replace(/\s+/g, "")
-  if (["руб", "руб.", "р", "р.", "₽", "rur", "rub"].includes(normalized))
-    return "RUB"
-  return value
-}
-
-function toRecord(headers: string[], row: string[]) {
-  const record: Record<string, unknown> = {}
-
-  headers.forEach((header, index) => {
-    const value = row[index]?.trim()
-    if (header && value) record[header] = normalizeCellValue(header, value)
-  })
-
-  return record
 }
 
 export async function* parseCsvFileInBatches({
@@ -171,3 +127,4 @@ export async function* parseCsvFileInBatches({
     onProgress?.({ rowsRead, batchesRead })
   }
 }
+export type { CsvImportHeaderAliases, CsvImportBatch, CsvImportProgress }

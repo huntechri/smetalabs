@@ -1,4 +1,4 @@
-import { WorksToolbar } from "@/features/directories/components/works-toolbar"
+import { WorksToolbar } from "@/features/directories/ui/works-toolbar"
 import { DirectoryWorksView } from "@/features/directory-works/components/directory-works-view"
 
 export default function WorksDirectoryPage() {

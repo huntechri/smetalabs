@@ -1,4 +1,4 @@
-import { CounterpartiesToolbar } from "@/features/directories/components/counterparties-toolbar"
+import { CounterpartiesToolbar } from "@/features/directories/ui/counterparties-toolbar"
 import { DirectoryCounterpartiesView } from "@/features/directory-counterparties/components/directory-counterparties-view"
 
 export default function CounterpartiesDirectoryPage() {

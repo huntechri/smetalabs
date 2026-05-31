@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { DirectorySuppliersListParams } from "../types"
+import type { DirectorySuppliersListParams } from "../model/directory-suppliers-model"
 
 const optionalTrimmedString = (maxLength: number) =>
   z.preprocess((value) => {

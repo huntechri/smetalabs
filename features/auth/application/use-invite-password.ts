@@ -2,7 +2,11 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import {
+  acceptTeamInvitation,
+  getCurrentUserInvitationMetadata,
+  updateCurrentUserCredential,
+} from "../api/auth-client"
 import {
   validatePasswords,
   isAlreadySaved,
@@ -12,7 +16,6 @@ import {
 
 export function useInvitePassword() {
   const router = useRouter()
-  const supabase = createClient()
   const [error, setError] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
 
@@ -28,7 +31,7 @@ export function useInvitePassword() {
     setIsPending(true)
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({ password })
+      const updateError = await updateCurrentUserCredential(password)
 
       if (updateError && !isAlreadySaved(updateError)) {
         setIsPending(false)
@@ -36,12 +39,10 @@ export function useInvitePassword() {
         return false
       }
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
+      const { metadata, error: userError, hasUser } =
+        await getCurrentUserInvitationMetadata()
 
-      if (userError || !user) {
+      if (userError || !hasUser) {
         setIsPending(false)
         setError(
           "Пароль сохранён, но не удалось проверить сессию. Войдите с новым паролем."
@@ -49,19 +50,17 @@ export function useInvitePassword() {
         return false
       }
 
-      if (!hasInvitationMetadata(user.user_metadata)) {
+      if (!hasInvitationMetadata(metadata)) {
         setIsPending(false)
         router.replace("/dashboard")
         return true
       }
 
-      const acceptResponse = await fetch("/api/team/invitations/accept", {
-        method: "POST",
-      })
+      const invitationAccepted = await acceptTeamInvitation()
 
       setIsPending(false)
 
-      if (!acceptResponse.ok) {
+      if (!invitationAccepted) {
         setError(
           "Пароль сохранён, но приглашение не удалось принять. Обратитесь к администратору workspace."
         )

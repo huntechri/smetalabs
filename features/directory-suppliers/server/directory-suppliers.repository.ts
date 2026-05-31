@@ -5,7 +5,7 @@ import type {
   DirectorySupplierMutationInput,
   DirectorySuppliersListParams,
   DirectorySuppliersListResponse,
-} from "../types"
+} from "../model/directory-suppliers-model"
 
 type NormalizedListParams = Required<
   Pick<DirectorySuppliersListParams, "status" | "limit" | "cursor" | "sort">

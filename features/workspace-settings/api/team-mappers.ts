@@ -1,4 +1,4 @@
-import type { WorkspaceMember } from "../types"
+import type { WorkspaceMember } from "../model/workspace-settings-model"
 
 export type ApiMember = {
   id: string

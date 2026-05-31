@@ -3,7 +3,7 @@ import type {
   DirectoryCounterpartiesListResponse,
   DirectoryCounterparty,
   DirectoryCounterpartyMutationInput,
-} from "../types"
+} from "../model/directory-counterparties-model"
 import { throwDirectoryCounterpartiesApiError } from "./directory-counterparties-errors"
 
 function appendParam(

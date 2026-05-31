@@ -4,7 +4,7 @@
 >
 > **Состояние:** Фронтенд (вёрстка + моки) + Бэкенд (Supabase: DB, Auth, RBAC, API). Активная разработка.
 >
-> **Последнее обновление:** 2026-05-28
+> **Последнее обновление:** 2026-05-30
 >
 > **Главный принцип:** Каждый разработчик должен открыть этот документ, найти нужный раздел и сразу понять, куда класть новый код.
 >
@@ -162,17 +162,83 @@ smetalabs/
 │   ├── nav-secondary.tsx                # Вторичная навигация sidebar
 │   ├── nav-user.tsx                     # Меню пользователя в sidebar
 │   │
-│   ├── auth/                            # Фича «Авторизация»
-│   │   └── components/
-│   │       ├── login-form.tsx           # Форма входа
-│   │       ├── signup-form.tsx          # Форма регистрации
-│   │       └── forgot-password-form.tsx # Форма восстановления
+│   ├── access-control/                  # Фича «Управление доступом» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   ├── access-control-client.ts     #   Клиент для выполнения запросов к API ролей
+│   │   │   └── access-control-query-keys.ts #   Ключи кэширования React Query
+│   │   ├── model/
+│   │   │   ├── access-control-model.ts      #   Бизнес-логика, типы, построение групп и матрицы прав
+│   │   │   └── access-control-model.test.ts #   Тесты модели
+│   │   ├── application/
+│   │   │   ├── use-access-control.ts        #   Хуки управления ролями (useRoles, useAssignRole, useRemoveRole)
+│   │   │   ├── use-permission-matrix-state.ts # Хук локального состояния матрицы
+│   │   │   ├── use-update-permission-matrix.ts # Хук сохранения/обновления матрицы
+│   │   │   └── __tests__/
+│   │   │       └── use-permission-matrix-state.test.tsx # Тесты хука состояния матрицы
+│   │   └── ui/
+│   │       ├── permissions-matrix.tsx       #   Основной контейнер матрицы прав доступа
+│   │       ├── permissions-matrix-table.tsx #   Таблица прав доступа по ролям
+│   │       ├── permissions-matrix-toolbar.tsx # Панель инструментов матрицы
+│   │       ├── permissions-matrix-skeleton.tsx # Загрузочный скелетон таблицы
+│   │       ├── permissions-matrix-error.tsx #   Отображение ошибок
+│   │       └── __tests__/
+│   │           └── permissions-matrix-toolbar.test.tsx # Тесты тулбара
 │   │
-│   ├── dashboard/                       # Фича «Дашборд»
-│   │   ├── chart-area-client.tsx        # Клиентский график (Recharts, lazy-загрузка)
-│   │   ├── chart-area-interactive.tsx   # Интерактивный график
-│   │   ├── data-table.tsx              # Таблица данных
-│   │   └── section-cards-dashboard.tsx  # Карточки статистики
+│   ├── account-settings/                # Фича «Настройки аккаунта» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   ├── settings-actions.ts      #   Серверные экшены мутаций
+│   │   │   ├── settings-client.ts       #   Клиент получения настроек (fetch)
+│   │   │   └── settings-query-keys.ts   #   Ключи кэширования React Query
+│   │   ├── model/
+│   │   │   └── account-settings-model.ts #  Валидация, инициалы, часовые пояса, кандидаты
+│   │   ├── application/
+│   │   │   ├── use-settings.ts          #   Хук загрузки настроек
+│   │   │   ├── use-update-profile.ts    #   Хук обновления профиля
+│   │   │   ├── use-update-workspace.ts  #   Хук обновления воркспейса
+│   │   │   ├── use-update-preferences.ts #  Хук обновления предпочтений
+│   │   │   ├── use-update-notifications.ts # Хук обновления уведомлений
+│   │   │   ├── use-security-actions.ts  #   Хук действий безопасности
+│   │   │   └── use-sensitive-actions.ts #   Хук опасных действий воркспейса
+│   │   └── ui/
+│   │       ├── account-settings-view.tsx #  Основной экран настроек
+│   │       ├── profile-settings-card.tsx #  Карточка настроек профиля
+│   │       ├── workspace-settings-card.tsx # Карточка настроек воркспейса
+│   │       ├── preferences-settings-card.tsx # Карточка настроек предпочтений
+│   │       ├── notification-settings-card.tsx # Карточка настроек уведомлений
+│   │       ├── security-settings-card.tsx # Карточка настроек безопасности
+│   │       └── sensitive-actions-card.tsx # Карточка опасных действий
+│   │
+│   ├── auth/                            # Фича «Авторизация» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── model/
+│   │   │   ├── auth-model.ts            #   Чистая бизнес-логика (валидация, нормализация ошибок, проверки метаданных)
+│   │   │   └── auth-model.test.ts       #   Тесты для доменных хелперов
+│   │   ├── application/
+│   │   │   ├── use-login.ts             #   Хук входа через Server Action
+│   │   │   ├── use-signup.ts            #   Хук регистрации через Server Action
+│   │   │   ├── use-forgot-password.ts   #   Хук восстановления пароля через Server Action
+│   │   │   ├── use-invite-password.ts   #   Хук установки пароля для приглашённых пользователей
+│   │   │   └── use-set-password.ts      #   Хук установки пароля
+│   │   └── ui/
+│   │       ├── auth-illustration.tsx    #   Декоративная иллюстрация
+│   │       ├── login-form.tsx           #   Форма входа
+│   │       ├── signup-form.tsx          #   Форма регистрации
+│   │       ├── forgot-password-form.tsx #   Форма восстановления пароля
+│   │       ├── invite-password-form.tsx #   Форма для приглашённых
+│   │       └── set-password-form.tsx    #   Форма сброса пароля
+│   │
+│   ├── dashboard/                       # Фича «Дашборд» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   └── dashboard-api.ts         #   Реэкспорт запросов к проектам
+│   │   ├── model/
+│   │   │   └── dashboard-model.ts       #   Вычисления, диапазоны дат, границы графиков
+│   │   ├── application/
+│   │   │   ├── use-workspace-dashboard-stats.ts # Хук статистики TanStack Query
+│   │   │   └── use-active-projects.ts   #   Хук проектов в работе
+│   │   └── ui/
+│   │       ├── chart-area-client.tsx    #   Ленивая загрузка
+│   │       ├── chart-area-interactive.tsx # Интерактивный график Recharts
+│   │       ├── data-table.tsx           #   Таблица проектов в работе
+│   │       └── section-cards-dashboard.tsx # Карточки KPI воркспейса
 │   │
 │   ├── projects/                        # Фича «Проекты»
 │   │   └── components/
@@ -295,12 +361,32 @@ smetalabs/
 │   │           ├── global-purchase-material-dialog.tsx # Выбор материала из каталога
 │   │           └── global-purchases-import-dialog.tsx # Диалог импорта закупок
 │   │
-│   ├── directories/                     # Фича «Справочники» (общие тулбары для страниц справочников)
-│   │   └── components/
-│   │       ├── directories-toolbar.tsx   # Общий тулбар (search + actions)
-│   │       ├── materials-toolbar.tsx     # Тулбар справочника материалов
-│   │       ├── works-toolbar.tsx         # Тулбар справочника работ
-│   │       ├── suppliers-toolbar.tsx     # Тулбар справочника поставщиков (+ Dialog)
+│   ├── notifications/                   # Фича «Уведомления» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   ├── notifications-client.ts  #   API-клиент (GET/POST → /api/notifications)
+│   │   │   └── notifications-query-keys.ts # Ключи кэширования React Query
+│   │   ├── model/
+│   │   │   └── notifications-model.ts   #   Типы, относительное время, визуальный маппинг
+│   │   ├── application/
+│   │   │   └── use-notifications.ts     #   Хуки запросов, мутаций и realtime
+│   │   ├── ui/
+│   │   │   ├── notification-bell.tsx    #   Компонент колокольчика в шапке
+│   │   │   ├── notification-item.tsx    #   Отображение одного события
+│   │   │   └── notification-list.tsx    #   Список и табы (Непрочитанные / Все)
+│   │   └── server/                      #   Бэкенд-слой (Repository, Service)
+│   │
+│   ├── directories/                     # Фича «Справочники» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── model/
+│   │   │   ├── csv-import.ts            #   Нормализаторы CSV (normalizeHeader, normalizeCellValue)
+│   │   │   ├── csv-import.test.ts       #   Unit-тесты нормализаторов
+│   │   │   └── directories-model.ts    #   Общие типы (DirectoryAction, DirectoriesToolbarProps)
+│   │   ├── application/
+│   │   │   └── csv-parser.ts           #   AsyncGenerator-парсер CSV для пошагового импорта
+│   │   └── ui/
+│   │       ├── directories-toolbar.tsx  #   Базовый тулбар (search + actions + children)
+│   │       ├── materials-toolbar.tsx    #   Тулбар справочника материалов (+ категориальный фильтр)
+│   │       ├── works-toolbar.tsx        #   Тулбар справочника работ (+ категориальный фильтр)
+│   │       ├── suppliers-toolbar.tsx    #   Тулбар справочника поставщиков (+ Dialog)
 │   │       └── counterparties-toolbar.tsx  # Тулбар справочника контрагентов (+ Dialog)
 │   │
 │   ├── directory-materials/             # Фича «Справочник материалов» (✅ эталонная структура)
@@ -349,22 +435,74 @@ smetalabs/
 │   │           ├── directory-suppliers-metric-group.tsx  # Группа метрик
 │   │           └── directory-suppliers-create-dialog.tsx  # Диалог создания (5 полей + Select цвета)
 │   │
-│   ├── directory-counterparties/        # Фича «Справочник контрагентов» (✅ эталонная структура)
-│   │   ├── __mocks__/
-│   │   │   └── directory-counterparties.ts  #   Мок-данные контрагентов (10: 5 юрлиц + 5 физлиц)
-│   │   ├── components/
-│   │   │   └── directory-counterparties-view.tsx  # Обёртка со скроллом
-│   │   ├── hooks/
-│   │   │   └── use-directory-counterparties.ts    # Хук (моки → API)
-│   │   └── directory-counterparties-details/
-│   │       └── components/
-│   │           ├── directory-counterparties-section.tsx     # Композиция
-│   │           ├── directory-counterparties-row.tsx         # Строка: название + тип + статус + ИНН + телефон
-│   │           ├── directory-counterparties-name.tsx        # Название контрагента
-│   │           ├── directory-counterparties-value.tsx       # Бейдж «label: value»
-│   │           ├── directory-counterparties-metric-group.tsx  # Группа метрик
-│   │           └── directory-counterparties-create-dialog.tsx  # Диалог создания с условными полями
-│   │                                                           # (юрлицо → реквизиты, физлицо → паспорт)
+│   ├── directory-counterparties/        # Фича «Справочник контрагентов» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   ├── directory-counterparties-client.ts       #   HTTP-клиент (fetch → /api/directory-counterparties)
+│   │   │   ├── directory-counterparties-query-keys.ts   #   Ключи кэширования React Query
+│   │   │   └── directory-counterparties-errors.ts       #   Типизированные ошибки API
+│   │   ├── model/
+│   │   │   ├── directory-counterparties-model.ts        #   Типы, события, доменные хелперы, парсеры URL-параметров
+│   │   │   └── directory-counterparties-model.test.ts   #   Unit-тесты (22 теста)
+│   │   ├── application/
+│   │   │   └── use-directory-counterparties.ts          #   TanStack Query: useQuery + useMutation (create/update/archive)
+│   │   ├── ui/
+│   │   │   ├── directory-counterparties-view.tsx         #   Layout-обёртка со скроллом
+│   │   │   ├── directory-counterparties-section.tsx      #   "use client" — список + пагинация + диалоги
+│   │   │   ├── directory-counterparties-row.tsx          #   Строка: имя + тип + статус + телефон + банк
+│   │   │   ├── directory-counterparties-name.tsx         #   Отображение наименования
+│   │   │   ├── directory-counterparties-value.tsx        #   Бейдж «label: value»
+│   │   │   ├── directory-counterparties-metric-group.tsx #   Группа метрик с заголовком
+│   │   │   └── directory-counterparties-create-dialog.tsx#   Диалог с условными полями (юр/физ)
+│   │   └── server/                                      #   Серверный слой (Repository, Service, Route Handlers)
+│   │
+│   ├── workspace-settings/              # Фича «Настройки воркспейса» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   ├── team-client.ts           #   HTTP-клиент (fetch → /api/team/*)
+│   │   │   ├── team-errors.ts           #   Типизированные ошибки API
+│   │   │   ├── team-mappers.ts          #   Адаптеры ответов API → внутренние типы
+│   │   │   ├── team-query-keys.ts       #   Ключи кэширования React Query
+│   │   │   └── __tests__/
+│   │   │       └── team-client.test.ts  #   Unit-тесты клиента
+│   │   ├── model/
+│   │   │   ├── workspace-settings-model.ts      #   Типы, статусы участников, бизнес-хелперы
+│   │   │   └── workspace-settings-model.test.ts #   Unit-тесты модели
+│   │   ├── application/
+│   │   │   ├── use-workspace-settings.ts        #   Общий хук настроек воркспейса
+│   │   │   ├── use-workspace-members.ts         #   Хук получения/управления участниками
+│   │   │   ├── use-workspace-overview.ts        #   Хук сводных показателей воркспейса
+│   │   │   ├── use-workspace-member-actions.ts  #   Хук действий над участником
+│   │   │   ├── use-workspace-member-dialogs.ts  #   Хук управления диалогами
+│   │   │   ├── use-domains.ts                   #   Хук разрешенных доменов
+│   │   │   ├── use-invitations.ts               #   Хук email-приглашений
+│   │   │   ├── use-invite-link.ts               #   Хук публичных инвайт-ссылок
+│   │   │   └── use-invite-member.ts             #   Хук отправки приглашений
+│   │   ├── ui/
+│   │   │   ├── workspace-settings-view.tsx      #   Входная точка (табы)
+│   │   │   ├── team-management-view.tsx         #   Представление управления командой
+│   │   │   ├── workspace-overview-card.tsx      #   Карточка обзора воркспейса
+│   │   │   ├── workspace-roles-summary-card.tsx #   Сводка ролей команды
+│   │   │   ├── workspace-members-table.tsx      #   Таблица участников (десктоп)
+│   │   │   ├── allowed-domains-card.tsx         #   Разрешенные почтовые домены
+│   │   │   ├── invite-link-card.tsx             #   Управление публичной инвайт-ссылкой
+│   │   │   ├── invite-member-card.tsx           #   Форма email-приглашения
+│   │   │   ├── pending-invitations-table.tsx    #   Таблица ожидающих приглашений
+│   │   │   ├── remove-member-dialog.tsx         #   Диалог исключения участника
+│   │   │   ├── suspend-member-dialog.tsx        #   Диалог блокировки доступа
+│   │   │   ├── reset-password-dialog.tsx        #   Диалог сброса пароля
+│   │   │   ├── role-change-dialog.tsx           #   Диалог смены роли
+│   │   │   ├── workspace-actions-card.tsx       #   Дополнительные настройки воркспейса
+│   │   │   └── members/                         #   Составные компоненты таблицы участников
+│   │   │       ├── workspace-members-section.tsx    # Секция (загрузка / ошибка / данные)
+│   │   │       ├── workspace-members-table.tsx      # Таблица десктоп
+│   │   │       ├── workspace-members-mobile-list.tsx # Список мобайл
+│   │   │       ├── workspace-member-row.tsx         # Строка участника
+│   │   │       ├── workspace-member-status-badge.tsx # Бейдж статуса
+│   │   │       ├── workspace-member-actions-menu.tsx # Меню действий
+│   │   │       ├── workspace-members-skeleton.tsx   # Скелетон загрузки
+│   │   │       ├── workspace-members-error.tsx      # Ошибки загрузки
+│   │   │       └── workspace-member-dialogs.tsx     # Модальные окна действий
+│   │   └── __mocks__/
+│   │       └── workspace-settings.ts    #   Мок-данные для тестов
 │   │
 │   └── ... (новые фичи создавать здесь по доменному принципу)
 │

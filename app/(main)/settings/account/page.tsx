@@ -1,4 +1,4 @@
-import { AccountSettingsView } from "@/features/account-settings/components/account-settings-view"
+import { AccountSettingsView } from "@/features/account-settings/ui/account-settings-view"
 
 export default function AccountSettingsPage() {
   return (

@@ -1,4 +1,4 @@
-import type { DirectoryCounterpartiesListParams } from "../types"
+import type { DirectoryCounterpartiesListParams } from "../model/directory-counterparties-model"
 
 export const directoryCounterpartiesQueryKeys = {
   all: ["directoryCounterparties"] as const,

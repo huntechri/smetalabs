@@ -1,4 +1,4 @@
-import { InvitePasswordForm } from "@/features/auth/components/invite-password-form"
+import { InvitePasswordForm } from "@/features/auth/ui/invite-password-form"
 
 export default function SetPasswordPage() {
   return <InvitePasswordForm />

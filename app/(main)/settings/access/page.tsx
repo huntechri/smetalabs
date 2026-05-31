@@ -1,4 +1,4 @@
-import { PermissionsMatrix } from "@/features/access-control/components/permissions-matrix"
+import { PermissionsMatrix } from "@/features/access-control/ui/permissions-matrix"
 
 export default function AccessSettingsPage() {
   return (

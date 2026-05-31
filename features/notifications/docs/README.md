@@ -13,12 +13,15 @@ features/notifications/
   api/
     notifications-client.ts          — клиентские API-функции (fetch, markRead, archive)
     notifications-query-keys.ts      — ключи для React Query кэша
-  components/
+  application/
+    use-notifications.ts             — хуки React Query + Realtime-подписка (загрузка и realtime orchestration)
+  model/
+    notifications-model.ts           — бизнес-логика форматирования дат и маппинга визуального оформления
+    notifications-model.test.ts      — юнит-тесты для модели
+  ui/
     notification-bell.tsx            — кнопка-колокольчик с индикатором непрочитанных
     notification-item.tsx            — карточка одного уведомления (иконка, текст, действия)
     notification-list.tsx            — попап-список с табами «Непрочитанные»/«Все»
-  hooks/
-    use-notifications.ts             — хуки React Query + Realtime-подписка
   server/
     notifications.repository.ts      — доступ к БД (CRUD)
     notifications.service.ts         — бизнес-логика отправки (проверка настроек, email)
@@ -104,64 +107,33 @@ db/
 
 **Ответ:** `{ data: { success: true } }`
 
-## Компоненты
+## Слои фичи (Client-side)
 
-### `NotificationBell`
+### 1. UI Layer (`features/notifications/ui/`)
 
-Кнопка-колокольчик в хедере приложения. Особенности:
-- **Индикатор** — красный бейдж с количеством непрочитанных (99+ при >99)
-- **Попап** — выпадающий список уведомлений по клику, выровнен по правому краю
-- **Realtime** — инициализирует подписку на Supabase Realtime при монтировании
-- Использует `useNotificationsCount()` для бейджа и `useNotificationsRealtime()` для live-обновлений
+Компоненты отвечают исключительно за отображение и вёрстку (layout/rendering). Они импортируют хуки из прикладного слоя и чистые хелперы из модели.
 
-### `NotificationList`
+*   `NotificationBell` — кнопка-колокольчик в хедере приложения. Инициализирует Supabase Realtime прослушивание при монтировании и отображает красный бейдж с количеством непрочитанных уведомлений.
+*   `NotificationList` — выпадающий список уведомлений внутри поповера. Содержит табы «Непрочитанные» / «Все», анимированные скелетоны при загрузке, пустое состояние и кнопку «Прочитать все».
+*   `NotificationItem` — карточка одного уведомления. Отображает иконку, тип, тело, относительное время, точку непрочитанного и кнопку архивации в архив (при наведении).
 
-Выпадающий список внутри попапа. Особенности:
-- **Табы:** «Непрочитанные» и «Все» с переключением через `Tabs`
-- **Скелетон:** анимированные placeholder'ы при загрузке (3 строки)
-- **Empty state:** иконка + пояснительный текст при отсутствии уведомлений
-- **Кнопка «Прочитать все»:** в шапке, только при наличии непрочитанных
-- **Футер:** ссылка на `/settings/account` для настройки уведомлений
-- Размеры: `w-80 sm:w-96`, максимальная высота списка `350px`
+### 2. Application Layer (`features/notifications/application/`)
 
-### `NotificationItem`
+Содержит прикладную логику загрузки данных, Supabase Realtime подписок и инвалидации кэша React Query:
 
-Карточка одного уведомления. Особенности:
-- **Иконка и цвет** зависят от типа (`type`):
-  - `project_*` — синий + иконка портфеля
-  - `estimate_*` — зелёный + калькулятор
-  - `procurement_*` — янтарный + корзина
-  - `team_*` — фиолетовый + пользователи
-  - `billing_*` — розовый + карта
-- **Индикатор непрочитанного** — синяя точка (скрывается при наведении)
-- **Относительное время** — «Только что», «5 мин. назад», «2 ч. назад», «3 дн. назад», дата
-- **Клик:** отмечает как прочитанное, закрывает попап, переходит по `link`
-- **Кнопка архивации** — иконка корзины, появляется при наведении (hover)
+*   `useNotifications(filters)` — React Query хук для получения списка уведомлений с фильтрацией (unreadOnly, limit).
+*   `useNotificationsCount()` — React Query хук для получения количества непрочитанных уведомлений (для бейджа).
+*   `useMarkNotificationsRead()` — мутация для отметки уведомлений как прочитанных.
+*   `useArchiveNotifications()` — мутация для архивации уведомлений.
+*   `useNotificationsRealtime()` — подписывается на Supabase Realtime канал (`INSERT` в таблицу `notifications` с фильтром по `recipient_id`). При поступлении нового уведомления показывает всплывающий тост с возможностью быстрого перехода по ссылке и инвалидирует кэш React Query.
 
-## Хуки
+### 3. Model Layer (`features/notifications/model/`)
 
-### `useNotifications(filters)`
+Содержит чистые функции бизнес-логики, свободные от зависимостей React и HTML-рендеринга. Полностью покрыт тестами.
 
-React Query хук для получения списка уведомлений. Принимает `{ unreadOnly?, limit?, offset? }`. Возвращает `{ notifications, unreadCount, hasMore }`.
-
-### `useNotificationsCount()`
-
-React Query хук для получения только количества непрочитанных. Используется в `NotificationBell` для бейджа.
-
-### `useMarkNotificationsRead()`
-
-React Query mutation. Принимает `{ ids?, all? }`. После успеха инвалидирует весь кэш уведомлений. При ошибке показывает toast.
-
-### `useArchiveNotifications()`
-
-React Query mutation. Принимает `{ ids?, all? }`. После успеха инвалидирует весь кэш уведомлений. При ошибке показывает toast.
-
-### `useNotificationsRealtime()`
-
-Подписывается на Supabase Realtime канал (`postgres_changes`, `INSERT` в `public.notifications`) с фильтром по `recipient_id`. При новом событии:
-- Показывает toast с заголовком и телом уведомления
-- Если есть `link` — добавляет кнопку «Перейти» в toast
-- Инвалидирует кэш React Query для обновления списков и счётчиков
+*   `formatRelativeTime(dateString)` — чистая функция форматирования относительного времени на русском языке («Только что», «5 мин. назад», «2 ч. назад», дата).
+*   `getNotificationVisualType(type)` — маппер типа события (`project_*`, `estimate_*`, `procurement_*`, `team_*`, `billing_*`) в визуальный тип иконки (`briefcase`, `calculator`, etc.) и соответствующий CSS-класс для Tailwind (цвета фона и текста).
+*   `NotificationIconType` — перечисление поддерживаемых типов иконок.
 
 ## Серверный слой
 

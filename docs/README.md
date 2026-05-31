@@ -15,6 +15,7 @@
 | [backend-architecture.md](./backend-architecture.md) | Бэкенд: Supabase, БД-схема, RLS, API | 🗄️ Бэкенд-разработчики |
 | [design-system.md](./design-system.md) | Дизайн-система: 34+ UI-компонента, токены | 🎨 Дизайнеры, фронтенд |
 | [directory-module-standard.md](./directory-module-standard.md) | Стандарт построения модулей-справочников | 👷 Разработчики справочников |
+| [feature-layers-standard.md](./feature-layers-standard.md) | Архитектурный стандарт: разделение слоёв в фичах | 🏗️ Разработчики |
 | [search-system.md](./search-system.md) | Архитектура поиска по всем модулям | 🔍 Разработчики поиска |
 | [deployment.md](./deployment.md) | Деплой: Vercel, переменные окружения, процедура | 🚀 DevOps |
 | [testing-strategy.md](./testing-strategy.md) | Стратегия тестирования, планы, моки | 🧪 QA, разработчики |

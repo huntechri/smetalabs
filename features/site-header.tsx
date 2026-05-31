@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { useSidebar } from "@/components/ui/sidebar"
 import { List, MoonIcon, SunIcon } from "@phosphor-icons/react"
 import { useTheme } from "next-themes"
-import { NotificationBell } from "@/features/notifications/components/notification-bell"
+import { NotificationBell } from "@/features/notifications/ui/notification-bell"
 
 export function SiteHeader() {
   const { toggleSidebar } = useSidebar()

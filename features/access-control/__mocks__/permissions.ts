@@ -4,7 +4,7 @@ import type {
   PermissionGroup,
   PermissionKey,
   RoleDefinition,
-} from "../types"
+} from "../model/access-control-model"
 
 export const accessRoles: RoleDefinition[] = [
   { id: "owner", label: "Владелец", locked: true },

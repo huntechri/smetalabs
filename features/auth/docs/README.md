@@ -10,20 +10,31 @@
 
 ```
 features/auth/
-  components/
+  ui/
     auth-illustration.tsx          — декоративная иллюстрация на страницах аутентификации
-    login-form.tsx                 — форма входа (email + пароль), useActionState + loginAction
-    signup-form.tsx                — форма регистрации (email + пароль + подтверждение), useActionState + signupAction
-    forgot-password-form.tsx       — форма восстановления пароля, useActionState + forgotPasswordAction
-    invite-password-form.tsx       — форма установки пароля для приглашённых пользователей
-    set-password-form.tsx          — форма сброса пароля после перехода по ссылке
+    login-form.tsx                 — форма входа, использует useLogin
+    signup-form.tsx                — форма регистрации, использует useSignup
+    forgot-password-form.tsx       — форма восстановления пароля, использует useForgotPassword
+    invite-password-form.tsx       — форма установки пароля для приглашённых пользователей, использует useInvitePassword
+    set-password-form.tsx          — форма сброса пароля после перехода по ссылке, использует useSetPassword
+
+  model/
+    auth-model.ts                  — чистая бизнес-логика (валидация, нормализация ошибок, проверки метаданных)
+    auth-model.test.ts             — модульные тесты для доменных хелперов
+
+  application/
+    use-login.ts                   — хук оркестрации входа через Server Action
+    use-signup.ts                  — хук оркестрации регистрации через Server Action
+    use-forgot-password.ts         — хук оркестрации восстановления пароля через Server Action
+    use-invite-password.ts         — хук сложной логики приглашений и установки пароля
+    use-set-password.ts            — хук установки пароля
 
 app/(auth)/
   layout.tsx                       — лейаут страниц аутентификации (центрирование, фон bg-muted, max-w-sm md:max-w-4xl)
   login/page.tsx                   — страница входа → рендерит <LoginForm />
   signup/page.tsx                  — страница регистрации → рендерит <SignupForm />
   forgot-password/page.tsx         — страница восстановления пароля → рендерит <ForgotPasswordForm />
-  set-password/page.tsx            — страница установки пароля
+  set-password/page.tsx            — страница установки пароля → рендерит <InvitePasswordForm />
 
 lib/
   auth/

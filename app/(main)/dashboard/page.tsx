@@ -1,8 +1,8 @@
 "use client"
 
-import { ChartAreaInteractive } from "@/features/dashboard/chart-area-interactive"
-import { DataTable } from "@/features/dashboard/data-table"
-import { SectionCards } from "@/features/dashboard/section-cards-dashboard"
+import { ChartAreaInteractive } from "@/features/dashboard/ui/chart-area-client"
+import { DataTable } from "@/features/dashboard/ui/data-table"
+import { SectionCards } from "@/features/dashboard/ui/section-cards-dashboard"
 
 export const dynamic = "force-dynamic"
 

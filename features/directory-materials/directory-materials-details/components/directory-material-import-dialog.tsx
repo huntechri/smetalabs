@@ -22,81 +22,25 @@ import {
 } from "@/components/ui/table"
 import { parseCsvFileInBatches } from "@/features/directories/application/csv-parser"
 import type { CsvImportBatch } from "@/features/directories/model/csv-import"
+import {
+  DIRECTORY_MATERIAL_IMPORT_APPLY_BATCH_SIZE,
+  DIRECTORY_MATERIAL_IMPORT_BATCH_SIZE,
+  DIRECTORY_MATERIAL_IMPORT_HEADER_ALIASES,
+  DIRECTORY_MATERIAL_IMPORT_STATUS_LABELS,
+  formatDirectoryMaterialImportBytes,
+  getDirectoryMaterialImportAppliedMessage,
+  getDirectoryMaterialImportBatchProgressMessage,
+  getDirectoryMaterialImportCompletedMessage,
+  getDirectoryMaterialImportErrorMessage,
+  getDirectoryMaterialImportProgressMessage,
+} from "@/features/directory-materials/model/directory-materials-import-model"
 import type {
   DirectoryMaterialImportApplyInput,
   DirectoryMaterialImportApplyResponse,
   DirectoryMaterialImportBatchInput,
   DirectoryMaterialImportCreateInput,
   DirectoryMaterialImportPreviewResponse,
-  DirectoryMaterialImportRowStatus,
 } from "@/features/directory-materials/types"
-
-const IMPORT_BATCH_SIZE = 300
-const APPLY_BATCH_SIZE = 500
-
-const HEADER_ALIASES: Record<string, string> = {
-  code: "code",
-  код: "code",
-  name: "name",
-  title: "name",
-  название: "name",
-  наименование: "name",
-  unit: "unit",
-  "ед. изм.": "unit",
-  "ед изм": "unit",
-  единица: "unit",
-  price: "price",
-  price_amount: "price",
-  rate: "price",
-  цена: "price",
-  category: "category",
-  категория: "category",
-  subcategory: "subcategory",
-  подкатегория: "subcategory",
-  supplier: "supplierName",
-  supplier_name: "supplierName",
-  suppliername: "supplierName",
-  поставщик: "supplierName",
-  description: "description",
-  описание: "description",
-  image_url: "imageUrl",
-  imageurl: "imageUrl",
-  "ссылка на изображение": "imageUrl",
-  currency_code: "currencyCode",
-  currencycode: "currencyCode",
-  currency: "currencyCode",
-  валюта: "currencyCode",
-  source_name: "sourceName",
-  sourcename: "sourceName",
-  источник: "sourceName",
-  source_external_row_key: "sourceExternalRowKey",
-  sourceexternalrowkey: "sourceExternalRowKey",
-  external_id: "sourceExternalRowKey",
-}
-
-const STATUS_LABELS: Record<DirectoryMaterialImportRowStatus, string> = {
-  pending: "Ожидает",
-  valid: "Готово",
-  warning: "Предупреждение",
-  error: "Ошибка",
-  duplicate: "Дубль",
-  conflict: "Конфликт",
-  applied: "Применено",
-  skipped: "Пропущено",
-}
-
-function formatBytes(bytes: number | null | undefined) {
-  if (!bytes) return "—"
-  if (bytes < 1024) return `${bytes} Б`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} КБ`
-  return `${(bytes / 1024 / 1024).toFixed(1)} МБ`
-}
-
-function getErrorMessage(error: unknown) {
-  return error instanceof Error
-    ? error.message
-    : "Не удалось выполнить импорт материалов"
-}
 
 export function DirectoryMaterialImportDialog({
   open,
@@ -154,7 +98,10 @@ export function DirectoryMaterialImportDialog({
     const nextPreview = await onAppendBatch(jobId, { ...batch, isLastBatch })
     setPreview(nextPreview)
     setProgress(
-      `Загружено строк: ${nextPreview.job.totalRows}. Пакет ${batch.batchNumber}.`
+      getDirectoryMaterialImportBatchProgressMessage({
+        totalRows: nextPreview.job.totalRows,
+        batchNumber: batch.batchNumber,
+      })
     )
     return nextPreview
   }
@@ -174,18 +121,18 @@ export function DirectoryMaterialImportDialog({
         fileMimeType: file.type || "text/csv",
         fileSizeBytes: file.size,
         sourceName: sourceName.trim() || null,
-        options: { batchSize: IMPORT_BATCH_SIZE },
+        options: { batchSize: DIRECTORY_MATERIAL_IMPORT_BATCH_SIZE },
       })
 
       let latestPreview = jobData
       let pendingBatch: CsvImportBatch | null = null
       for await (const batch of parseCsvFileInBatches({
         file,
-        headerAliases: HEADER_ALIASES,
-        batchSize: IMPORT_BATCH_SIZE,
+        headerAliases: DIRECTORY_MATERIAL_IMPORT_HEADER_ALIASES,
+        batchSize: DIRECTORY_MATERIAL_IMPORT_BATCH_SIZE,
         onProgress: ({ rowsRead, batchesRead }) =>
           setProgress(
-            `Прочитано строк: ${rowsRead}. Подготовлено пакетов: ${batchesRead}.`
+            getDirectoryMaterialImportProgressMessage({ rowsRead, batchesRead })
           ),
       })) {
         if (pendingBatch)
@@ -202,10 +149,10 @@ export function DirectoryMaterialImportDialog({
       latestPreview = await sendBatch(jobData.job.id, pendingBatch, true)
       setPreview(latestPreview)
       setProgress(
-        `Загрузка завершена. Всего строк: ${latestPreview.job.totalRows}.`
+        getDirectoryMaterialImportCompletedMessage(latestPreview.job.totalRows)
       )
     } catch (err) {
-      setError(getErrorMessage(err))
+      setError(getDirectoryMaterialImportErrorMessage(err))
     }
   }
 
@@ -218,15 +165,15 @@ export function DirectoryMaterialImportDialog({
       let appliedTotal = preview.job.appliedRows
       while (hasMore) {
         const response = await onApplyJob(preview.job.id, {
-          batchSize: APPLY_BATCH_SIZE,
+          batchSize: DIRECTORY_MATERIAL_IMPORT_APPLY_BATCH_SIZE,
         })
         hasMore = Boolean(response.hasMore)
         appliedTotal = response.job.appliedRows
-        setProgress(`Применено строк: ${appliedTotal}.`)
+        setProgress(getDirectoryMaterialImportAppliedMessage(appliedTotal))
       }
       onOpenChange(false)
     } catch (err) {
-      setError(getErrorMessage(err))
+      setError(getDirectoryMaterialImportErrorMessage(err))
     }
   }
 
@@ -270,7 +217,8 @@ export function DirectoryMaterialImportDialog({
 
           {file ? (
             <p className="text-xs/relaxed text-muted-foreground">
-              Выбран файл: {file.name}, {formatBytes(file.size)}
+              Выбран файл: {file.name},{" "}
+              {formatDirectoryMaterialImportBytes(file.size)}
             </p>
           ) : null}
           {progress ? (
@@ -311,7 +259,9 @@ export function DirectoryMaterialImportDialog({
                       return (
                         <TableRow key={row.id}>
                           <TableCell>{row.rowNumber}</TableCell>
-                          <TableCell>{STATUS_LABELS[row.status]}</TableCell>
+                          <TableCell>
+                            {DIRECTORY_MATERIAL_IMPORT_STATUS_LABELS[row.status]}
+                          </TableCell>
                           <TableCell>
                             {String(normalized.name ?? "—")}
                           </TableCell>

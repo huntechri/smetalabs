@@ -1,3 +1,6 @@
+import { createClient } from "@/lib/supabase/client"
+import type { RealtimeChannel } from "@supabase/supabase-js"
+
 export interface ClientNotification {
   id: string
   recipient_id: string
@@ -26,6 +29,10 @@ export interface SuccessResponse {
   data: {
     success: boolean
   }
+}
+
+export type NotificationsRealtimeSubscription = {
+  unsubscribe: () => void
 }
 
 /**
@@ -109,4 +116,45 @@ export async function archiveNotifications(params: {
 
   const json: SuccessResponse = await res.json()
   return json.data.success
+}
+
+export async function subscribeToNotificationsRealtime(
+  onInsert: (notification: ClientNotification) => void
+): Promise<NotificationsRealtimeSubscription> {
+  const supabase = createClient()
+  let activeChannel: RealtimeChannel | null = null
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return {
+      unsubscribe: () => {},
+    }
+  }
+
+  activeChannel = supabase
+    .channel(`realtime-notifications-${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+        filter: `recipient_id=eq.${user.id}`,
+      },
+      (payload) => {
+        onInsert(payload.new as ClientNotification)
+      }
+    )
+    .subscribe()
+
+  return {
+    unsubscribe: () => {
+      if (activeChannel) {
+        supabase.removeChannel(activeChannel)
+      }
+    },
+  }
 }

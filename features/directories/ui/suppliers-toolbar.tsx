@@ -2,7 +2,7 @@
 
 import { Suspense } from "react"
 import { DirectoriesToolbar } from "./directories-toolbar"
-import { DIRECTORY_SUPPLIERS_CREATE_EVENT } from "@/features/directory-suppliers/lib/directory-suppliers-events"
+import { DIRECTORY_SUPPLIERS_CREATE_EVENT } from "@/features/directory-suppliers/model/directory-suppliers-model"
 import { PlusIcon } from "@phosphor-icons/react"
 
 export function SuppliersToolbar() {

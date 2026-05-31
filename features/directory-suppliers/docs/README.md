@@ -32,18 +32,13 @@ features/directory-suppliers/
 │   ├── directory-suppliers-value.tsx       # Бейдж «label: value»
 │   ├── directory-suppliers-metric-group.tsx# Группа метрик с заголовком
 │   └── directory-suppliers-create-dialog.tsx# Диалог создания/редактирования
-├── hooks/
-│   └── use-directory-suppliers.ts          # Compatibility export на application hook
-├── components/
-│   └── directory-suppliers-view.tsx        # Compatibility export на ui view
-├── directory-suppliers-details/
-│   └── components/                         # Compatibility exports на ui components
 ├── server/
 │   ├── directory-suppliers.route-handlers.ts
 │   ├── directory-suppliers.schemas.ts
 │   ├── directory-suppliers.service.ts
 │   └── directory-suppliers.repository.ts
-└── types.ts                                # Compatibility re-export типов из model
+└── docs/
+    └── README.md
 
 app/api/directory-suppliers/
 ├── route.ts                                # GET (список), POST (создание)
@@ -56,6 +51,7 @@ app/api/directory-suppliers/
 - `model` — чистые типы, constants, form mapping, label helpers, HEX validation, URL params parsing.
 - `application` — сценарии загрузки/создания/обновления/архивирования, TanStack Query и invalidation.
 - `api` — HTTP-доступ к `/api/directory-suppliers`, error adapter и backend contracts.
+- `server` — серверные route handlers, schemas, service и repository.
 
 ## Данные
 

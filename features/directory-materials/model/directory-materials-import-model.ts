@@ -1,4 +1,7 @@
-import type { DirectoryMaterialImportRowStatus } from "../types"
+import type {
+  DirectoryMaterialImportJob,
+  DirectoryMaterialImportRowStatus,
+} from "../types"
 
 export const DIRECTORY_MATERIAL_IMPORT_BATCH_SIZE = 300
 export const DIRECTORY_MATERIAL_IMPORT_APPLY_BATCH_SIZE = 500
@@ -55,6 +58,16 @@ export const DIRECTORY_MATERIAL_IMPORT_STATUS_LABELS: Record<
   conflict: "Конфликт",
   applied: "Применено",
   skipped: "Пропущено",
+}
+
+export function canApplyDirectoryMaterialImportJob(
+  job: DirectoryMaterialImportJob | null | undefined
+) {
+  if (!job) return false
+  return (
+    (job.status === "ready_for_review" || job.status === "applying") &&
+    job.validRows + job.warningRows > 0
+  )
 }
 
 export function formatDirectoryMaterialImportBytes(

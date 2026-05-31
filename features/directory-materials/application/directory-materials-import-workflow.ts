@@ -1,6 +1,7 @@
 "use client"
 
 import { parseCsvFileInBatches } from "@/features/directories/application/csv-parser"
+import type { CsvImportBatch } from "@/features/directories/model/csv-import"
 import {
   DIRECTORY_MATERIAL_IMPORT_APPLY_BATCH_SIZE,
   DIRECTORY_MATERIAL_IMPORT_BATCH_SIZE,
@@ -24,15 +25,11 @@ export async function createDirectoryMaterialImportPreview(params: {
   file: File
   sourceName: string
   createJob: (input: DirectoryMaterialImportCreateInput) => Promise<PreviewData>
-  appendBatch: (
-    id: string,
-    input: DirectoryMaterialImportBatchInput
-  ) => Promise<PreviewData>
+  appendBatch: (id: string, input: DirectoryMaterialImportBatchInput) => Promise<PreviewData>
   setPreview: (preview: PreviewData) => void
   setProgress: (message: string) => void
 }) {
   params.setProgress("Создаём импорт...")
-
   const jobData = await params.createJob({
     rows: [],
     fileName: params.file.name,
@@ -41,73 +38,40 @@ export async function createDirectoryMaterialImportPreview(params: {
     sourceName: params.sourceName.trim() || null,
     options: { batchSize: DIRECTORY_MATERIAL_IMPORT_BATCH_SIZE },
   })
-
   let latestPreview = jobData
-  let pendingBatch: Awaited<
-    ReturnType<typeof parseCsvFileInBatches>
-  > extends AsyncGenerator<infer Batch>
-    ? Batch | null
-    : never = null
-
+  let pendingBatch: CsvImportBatch | null = null
   for await (const batch of parseCsvFileInBatches({
     file: params.file,
     headerAliases: DIRECTORY_MATERIAL_IMPORT_HEADER_ALIASES,
     batchSize: DIRECTORY_MATERIAL_IMPORT_BATCH_SIZE,
-    onProgress: ({ rowsRead, batchesRead }) =>
-      params.setProgress(
-        getDirectoryMaterialImportProgressMessage({ rowsRead, batchesRead })
-      ),
+    onProgress: ({ rowsRead, batchesRead }) => params.setProgress(getDirectoryMaterialImportProgressMessage({ rowsRead, batchesRead })),
   })) {
     if (pendingBatch) {
-      latestPreview = await params.appendBatch(jobData.job.id, {
-        ...pendingBatch,
-        isLastBatch: false,
-      })
+      latestPreview = await params.appendBatch(jobData.job.id, { ...pendingBatch, isLastBatch: false })
       params.setPreview(latestPreview)
-      params.setProgress(
-        getDirectoryMaterialImportBatchProgressMessage({
-          totalRows: latestPreview.job.totalRows,
-          batchNumber: pendingBatch.batchNumber,
-        })
-      )
+      params.setProgress(getDirectoryMaterialImportBatchProgressMessage({ totalRows: latestPreview.job.totalRows, batchNumber: pendingBatch.batchNumber }))
     }
     pendingBatch = batch
   }
-
   if (!pendingBatch) {
     params.setProgress("")
     throw new Error("Файл не содержит строк для импорта")
   }
-
-  latestPreview = await params.appendBatch(jobData.job.id, {
-    ...pendingBatch,
-    isLastBatch: true,
-  })
+  latestPreview = await params.appendBatch(jobData.job.id, { ...pendingBatch, isLastBatch: true })
   params.setPreview(latestPreview)
-  params.setProgress(
-    getDirectoryMaterialImportCompletedMessage(latestPreview.job.totalRows)
-  )
-
+  params.setProgress(getDirectoryMaterialImportCompletedMessage(latestPreview.job.totalRows))
   return latestPreview
 }
 
 export async function applyDirectoryMaterialImportPreview(params: {
   preview: PreviewData
-  applyJob: (
-    id: string,
-    input?: DirectoryMaterialImportApplyInput
-  ) => Promise<DirectoryMaterialImportApplyResponse["data"]>
+  applyJob: (id: string, input?: DirectoryMaterialImportApplyInput) => Promise<DirectoryMaterialImportApplyResponse["data"]>
   setProgress: (message: string) => void
 }) {
   let hasMore = true
-
   while (hasMore) {
-    const response = await params.applyJob(params.preview.job.id, {
-      batchSize: DIRECTORY_MATERIAL_IMPORT_APPLY_BATCH_SIZE,
-    })
+    const response = await params.applyJob(params.preview.job.id, { batchSize: DIRECTORY_MATERIAL_IMPORT_APPLY_BATCH_SIZE })
     hasMore = Boolean(response.hasMore)
-    params.setProgress(
-      getDirectoryMaterialImportAppliedMessage(response.job.appliedRows)
-    )
+    params.setProgress(getDirectoryMaterialImportAppliedMessage(response.job.appliedRows))
   }
 }

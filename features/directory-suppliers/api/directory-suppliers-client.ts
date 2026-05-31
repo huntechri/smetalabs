@@ -3,7 +3,7 @@ import type {
   DirectorySupplierMutationInput,
   DirectorySuppliersListParams,
   DirectorySuppliersListResponse,
-} from "../types"
+} from "../model/directory-suppliers-model"
 import { throwDirectorySuppliersApiError } from "./directory-suppliers-errors"
 
 function appendParam(

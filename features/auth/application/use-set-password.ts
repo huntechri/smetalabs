@@ -2,12 +2,11 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { updateCurrentUserCredential } from "../api/auth-client"
 import { validatePasswords } from "../model/auth-model"
 
 export function useSetPassword() {
   const router = useRouter()
-  const supabase = createClient()
   const [error, setError] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
 
@@ -23,7 +22,7 @@ export function useSetPassword() {
     setIsPending(true)
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({ password })
+      const updateError = await updateCurrentUserCredential(password)
 
       setIsPending(false)
 

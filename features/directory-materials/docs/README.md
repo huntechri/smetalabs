@@ -1,6 +1,6 @@
 # Справочник материалов (directory-materials)
 
-> 2026-05-23 · статус: полностью реализован (production-ready бэкенд и фронтенд с интеграцией гибридного поиска, импорта и экспорта).
+> 2026-05-31 · статус: полностью реализован (production-ready бэкенд и фронтенд с интеграцией гибридного поиска, импорта и экспорта). Клиентский feature-слой разделён на `model` / `application` / `api` / UI.
 
 ---
 
@@ -18,7 +18,11 @@
 features/directory-materials/
 ├── api/
 │   ├── directory-materials-client.ts          # API-клиент для работы со справочником
+│   ├── directory-materials-errors.ts          # Нормализация ошибок API
 │   └── directory-materials-query-keys.ts      # Ключи кэша React Query
+├── application/
+│   ├── directory-materials-import-workflow.ts # Сценарии preview/apply импорта CSV
+│   └── use-directory-materials.ts             # React Query orchestration, загрузка и мутации
 ├── components/
 │   ├── directory-materials-view.tsx           # Основное представление справочника материалов
 │   └── directory-materials-category-filter.tsx # Фильтр по категориям и подкатегориям
@@ -27,12 +31,15 @@ features/directory-materials/
 │       ├── directory-materials-section.tsx    # Секция отображения списка материалов
 │       ├── directory-materials-row.tsx        # Строка конкретного материала (с поддержкой изображений)
 │       ├── directory-material-form-dialog.tsx # Диалог создания и редактирования материала
-│       └── directory-material-import-dialog.tsx # Диалог пошагового импорта из CSV
+│       └── directory-material-import-dialog.tsx # UI-диалог импорта CSV
 ├── hooks/
 │   ├── use-directory-material-categories.ts   # Хук получения списка категорий
-│   └── use-directory-materials.ts             # Основной хук для списка, мутаций и импорта
+│   └── use-directory-materials.ts             # Compatibility re-export из application
 ├── lib/
 │   └── query.ts                               # Вспомогательные функции запросов
+├── model/
+│   ├── directory-materials-import-model.ts    # Pure import constants, labels and formatters
+│   └── directory-materials-model.ts           # Pure params/form/pagination/mapping helpers
 └── server/
     ├── directory-materials-ai.ts              # Логика AI семантического поиска
     ├── directory-materials-import.repository.ts # Репозиторий импорта CSV
@@ -44,6 +51,15 @@ features/directory-materials/
     ├── directory-materials.schemas.ts         # Zod-схемы валидации
     └── directory-materials.service.ts         # Сервис бизнес-логики и контроля прав
 ```
+
+---
+
+## Клиентские слои
+
+- `model` содержит только чистые типы, constants, selectors, mappers, validators, formatters и status helpers. В нём нет React, React Query, router, fetch или DOM side effects.
+- `application` содержит клиентские сценарии и orchestration: React Query hook `useDirectoryMaterials`, invalidation policy, mutations, import preview workflow и apply workflow.
+- `api` содержит HTTP adapters, query keys и API error normalization.
+- UI components отвечают за render, локальное визуальное состояние, формы, таблицы, диалоги и вызов application-команд.
 
 ---
 
@@ -98,7 +114,7 @@ features/directory-materials/
 
 ## Импорт и Экспорт
 
-- **Импорт (CSV):** пошаговый мастер в диалоге `directory-material-import-dialog.tsx` позволяет загружать огромные файлы CSV (до 100 тыс.+ строк) за счет оптимизированного репозитория `directory-materials-large-import.repository.ts`, который разбивает данные на пакеты (batches) и минимизирует транзакционные задержки.
+- **Импорт (CSV):** пошаговый мастер в диалоге `directory-material-import-dialog.tsx` отображает выбор файла, preview, progress и ошибки. Сам workflow preview/apply вынесен в `application/directory-materials-import-workflow.ts`. Большие файлы отправляются пакетами через существующие import job endpoints.
 - **Экспорт (Excel):** экспорт каталога материалов в формате XLSX с использованием бэкенд-сервиса экспорта.
 
 ---
@@ -109,10 +125,11 @@ features/directory-materials/
 |---|---|---|
 | **БД-схема и RLS** | ✅ Готова | Настроены все таблицы, связи и политики доступа. |
 | **API Route Handlers** | ✅ Готовы | Полноценные Next.js эндпоинты с валидацией Zod. |
-| **Клиентский хук** | ✅ Готов | `useDirectoryMaterials` интегрирован с API и React Query. |
+| **Клиентский application layer** | ✅ Готов | `useDirectoryMaterials` и import workflow вынесены в `application`. |
+| **Клиентский model layer** | ✅ Готов | Form mapping, params, pagination, import constants/labels/formatters вынесены в `model`. |
 | **Изображения материалов**| ✅ Готовы | UI-строка поддерживает рендеринг изображений по URL. |
 | **Фильтрация по категориям**| ✅ Готова | Компонент категории корректно фильтрует список. |
 | **Создание/Редактирование** | ✅ Готово | Диалог `directory-material-form-dialog.tsx` позволяет редактировать записи. |
-| **Импорт (CSV)** | ✅ Готов | Поддержка больших файлов с пакетной вставкой в БД. |
+| **Импорт (CSV)** | ✅ Готов | Поддержка больших файлов с пакетной отправкой через import workflow. |
 | **Экспорт (XLSX)** | ✅ Готов | Формирование и скачивание XLSX-файлов. |
 | **Гибридный поиск** | ✅ Готов | Текстовое + векторное AI-ранжирование. |

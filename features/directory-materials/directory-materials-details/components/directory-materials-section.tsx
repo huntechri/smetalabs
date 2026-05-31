@@ -12,7 +12,11 @@ import {
 } from "@/components/ui/empty"
 import { FieldError } from "@/components/ui/field"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useDirectoryMaterials } from "@/features/directory-materials/hooks/use-directory-materials"
+import { useDirectoryMaterials } from "@/features/directory-materials/application/use-directory-materials"
+import {
+  getDirectoryMaterialArchiveConfirmMessage,
+  getDirectoryMaterialsPageState,
+} from "@/features/directory-materials/model/directory-materials-model"
 import {
   DIRECTORY_MATERIALS_CREATE_EVENT,
   DIRECTORY_MATERIALS_IMPORT_EVENT,
@@ -25,7 +29,6 @@ import { DirectoryMaterialFormDialog } from "./directory-material-form-dialog"
 import { DirectoryMaterialImportDialog } from "./directory-material-import-dialog"
 import { DirectoryMaterialsRow } from "./directory-materials-row"
 
-const DEFAULT_LIMIT = 50
 const SKELETON_ROW_COUNT = 6
 
 function DirectoryMaterialsRowSkeleton() {
@@ -139,7 +142,7 @@ export function DirectoryMaterialsSection() {
 
   const handleArchive = async (material: DirectoryMaterial) => {
     const confirmed = window.confirm(
-      `Архивировать материал «${material.name}»? Он исчезнет из активного списка.`
+      getDirectoryMaterialArchiveConfirmMessage(material)
     )
     if (!confirmed) return
     await archiveMaterial(material.id)
@@ -153,15 +156,18 @@ export function DirectoryMaterialsSection() {
     await createMaterial(input)
   }
 
-  const currentCursor = params.cursor ?? 0
-  const currentLimit = params.limit ?? meta?.limit ?? DEFAULT_LIMIT
-  const pageStart = materials.length > 0 ? currentCursor + 1 : 0
-  const pageEnd = currentCursor + materials.length
-  const totalLabel = meta?.hasMore
-    ? `минимум ${meta.total}`
-    : String(meta?.total ?? materials.length)
-  const previousCursor = Math.max(currentCursor - currentLimit, 0)
-  const nextCursor = meta?.nextCursor ?? currentCursor + currentLimit
+  const {
+    currentCursor,
+    pageStart,
+    pageEnd,
+    totalLabel,
+    previousCursor,
+    nextCursor,
+  } = getDirectoryMaterialsPageState({
+    materialCount: materials.length,
+    meta,
+    params,
+  })
   const showSkeletonRows = loading || isFetching
 
   return (

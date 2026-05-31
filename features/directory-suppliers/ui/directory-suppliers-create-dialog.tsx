@@ -2,11 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
-import type {
-  DirectorySupplier,
-  DirectorySupplierLegalStatus,
-  DirectorySupplierMutationInput,
-} from "@/features/directory-suppliers/types"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -26,19 +21,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-const colorPresets = [
-  { value: "#3B82F6", label: "Синий" },
-  { value: "#EF4444", label: "Красный" },
-  { value: "#10B981", label: "Зелёный" },
-  { value: "#F59E0B", label: "Янтарный" },
-  { value: "#8B5CF6", label: "Фиолетовый" },
-  { value: "#06B6D4", label: "Голубой" },
-  { value: "#EC4899", label: "Розовый" },
-  { value: "#EAB308", label: "Жёлтый" },
-  { value: "#6366F1", label: "Индиго" },
-  { value: "#64748B", label: "Серый" },
-]
+import {
+  DIRECTORY_SUPPLIER_COLOR_PRESETS,
+  buildDirectorySupplierMutationInput,
+  formatSupplierColorInput,
+  getDirectorySupplierInitialFormState,
+  isValidSupplierColorHex,
+  type DirectorySupplier,
+  type DirectorySupplierFormState,
+  type DirectorySupplierLegalStatus,
+  type DirectorySupplierMutationInput,
+} from "../model/directory-suppliers-model"
 
 type DirectorySuppliersFormDialogProps = {
   open: boolean
@@ -55,45 +48,29 @@ export function DirectorySuppliersFormDialog({
   saving,
   supplier,
 }: DirectorySuppliersFormDialogProps) {
-  const [name, setName] = useState("")
-  const [color, setColor] = useState("#64748B")
-  const [legalStatus, setLegalStatus] =
-    useState<DirectorySupplierLegalStatus>("juridical")
-  const [inn, setInn] = useState("")
-  const [phone, setPhone] = useState("")
-  const [email, setEmail] = useState("")
-  const [address, setAddress] = useState("")
-  const [notes, setNotes] = useState("")
+  const [formState, setFormState] = useState<DirectorySupplierFormState>(() =>
+    getDirectorySupplierInitialFormState()
+  )
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!open) return
-
-    setName(supplier?.name ?? "")
-    setColor(supplier?.color ?? "#64748B")
-    setLegalStatus(supplier?.legalStatus ?? "juridical")
-    setInn(supplier?.inn ?? "")
-    setPhone(supplier?.phone ?? "")
-    setEmail(supplier?.email ?? "")
-    setAddress(supplier?.address ?? "")
-    setNotes(supplier?.notes ?? "")
+    setFormState(getDirectorySupplierInitialFormState(supplier))
   }, [open, supplier])
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const handleSubmit = async () => {
-    await onSubmit({
-      name,
-      legalStatus,
-      color,
-      inn,
-      phone,
-      email,
-      address,
-      notes,
-    })
+  const setField = <K extends keyof DirectorySupplierFormState>(
+    key: K,
+    value: DirectorySupplierFormState[K]
+  ) => {
+    setFormState((current) => ({ ...current, [key]: value }))
   }
 
-  const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(color)
+  const handleSubmit = async () => {
+    await onSubmit(buildDirectorySupplierMutationInput(formState))
+  }
+
+  const isValidHex = isValidSupplierColorHex(formState.color)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -113,8 +90,8 @@ export function DirectorySuppliersFormDialog({
             <Input
               id="supplier-name"
               placeholder="Введите наименование"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
+              value={formState.name}
+              onChange={(event) => setField("name", event.target.value)}
             />
           </div>
  
@@ -122,9 +99,9 @@ export function DirectorySuppliersFormDialog({
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="supplier-status">Тип</Label>
               <Select
-                value={legalStatus}
+                value={formState.legalStatus}
                 onValueChange={(value) =>
-                  setLegalStatus(value as DirectorySupplierLegalStatus)
+                  setField("legalStatus", value as DirectorySupplierLegalStatus)
                 }
               >
                 <SelectTrigger id="supplier-status" className="w-full">
@@ -145,41 +122,42 @@ export function DirectorySuppliersFormDialog({
                     type="color"
                     id="supplier-color-picker"
                     className="absolute -inset-1 h-[calc(100%+8px)] w-[calc(100%+8px)] cursor-pointer bg-transparent p-0 border-0"
-                    value={color.startsWith("#") && color.length === 7 ? color : "#64748B"}
-                    onChange={(event) => setColor(event.target.value.toUpperCase())}
+                    value={
+                      formState.color.startsWith("#") && formState.color.length === 7
+                        ? formState.color
+                        : "#64748B"
+                    }
+                    onChange={(event) => setField("color", event.target.value.toUpperCase())}
                   />
                 </div>
                 <Input
                   id="supplier-color"
                   type="text"
                   placeholder="#64748B"
-                  value={color}
+                  value={formState.color}
                   onChange={(event) => {
-                    let val = event.target.value
-                    if (val && !val.startsWith("#")) {
-                      val = "#" + val
-                    }
-                    setColor(val.toUpperCase())
+                    setField("color", formatSupplierColorInput(event.target.value))
                   }}
                   className="font-mono uppercase"
                 />
               </div>
               <div className="flex flex-wrap gap-1.5 mt-1">
-                {colorPresets.map((preset) => (
+                {DIRECTORY_SUPPLIER_COLOR_PRESETS.map((preset) => (
                   <button
                     key={preset.value}
                     type="button"
                     title={preset.label}
                     className={cn(
                       "h-6 w-6 rounded-full border border-muted-foreground/30 transition-transform hover:scale-110 focus:outline-none focus:ring-1 focus:ring-ring",
-                      color.toLowerCase() === preset.value.toLowerCase() && "ring-2 ring-ring scale-110"
+                      formState.color.toLowerCase() === preset.value.toLowerCase() &&
+                        "ring-2 ring-ring scale-110"
                     )}
                     style={{ backgroundColor: preset.value }}
-                    onClick={() => setColor(preset.value)}
+                    onClick={() => setField("color", preset.value)}
                   />
                 ))}
               </div>
-              {!isValidHex && color && (
+              {!isValidHex && formState.color && (
                 <span className="text-xs text-destructive">Формат HEX: #RRGGBB</span>
               )}
             </div>
@@ -191,8 +169,8 @@ export function DirectorySuppliersFormDialog({
               <Input
                 id="supplier-inn"
                 placeholder="Введите ИНН"
-                value={inn}
-                onChange={(event) => setInn(event.target.value)}
+                value={formState.inn}
+                onChange={(event) => setField("inn", event.target.value)}
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -200,8 +178,8 @@ export function DirectorySuppliersFormDialog({
               <Input
                 id="supplier-phone"
                 placeholder="+7 (XXX) XXX-XX-XX"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
+                value={formState.phone}
+                onChange={(event) => setField("phone", event.target.value)}
               />
             </div>
           </div>
@@ -211,8 +189,8 @@ export function DirectorySuppliersFormDialog({
             <Input
               id="supplier-email"
               placeholder="mail@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              value={formState.email}
+              onChange={(event) => setField("email", event.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -220,8 +198,8 @@ export function DirectorySuppliersFormDialog({
             <Input
               id="supplier-address"
               placeholder="Введите адрес"
-              value={address}
-              onChange={(event) => setAddress(event.target.value)}
+              value={formState.address}
+              onChange={(event) => setField("address", event.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -229,8 +207,8 @@ export function DirectorySuppliersFormDialog({
             <Textarea
               id="supplier-notes"
               placeholder="Дополнительная информация"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
+              value={formState.notes}
+              onChange={(event) => setField("notes", event.target.value)}
             />
           </div>
         </div>
@@ -243,7 +221,10 @@ export function DirectorySuppliersFormDialog({
           >
             Отмена
           </Button>
-          <Button onClick={handleSubmit} disabled={saving || !name.trim() || !isValidHex}>
+          <Button
+            onClick={handleSubmit}
+            disabled={saving || !formState.name.trim() || !isValidHex}
+          >
             {supplier ? "Сохранить" : "Создать"}
           </Button>
         </DialogFooter>

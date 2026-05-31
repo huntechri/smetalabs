@@ -4,9 +4,11 @@ import { useEffect, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { DirectorySupplier } from "@/features/directory-suppliers/types"
-import { useDirectorySuppliers } from "@/features/directory-suppliers/hooks/use-directory-suppliers"
-import { DIRECTORY_SUPPLIERS_CREATE_EVENT } from "@/features/directory-suppliers/lib/directory-suppliers-events"
+import { useDirectorySuppliers } from "../application/use-directory-suppliers"
+import {
+  DIRECTORY_SUPPLIERS_CREATE_EVENT,
+  type DirectorySupplier,
+} from "../model/directory-suppliers-model"
 import { DirectorySuppliersFormDialog } from "./directory-suppliers-create-dialog"
 import { DirectorySuppliersRow } from "./directory-suppliers-row"
 

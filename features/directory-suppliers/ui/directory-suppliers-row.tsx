@@ -7,7 +7,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import type { DirectorySupplier } from "@/features/directory-suppliers/types"
+import type { DirectorySupplier } from "../model/directory-suppliers-model"
+import { getSupplierLegalStatusLabel } from "../model/directory-suppliers-model"
 import {
   ArchiveIcon,
   GearSixIcon,
@@ -55,7 +56,7 @@ export function DirectorySuppliersRow({
             variant={row.legalStatus === "juridical" ? "default" : "secondary"}
             className="gap-1 rounded-md px-1.5 py-0.5 font-normal"
           >
-            {row.legalStatus === "juridical" ? "Юр. лицо" : "Физ. лицо"}
+            {getSupplierLegalStatusLabel(row.legalStatus)}
           </Badge>
         </DirectorySuppliersMetricGroup>
 

@@ -1,4 +1,4 @@
-import type { DirectorySuppliersListParams } from "../types"
+import type { DirectorySuppliersListParams } from "../model/directory-suppliers-model"
 
 export const directorySuppliersQueryKeys = {
   all: ["directorySuppliers"] as const,

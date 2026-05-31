@@ -7,7 +7,7 @@ import { directorySuppliersCacheTags } from "../api/directory-suppliers-query-ke
 import type {
   DirectorySuppliersListParams,
   DirectorySupplierMutationInput,
-} from "../types"
+} from "../model/directory-suppliers-model"
 import {
   archiveDirectorySupplierForWorkspace,
   createDirectorySupplierForWorkspace,

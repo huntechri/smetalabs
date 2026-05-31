@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import {
   DirectorySuppliersRowsSkeleton,
   DirectorySuppliersSection,
-} from "@/features/directory-suppliers/directory-suppliers-details/components/directory-suppliers-section"
+} from "./directory-suppliers-section"
 
 export function DirectorySuppliersView() {
   return (

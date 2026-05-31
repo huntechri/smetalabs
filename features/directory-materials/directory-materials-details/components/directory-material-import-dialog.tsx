@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { applyDirectoryMaterialImportPreview, createDirectoryMaterialImportPreview } from "@/features/directory-materials/application/directory-materials-import-workflow"
-import { DIRECTORY_MATERIAL_IMPORT_STATUS_LABELS, formatDirectoryMaterialImportBytes, getDirectoryMaterialImportErrorMessage } from "@/features/directory-materials/model/directory-materials-import-model"
+import { canApplyDirectoryMaterialImportJob, DIRECTORY_MATERIAL_IMPORT_STATUS_LABELS, formatDirectoryMaterialImportBytes, getDirectoryMaterialImportErrorMessage } from "@/features/directory-materials/model/directory-materials-import-model"
 import type { DirectoryMaterialImportApplyInput, DirectoryMaterialImportApplyResponse, DirectoryMaterialImportBatchInput, DirectoryMaterialImportCreateInput, DirectoryMaterialImportPreviewResponse } from "@/features/directory-materials/types"
 
 export function DirectoryMaterialImportDialog({ open, onOpenChange, importing, onCreateJob, onAppendBatch, onApplyJob }: {
@@ -23,6 +23,7 @@ export function DirectoryMaterialImportDialog({ open, onOpenChange, importing, o
   const [preview, setPreview] = useState<DirectoryMaterialImportPreviewResponse["data"] | null>(null)
   const [progress, setProgress] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [workflowPending, setWorkflowPending] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -31,6 +32,7 @@ export function DirectoryMaterialImportDialog({ open, onOpenChange, importing, o
     setPreview(null)
     setProgress("")
     setError(null)
+    setWorkflowPending(false)
   }, [open])
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -47,9 +49,12 @@ export function DirectoryMaterialImportDialog({ open, onOpenChange, importing, o
     }
     try {
       setError(null)
+      setWorkflowPending(true)
       await createDirectoryMaterialImportPreview({ file, sourceName, createJob: onCreateJob, appendBatch: onAppendBatch, setPreview, setProgress })
     } catch (err) {
       setError(getDirectoryMaterialImportErrorMessage(err))
+    } finally {
+      setWorkflowPending(false)
     }
   }
 
@@ -57,15 +62,19 @@ export function DirectoryMaterialImportDialog({ open, onOpenChange, importing, o
     if (!preview) return
     try {
       setError(null)
+      setWorkflowPending(true)
       await applyDirectoryMaterialImportPreview({ preview, applyJob: onApplyJob, setProgress })
       onOpenChange(false)
     } catch (err) {
       setError(getDirectoryMaterialImportErrorMessage(err))
+    } finally {
+      setWorkflowPending(false)
     }
   }
 
   const rows = preview?.rows ?? []
-  const hasApplyableRows = preview !== null && preview.job.validRows + preview.job.warningRows > 0
+  const busy = importing || workflowPending
+  const hasApplyableRows = canApplyDirectoryMaterialImportJob(preview?.job)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -91,9 +100,9 @@ export function DirectoryMaterialImportDialog({ open, onOpenChange, importing, o
           {error ? <p className="text-xs/relaxed text-destructive">{error}</p> : null}
         </div>
         <DialogFooter showCloseButton={false}>
-          <Button disabled={importing} onClick={() => onOpenChange(false)} type="button" variant="outline">Отмена</Button>
-          <Button disabled={importing || !file} onClick={handleCreatePreview} type="button" variant="outline">{importing ? "Обработка..." : "Создать preview"}</Button>
-          <Button disabled={importing || !hasApplyableRows} onClick={handleApply} type="button">{importing ? "Применение..." : "Применить импорт"}</Button>
+          <Button disabled={busy} onClick={() => onOpenChange(false)} type="button" variant="outline">Отмена</Button>
+          <Button disabled={busy || !file} onClick={handleCreatePreview} type="button" variant="outline">{busy ? "Обработка..." : "Создать preview"}</Button>
+          <Button disabled={busy || !hasApplyableRows} onClick={handleApply} type="button">{busy ? "Применение..." : "Применить импорт"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

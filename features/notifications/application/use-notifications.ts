@@ -2,13 +2,11 @@ import { useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { createClient } from "@/lib/supabase/client"
-import type { RealtimeChannel } from "@supabase/supabase-js"
 import {
   fetchNotifications,
   markNotificationsRead,
   archiveNotifications,
-  type ClientNotification,
+  subscribeToNotificationsRealtime,
 } from "../api/notifications-client"
 import { notificationsQueryKeys } from "../api/notifications-query-keys"
 
@@ -80,60 +78,43 @@ export function useArchiveNotifications() {
 export function useNotificationsRealtime() {
   const queryClient = useQueryClient()
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
-    let activeChannel: RealtimeChannel | null = null
+    let cancelled = false
+    let unsubscribe: (() => void) | null = null
 
-    async function subscribe() {
-      // Получаем id текущего аутентифицированного пользователя
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
+    subscribeToNotificationsRealtime((newNotif) => {
+      toast.info(newNotif.title, {
+        description: newNotif.body,
+        action: newNotif.link
+          ? {
+              label: "Перейти",
+              onClick: () => {
+                router.push(newNotif.link!)
+              },
+            }
+          : undefined,
+        duration: 8000,
+      })
 
-      activeChannel = supabase
-        .channel(`realtime-notifications-${user.id}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "notifications",
-            filter: `recipient_id=eq.${user.id}`,
-          },
-          (payload) => {
-            const newNotif = payload.new as ClientNotification
-
-            // Отображаем красивый тост с кнопкой действия (если есть ссылка)
-            toast.info(newNotif.title, {
-              description: newNotif.body,
-              action: newNotif.link
-                ? {
-                    label: "Перейти",
-                    onClick: () => {
-                      router.push(newNotif.link!)
-                    },
-                  }
-                : undefined,
-              duration: 8000,
-            })
-
-            // Инвалидируем кэш, чтобы обновить списки и счетчики
-            queryClient.invalidateQueries({
-              queryKey: notificationsQueryKeys.all,
-            })
-          }
-        )
-        .subscribe()
-    }
-
-    subscribe()
+      queryClient.invalidateQueries({
+        queryKey: notificationsQueryKeys.all,
+      })
+    })
+      .then((subscription) => {
+        if (cancelled) {
+          subscription.unsubscribe()
+          return
+        }
+        unsubscribe = subscription.unsubscribe
+      })
+      .catch((error: Error) => {
+        console.error("Notifications realtime subscription failed", error)
+      })
 
     return () => {
-      if (activeChannel) {
-        supabase.removeChannel(activeChannel)
-      }
+      cancelled = true
+      unsubscribe?.()
     }
-  }, [queryClient, router, supabase])
+  }, [queryClient, router])
 }

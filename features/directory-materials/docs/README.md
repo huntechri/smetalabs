@@ -1,118 +1,182 @@
 # Справочник материалов (directory-materials)
 
-> 2026-05-23 · статус: полностью реализован (production-ready бэкенд и фронтенд с интеграцией гибридного поиска, импорта и экспорта).
-
----
+> Статус: production | feature layers migrated | 2026-06-01
 
 ## Назначение
 
-Справочник материалов — центральный каталог строительных материалов и изделий. Хранит эталонные расценки, единицы измерения, категории, информацию о поставщиках, изображения и поисковые индексы. Используется сметным модулем для добавления материалов в сметы.
+Центральный каталог строительных материалов и изделий. Хранит эталонные расценки, единицы измерения, категории, информацию о поставщиках, изображения и поисковые индексы. Используется сметным модулем для добавления материалов в сметы.
 
+**Маршрут:** `/directories/materials`  
+**Страница:** `app/(main)/directories/materials/page.tsx`  
 **Масштаб данных:** 35 226 активных записей, 106 678 строк импорта.
-
----
 
 ## Структура модуля
 
 ```
 features/directory-materials/
 ├── api/
-│   ├── directory-materials-client.ts          # API-клиент для работы со справочником
-│   └── directory-materials-query-keys.ts      # Ключи кэша React Query
-├── components/
-│   ├── directory-materials-view.tsx           # Основное представление справочника материалов
-│   └── directory-materials-category-filter.tsx # Фильтр по категориям и подкатегориям
-├── directory-materials-details/
-│   └── components/
-│       ├── directory-materials-section.tsx    # Секция отображения списка материалов
-│       ├── directory-materials-row.tsx        # Строка конкретного материала (с поддержкой изображений)
-│       ├── directory-material-form-dialog.tsx # Диалог создания и редактирования материала
-│       └── directory-material-import-dialog.tsx # Диалог пошагового импорта из CSV
-├── hooks/
-│   ├── use-directory-material-categories.ts   # Хук получения списка категорий
-│   └── use-directory-materials.ts             # Основной хук для списка, мутаций и импорта
-├── lib/
-│   └── query.ts                               # Вспомогательные функции запросов
-└── server/
-    ├── directory-materials-ai.ts              # Логика AI семантического поиска
-    ├── directory-materials-import.repository.ts # Репозиторий импорта CSV
-    ├── directory-materials-large-import.repository.ts # Оптимизированный репозиторий большого импорта
-    ├── directory-materials-fast-import.repository.ts # Быстрый импорт данных
-    ├── directory-materials.export.ts          # Логика экспорта в Excel (XLSX)
-    ├── directory-materials.repository.ts      # Базовые CRUD-операции справочника с БД
-    ├── directory-materials.route-handlers.ts  # Обработчики Next.js Route Handlers
-    ├── directory-materials.schemas.ts         # Zod-схемы валидации
-    └── directory-materials.service.ts         # Сервис бизнес-логики и контроля прав
+│   ├── directory-materials-client.ts               # HTTP/API adapters: fetch, create, update, archive, import, export
+│   ├── directory-materials-query-keys.ts            # Ключи кэширования и теги инвалидации
+│   └── directory-materials-errors.ts               # Ошибки API-клиента
+├── application/
+│   ├── use-directory-materials.ts                  # Use-case orchestration: список, мутации, импорт (TanStack Query)
+│   └── use-directory-material-categories.ts        # Use-case: дерево категорий/подкатегорий/поставщиков
+├── model/
+│   ├── directory-materials-model.ts                # Типы, constants, form mapping, selectors, URL params parsing
+│   └── directory-materials-model.test.ts           # Unit-тесты чистой модели
+├── ui/
+│   ├── directory-materials-view.tsx                # Layout-обёртка со Suspense
+│   ├── directory-materials-section.tsx             # Список, пагинация, dialog orchestration
+│   ├── directory-materials-row.tsx                 # Строка материала: код, название, ед. изм., цена, категория
+│   ├── directory-materials-category-filter.tsx     # Фильтр по категории, подкатегории и поставщику
+│   ├── directory-material-form-dialog.tsx          # Диалог создания/редактирования материала
+│   └── directory-material-import-dialog.tsx        # Диалог пошагового CSV-импорта с preview
+├── server/
+│   ├── directory-materials-ai.ts                   # AI-семантический поиск (pgvector + OpenAI)
+│   ├── directory-materials-import.repository.ts    # Репозиторий импорта CSV (пакетная вставка)
+│   ├── directory-materials-large-import.repository.ts # Оптимизированный репозиторий для больших файлов
+│   ├── directory-materials-fast-import.repository.ts  # Быстрый импорт данных
+│   ├── directory-materials.export.ts               # Логика экспорта в CSV
+│   ├── directory-materials.repository.ts           # Базовые CRUD-операции с БД
+│   ├── directory-materials.route-handlers.ts       # Обработчики Next.js Route Handlers
+│   ├── directory-materials.schemas.ts              # Zod-схемы валидации
+│   └── directory-materials.service.ts             # Сервис бизнес-логики и контроля прав
+└── docs/
+    └── README.md
+
+app/api/directory-materials/
+├── route.ts                                        # GET (список), POST (создание)
+├── [id]/route.ts                                   # GET (детали), PATCH (обновление), DELETE (архивирование)
+├── categories/route.ts                             # GET (дерево категорий)
+├── export/route.ts                                 # GET (экспорт CSV)
+├── ai-search/route.ts                              # POST (семантический поиск)
+├── embeddings/process/route.ts                     # POST (обновление векторных эмбеддингов)
+└── import-jobs/
+    ├── route.ts                                    # POST (создать задачу импорта)
+    └── [id]/
+        ├── route.ts                                # GET (статус задачи)
+        ├── batches/route.ts                        # POST (добавить пакет строк)
+        └── apply-fast/route.ts                     # POST (применить импорт)
 ```
 
----
+## Слои
+
+- `ui` — JSX, layout, формы, модалки, локальный визуальный state и вызов команд.
+- `model` — чистые типы, constants, form mapping, selectors, URL params parsing, event dispatchers, import constants.
+- `application` — сценарии загрузки/создания/обновления/архивирования/импорта, TanStack Query и invalidation.
+- `api` — HTTP-доступ к `/api/directory-materials`, error adapter и backend contracts.
+- `server` — серверные route handlers, schemas, service, repositories и AI-поиск.
 
 ## Данные
 
-### Таблицы базы данных
+### TypeScript: `DirectoryMaterial`
 
-Все таблицы в схеме `public`, RLS включён, multi-tenant изоляция через `workspace_owner_id`.
+```typescript
+export type DirectoryMaterial = {
+  id: string
+  name: string
+  unit: string
+  unitCode: string
+  unitLabel: string
+  price: number
+  priceAmount: number
+  currencyCode: string
+  category: string
+  subcategory: string | null
+  code: string | null
+  supplierName: string | null
+  supplierId: string | null
+  imageUrl: string | null
+  description: string | null
+  aliases: string[]
+  keywords: string[]
+  status: "active" | "archived"
+  version: number
+  metadata: {
+    sourceName: string | null
+    sourceExternalRowKey: string | null
+    createdAt: string
+    updatedAt: string
+    searchRank?: number | null
+  }
+}
+```
 
-#### `directory_materials` — основная таблица
-| Колонка | Тип | Описание |
-|---|---|---|
-| `id` | uuid PK | Уникальный идентификатор материала |
-| `workspace_owner_id` | uuid FK → `profiles.id` | Tenant-изоляция |
-| `name` / `normalized_name` | text | Название материала |
-| `unit_code` / `unit_label` | text | Единицы измерения |
-| `price_amount` | numeric | Цена за единицу ≥ 0 |
-| `currency_code` | varchar(3) | Код валюты, default `'RUB'` |
-| `category` / `subcategory` | text | Категория и подкатегория |
-| `code` | text | Код по классификатору |
-| `description` | text | Описание |
-| `supplier_name` / `supplier_id` | text/uuid | Имя и ID поставщика |
-| `image_url` | text | URL изображения |
-| `aliases` / `keywords` | text[] | Синонимы и ключевые слова (массивы) |
-| `status` | enum | `active`, `archived` |
+### `DirectoryMaterialsListParams`
 
----
+```typescript
+export type DirectoryMaterialsListParams = {
+  q?: string
+  category?: string
+  subcategory?: string
+  unit?: string
+  status?: "active" | "archived"
+  supplier?: string
+  limit?: number
+  cursor?: number
+  sort?: "relevance" | "updated_desc" | "name_asc"
+}
+```
 
-## API (Next.js API Routes)
+### `DirectoryMaterialMutationInput`
 
-Клиентское приложение взаимодействует со справочником через Next.js Route Handlers по пути `/api/directory-materials`:
+```typescript
+export type DirectoryMaterialMutationInput = {
+  name: string
+  unit: string
+  price: number
+  category: string
+  subcategory?: string | null
+  code?: string | null
+  supplierName?: string | null
+  imageUrl?: string | null
+  description?: string | null
+  aliases?: string[]
+  keywords?: string[]
+  sourceName?: string | null
+  sourceExternalRowKey?: string | null
+  currencyCode?: string
+}
+```
 
-- `GET /api/directory-materials` — Получить список материалов с фильтрацией, пагинацией и сортировкой.
-- `POST /api/directory-materials` — Создать новый материал.
-- `PATCH /api/directory-materials/[id]` — Редактировать материал.
-- `DELETE /api/directory-materials/[id]` — Архивировать материал.
-- `GET /api/directory-materials/categories` — Получение дерева категорий и подкатегорий.
-- `GET /api/directory-materials/export` — Экспорт справочника материалов в XLSX-формат.
-- `POST /api/directory-materials/import-jobs` — Создать задачу импорта CSV.
+## API
 
----
+Все backend contracts сохранены без изменений.
 
-## Поиск (Текстовый + Семантический Гибридный)
+| Метод | Путь | Назначение |
+|-------|------|------------|
+| `GET` | `/api/directory-materials` | Список материалов с пагинацией, поиском, сортировкой и фильтрацией |
+| `POST` | `/api/directory-materials` | Создание нового материала |
+| `PATCH` | `/api/directory-materials/[id]` | Редактирование материала |
+| `DELETE` | `/api/directory-materials/[id]` | Soft-delete / архивирование |
+| `GET` | `/api/directory-materials/categories` | Дерево категорий, подкатегорий и поставщиков |
+| `GET` | `/api/directory-materials/export` | Экспорт каталога в CSV |
+| `POST` | `/api/directory-materials/ai-search` | Семантический поиск по векторным эмбеддингам |
+| `POST` | `/api/directory-materials/embeddings/process` | Обновление векторных индексов |
+| `POST` | `/api/directory-materials/import-jobs` | Создать задачу импорта CSV |
+| `GET` | `/api/directory-materials/import-jobs/[id]` | Статус задачи импорта |
+| `POST` | `/api/directory-materials/import-jobs/[id]/batches` | Добавить пакет строк в задачу |
+| `POST` | `/api/directory-materials/import-jobs/[id]/apply-fast` | Применить импорт |
 
-Реализована развитая гибридная стратегия поиска с помощью RPC-функции `search_directory_materials_ai`:
-1. **Точное совпадение:** по коду или по внешнему ключу.
-2. **Префиксное и полнотекстовое совпадение:** по нормализованному имени, поставщику, алиасам и ключевым словам.
-3. **Семантический поиск:** по векторным эмбеддингам (`pgvector` + OpenAI `text-embedding-3-small` 1536 измерений).
-4. **Гибридный скоринг:** `(semantic_score × 0.68) + (text_score × 0.32)` с детальным обоснованием совпадения (`match_reason`).
+## Поиск
 
----
+Реализована гибридная стратегия поиска через RPC-функцию `search_directory_materials_ai`:
 
-## Импорт и Экспорт
+1. **Точное совпадение** — по коду или по внешнему ключу.
+2. **Префиксное и полнотекстовое** — по нормализованному имени, поставщику, алиасам и ключевым словам.
+3. **Семантический поиск** — по векторным эмбеддингам (`pgvector` + OpenAI `text-embedding-3-small`, 1536 измерений).
+4. **Гибридный скоринг** — `(semantic_score × 0.68) + (text_score × 0.32)` с детальным `match_reason`.
 
-- **Импорт (CSV):** пошаговый мастер в диалоге `directory-material-import-dialog.tsx` позволяет загружать огромные файлы CSV (до 100 тыс.+ строк) за счет оптимизированного репозитория `directory-materials-large-import.repository.ts`, который разбивает данные на пакеты (batches) и минимизирует транзакционные задержки.
-- **Экспорт (Excel):** экспорт каталога материалов в формате XLSX с использованием бэкенд-сервиса экспорта.
+## Поведение
 
----
+Behavior changes: none.
 
-## Текущее состояние
+Сохранены:
 
-| Задача | Статус | Комментарий |
-|---|---|---|
-| **БД-схема и RLS** | ✅ Готова | Настроены все таблицы, связи и политики доступа. |
-| **API Route Handlers** | ✅ Готовы | Полноценные Next.js эндпоинты с валидацией Zod. |
-| **Клиентский хук** | ✅ Готов | `useDirectoryMaterials` интегрирован с API и React Query. |
-| **Изображения материалов**| ✅ Готовы | UI-строка поддерживает рендеринг изображений по URL. |
-| **Фильтрация по категориям**| ✅ Готова | Компонент категории корректно фильтрует список. |
-| **Создание/Редактирование** | ✅ Готово | Диалог `directory-material-form-dialog.tsx` позволяет редактировать записи. |
-| **Импорт (CSV)** | ✅ Готов | Поддержка больших файлов с пакетной вставкой в БД. |
-| **Экспорт (XLSX)** | ✅ Готов | Формирование и скачивание XLSX-файлов. |
-| **Гибридный поиск** | ✅ Готов | Текстовое + векторное AI-ранжирование. |
+- поля материала, ед. изм., категории и поставщика;
+- поиск, фильтрация по категории/подкатегории/поставщику, пагинация;
+- создание, редактирование и архивирование;
+- пошаговый CSV-импорт с preview (batch-загрузка);
+- экспорт в CSV;
+- гибридный AI-поиск;
+- текущие HTTP/backend contracts.

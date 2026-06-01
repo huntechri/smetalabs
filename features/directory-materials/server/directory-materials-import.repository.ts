@@ -372,17 +372,82 @@ async function getRows(workspaceOwnerId: string, jobId: string) {
   return ((data ?? []) as ImportRowDbRow[]).map(mapRow)
 }
 
-async function loadExistingCandidates(workspaceOwnerId: string) {
-  const { data, error } = await supabase
-    .from("directory_materials")
-    .select(
-      "id,code,normalized_name,unit_code,source_name,source_external_row_key,dedupe_fingerprint"
-    )
-    .eq("workspace_owner_id", workspaceOwnerId)
-    .is("deleted_at", null)
+async function loadExistingCandidatesForBatch(
+  workspaceOwnerId: string,
+  filters: { codes: string[]; fingerprints: string[]; names: string[] }
+): Promise<ExistingMaterialCandidate[]> {
+  const { codes, fingerprints, names } = filters
+  const results = new Map<string, ExistingMaterialCandidate>()
 
-  if (error) throw error
-  return (data ?? []) as ExistingMaterialCandidate[]
+  const chunk = <T>(arr: T[], size: number): T[][] => {
+    const chunks: T[][] = []
+    for (let i = 0; i < arr.length; i += size) {
+      chunks.push(arr.slice(i, i + size))
+    }
+    return chunks
+  }
+
+  const codeChunks = chunk(codes, 100)
+  const fingerprintChunks = chunk(fingerprints, 100)
+  const nameChunks = chunk(names, 100)
+
+  const promises: Promise<any>[] = []
+
+  for (const codeChunk of codeChunks) {
+    promises.push(
+      Promise.resolve(
+        supabase
+          .from("directory_materials")
+          .select(
+            "id,code,normalized_name,unit_code,source_name,source_external_row_key,dedupe_fingerprint"
+          )
+          .eq("workspace_owner_id", workspaceOwnerId)
+          .is("deleted_at", null)
+          .in("code", codeChunk)
+      )
+    )
+  }
+
+  for (const fingerprintChunk of fingerprintChunks) {
+    promises.push(
+      Promise.resolve(
+        supabase
+          .from("directory_materials")
+          .select(
+            "id,code,normalized_name,unit_code,source_name,source_external_row_key,dedupe_fingerprint"
+          )
+          .eq("workspace_owner_id", workspaceOwnerId)
+          .is("deleted_at", null)
+          .in("dedupe_fingerprint", fingerprintChunk)
+      )
+    )
+  }
+
+  for (const nameChunk of nameChunks) {
+    promises.push(
+      Promise.resolve(
+        supabase
+          .from("directory_materials")
+          .select(
+            "id,code,normalized_name,unit_code,source_name,source_external_row_key,dedupe_fingerprint"
+          )
+          .eq("workspace_owner_id", workspaceOwnerId)
+          .is("deleted_at", null)
+          .in("normalized_name", nameChunk)
+      )
+    )
+  }
+
+  const queryResults = await Promise.all(promises)
+  for (const res of queryResults) {
+    if (res.error) throw res.error
+    const data = (res.data ?? []) as ExistingMaterialCandidate[]
+    for (const item of data) {
+      results.set(item.id, item)
+    }
+  }
+
+  return Array.from(results.values())
 }
 
 function classifyAgainstExisting(
@@ -474,11 +539,41 @@ export async function createDirectoryMaterialImportJobForWorkspace(
 ): Promise<DirectoryMaterialImportPreviewResponse> {
   const fallbackSourceName = toNullableString(input.sourceName)
   const seen = new Map<string, number>()
-  const existing = await loadExistingCandidates(workspaceOwnerId)
-  const rows: PreparedImportRow[] = input.rows.map((rawData, index) => {
+
+  // Pre-normalize all rows to collect candidate filters
+  const preNormalized = input.rows.map((rawData) => {
     const normalized = normalizeImportRow(rawData, fallbackSourceName)
     const { errors, warnings, ...normalizedData } = normalized
     const dedupeFingerprint = buildDedupeFingerprint(normalizedData)
+    return {
+      rawData,
+      normalizedData,
+      dedupeFingerprint,
+      errors,
+      warnings,
+    }
+  })
+
+  const codesSet = new Set<string>()
+  const fingerprintsSet = new Set<string>()
+  const namesSet = new Set<string>()
+
+  for (const item of preNormalized) {
+    if (item.normalizedData.code) {
+      codesSet.add(item.normalizedData.code.trim())
+    }
+    fingerprintsSet.add(item.dedupeFingerprint)
+    namesSet.add(normalizeSearch(item.normalizedData.name))
+  }
+
+  const existing = await loadExistingCandidatesForBatch(workspaceOwnerId, {
+    codes: Array.from(codesSet),
+    fingerprints: Array.from(fingerprintsSet),
+    names: Array.from(namesSet),
+  })
+
+  const rows: PreparedImportRow[] = preNormalized.map((item, index) => {
+    const { rawData, normalizedData, dedupeFingerprint, errors, warnings } = item
     let status: DirectoryMaterialImportRowStatus =
       errors.length > 0 ? "error" : "valid"
 
@@ -510,6 +605,7 @@ export async function createDirectoryMaterialImportJobForWorkspace(
       existing
     )
   })
+
   const counts = getCounts(rows)
   const { data: jobRow, error: jobError } = await supabase
     .from("directory_material_import_jobs")

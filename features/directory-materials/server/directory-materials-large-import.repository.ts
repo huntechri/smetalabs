@@ -380,17 +380,91 @@ async function getPriorFingerprints(workspaceOwnerId: string, jobId: string) {
   )
 }
 
-async function loadExistingMaterials(workspaceOwnerId: string) {
-  const { data, error } = await supabase
-    .from("directory_materials")
-    .select(
-      "id,name,code,normalized_name,unit_code,price_amount,currency_code,source_name,source_external_row_key,dedupe_fingerprint"
-    )
-    .eq("workspace_owner_id", workspaceOwnerId)
-    .is("deleted_at", null)
+async function loadExistingMaterialsForBatch(
+  workspaceOwnerId: string,
+  input: DirectoryMaterialImportBatchInput,
+  fallbackSourceName: string | null
+): Promise<ExistingMaterial[]> {
+  const codes = new Set<string>()
+  const fingerprints = new Set<string>()
+  const names = new Set<string>()
 
-  if (error) throw error
-  return (data ?? []) as ExistingMaterial[]
+  for (const rawData of input.rows) {
+    const normalized = normalizeImportRow(rawData, fallbackSourceName)
+    const dedupeFingerprint = buildDedupeFingerprint(normalized.data)
+    if (normalized.data.code) codes.add(normalized.data.code.trim())
+    fingerprints.add(dedupeFingerprint)
+    names.add(normalizeSearch(normalized.data.name))
+  }
+
+  const results = new Map<string, ExistingMaterial>()
+
+  const chunk = <T>(arr: T[], size: number): T[][] => {
+    const chunks: T[][] = []
+    for (let i = 0; i < arr.length; i += size) {
+      chunks.push(arr.slice(i, i + size))
+    }
+    return chunks
+  }
+
+  const codeChunks = chunk(Array.from(codes), 100)
+  const fingerprintChunks = chunk(Array.from(fingerprints), 100)
+  const nameChunks = chunk(Array.from(names), 100)
+
+  const promises: Promise<any>[] = []
+
+  const columns =
+    "id,name,code,normalized_name,unit_code,price_amount,currency_code,source_name,source_external_row_key,dedupe_fingerprint"
+
+  for (const codeChunk of codeChunks) {
+    promises.push(
+      Promise.resolve(
+        supabase
+          .from("directory_materials")
+          .select(columns)
+          .eq("workspace_owner_id", workspaceOwnerId)
+          .is("deleted_at", null)
+          .in("code", codeChunk)
+      )
+    )
+  }
+
+  for (const fingerprintChunk of fingerprintChunks) {
+    promises.push(
+      Promise.resolve(
+        supabase
+          .from("directory_materials")
+          .select(columns)
+          .eq("workspace_owner_id", workspaceOwnerId)
+          .is("deleted_at", null)
+          .in("dedupe_fingerprint", fingerprintChunk)
+      )
+    )
+  }
+
+  for (const nameChunk of nameChunks) {
+    promises.push(
+      Promise.resolve(
+        supabase
+          .from("directory_materials")
+          .select(columns)
+          .eq("workspace_owner_id", workspaceOwnerId)
+          .is("deleted_at", null)
+          .in("normalized_name", nameChunk)
+      )
+    )
+  }
+
+  const queryResults = await Promise.all(promises)
+  for (const res of queryResults) {
+    if (res.error) throw res.error
+    const data = (res.data ?? []) as ExistingMaterial[]
+    for (const item of data) {
+      results.set(item.id, item)
+    }
+  }
+
+  return Array.from(results.values())
 }
 
 function classifyByExistingCode(
@@ -670,7 +744,7 @@ export async function appendDirectoryMaterialImportBatchForWorkspace(
     input,
     jobRow.source_name,
     await getPriorFingerprints(workspaceOwnerId, id),
-    await loadExistingMaterials(workspaceOwnerId)
+    await loadExistingMaterialsForBatch(workspaceOwnerId, input, jobRow.source_name)
   )
   const counts = countRows(rows)
 

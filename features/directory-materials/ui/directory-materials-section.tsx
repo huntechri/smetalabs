@@ -12,15 +12,13 @@ import {
 } from "@/components/ui/empty"
 import { FieldError } from "@/components/ui/field"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useDirectoryMaterials } from "@/features/directory-materials/hooks/use-directory-materials"
+import { useDirectoryMaterials } from "@/features/directory-materials/application/use-directory-materials"
 import {
   DIRECTORY_MATERIALS_CREATE_EVENT,
   DIRECTORY_MATERIALS_IMPORT_EVENT,
-} from "@/features/directory-materials/lib/directory-materials-events"
-import type {
-  DirectoryMaterial,
-  DirectoryMaterialMutationInput,
-} from "@/features/directory-materials/types"
+  type DirectoryMaterial,
+  type DirectoryMaterialMutationInput,
+} from "@/features/directory-materials/model/directory-materials-model"
 import { DirectoryMaterialFormDialog } from "./directory-material-form-dialog"
 import { DirectoryMaterialImportDialog } from "./directory-material-import-dialog"
 import { DirectoryMaterialsRow } from "./directory-materials-row"
@@ -183,7 +181,7 @@ export function DirectoryMaterialsSection() {
             </Empty>
           ) : null}
           {!showSkeletonRows
-            ? materials.map((row) => (
+            ? materials.map((row: DirectoryMaterial) => (
                 <DirectoryMaterialsRow
                   key={row.id}
                   onArchive={handleArchive}

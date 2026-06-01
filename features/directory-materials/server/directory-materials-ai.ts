@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { supabase } from "@/db"
 import { DirectoryMaterialsApiError } from "../api/directory-materials-errors"
-import type { DirectoryMaterial } from "../types"
+import type { DirectoryMaterial } from "../model/directory-materials-model"
 
 export const DIRECTORY_MATERIALS_AI_MODEL = "text-embedding-3-small"
 export const DIRECTORY_MATERIALS_AI_DIMENSIONS = 1536

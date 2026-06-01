@@ -10,7 +10,7 @@ import type {
   DirectoryMaterialsListParams,
   DirectoryMaterialsListResponse,
   DirectoryMaterialUnitOption,
-} from "../types"
+} from "../model/directory-materials-model"
 
 type NormalizedListParams = Required<
   Pick<DirectoryMaterialsListParams, "status" | "limit" | "cursor" | "sort">

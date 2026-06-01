@@ -18,7 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useDirectoryMaterialCategories } from "../hooks/use-directory-material-categories"
+import { useDirectoryMaterialCategories } from "@/features/directory-materials/application/use-directory-material-categories"
+import type {
+  DirectoryMaterialCategoryOption,
+  DirectoryMaterialSupplierOption,
+} from "@/features/directory-materials/model/directory-materials-model"
 
 const ALL_CATEGORIES_VALUE = "__all_categories__"
 const ALL_SUBCATEGORIES_VALUE = "__all_subcategories__"
@@ -136,7 +140,7 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
             >
               Все категории
             </SelectItem>
-            {categories.map((item) => (
+            {categories.map((item: DirectoryMaterialCategoryOption) => (
               <SelectItem
                 className={FILTER_ITEM_CLASS}
                 key={item.category}
@@ -163,7 +167,7 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
             >
               Все подкатегории
             </SelectItem>
-            {subcategories.map((item) => (
+            {subcategories.map((item: { name: string; total: number }) => (
               <SelectItem
                 className={FILTER_ITEM_CLASS}
                 key={item.name}
@@ -190,7 +194,7 @@ export function DirectoryMaterialsCategoryFilter({ open }: { open: boolean }) {
             >
               Все поставщики
             </SelectItem>
-            {suppliers.map((item) => (
+            {suppliers.map((item: DirectoryMaterialSupplierOption) => (
               <SelectItem
                 className={FILTER_ITEM_CLASS}
                 key={item.name}

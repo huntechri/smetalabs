@@ -10,7 +10,7 @@ import type {
   DirectoryMaterialImportRow,
   DirectoryMaterialImportRowAction,
   DirectoryMaterialImportRowStatus,
-} from "../types"
+} from "../model/directory-materials-model"
 
 const APPLY_CHUNK_SIZE = 100
 

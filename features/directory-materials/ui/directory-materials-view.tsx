@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import {
   DirectoryMaterialsRowsSkeleton,
   DirectoryMaterialsSection,
-} from "@/features/directory-materials/directory-materials-details/components/directory-materials-section"
+} from "./directory-materials-section"
 
 export function DirectoryMaterialsView() {
   return (

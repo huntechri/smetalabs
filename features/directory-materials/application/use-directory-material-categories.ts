@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { fetchDirectoryMaterialsCategories } from "../api/directory-materials-client"
 import { directoryMaterialsQueryKeys } from "../api/directory-materials-query-keys"
-import type { DirectoryMaterialsCategoriesParams } from "../types"
+import type { DirectoryMaterialsCategoriesParams } from "../model/directory-materials-model"
 
 const DIRECTORY_MATERIALS_CATEGORIES_STALE_TIME_MS = 5 * 60_000
 const DIRECTORY_MATERIALS_CATEGORIES_GC_TIME_MS = 10 * 60_000

@@ -1,5 +1,5 @@
 import { MaterialsToolbar } from "@/features/directories/ui/materials-toolbar"
-import { DirectoryMaterialsView } from "@/features/directory-materials/components/directory-materials-view"
+import { DirectoryMaterialsView } from "@/features/directory-materials/ui/directory-materials-view"
 
 export default function MaterialsDirectoryPage() {
   return (

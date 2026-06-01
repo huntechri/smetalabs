@@ -2,7 +2,7 @@ import { z } from "zod"
 import type {
   DirectoryMaterialsCategoriesParams,
   DirectoryMaterialsListParams,
-} from "../types"
+} from "../model/directory-materials-model"
 
 const MAX_IMPORT_BATCH_ROWS = 2000
 const MAX_IMPORT_APPLY_BATCH_ROWS = 500

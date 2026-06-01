@@ -2,7 +2,7 @@ import type {
   DirectoryMaterial,
   DirectoryMaterialsExportFile,
   DirectoryMaterialsExportFormat,
-} from "../types"
+} from "../model/directory-materials-model"
 
 const CSV_COLUMNS: Array<{
   label: string

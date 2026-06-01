@@ -8,7 +8,7 @@ import type {
   DirectoryMaterialImportNormalizedRow,
   DirectoryMaterialImportRowAction,
   DirectoryMaterialImportRowStatus,
-} from "../types"
+} from "../model/directory-materials-model"
 
 const DEFAULT_FAST_APPLY_BATCH_SIZE = 1000
 const MAX_FAST_APPLY_BATCH_SIZE = 1000

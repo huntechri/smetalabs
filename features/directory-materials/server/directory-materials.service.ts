@@ -13,7 +13,7 @@ import type {
   DirectoryMaterialsCategoriesParams,
   DirectoryMaterialsExportFormat,
   DirectoryMaterialsListParams,
-} from "../types"
+} from "../model/directory-materials-model"
 import {
   archiveDirectoryMaterialForWorkspace,
   createDirectoryMaterialForWorkspace,

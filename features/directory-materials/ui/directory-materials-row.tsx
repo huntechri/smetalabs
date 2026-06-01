@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { DirectoryMaterial } from "@/features/directory-materials/types"
+import type { DirectoryMaterial } from "@/features/directory-materials/model/directory-materials-model"
 import { ImageIcon } from "lucide-react"
 import {
   ArchiveIcon,

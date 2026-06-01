@@ -12,7 +12,7 @@ import type {
   DirectoryMaterialImportRow,
   DirectoryMaterialImportRowAction,
   DirectoryMaterialImportRowStatus,
-} from "../types"
+} from "../model/directory-materials-model"
 
 const DEFAULT_PREVIEW_LIMIT = 100
 const DEFAULT_APPLY_BATCH_SIZE = 500

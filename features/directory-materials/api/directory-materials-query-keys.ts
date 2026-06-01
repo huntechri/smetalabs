@@ -1,7 +1,7 @@
 import type {
   DirectoryMaterialsCategoriesParams,
   DirectoryMaterialsListParams,
-} from "../types"
+} from "../model/directory-materials-model"
 
 export const directoryMaterialsQueryKeys = {
   all: ["directoryMaterials"] as const,

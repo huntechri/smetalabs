@@ -17,46 +17,14 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import type {
-  DirectoryMaterial,
-  DirectoryMaterialMutationInput,
-} from "@/features/directory-materials/types"
-
-type DirectoryMaterialFormState = {
-  name: string
-  unit: string
-  price: string
-  category: string
-  subcategory: string
-  code: string
-  supplierName: string
-}
-
-const emptyState: DirectoryMaterialFormState = {
-  name: "",
-  unit: "",
-  price: "",
-  category: "",
-  subcategory: "",
-  code: "",
-  supplierName: "",
-}
-
-function getInitialState(
-  material: DirectoryMaterial | null
-): DirectoryMaterialFormState {
-  if (!material) return emptyState
-
-  return {
-    name: material.name,
-    unit: material.unitLabel || material.unit,
-    price: String(material.priceAmount),
-    category: material.category,
-    subcategory: material.subcategory ?? "",
-    code: material.code ?? "",
-    supplierName: material.supplierName ?? "",
-  }
-}
+import {
+  buildDirectoryMaterialMutationInput,
+  getDirectoryMaterialInitialFormState,
+  validateDirectoryMaterialFormState,
+  type DirectoryMaterial,
+  type DirectoryMaterialFormState,
+  type DirectoryMaterialMutationInput,
+} from "@/features/directory-materials/model/directory-materials-model"
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error
@@ -80,13 +48,13 @@ export function DirectoryMaterialFormDialog({
   onSubmit: (input: DirectoryMaterialMutationInput) => Promise<void>
 }) {
   const [form, setForm] = useState<DirectoryMaterialFormState>(() =>
-    getInitialState(material)
+    getDirectoryMaterialInitialFormState(material)
   )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
-      setForm(getInitialState(material))
+      setForm(getDirectoryMaterialInitialFormState(material))
       setError(null)
     }
   }, [open, material])
@@ -101,41 +69,16 @@ export function DirectoryMaterialFormDialog({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    const name = form.name.trim()
-    const unit = form.unit.trim()
-    const category = form.category.trim()
-    const subcategory = form.subcategory.trim()
-    const code = form.code.trim()
-    const supplierName = form.supplierName.trim()
-    const price = Number(form.price)
-
-    if (!name || !unit || !category) {
-      setError("Заполните название, единицу измерения и категорию")
-      return
-    }
-
-    if (!Number.isFinite(price) || price < 0) {
-      setError("Цена должна быть неотрицательным числом")
+    const validationError = validateDirectoryMaterialFormState(form)
+    if (validationError) {
+      setError(validationError)
       return
     }
 
     setError(null)
 
     try {
-      await onSubmit({
-        name,
-        unit,
-        price,
-        category,
-        subcategory: subcategory || null,
-        code: code || null,
-        supplierName: supplierName || null,
-        imageUrl: material?.imageUrl ?? null,
-        description: material?.description ?? null,
-        sourceName: material?.metadata.sourceName ?? null,
-        sourceExternalRowKey: material?.metadata.sourceExternalRowKey ?? null,
-        currencyCode: material?.currencyCode ?? "RUB",
-      })
+      await onSubmit(buildDirectoryMaterialMutationInput(form, material))
       onOpenChange(false)
     } catch (err) {
       setError(getErrorMessage(err))

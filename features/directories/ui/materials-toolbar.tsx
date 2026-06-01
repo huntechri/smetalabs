@@ -3,11 +3,11 @@
 import { Suspense, useState } from "react"
 import { DirectoriesToolbar } from "./directories-toolbar"
 import type { DirectoryAction } from "../model/directories-model"
-import { DirectoryMaterialsCategoryFilter } from "@/features/directory-materials/components/directory-materials-category-filter"
+import { DirectoryMaterialsCategoryFilter } from "@/features/directory-materials/ui/directory-materials-category-filter"
 import {
   dispatchDirectoryMaterialsCreateEvent,
   dispatchDirectoryMaterialsImportEvent,
-} from "@/features/directory-materials/lib/directory-materials-events"
+} from "@/features/directory-materials/model/directory-materials-model"
 import {
   PlusIcon,
   FileArrowDownIcon,

@@ -13,64 +13,24 @@ import {
   updateDirectoryMaterial,
 } from "../api/directory-materials-client"
 import { directoryMaterialsQueryKeys } from "../api/directory-materials-query-keys"
-import type {
-  DirectoryMaterialImportApplyInput,
-  DirectoryMaterialImportBatchInput,
-  DirectoryMaterialImportCreateInput,
-  DirectoryMaterialMutationInput,
-  DirectoryMaterialsListParams,
-  DirectoryMaterialsSort,
-} from "../types"
-
-type ReadonlySearchParams = {
-  get: (name: string) => string | null
-}
+import {
+  getDirectoryMaterialsListParams,
+  type DirectoryMaterialImportApplyInput,
+  type DirectoryMaterialImportBatchInput,
+  type DirectoryMaterialImportCreateInput,
+  type DirectoryMaterialMutationInput,
+} from "../model/directory-materials-model"
 
 const DIRECTORY_MATERIALS_STALE_TIME_MS = 30_000
 const DIRECTORY_MATERIALS_GC_TIME_MS = 5 * 60_000
 
-function getStringParam(searchParams: ReadonlySearchParams, key: string) {
-  const value = searchParams.get(key)?.trim()
-  return value || undefined
-}
-
-function getNumberParam(searchParams: ReadonlySearchParams, key: string) {
-  const value = searchParams.get(key)
-  if (!value) return undefined
-
-  const parsed = Number(value)
-  return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
-}
-
-function getSortParam(
-  searchParams: ReadonlySearchParams
-): DirectoryMaterialsSort | undefined {
-  const sort = searchParams.get("sort")
-  if (sort === "relevance" || sort === "updated_desc" || sort === "name_asc")
-    return sort
-  return undefined
-}
-
-function getListParams(
-  searchParams: ReadonlySearchParams
-): DirectoryMaterialsListParams {
-  return {
-    q: getStringParam(searchParams, "q"),
-    category: getStringParam(searchParams, "category"),
-    subcategory: getStringParam(searchParams, "subcategory"),
-    unit: getStringParam(searchParams, "unit"),
-    status: searchParams.get("status") === "archived" ? "archived" : "active",
-    supplier: getStringParam(searchParams, "supplier"),
-    limit: getNumberParam(searchParams, "limit") ?? 50,
-    cursor: getNumberParam(searchParams, "cursor") ?? 0,
-    sort: getSortParam(searchParams) ?? "relevance",
-  }
-}
-
 export function useDirectoryMaterials() {
   const searchParams = useSearchParams()
   const queryClient = useQueryClient()
-  const params = useMemo(() => getListParams(searchParams), [searchParams])
+  const params = useMemo(
+    () => getDirectoryMaterialsListParams(searchParams),
+    [searchParams]
+  )
 
   const materialsQuery = useQuery({
     queryKey: directoryMaterialsQueryKeys.list(params),

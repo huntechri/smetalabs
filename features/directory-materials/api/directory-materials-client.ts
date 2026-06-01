@@ -10,7 +10,7 @@ import type {
   DirectoryMaterialsCategoriesResponse,
   DirectoryMaterialsListParams,
   DirectoryMaterialsListResponse,
-} from "../types"
+} from "../model/directory-materials-model"
 import { throwDirectoryMaterialsApiError } from "./directory-materials-errors"
 
 function appendParam(

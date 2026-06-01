@@ -223,6 +223,7 @@ async function updateMaterialPrices(
         const { error } = await supabase
           .from("directory_materials")
           .update({
+            name: row.normalizedData.name.trim().replace(/\s+/g, " "),
             price_amount: row.normalizedData.price,
             currency_code: row.normalizedData.currencyCode ?? "RUB",
             updated_by: userId,

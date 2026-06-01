@@ -481,19 +481,13 @@ function classifyByExistingCode(
   const sameName =
     normalizeSearch(existing.normalized_name ?? existing.name) ===
     normalizeSearch(row.normalizedData.name)
-  if (!sameName) {
-    row.status = "conflict"
-    row.action = "skip"
-    row.conflictMaterialIds = [existing.id]
-    row.warningMessages.push("Код совпадает, но название отличается")
-    return
-  }
 
-  if (
+  const samePrice =
     sameMoney(existing.price_amount, row.normalizedData.price) &&
     (existing.currency_code ?? "RUB") ===
       (row.normalizedData.currencyCode ?? "RUB")
-  ) {
+
+  if (sameName && samePrice) {
     row.status = "duplicate"
     row.action = "skip"
     row.duplicateMaterialId = existing.id
@@ -506,9 +500,20 @@ function classifyByExistingCode(
   row.status = "warning"
   row.action = "update"
   row.duplicateMaterialId = existing.id
-  row.warningMessages.push(
-    `Цена будет обновлена: ${toNumber(existing.price_amount)} → ${row.normalizedData.price}`
-  )
+
+  if (!sameName && !samePrice) {
+    row.warningMessages.push(
+      `Название и цена будут обновлены: "${existing.name || ""}" → "${row.normalizedData.name}", ${toNumber(existing.price_amount)} → ${row.normalizedData.price}`
+    )
+  } else if (!sameName) {
+    row.warningMessages.push(
+      `Название будет обновлено: "${existing.name || ""}" → "${row.normalizedData.name}"`
+    )
+  } else {
+    row.warningMessages.push(
+      `Цена будет обновлена: ${toNumber(existing.price_amount)} → ${row.normalizedData.price}`
+    )
+  }
 }
 
 function prepareRows(
@@ -818,6 +823,7 @@ async function applyMaterialPriceUpdates(
       const { error } = await supabase
         .from("directory_materials")
         .update({
+          name: normalized.name.trim().replace(/\s+/g, " "),
           price_amount: normalized.price,
           currency_code: normalized.currencyCode ?? "RUB",
           updated_by: userId,

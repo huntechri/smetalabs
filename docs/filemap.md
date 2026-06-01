@@ -392,17 +392,24 @@ smetalabs/
 │   ├── directory-materials/             # Фича «Справочник материалов» (✅ эталонная структура)
 │   │   ├── __mocks__/
 │   │   │   └── directory-materials.ts   #   Мок-данные материалов
-│   │   ├── components/
-│   │   │   └── directory-materials-view.tsx  # Обёртка со скроллом
-│   │   ├── hooks/
-│   │   │   └── use-directory-materials.ts    # Хук (моки → API)
-│   │   └── directory-materials-details/
-│   │       └── components/
-│   │           ├── directory-materials-section.tsx     # Композиция (хук → map → Row)
-│   │           ├── directory-materials-row.tsx         # Строка материала
-│   │           ├── directory-materials-name.tsx        # Название материала
-│   │           ├── directory-materials-value.tsx       # Бейдж «label: value»
-│   │           └── directory-materials-metric-group.tsx  # Группа метрик
+│   │   ├── api/
+│   │   │   ├── directory-materials-client.ts # HTTP-клиент к API
+│   │   │   ├── directory-materials-errors.ts # Адаптер ошибок
+│   │   │   └── directory-materials-query-keys.ts # Ключи кэширования
+│   │   ├── application/
+│   │   │   ├── use-directory-materials.ts # Оркестрация данных (список/мутации)
+│   │   │   └── use-directory-material-categories.ts # Дерево категорий/поставщиков
+│   │   ├── model/
+│   │   │   ├── directory-materials-model.ts # Типы, константы и мапперы форм
+│   │   │   └── directory-materials-model.test.ts # Unit-тесты доменной логики
+│   │   ├── ui/
+│   │   │   ├── directory-materials-view.tsx # Основная разметка (с подвесом)
+│   │   │   ├── directory-materials-section.tsx # Раздел списка, пагинации и модалок
+│   │   │   ├── directory-materials-row.tsx # Отображение строки материала
+│   │   │   ├── directory-materials-category-filter.tsx # Фильтр категорий/поставщиков
+│   │   │   ├── directory-material-form-dialog.tsx # Диалог добавления/редактирования
+│   │   │   └── directory-material-import-dialog.tsx # Диалог пошагового импорта из CSV
+│   │   └── server/                      # Серверная логика (repositories, service, ai)
 │   │
 │   ├── directory-works/                 # Фича «Справочник работ» (✅ эталонная структура)
 │   │   ├── __mocks__/

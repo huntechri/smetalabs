@@ -88,7 +88,7 @@ features/{domain}/
 | Закупки | `features/purchases/` | `purchase-details/` | ✅ |
 | Выполнение | `features/execution/` | `execution-details/` | ✅ |
 | Глобальные закупки | `features/global-purchases/` | `global-purchases-details/` | ✅ |
-| Справочник материалов | `features/directory-materials/` | `directory-materials-details/` | ✅ |
+| Справочник материалов | `features/directory-materials/` | `ui/`, `model/`, `application/`, `api/`, `server/` | ✅ |
 | Справочник работ | `features/directory-works/` | `directory-works-details/` | ✅ |
 | Справочник поставщиков | `features/directory-suppliers/` | `directory-suppliers-details/` | ✅ |
 | Справочник контрагентов | `features/directory-counterparties/` | `directory-counterparties-details/` | ✅ |

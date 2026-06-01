@@ -22,77 +22,19 @@ import {
 } from "@/components/ui/table"
 import { parseCsvFileInBatches } from "@/features/directories/application/csv-parser"
 import type { CsvImportBatch } from "@/features/directories/model/csv-import"
-import type {
-  DirectoryWorkImportApplyInput,
-  DirectoryWorkImportApplyResponse,
-  DirectoryWorkImportBatchInput,
-  DirectoryWorkImportCreateInput,
-  DirectoryWorkImportPreviewResponse,
-  DirectoryWorkImportRowStatus,
-} from "@/features/directory-works/types"
-
-const IMPORT_BATCH_SIZE = 1500
-const APPLY_BATCH_SIZE = 200
-
-const HEADER_ALIASES: Record<string, string> = {
-  code: "code",
-  код: "code",
-  title: "title",
-  название: "title",
-  наименование: "title",
-  unit: "unit",
-  "ед. изм.": "unit",
-  "ед изм": "unit",
-  единица: "unit",
-  rate: "rate",
-  price: "rate",
-  расценка: "rate",
-  цена: "rate",
-  category: "category",
-  категория: "category",
-  subcategory: "subcategory",
-  подкатегория: "subcategory",
-  aliases: "aliases",
-  синонимы: "aliases",
-  keywords: "keywords",
-  "ключевые слова": "keywords",
-  description: "description",
-  описание: "description",
-  included_operations: "included_operations",
-  "включенные операции": "included_operations",
-  excluded_operations: "excluded_operations",
-  "исключенные операции": "excluded_operations",
-  price_kind: "price_kind",
-  "тип цены": "price_kind",
-  currency_code: "currency_code",
-  currency: "currency_code",
-  валюта: "currency_code",
-  vat_rate: "vat_rate",
-  ндс: "vat_rate",
-  source_name: "source_name",
-  источник: "source_name",
-  source_external_row_key: "source_external_row_key",
-  external_id: "source_external_row_key",
-  effective_date: "effective_date",
-}
-
-const STATUS_LABELS: Record<DirectoryWorkImportRowStatus, string> = {
-  pending: "Ожидает",
-  valid: "Готово",
-  warning: "Предупреждение",
-  error: "Ошибка",
-  duplicate: "Дубль",
-  conflict: "Конфликт",
-  applied: "Применено",
-  skipped: "Пропущено",
-}
-
-function formatBytes(bytes: number | null | undefined) {
-  if (!bytes) return "—"
-  if (bytes < 1024) return `${bytes} Б`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} КБ`
-  return `${(bytes / 1024 / 1024).toFixed(1)} МБ`
-}
+import {
+  DIRECTORY_WORKS_IMPORT_BATCH_SIZE,
+  DIRECTORY_WORKS_APPLY_BATCH_SIZE,
+  DIRECTORY_WORKS_HEADER_ALIASES,
+  DIRECTORY_WORKS_IMPORT_STATUS_LABELS,
+  formatWorkImportBytes,
+  type DirectoryWorkImportApplyInput,
+  type DirectoryWorkImportApplyResponse,
+  type DirectoryWorkImportBatchInput,
+  type DirectoryWorkImportCreateInput,
+  type DirectoryWorkImportPreviewResponse,
+  type DirectoryWorkImportRowStatus,
+} from "../model/directory-works-model"
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Не удалось выполнить импорт"
@@ -174,15 +116,15 @@ export function DirectoryWorkImportDialog({
         fileMimeType: file.type || "text/csv",
         fileSizeBytes: file.size,
         sourceName: sourceName.trim() || null,
-        options: { batchSize: IMPORT_BATCH_SIZE },
+        options: { batchSize: DIRECTORY_WORKS_IMPORT_BATCH_SIZE },
       })
 
       let latestPreview = jobData
       let pendingBatch: CsvImportBatch | null = null
       for await (const batch of parseCsvFileInBatches({
         file,
-        headerAliases: HEADER_ALIASES,
-        batchSize: IMPORT_BATCH_SIZE,
+        headerAliases: DIRECTORY_WORKS_HEADER_ALIASES,
+        batchSize: DIRECTORY_WORKS_IMPORT_BATCH_SIZE,
         onProgress: ({ rowsRead, batchesRead }) =>
           setProgress(
             `Прочитано строк: ${rowsRead}. Подготовлено пакетов: ${batchesRead}.`
@@ -218,7 +160,7 @@ export function DirectoryWorkImportDialog({
       let appliedTotal = preview.job.appliedRows
       while (hasMore) {
         const response = await onApplyJob(preview.job.id, {
-          batchSize: APPLY_BATCH_SIZE,
+          batchSize: DIRECTORY_WORKS_APPLY_BATCH_SIZE,
         })
         hasMore = Boolean(response.hasMore)
         appliedTotal = response.job.appliedRows
@@ -270,7 +212,7 @@ export function DirectoryWorkImportDialog({
 
           {file ? (
             <p className="text-xs/relaxed text-muted-foreground">
-              Выбран файл: {file.name}, {formatBytes(file.size)}
+              Выбран файл: {file.name}, {formatWorkImportBytes(file.size)}
             </p>
           ) : null}
           {progress ? (
@@ -311,7 +253,9 @@ export function DirectoryWorkImportDialog({
                       return (
                         <TableRow key={row.id}>
                           <TableCell>{row.rowNumber}</TableCell>
-                          <TableCell>{STATUS_LABELS[row.status]}</TableCell>
+                          <TableCell>
+                            {DIRECTORY_WORKS_IMPORT_STATUS_LABELS[row.status]}
+                          </TableCell>
                           <TableCell>
                             {String(normalized.title ?? "—")}
                           </TableCell>

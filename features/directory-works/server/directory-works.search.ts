@@ -1,4 +1,4 @@
-import type { DirectoryWorksListParams } from "../types"
+import type { DirectoryWorksListParams } from "../model/directory-works-model"
 
 export const MAX_DIRECTORY_WORKS_INTERACTIVE_CURSOR = 5000
 

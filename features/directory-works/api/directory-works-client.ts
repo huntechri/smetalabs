@@ -13,7 +13,7 @@ import type {
   DirectoryWorksExportFormat,
   DirectoryWorksListParams,
   DirectoryWorksListResponse,
-} from "../types"
+} from "../model/directory-works-model"
 import { throwDirectoryWorksApiError } from "./directory-works-errors"
 
 function appendParam(

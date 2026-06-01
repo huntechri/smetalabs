@@ -7,14 +7,14 @@ import { Skeleton } from "@/components/ui/skeleton"
 import type {
   DirectoryWork,
   DirectoryWorksListParams,
-} from "@/features/directory-works/types"
-import { buildDirectoryWorksExportHref } from "@/features/directory-works/api/directory-works-client"
-import { useDirectoryWorks } from "@/features/directory-works/hooks/use-directory-works"
+} from "../model/directory-works-model"
+import { buildDirectoryWorksExportHref } from "../api/directory-works-client"
+import { useDirectoryWorks } from "../application/use-directory-works"
 import {
   DIRECTORY_WORKS_CREATE_EVENT,
   DIRECTORY_WORKS_EXPORT_EVENT,
   DIRECTORY_WORKS_IMPORT_EVENT,
-} from "@/features/directory-works/lib/directory-works-events"
+} from "../model/directory-works-model"
 import { DirectoryWorkFormDialog } from "./directory-work-form-dialog"
 import { DirectoryWorkImportDialog } from "./directory-work-import-dialog"
 import { DirectoryWorksRow } from "./directory-works-row"

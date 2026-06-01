@@ -13,7 +13,7 @@ import type {
   DirectoryWorkImportRowAction,
   DirectoryWorkImportRowStatus,
   DirectoryWorkPriceKind,
-} from "../types"
+} from "../model/directory-works-model"
 
 const VALID_PRICE_KINDS = new Set<DirectoryWorkPriceKind>([
   "base",

@@ -7,7 +7,7 @@ import type {
   DirectoryWorksListMeta,
   DirectoryWorksListParams,
   DirectoryWorksListResponse,
-} from "../types"
+} from "../model/directory-works-model"
 import { DirectoryWorksApiError } from "../api/directory-works-errors"
 import {
   getTotalCount,

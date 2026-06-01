@@ -3,12 +3,12 @@
 import { Suspense, useState } from "react"
 import { DirectoriesToolbar } from "./directories-toolbar"
 import type { DirectoryAction } from "../model/directories-model"
-import { DirectoryWorksCategoryFilter } from "@/features/directory-works/components/directory-works-category-filter"
+import { DirectoryWorksCategoryFilter } from "@/features/directory-works/ui/directory-works-category-filter"
 import {
   dispatchDirectoryWorksCreateEvent,
   dispatchDirectoryWorksExportEvent,
   dispatchDirectoryWorksImportEvent,
-} from "@/features/directory-works/lib/directory-works-events"
+} from "@/features/directory-works/model/directory-works-model"
 import {
   PlusIcon,
   FileArrowDownIcon,

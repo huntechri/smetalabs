@@ -12,38 +12,14 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import type {
-  DirectoryWork,
-  DirectoryWorkMutationInput,
-} from "@/features/directory-works/types"
-
-type DirectoryWorkFormState = {
-  title: string
-  unit: string
-  rate: string
-  category: string
-  subcategory: string
-}
-
-const emptyState: DirectoryWorkFormState = {
-  title: "",
-  unit: "",
-  rate: "",
-  category: "",
-  subcategory: "",
-}
-
-function getInitialState(work: DirectoryWork | null): DirectoryWorkFormState {
-  if (!work) return emptyState
-
-  return {
-    title: work.title,
-    unit: work.unitLabel || work.unit,
-    rate: String(work.rateAmount),
-    category: work.category,
-    subcategory: work.subcategory ?? "",
-  }
-}
+import {
+  getDirectoryWorkInitialFormState,
+  validateDirectoryWorkFormState,
+  buildDirectoryWorkMutationInput,
+  type DirectoryWork,
+  type DirectoryWorkMutationInput,
+  type DirectoryWorkFormState,
+} from "../model/directory-works-model"
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Не удалось сохранить работу"
@@ -65,13 +41,13 @@ export function DirectoryWorkFormDialog({
   onSubmit: (input: DirectoryWorkMutationInput) => Promise<void>
 }) {
   const [form, setForm] = useState<DirectoryWorkFormState>(() =>
-    getInitialState(work)
+    getDirectoryWorkInitialFormState(work)
   )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
-      setForm(getInitialState(work))
+      setForm(getDirectoryWorkInitialFormState(work))
       setError(null)
     }
   }, [open, work])
@@ -83,40 +59,17 @@ export function DirectoryWorkFormDialog({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    const title = form.title.trim()
-    const unit = form.unit.trim()
-    const category = form.category.trim()
-    const subcategory = form.subcategory.trim()
-    const rate = Number(form.rate)
-
-    if (!title || !unit || !category) {
-      setError("Заполните название, единицу измерения и категорию")
-      return
-    }
-
-    if (!Number.isFinite(rate) || rate < 0) {
-      setError("Расценка должна быть неотрицательным числом")
+    const validationError = validateDirectoryWorkFormState(form)
+    if (validationError) {
+      setError(validationError)
       return
     }
 
     setError(null)
 
     try {
-      await onSubmit({
-        title,
-        unit,
-        rate,
-        category,
-        subcategory: subcategory || null,
-        code: work?.code ?? null,
-        description: work?.description ?? null,
-        includedOperations: work?.includedOperations ?? null,
-        excludedOperations: work?.excludedOperations ?? null,
-        sourceName: work?.metadata.sourceName ?? null,
-        sourceExternalRowKey: work?.metadata.sourceExternalRowKey ?? null,
-        currencyCode: work?.currencyCode ?? "RUB",
-        priceKind: work?.priceKind ?? "base",
-      })
+      const mutationInput = buildDirectoryWorkMutationInput(form, work)
+      await onSubmit(mutationInput)
     } catch (err) {
       setError(getErrorMessage(err))
     }

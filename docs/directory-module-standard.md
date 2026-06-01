@@ -1,5 +1,9 @@
 # SmetaLabs — Стандарт построения Directory-модулей
 
+> [!WARNING]
+> **Этот стандарт частично устарел.** 
+> В ходе выполнения Epic #196 модули `directory-works` и `directory-materials` были переведены на новый, более строгий четырехслойный стандарт фич: [Архитектурный стандарт: Разделение слоёв в feature-модулях](file:///c:/Users/Admin/smetalabs/docs/feature-layers-standard.md) (`model`, `application`, `ui`, `api`, `server`). Рекомендуется использовать их в качестве эталонных примеров для новых модулей.
+
 > **Последняя проверка:** 2026-05-22
 >
 > **На основе:** анализа трёх реализованных модулей: `directory-works`, `directory-suppliers`, `directory-counterparties`.

@@ -1,7 +1,7 @@
 import type {
   DirectoryWorkAiSearchInput,
   DirectoryWorksListParams,
-} from "../types"
+} from "../model/directory-works-model"
 
 function compactParams(params: DirectoryWorksListParams = {}) {
   return Object.fromEntries(

@@ -6,7 +6,7 @@ import type {
   DirectoryWorkAiSearchInput,
   DirectoryWorkAiSearchResponse,
   DirectoryWorkEmbeddingProcessResponse,
-} from "../types"
+} from "../model/directory-works-model"
 import {
   mapDirectoryWorkRow,
   type DirectoryWorkRpcRow,

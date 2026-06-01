@@ -1,4 +1,4 @@
-import type { DirectoryWork, DirectoryWorksListParams } from "../types"
+import type { DirectoryWork, DirectoryWorksListParams } from "../model/directory-works-model"
 import { listDirectoryWorksForWorkspace } from "./directory-works.repository"
 
 const EXPORT_LIMIT = 100

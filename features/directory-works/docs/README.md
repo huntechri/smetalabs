@@ -18,25 +18,22 @@
 features/directory-works/
 ├── api/
 │   ├── directory-works-client.ts              # API-клиент для работы со справочником
+│   ├── directory-works-errors.ts              # Адаптер ошибок API
+│   ├── directory-works-mappers.ts             # Мапперы сетевых ответов к доменным сущностям
 │   └── directory-works-query-keys.ts          # Ключи кэша React Query
-├── components/
-│   ├── directory-works-view.tsx               # Основное представление справочника работ
-│   └── directory-works-category-filter.tsx    # Фильтр по категориям и подкатегориям
-├── directory-works-details/
-│   └── components/
-│       ├── directory-works-section.tsx        # Секция отображения списка работ
-│       ├── directory-works-row.tsx            # Строка конкретной работы
-│       ├── directory-work-form-dialog.tsx     # Диалог создания и редактирования работы
-│       ├── directory-work-import-dialog.tsx   # Диалог пошагового импорта из CSV
-│       ├── directory-works-code.tsx           # Отображение кода работы
-│       ├── directory-works-name.tsx           # Отображение наименования
-│       ├── directory-works-value.tsx          # Атомарный UI: бейдж со значением
-│       └── directory-works-metric-group.tsx   # Атомарный UI: группа метрик
-├── hooks/
-│   ├── use-directory-work-categories.ts      # Хук получения списка категорий
+├── application/
+│   ├── use-directory-work-categories.ts       # Хук получения списка категорий
 │   └── use-directory-works.ts                 # Основной хук для списка, мутаций и импорта
-├── lib/
-│   └── query.ts                               # Вспомогательные функции запросов
+├── model/
+│   ├── directory-works-model.ts               # Доменные типы, валидация форм, selectors, events
+│   └── directory-works-model.test.ts          # Юнит-тесты доменной логики и валидаторов
+├── ui/
+│   ├── directory-works-view.tsx               # Основное представление справочника работ
+│   ├── directory-works-section.tsx            # Секция отображения списка работ
+│   ├── directory-works-row.tsx                # Строка конкретной работы
+│   ├── directory-works-category-filter.tsx    # Фильтр по категориям и подкатегориям
+│   ├── directory-work-form-dialog.tsx         # Диалог создания и редактирования работы
+│   └── directory-work-import-dialog.tsx       # Диалог пошагового импорта из CSV
 └── server/
     ├── directory-works-import.repository.ts   # Репозиторий импорта CSV
     ├── directory-works-large-import.repository.ts # Оптимизированный репозиторий большого импорта

@@ -109,8 +109,6 @@ smetalabs/
 │   ├── execution.ts                     #   Тип ExecutionRow
 │   ├── global-purchases.ts              #   Тип GlobalPurchaseRow
 │   ├── estimate.ts                      #   Типы Work, Material
-│   ├── directory-material.ts            #   Тип DirectoryMaterialRow
-│   ├── directory-work.ts                #   Тип DirectoryWorkRow
 │   ├── directory-supplier.ts            #   Тип DirectorySupplierRow
 │   ├── directory-counterparty.ts        #   Тип DirectoryCounterpartyRow
 │   │                                     #   + CounterpartyType, LegalStatus, BankDetails, PassportData
@@ -412,19 +410,24 @@ smetalabs/
 │   │   └── server/                      # Серверная логика (repositories, service, ai)
 │   │
 │   ├── directory-works/                 # Фича «Справочник работ» (✅ эталонная структура)
-│   │   ├── __mocks__/
-│   │   │   └── directory-works.ts       #   Мок-данные работ
-│   │   ├── components/
-│   │   │   └── directory-works-view.tsx  # Обёртка со скроллом
-│   │   ├── hooks/
-│   │   │   └── use-directory-works.ts    # Хук (моки → API)
-│   │   └── directory-works-details/
-│   │       └── components/
-│   │           ├── directory-works-section.tsx     # Композиция (хук → map → Row)
-│   │           ├── directory-works-row.tsx         # Строка работы
-│   │           ├── directory-works-name.tsx        # Название работы
-│   │           ├── directory-works-value.tsx       # Бейдж «label: value»
-│   │           └── directory-works-metric-group.tsx  # Группа метрик
+│   │   ├── api/
+│   │   │   ├── directory-works-client.ts # HTTP-клиент к API
+│   │   │   ├── directory-works-errors.ts # Адаптер ошибок
+│   │   │   └── directory-works-query-keys.ts # Ключи кэширования
+│   │   ├── application/
+│   │   │   ├── use-directory-works.ts   # Оркестрация данных (список/мутации)
+│   │   │   └── use-directory-work-categories.ts # Дерево категорий
+│   │   ├── model/
+│   │   │   ├── directory-works-model.ts # Типы, константы и мапперы форм
+│   │   │   └── directory-works-model.test.ts # Unit-тесты доменной логики
+│   │   ├── ui/
+│   │   │   ├── directory-works-view.tsx  # Главный контейнер-представление
+│   │   │   ├── directory-works-section.tsx # Раздел списка, пагинации и модалок
+│   │   │   ├── directory-works-row.tsx   # Строка конкретной работы
+│   │   │   ├── directory-works-category-filter.tsx # Фильтр категорий
+│   │   │   ├── directory-work-form-dialog.tsx # Диалог добавления/редактирования
+│   │   │   └── directory-work-import-dialog.tsx # Диалог пошагового импорта из CSV
+│   │   └── server/                      # Серверная логика (repositories, service, embeddings)
 │   │
 │   ├── directory-suppliers/             # Фича «Справочник поставщиков» (✅ эталонная структура)
 │   │   ├── __mocks__/
@@ -875,7 +878,7 @@ lib/
 
 ### 2.5 Типы
 
-> **Текущее состояние:** 9 файлов типов. RBAC полностью типизирован (`roles.ts`).
+> **Текущее состояние:** 7 файлов типов. RBAC полностью типизирован (`roles.ts`).
 
 ```
 types/
@@ -883,8 +886,6 @@ types/
 ├── execution.ts            # ExecutionRow (структура идентична PurchaseRow)
 ├── global-purchases.ts     # GlobalPurchaseRow
 ├── estimate.ts             # Work, Material (для смет)
-├── directory-material.ts   # DirectoryMaterialRow
-├── directory-work.ts       # DirectoryWorkRow
 ├── directory-supplier.ts   # DirectorySupplierRow
 ├── directory-counterparty.ts  # DirectoryCounterpartyRow, CounterpartyType, LegalStatus, BankDetails, PassportData
 └── roles.ts                # RoleName, Role, PermissionKey (19 ключей), Permission, PermissionGroup,

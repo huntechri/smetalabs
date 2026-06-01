@@ -4,7 +4,7 @@ import type {
   DirectoryWorkPriceKind,
   DirectoryWorkStatus,
   DirectoryWorkUnitOption,
-} from "../types"
+} from "../model/directory-works-model"
 
 export type DirectoryWorkRpcRow = {
   id: string

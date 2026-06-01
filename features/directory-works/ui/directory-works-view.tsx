@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import {
   DirectoryWorksRowsSkeleton,
   DirectoryWorksSection,
-} from "@/features/directory-works/directory-works-details/components/directory-works-section"
+} from "./directory-works-section"
 
 export function DirectoryWorksView() {
   return (

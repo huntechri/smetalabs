@@ -11,7 +11,7 @@ import type {
   DirectoryWorkMutationInput,
   DirectoryWorksExportFormat,
   DirectoryWorksListParams,
-} from "../types"
+} from "../model/directory-works-model"
 import { directoryWorksCacheTags } from "../api/directory-works-query-keys"
 import {
   archiveDirectoryWorkForWorkspace,

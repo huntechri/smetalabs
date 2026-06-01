@@ -13,63 +13,24 @@ import {
   updateDirectoryWork,
 } from "../api/directory-works-client"
 import { directoryWorksQueryKeys } from "../api/directory-works-query-keys"
-import type {
-  DirectoryWorkImportApplyInput,
-  DirectoryWorkImportBatchInput,
-  DirectoryWorkImportCreateInput,
-  DirectoryWorkMutationInput,
-  DirectoryWorksListParams,
-  DirectoryWorksSort,
-} from "../types"
-
-type ReadonlySearchParams = {
-  get: (name: string) => string | null
-}
+import {
+  getDirectoryWorksListParams,
+  type DirectoryWorkImportApplyInput,
+  type DirectoryWorkImportBatchInput,
+  type DirectoryWorkImportCreateInput,
+  type DirectoryWorkMutationInput,
+} from "../model/directory-works-model"
 
 const DIRECTORY_WORKS_STALE_TIME_MS = 30_000
 const DIRECTORY_WORKS_GC_TIME_MS = 5 * 60_000
 
-function getStringParam(searchParams: ReadonlySearchParams, key: string) {
-  const value = searchParams.get(key)?.trim()
-  return value || undefined
-}
-
-function getNumberParam(searchParams: ReadonlySearchParams, key: string) {
-  const value = searchParams.get(key)
-  if (!value) return undefined
-
-  const parsed = Number(value)
-  return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
-}
-
-function getSortParam(
-  searchParams: ReadonlySearchParams
-): DirectoryWorksSort | undefined {
-  const sort = searchParams.get("sort")
-  if (sort === "relevance" || sort === "updated_desc" || sort === "title_asc")
-    return sort
-  return undefined
-}
-
-function getListParams(
-  searchParams: ReadonlySearchParams
-): DirectoryWorksListParams {
-  return {
-    q: getStringParam(searchParams, "q"),
-    category: getStringParam(searchParams, "category"),
-    subcategory: getStringParam(searchParams, "subcategory"),
-    unit: getStringParam(searchParams, "unit"),
-    status: searchParams.get("status") === "archived" ? "archived" : "active",
-    limit: getNumberParam(searchParams, "limit") ?? 50,
-    cursor: getNumberParam(searchParams, "cursor") ?? 0,
-    sort: getSortParam(searchParams) ?? "relevance",
-  }
-}
-
 export function useDirectoryWorks() {
   const searchParams = useSearchParams()
   const queryClient = useQueryClient()
-  const params = useMemo(() => getListParams(searchParams), [searchParams])
+  const params = useMemo(
+    () => getDirectoryWorksListParams(searchParams),
+    [searchParams]
+  )
 
   const worksQuery = useQuery({
     queryKey: directoryWorksQueryKeys.list(params),

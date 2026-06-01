@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useDirectoryWorkCategories } from "../hooks/use-directory-work-categories"
+import { useDirectoryWorkCategories } from "../application/use-directory-work-categories"
 
 const ALL_CATEGORIES_VALUE = "__all_categories__"
 const ALL_SUBCATEGORIES_VALUE = "__all_subcategories__"

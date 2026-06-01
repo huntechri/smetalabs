@@ -411,7 +411,7 @@ async function loadExistingMaterialsForBatch(
   const fingerprintChunks = chunk(Array.from(fingerprints), 100)
   const nameChunks = chunk(Array.from(names), 10)
 
-  const promises: Promise<any>[] = []
+  const promises: Promise<unknown>[] = []
 
   const columns =
     "id,name,code,normalized_name,unit_code,price_amount,currency_code,source_name,source_external_row_key,dedupe_fingerprint"

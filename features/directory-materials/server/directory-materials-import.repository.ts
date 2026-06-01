@@ -391,7 +391,7 @@ async function loadExistingCandidatesForBatch(
   const fingerprintChunks = chunk(fingerprints, 100)
   const nameChunks = chunk(names, 10)
 
-  const promises: Promise<any>[] = []
+  const promises: Promise<unknown>[] = []
 
   for (const codeChunk of codeChunks) {
     promises.push(

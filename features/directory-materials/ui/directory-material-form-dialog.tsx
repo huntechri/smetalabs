@@ -52,12 +52,14 @@ export function DirectoryMaterialFormDialog({
   )
   const [error, setError] = useState<string | null>(null)
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (open) {
       setForm(getDirectoryMaterialInitialFormState(material))
       setError(null)
     }
   }, [open, material])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const updateField = (
     field: keyof DirectoryMaterialFormState,

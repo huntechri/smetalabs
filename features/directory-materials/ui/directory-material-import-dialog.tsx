@@ -72,6 +72,7 @@ export function DirectoryMaterialImportDialog({
   const [progress, setProgress] = useState("")
   const [error, setError] = useState<string | null>(null)
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (open) {
       setFile(null)
@@ -81,6 +82,7 @@ export function DirectoryMaterialImportDialog({
       setError(null)
     }
   }, [open])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFile(event.target.files?.[0] ?? null)

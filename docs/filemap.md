@@ -238,11 +238,30 @@ smetalabs/
 │   │       ├── data-table.tsx           #   Таблица проектов в работе
 │   │       └── section-cards-dashboard.tsx # Карточки KPI воркспейса
 │   │
-│   ├── projects/                        # Фича «Проекты»
-│   │   └── components/
-│   │       ├── projects-view.tsx        # Представление списка проектов
-│   │       ├── project-card.tsx         # Карточка одного проекта
-│   │       └── section-cards.tsx        # Карточки статистики (раздел проектов)
+│   ├── projects/                        # Фича «Проекты» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   ├── projects-client.ts       # Клиентские запросы к API с обработкой ошибок
+│   │   │   ├── project-estimate-records-client.ts # Запросы к API для смет проектов
+│   │   │   ├── projects-errors.ts       # Обработка ошибок API
+│   │   │   └── projects-query-keys.ts   # Ключи кэша React Query
+│   │   ├── application/
+│   │   │   ├── use-projects.ts          # Хук управления списком проектов
+│   │   │   ├── use-project-dashboard-stats.ts # Хук управления показателями проекта
+│   │   │   └── use-project-estimate-records.ts # Хук управления сметами проекта
+│   │   ├── model/
+│   │   │   ├── projects-model.ts        # Типы, хелперы, парсеры и логика графика/форм
+│   │   │   └── projects-model.test.ts   # Unit-тесты для расчета графиков и форм
+│   │   ├── ui/
+│   │   │   ├── projects-view.tsx        # Представление списка проектов
+│   │   │   ├── project-card.tsx         # Карточка одного проекта
+│   │   │   ├── projects-toolbar.tsx     # Панель поиска/фильтрации
+│   │   │   ├── create-project-dialog.tsx # Диалог создания/редактирования проекта
+│   │   │   ├── section-cards.tsx        # Карточки метрик (договор, оплата, баланс)
+│   │   │   ├── chart-area-interactive.tsx # Интерактивный график динамики баланса
+│   │   │   ├── estimates-table.tsx      # Таблица смет проекта с вкладками
+│   │   │   ├── estimate-name-dialog.tsx # Диалог создания/редактирования сметы
+│   │   │   └── estimate-delete-dialog.tsx # Диалог удаления сметы
+│   │   └── server/                      # Серверная логика (repositories, service, schemas, route-handlers)
 │   │
 │   ├── estimates/                       # Фича «Сметы» (✅ полная структура — декомпозирована)
 │   │   ├── __mocks__/

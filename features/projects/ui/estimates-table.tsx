@@ -22,27 +22,17 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useProjectEstimateRecords } from "@/features/projects/hooks/use-project-estimate-records"
-import { EstimateDeleteDialog } from "@/features/projects/project-overview/components/estimate-delete-dialog"
-import { EstimateNameDialog } from "@/features/projects/project-overview/components/estimate-name-dialog"
+import { useProjectEstimateRecords } from "../application/use-project-estimate-records"
+import { EstimateDeleteDialog } from "./estimate-delete-dialog"
+import { EstimateNameDialog } from "./estimate-name-dialog"
 import {
   formatEstimateAmount,
   formatEstimateDate,
   formatEstimateStatus,
-} from "@/features/projects/project-overview/lib/estimate-table-data"
-import type {
-  EstimateDialogState,
-  EstimateRow,
-} from "@/features/projects/project-overview/types"
-
-const EMPTY_DIALOG_STATE: EstimateDialogState = {
-  open: false,
-  estimate: null,
-  name: "",
-  type: "Основная",
-  status: "new",
-  error: null,
-}
+  emptyEstimateDialogState,
+  type EstimateDialogState,
+  type EstimateRow,
+} from "../model/projects-model"
 
 export function EstimatesTable({ projectId }: { projectId: string }) {
   const router = useRouter()
@@ -58,7 +48,7 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
     deleteRecord,
   } = useProjectEstimateRecords(projectId)
   const [dialogState, setDialogState] =
-    React.useState<EstimateDialogState>(EMPTY_DIALOG_STATE)
+    React.useState<EstimateDialogState>(emptyEstimateDialogState)
   const [estimateToDelete, setEstimateToDelete] =
     React.useState<EstimateRow | null>(null)
   const [deleteError, setDeleteError] = React.useState<string | null>(null)
@@ -105,7 +95,7 @@ export function EstimatesTable({ projectId }: { projectId: string }) {
     setEstimateToDelete(estimate)
   }
 
-  const closeDialog = () => setDialogState(EMPTY_DIALOG_STATE)
+  const closeDialog = () => setDialogState(emptyEstimateDialogState)
 
   const closeDeleteDialog = () => {
     setDeleteError(null)

@@ -1,6 +1,6 @@
-import { ChartAreaInteractive } from "@/features/projects/project-overview/components/chart-area-interactive"
-import { EstimatesTable } from "@/features/projects/project-overview/components/estimates-table"
-import { SectionCards } from "@/features/projects/project-overview/components/section-cards"
+import { ChartAreaInteractive } from "@/features/projects/ui/chart-area-interactive"
+import { EstimatesTable } from "@/features/projects/ui/estimates-table"
+import { SectionCards } from "@/features/projects/ui/section-cards"
 
 export const dynamic = "force-dynamic"
 

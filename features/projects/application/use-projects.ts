@@ -14,63 +14,18 @@ import type {
   ProjectMutationInput,
   ProjectStatus,
   ProjectsListParams,
-  ProjectsSort,
 } from "@/types/project"
-
-type ReadonlySearchParams = {
-  get: (name: string) => string | null
-}
+import { getProjectsListParams } from "../model/projects-model"
 
 const PROJECTS_STALE_TIME_MS = 30_000
 const PROJECTS_GC_TIME_MS = 5 * 60_000
-
-function getStringParam(searchParams: ReadonlySearchParams, key: string) {
-  const value = searchParams.get(key)?.trim()
-  return value || undefined
-}
-
-function getNumberParam(searchParams: ReadonlySearchParams, key: string) {
-  const value = searchParams.get(key)
-  if (!value) return undefined
-
-  const parsed = Number(value)
-  return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
-}
-
-function getStatusParam(
-  searchParams: ReadonlySearchParams
-): ProjectStatus | "all" {
-  const status = searchParams.get("status")
-  if (status === "new" || status === "in_progress" || status === "completed")
-    return status
-  return "all"
-}
-
-function getSortParam(
-  searchParams: ReadonlySearchParams
-): ProjectsSort | undefined {
-  const sort = searchParams.get("sort")
-  if (sort === "relevance" || sort === "updated_desc" || sort === "title_asc")
-    return sort
-  return undefined
-}
-
-function getListParams(searchParams: ReadonlySearchParams): ProjectsListParams {
-  return {
-    q: getStringParam(searchParams, "q"),
-    status: getStatusParam(searchParams),
-    limit: getNumberParam(searchParams, "limit") ?? 50,
-    cursor: getNumberParam(searchParams, "cursor") ?? 0,
-    sort: getSortParam(searchParams) ?? "relevance",
-  }
-}
 
 export function useProjects() {
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const params = useMemo(() => getListParams(searchParams), [searchParams])
+  const params = useMemo(() => getProjectsListParams(searchParams), [searchParams])
 
   const projectsQuery = useQuery({
     queryKey: projectsQueryKeys.list(params),

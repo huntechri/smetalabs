@@ -11,8 +11,8 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/comp
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { formatMoney } from "@/lib/formatters"
-import { useProjectDashboardStats } from "@/features/projects/hooks/use-project-dashboard-stats"
+import { formatProjectMoney } from "../model/projects-model"
+import { useProjectDashboardStats } from "../application/use-project-dashboard-stats"
 
 interface SectionCardsProps {
   projectId: string
@@ -70,7 +70,7 @@ export function SectionCards({ projectId }: SectionCardsProps) {
             Договор
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {formatMoney(contractTotal)}
+            {formatProjectMoney(contractTotal)}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -86,7 +86,7 @@ export function SectionCards({ projectId }: SectionCardsProps) {
             Оплачено
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums text-chart-2 @[250px]/card:text-3xl">
-            {formatMoney(paidTotal)}
+            {formatProjectMoney(paidTotal)}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -102,7 +102,7 @@ export function SectionCards({ projectId }: SectionCardsProps) {
             Баланс
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {formatMoney(totalBalance)}
+            {formatProjectMoney(totalBalance)}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -128,4 +128,3 @@ export function SectionCards({ projectId }: SectionCardsProps) {
     </div>
   )
 }
-

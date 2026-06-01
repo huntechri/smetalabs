@@ -20,6 +20,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import {
+  PROJECT_STATUS_CONFIG,
+  formatProjectMoney,
+  formatProjectDateRange,
+} from "../model/projects-model"
 
 interface ProjectCardProps {
   project: ProjectRow
@@ -28,52 +33,13 @@ interface ProjectCardProps {
   onArchive: (project: ProjectRow) => void
 }
 
-const STATUS_CONFIG: Record<
-  ProjectRow["status"],
-  {
-    label: string
-    dotClass: string
-    badgeVariant: "default" | "secondary"
-    badgeClassName?: string
-  }
-> = {
-  new: {
-    label: "Новый",
-    dotClass: "bg-blue-500",
-    badgeVariant: "default",
-    badgeClassName:
-      "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
-  },
-  in_progress: {
-    label: "В работе",
-    dotClass: "bg-emerald-500",
-    badgeVariant: "default",
-  },
-  completed: {
-    label: "Завершён",
-    dotClass: "bg-slate-400",
-    badgeVariant: "secondary",
-  },
-}
-
-function formatMoney(value: number | null): string {
-  if (value === null) return "Бюджет не указан"
-  return value.toLocaleString("ru-RU") + " ₽"
-}
-
-function formatDateRange(start?: string | null, end?: string | null): string {
-  if (!start && !end) return "Сроки не указаны"
-  if (start && end) return `${start} – ${end}`
-  return start || end || ""
-}
-
 export function ProjectCard({
   project,
   disabled,
   onEdit,
   onArchive,
 }: ProjectCardProps) {
-  const statusCfg = STATUS_CONFIG[project.status]
+  const statusCfg = PROJECT_STATUS_CONFIG[project.status]
 
   return (
     <Card className="h-full">
@@ -112,7 +78,7 @@ export function ProjectCard({
                 <span>Бюджет</span>
               </div>
               <div className="w-full truncate text-xs font-medium">
-                {formatMoney(project.budgetAmount)}
+                {formatProjectMoney(project.budgetAmount)}
               </div>
             </div>
           </div>
@@ -124,7 +90,7 @@ export function ProjectCard({
                 <span>Сроки</span>
               </div>
               <div className="w-full truncate text-xs font-medium">
-                {formatDateRange(project.startDate, project.endDate)}
+                {formatProjectDateRange(project.startDate, project.endDate)}
               </div>
             </div>
           </div>

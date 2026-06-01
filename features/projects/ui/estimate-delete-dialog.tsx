@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import type { EstimateRow } from "@/features/projects/project-overview/types"
+import type { EstimateRow } from "../model/projects-model"
 
 export function EstimateDeleteDialog({
   estimate,

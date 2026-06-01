@@ -4,7 +4,7 @@ import * as React from "react"
 import { ComposedChart, Area, Bar, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useProjectDashboardStats } from "@/features/projects/hooks/use-project-dashboard-stats"
+import { useProjectDashboardStats } from "../application/use-project-dashboard-stats"
 import {
   Card,
   CardAction,
@@ -32,7 +32,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { formatMoney } from "@/lib/formatters"
+import { formatProjectMoney } from "../model/projects-model"
 
 const chartConfig = {
   inflow: {
@@ -264,7 +264,7 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
                           {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
                         </span>
                         <span className="font-mono font-medium text-foreground tabular-nums">
-                          {formatMoney(name === "outflow" ? Math.abs(Number(value)) : Number(value))}
+                          {formatProjectMoney(name === "outflow" ? Math.abs(Number(value)) : Number(value))}
                         </span>
                       </div>
                     </>
@@ -302,4 +302,3 @@ export function ChartAreaInteractive({ projectId }: ChartAreaInteractiveProps) {
     </Card>
   )
 }
-

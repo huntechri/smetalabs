@@ -2,14 +2,14 @@
 
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { fetchWorkspaceDashboardStats } from "../api/dashboard-api"
+import { fetchProjectDashboardStats } from "@/features/projects/api/projects-client"
 import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
-import { processChartData } from "@/features/projects/model/projects-model"
+import { processChartData } from "../model/projects-model"
 
-export function useWorkspaceDashboardStats(timeRange: string = "90d") {
+export function useProjectDashboardStats(projectId: string, timeRange: string = "90d") {
   const query = useQuery({
-    queryKey: projectsQueryKeys.workspaceStats(),
-    queryFn: fetchWorkspaceDashboardStats,
+    queryKey: projectsQueryKeys.dashboardStats(projectId),
+    queryFn: () => fetchProjectDashboardStats(projectId),
     staleTime: 10_000,
   })
 
@@ -24,6 +24,7 @@ export function useWorkspaceDashboardStats(timeRange: string = "90d") {
     stats,
     chartData,
     loading: query.isLoading,
+    isFetching: query.isFetching,
     error: query.error instanceof Error ? query.error.message : null,
     refetch: async () => {
       await query.refetch()

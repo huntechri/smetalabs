@@ -41,6 +41,15 @@ import type {
   ProjectRow,
   ProjectStatus,
 } from "@/types/project"
+import {
+  type ProjectFormState,
+  getProjectInitialFormState,
+  getProjectErrorMessage,
+  buildProjectMutationInput,
+  formatDisplayDate,
+  parseDate,
+  toDateString,
+} from "../model/projects-model"
 
 const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [
   { label: "Новый", value: "new" },
@@ -56,80 +65,6 @@ const CUSTOMER_LIST_PARAMS = {
   sort: "name_asc" as const,
 }
 
-type FormState = {
-  title: string
-  customerCounterpartyId: string
-  address: string
-  startDate: string
-  endDate: string
-  status: ProjectStatus
-}
-
-const EMPTY_FORM: FormState = {
-  title: "",
-  customerCounterpartyId: "",
-  address: "",
-  startDate: "",
-  endDate: "",
-  status: "new",
-}
-
-function initialState(project?: ProjectRow | null): FormState {
-  if (!project) return EMPTY_FORM
-
-  return {
-    title: project.title,
-    customerCounterpartyId: project.customerCounterpartyId ?? "",
-    address: project.address ?? "",
-    startDate: project.startDate ?? "",
-    endDate: project.endDate ?? "",
-    status: project.status,
-  }
-}
-
-function nullable(value: string) {
-  const trimmed = value.trim()
-  return trimmed ? trimmed : null
-}
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Не удалось сохранить проект"
-}
-
-function parseDate(value: string): Date | undefined {
-  if (!value) return undefined
-  const date = new Date(value + "T00:00:00")
-  return isNaN(date.getTime()) ? undefined : date
-}
-
-function toDateString(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
-}
-
-function formatDisplayDate(value: string): string {
-  const date = parseDate(value)
-  if (!date) return value
-  return date.toLocaleDateString("ru-RU", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
-}
-
-function toMutationInput(form: FormState): ProjectMutationInput {
-  return {
-    title: form.title.trim(),
-    customerCounterpartyId: nullable(form.customerCounterpartyId),
-    address: nullable(form.address),
-    startDate: nullable(form.startDate),
-    endDate: nullable(form.endDate),
-    status: form.status,
-  }
-}
-
 export function CreateProjectDialog({
   open,
   onOpenChange,
@@ -143,7 +78,7 @@ export function CreateProjectDialog({
   saving?: boolean
   onSubmit: (input: ProjectMutationInput) => Promise<void>
 }) {
-  const [form, setForm] = useState<FormState>(() => initialState(project))
+  const [form, setForm] = useState<ProjectFormState>(() => getProjectInitialFormState(project))
   const [error, setError] = useState<string | null>(null)
   const isEdit = Boolean(project)
 
@@ -172,11 +107,11 @@ export function CreateProjectDialog({
 
   useEffect(() => {
     if (!open) return
-    setForm(initialState(project))
+    setForm(getProjectInitialFormState(project))
     setError(null)
   }, [open, project])
 
-  const setField = (field: keyof FormState, value: string) => {
+  const setField = (field: keyof ProjectFormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
   }
 
@@ -191,10 +126,10 @@ export function CreateProjectDialog({
 
     try {
       setError(null)
-      await onSubmit(toMutationInput(form))
+      await onSubmit(buildProjectMutationInput(form))
       onOpenChange(false)
     } catch (err) {
-      setError(errorMessage(err))
+      setError(getProjectErrorMessage(err))
     }
   }
 
@@ -272,7 +207,7 @@ export function CreateProjectDialog({
               <FieldLabel htmlFor="project-status">Статус</FieldLabel>
               <Select
                 value={form.status}
-                onValueChange={(value) => setField("status", value)}
+                onValueChange={(value) => setField("status", value as ProjectStatus)}
               >
                 <SelectTrigger id="project-status" className="w-full">
                   <SelectValue placeholder="Выберите статус" />
@@ -317,13 +252,13 @@ export function CreateProjectDialog({
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
-                    mode="single"
-                    locale={ru}
-                    selected={parseDate(form.startDate)}
-                    onSelect={(date) =>
-                      setField("startDate", date ? toDateString(date) : "")
-                    }
-                    defaultMonth={parseDate(form.startDate) ?? undefined}
+                     mode="single"
+                     locale={ru}
+                     selected={parseDate(form.startDate)}
+                     onSelect={(date) =>
+                       setField("startDate", date ? toDateString(date) : "")
+                     }
+                     defaultMonth={parseDate(form.startDate) ?? undefined}
                   />
                 </PopoverContent>
               </Popover>

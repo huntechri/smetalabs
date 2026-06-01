@@ -409,7 +409,7 @@ async function loadExistingMaterialsForBatch(
 
   const codeChunks = chunk(Array.from(codes), 100)
   const fingerprintChunks = chunk(Array.from(fingerprints), 100)
-  const nameChunks = chunk(Array.from(names), 100)
+  const nameChunks = chunk(Array.from(names), 10)
 
   const promises: Promise<any>[] = []
 
@@ -773,7 +773,15 @@ export async function appendDirectoryMaterialImportBatchForWorkspace(
       }))
     )
 
-  if (rowsError) throw rowsError
+  if (rowsError) {
+    console.error("[appendDirectoryMaterialImportBatchForWorkspace] rowsError details:", {
+      code: rowsError.code,
+      message: rowsError.message,
+      details: rowsError.details,
+      hint: rowsError.hint,
+    })
+    throw rowsError
+  }
 
   const { error: updateError } = await supabase
     .from("directory_material_import_jobs")

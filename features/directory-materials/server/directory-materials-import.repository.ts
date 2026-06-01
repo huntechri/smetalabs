@@ -389,7 +389,7 @@ async function loadExistingCandidatesForBatch(
 
   const codeChunks = chunk(codes, 100)
   const fingerprintChunks = chunk(fingerprints, 100)
-  const nameChunks = chunk(names, 100)
+  const nameChunks = chunk(names, 10)
 
   const promises: Promise<any>[] = []
 

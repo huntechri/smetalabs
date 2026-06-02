@@ -259,25 +259,29 @@ export async function listDirectoryMaterialsForWorkspace(
   workspaceOwnerId: string,
   params: NormalizedListParams
 ): Promise<DirectoryMaterialsListResponse> {
-  const from = params.cursor
-  const to = params.cursor + params.limit
+  const { data, error } = await supabase.rpc("search_directory_materials", {
+    p_workspace_owner_id: workspaceOwnerId,
+    p_q: params.q ?? null,
+    p_category: params.category ?? null,
+    p_subcategory: params.subcategory ?? null,
+    p_supplier: params.supplier ?? null,
+    p_unit: params.unit ?? null,
+    p_status: params.status,
+    p_limit: params.limit + 1,
+    p_cursor: params.cursor,
+    p_sort: params.sort,
+  })
 
-  let query = supabase
-    .from("directory_materials")
-    .select(MATERIAL_SELECT, { count: "exact" })
-    .eq("workspace_owner_id", workspaceOwnerId)
-    .eq("status", params.status)
-    .is("deleted_at", null)
-
-  query = applyDirectoryMaterialFilters(query, params)
-  query = applyDirectoryMaterialSort(query, params)
-
-  const { data, error, count } = await query.range(from, to)
   if (error) throw error
 
-  const rows = ((data ?? []) as DirectoryMaterialDbRow[]).filter(Boolean)
+  const rows = ((data ?? []) as (DirectoryMaterialDbRow & { total_count?: string | number | null })[]).filter(Boolean)
   const visibleRows = rows.slice(0, params.limit)
   const hasMore = rows.length > params.limit
+
+  const firstTotal = rows[0]?.total_count
+  const total = firstTotal !== undefined && firstTotal !== null
+    ? Number(firstTotal)
+    : params.cursor + visibleRows.length + (hasMore ? 1 : 0)
 
   return {
     data: visibleRows.map(mapDirectoryMaterialRow),
@@ -286,7 +290,7 @@ export async function listDirectoryMaterialsForWorkspace(
       cursor: params.cursor,
       nextCursor: hasMore ? params.cursor + params.limit : null,
       hasMore,
-      total: count ?? params.cursor + visibleRows.length + (hasMore ? 1 : 0),
+      total,
     },
   }
 }

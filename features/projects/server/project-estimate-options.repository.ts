@@ -156,24 +156,23 @@ export async function listProjectEstimateMaterialOptionsForWorkspace(
   }
 
   const normalizedQuery = normalizeSearch(params.q)
-  const limitWithSentinel = params.limit + 1
 
   if (normalizedQuery.length < ESTIMATE_OPTION_SEARCH_MIN_LENGTH) {
     return buildMeta([], params)
   }
 
-  const { data, error } = await supabase
-    .from("directory_materials")
-    .select(MATERIAL_OPTION_SELECT)
-    .eq("workspace_owner_id", workspaceOwnerId)
-    .eq("status", "active")
-    .is("deleted_at", null)
-    .textSearch("search_fts", normalizedQuery, {
-      type: "websearch",
-      config: "simple",
-    })
-    .order("normalized_name", { ascending: true })
-    .range(params.cursor, params.cursor + limitWithSentinel - 1)
+  const { data, error } = await supabase.rpc("search_directory_materials", {
+    p_workspace_owner_id: workspaceOwnerId,
+    p_q: normalizedQuery,
+    p_category: null,
+    p_subcategory: null,
+    p_supplier: null,
+    p_unit: null,
+    p_status: "active",
+    p_limit: params.limit + 1,
+    p_cursor: params.cursor,
+    p_sort: "relevance",
+  })
 
   if (error) throw error
 

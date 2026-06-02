@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/empty"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePurchases } from "@/features/purchases/hooks/use-purchases"
-import { useProjectEstimateContent } from "@/features/estimates/hooks/use-project-estimate-content"
+import { useProjectEstimateContent } from "@/features/estimates/application/use-project-estimate-content"
 import { PurchaseRow } from "./purchase-row"
 import { AddPurchaseDialog } from "./add-purchase-dialog"
 import {

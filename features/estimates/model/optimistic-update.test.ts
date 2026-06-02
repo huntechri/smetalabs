@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
-import { applyOptimisticChange } from "../estimate-details/lib/optimistic-update"
-import type { ProjectEstimateContentData } from "../estimate-details/lib/optimistic-update"
+import { applyOptimisticChange } from "./optimistic-update"
+import type { ProjectEstimateContentData } from "./optimistic-update"
 
 describe("optimistic-update calculations", () => {
   const mockData = (): ProjectEstimateContentData => ({

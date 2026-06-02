@@ -30,6 +30,28 @@ describe("directory works schemas", () => {
     })
   })
 
+  it("parses recommend parameter", () => {
+    const params = parseDirectoryWorksListParams(
+      new URLSearchParams({
+        recommend: "true",
+      })
+    )
+
+    expect(params).toMatchObject({
+      recommend: true,
+    })
+
+    const paramsFalse = parseDirectoryWorksListParams(
+      new URLSearchParams({
+        recommend: "false",
+      })
+    )
+
+    expect(paramsFalse).toMatchObject({
+      recommend: false,
+    })
+  })
+
   it("bounds deep interactive cursors for large catalogs", () => {
     const params = parseDirectoryWorksListParams(
       new URLSearchParams({ cursor: "250000", limit: "100" })

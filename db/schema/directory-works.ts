@@ -10,6 +10,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -516,3 +517,36 @@ export const directoryWorkEmbeddings = pgTable(
     ),
   ]
 )
+
+export const directoryWorkUsageStats = pgTable(
+  "directory_work_usage_stats",
+  {
+    workspaceOwnerId: uuid("workspace_owner_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    workId: uuid("work_id").notNull(),
+    useCount: integer("use_count").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.workspaceOwnerId, t.workId] }),
+    foreignKey({
+      name: "fk_directory_work_usage_stats_work_workspace",
+      columns: [t.workId, t.workspaceOwnerId],
+      foreignColumns: [directoryWorks.id, directoryWorks.workspaceOwnerId],
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    index("idx_directory_work_usage_stats_workspace_use_count").on(
+      t.workspaceOwnerId,
+      t.useCount
+    ),
+    check("chk_directory_work_usage_stats_use_count_non_negative", sql`${t.useCount} >= 0`),
+  ]
+)
+

@@ -19,6 +19,7 @@ export type DirectoryWorksListParams = {
   limit?: number
   cursor?: number
   sort?: DirectoryWorksSort
+  recommend?: boolean
 }
 
 export type DirectoryWorkMutationInput = {

@@ -263,32 +263,39 @@ smetalabs/
 │   │   │   └── estimate-delete-dialog.tsx # Диалог удаления сметы
 │   │   └── server/                      # Серверная логика (repositories, service, schemas, route-handlers)
 │   │
-│   ├── estimates/                       # Фича «Сметы» (✅ полная структура — декомпозирована)
-│   │   ├── __mocks__/
-│   │   │   └── estimates.ts             #   Мок-данные (работы + материалы)
-│   │   ├── components/
-│   │   │   └── estimate-navigation-tabs.tsx  # Табы навигации по смете
-│   │   ├── hooks/
-│   │   │   └── use-estimates.ts         #   Хук с состоянием (useState, useMemo)
-│   │   ├── estimate-details/
-│   │   │   └── components/
-│   │   │       ├── estimate-section.tsx        # Секция сметы — композиция (112 строк)
-│   │   │       ├── estimate-row.tsx            # Строка работы (collapsible + метрики + материалы)
-│   │   │       ├── estimate-name.tsx           # Поле названия работы (textarea)
-│   │   │       ├── estimate-value.tsx          # Бейдж «label: value»
-│   │   │       ├── estimate-metric-group.tsx   # Группа метрик с заголовком
-│   │   │       ├── estimate-material-card.tsx  # Карточка материала (Card + метрики)
-│   │   │       ├── estimate-material-name.tsx  # Поле названия материала
-│   │   │       ├── estimate-material-actions.tsx # Меню материала (Edit/Duplicate/Delete)
-│   │   │       ├── estimate-work-number.tsx    # Номер работы (№ + value)
-│   │   │       ├── estimate-work-actions.tsx   # Кнопки действий работы
-│   │   │       ├── estimate-summary-value.tsx  # Сводные итоги (label + value)
-│   │   │       ├── create-section-dialog.tsx   # Диалог создания секции
-│   │   │       └── estimate-empty-state.tsx    # Пустое состояние сметы
-│   │   └── estimate-tabs/
-│   │       └── components/
-│   │           ├── estimate-tab-placeholder.tsx # Заглушка для вкладки
-│   │           └── estimate-tab-toolbar.tsx     # Тулбар вкладки сметы
+│   ├── estimates/                       # Фича «Сметы» (✅ декомпозирована по 4-слойному стандарту)
+│   │   ├── api/
+│   │   │   └── project-estimate-content-client.ts # API-клиент
+│   │   ├── application/
+│   │   │   ├── estimate-excel-exporter.ts
+│   │   │   ├── use-estimate-editor-scenarios.ts
+│   │   │   └── use-project-estimate-content.ts
+│   │   ├── model/
+│   │   │   ├── calculations.ts
+│   │   │   ├── calculations.test.ts
+│   │   │   ├── optimistic-update.ts
+│   │   │   ├── optimistic-update.test.ts
+│   │   │   └── estimate-editor-form.ts
+│   │   └── ui/
+│   │       ├── types.ts
+│   │       ├── estimate-editor-view.tsx
+│   │       ├── estimate-editor-context.tsx
+│   │       ├── estimate-section-card.tsx
+│   │       ├── estimate-work-card.tsx
+│   │       ├── estimate-material-card.tsx
+│   │       ├── estimate-work-picker-dialog.tsx
+│   │       ├── estimate-material-picker-dialog.tsx
+│   │       ├── create-section-dialog.tsx
+│   │       ├── estimate-empty-state.tsx
+│   │       ├── estimate-name.tsx
+│   │       ├── estimate-material-name.tsx
+│   │       ├── estimate-work-number.tsx
+│   │       ├── estimate-material-actions.tsx
+│   │       ├── estimate-navigation-tabs.tsx
+│   │       ├── estimate-import-dialog.tsx
+│   │       └── estimate-tabs/
+│   │           ├── estimate-tab-toolbar.tsx
+│   │           └── estimate-tab-placeholder.tsx
 │   │
 │   ├── purchases/                       # Фича «Закупки» (✅ эталонная структура фичи)
 │   │   ├── __mocks__/
@@ -695,7 +702,7 @@ features/{domain}/
 ```
 
 **Когда создавать подпапку в фиче:**
-- Фича имеет несколько смысловых частей (например, `estimates/estimate-details/` и `estimates/estimate-tabs/`)
+- Фича имеет несколько смысловых частей (например, `estimates/ui/` и `estimates/ui/estimate-tabs/`)
 - Каждая часть содержит 2+ компонента
 - Иначе — плоский список в `components/`
 
@@ -1137,8 +1144,8 @@ features/execution/
 
 ```
 1. Создать app/(main)/projects/[projectId]/estimates/[estimateId]/new-tab/page.tsx
-2. Создать features/estimates/estimate-tabs/components/new-tab-content.tsx
-3. Добавить значение таба в features/estimates/components/estimate-navigation-tabs.tsx
+2. Создать features/estimates/ui/estimate-tabs/new-tab-content.tsx
+3. Добавить значение таба в features/estimates/ui/estimate-navigation-tabs.tsx
 ```
 
 ### 5.4 Создать форму с валидацией

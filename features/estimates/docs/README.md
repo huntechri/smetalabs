@@ -26,38 +26,38 @@
 
 ```
 features/estimates/
-├── __mocks__/
-│   └── estimates.ts                    # Мок-данные для тестов
-├── __tests__/
-│   └── optimistic-update.test.ts       # Юнит-тесты на логику оптимистичных обновлений
 ├── api/
 │   └── project-estimate-content-client.ts # API-клиент для смет
-├── components/
-│   └── estimate-navigation-tabs.tsx    # Табы навигации по вкладкам сметы (5 вкладок)
-├── estimate-details/
-│   ├── components/
-│   │   ├── estimate-editor-view.tsx    # Основной редактор сметного контента (список разделов, DND)
-│   │   ├── estimate-editor-context.tsx # React-контекст для редактора сметы
-│   │   ├── estimate-section-card.tsx   # Секция/Раздел сметы (список работ, DND)
-│   │   ├── estimate-work-card.tsx      # Карточка работы (информация, DND, список материалов)
-│   │   ├── estimate-material-card.tsx  # Карточка материала
-│   │   ├── estimate-work-picker-dialog.tsx # Диалог добавления работ из справочника
-│   │   ├── estimate-material-picker-dialog.tsx # Диалог добавления материалов из справочника
-│   │   ├── create-section-dialog.tsx   # Диалог создания раздела
-│   │   ├── estimate-empty-state.tsx    # Пустое состояние сметы
-│   │   ├── estimate-name.tsx           # Инлайн-редактирование имени работы
-│   │   ├── estimate-material-name.tsx  # Инлайн-редактирование имени материала
-│   │   ├── estimate-work-number.tsx    # UI-отображение номера работы
-│   │   └── estimate-material-actions.tsx # Dropdown-действия для материала
-│   └── lib/
-│       └── optimistic-update.ts        # Логика оптимистичных обновлений контента
-├── estimate-tabs/
-│   └── components/
-│       ├── estimate-tab-toolbar.tsx    # Тулбар вкладки (поиск, импорт, экспорт, коэффициент)
-│       └── estimate-tab-placeholder.tsx # Заглушка для нереализованных вкладок
-└── hooks/
-    ├── use-estimates.ts                # Вспомогательный хук
-    └── use-project-estimate-content.ts # Основной React Query хук работы со сметным контентом
+├── application/
+│   ├── estimate-excel-exporter.ts      # Генерация и экспорт смет в Excel
+│   ├── use-estimate-editor-scenarios.ts # Сценарии использования редактора (добавление, reorder, удаление)
+│   └── use-project-estimate-content.ts # React Query хук получения и мутаций сметного контента
+├── model/
+│   ├── calculations.ts                 # Чистые расчетные функции (суммы, коэффициенты, округления)
+│   ├── calculations.test.ts            # Юнит-тесты расчетов
+│   ├── optimistic-update.ts            # Логика оптимистичных обновлений контента
+│   ├── optimistic-update.test.ts       # Юнит-тесты оптимистичных обновлений
+│   └── estimate-editor-form.ts         # Хелперы парсинга и валидации форм
+└── ui/
+    ├── types.ts                        # UI типы (состояния диалогов, пэйлоады изменений)
+    ├── estimate-editor-view.tsx        # Основной редактор сметного контента
+    ├── estimate-editor-context.tsx     # React-контекст для координации событий в UI
+    ├── estimate-section-card.tsx       # Карточка раздела сметы
+    ├── estimate-work-card.tsx          # Карточка работы
+    ├── estimate-material-card.tsx      # Карточка материала
+    ├── estimate-work-picker-dialog.tsx # Диалог добавления работ из справочника
+    ├── estimate-material-picker-dialog.tsx # Диалог добавления материалов из справочника
+    ├── create-section-dialog.tsx       # Диалог создания раздела
+    ├── estimate-empty-state.tsx        # Пустое состояние сметы
+    ├── estimate-name.tsx               # Инлайн-редактирование имени работы
+    ├── estimate-material-name.tsx      # Инлайн-редактирование имени материала
+    ├── estimate-work-number.tsx        # UI-отображение номера работы
+    ├── estimate-material-actions.tsx   # Dropdown-действия для материала
+    ├── estimate-navigation-tabs.tsx    # Вкладки навигации по разделам сметы
+    ├── estimate-import-dialog.tsx      # Диалог импорта смет
+    └── estimate-tabs/
+        ├── estimate-tab-toolbar.tsx    # Тулбар сметного редактора (поиск, экспорт, коэффициент)
+        └── estimate-tab-placeholder.tsx # Заглушки для смежных вкладок (Финансы, Документы и др.)
 ```
 
 ### Роутинг (App Router)
@@ -154,7 +154,7 @@ DELETE /api/projects/[id]/estimate-records/[recId] — архивировать 
 
 ## 5. Optimistic Updates
 
-В хуке `useProjectEstimateContent` реализована поддержка оптимистичных обновлений (`features/estimates/estimate-details/lib/optimistic-update.ts`):
+В хуке `useProjectEstimateContent` реализована поддержка оптимистичных обновлений (`features/estimates/model/optimistic-update.ts`):
 1. UI немедленно реагирует на действия пользователя (изменение количеств, цен, переименования, удаление элементов, DND реордеринг).
 2. Запрос посылается на сервер.
 3. При ошибке автоматически происходит откат (rollback) к предыдущему сохраненному состоянию кэша.

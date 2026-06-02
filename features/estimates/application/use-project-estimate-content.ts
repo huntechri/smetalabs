@@ -13,7 +13,7 @@ import type {
   ProjectEstimateContentResponse,
   ProjectEstimateContentSection,
 } from "@/types/project-estimate-content"
-import { applyOptimisticChange } from "@/features/estimates/estimate-details/lib/optimistic-update"
+import { applyOptimisticChange } from "@/features/estimates/model/optimistic-update"
 
 const ESTIMATE_CONTENT_STALE_TIME_MS = 15_000
 const ESTIMATE_CONTENT_GC_TIME_MS = 5 * 60_000

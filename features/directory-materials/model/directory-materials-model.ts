@@ -20,6 +20,7 @@ export type DirectoryMaterialsListParams = {
   limit?: number
   cursor?: number
   sort?: DirectoryMaterialsSort
+  recommend?: boolean
 }
 
 export type DirectoryMaterialsCategoriesParams = {

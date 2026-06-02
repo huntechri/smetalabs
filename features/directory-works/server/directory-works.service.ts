@@ -19,6 +19,7 @@ import {
   getDirectoryWorkCategoriesForWorkspace,
   getDirectoryWorkForWorkspace,
   listDirectoryWorksForWorkspace,
+  listPopularDirectoryWorksForWorkspace,
   updateDirectoryWorkForWorkspace,
 } from "./directory-works.repository"
 import {
@@ -154,11 +155,27 @@ export async function listDirectoryWorks(params: DirectoryWorksListParams) {
     },
     () =>
       unstable_cache(
-        () =>
-          listDirectoryWorksForWorkspace(
+        () => {
+          if (normalizedParams.recommend) {
+            return listPopularDirectoryWorksForWorkspace(
+              context.workspaceOwnerId,
+              normalizedParams.limit
+            ).then((data) => ({
+              data,
+              meta: {
+                limit: normalizedParams.limit,
+                cursor: 0,
+                nextCursor: null,
+                hasMore: false,
+                total: data.length,
+              },
+            }))
+          }
+          return listDirectoryWorksForWorkspace(
             context.workspaceOwnerId,
             normalizedParams
-          ),
+          )
+        },
         ["directory-works:list", cacheKey],
         {
           revalidate: LIST_CACHE_REVALIDATE_SECONDS,

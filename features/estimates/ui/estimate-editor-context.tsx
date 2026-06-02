@@ -1,23 +1,16 @@
 "use client"
 
 import * as React from "react"
-import type { EstimateContentChangeInput } from "@/features/estimates/api/project-estimate-content-client"
 import type {
   EstimateArchive,
-  EstimateContentData,
-} from "@/features/estimates/estimate-details/types"
+} from "@/features/estimates/ui/types"
 import type { ProjectEstimateContentWork } from "@/types/project-estimate-content"
 
 export type MoveDirection = "up" | "down"
 
-export type EstimateSave = (
-  input: EstimateContentChangeInput
-) => Promise<EstimateContentData | null>
-
 export type EstimateEditorContextValue = {
   savingIds: Set<string>
   reorderDisabled: boolean
-  onSave: EstimateSave
   onArchive: EstimateArchive
   onMoveSection: (sectionId: string, direction: MoveDirection) => void
   onMoveWork: (
@@ -29,6 +22,20 @@ export type EstimateEditorContextValue = {
   onAddWork: (sectionId: string) => void
   onAddMaterial: (work: ProjectEstimateContentWork) => void
   onReplaceWork: (work: ProjectEstimateContentWork) => void
+  onUpdateWork: (
+    workId: string,
+    payload: { title?: string; quantity?: number; price?: number }
+  ) => void
+  onUpdateMaterial: (
+    materialId: string,
+    payload: {
+      title?: string
+      quantity?: number
+      consumption?: number | null
+      price?: number
+      changedField?: "quantity" | "consumption" | "price" | "workQuantity"
+    }
+  ) => void
 }
 
 const EstimateEditorContext =

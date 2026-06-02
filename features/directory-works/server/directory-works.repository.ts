@@ -194,6 +194,64 @@ export async function listDirectoryWorksForWorkspace(
   }
 }
 
+export async function listPopularDirectoryWorksForWorkspace(
+  workspaceOwnerId: string,
+  limit: number
+): Promise<DirectoryWork[]> {
+  const { data: popularData, error: popularError } = await supabase
+    .from("directory_work_usage_stats")
+    .select(`
+      work:directory_works(
+        id,title,unit_code,unit_label,rate_amount,currency_code,price_kind,category,subcategory,code,description,included_operations,excluded_operations,source_name,source_external_row_key,status,version,created_at,updated_at
+      ),
+      use_count
+    `)
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .gt("use_count", 0)
+    .order("use_count", { ascending: false })
+    .limit(limit)
+
+  if (popularError) throw popularError
+
+  const popularWorks: DirectoryWork[] = []
+  const seenIds = new Set<string>()
+
+  if (popularData) {
+    for (const row of popularData) {
+      if (row.work) {
+        const workRow = row.work as unknown as DirectoryWorkRpcRow
+        popularWorks.push(mapDirectoryWorkRow(workRow))
+        seenIds.add(workRow.id)
+      }
+    }
+  }
+
+  if (popularWorks.length < limit) {
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("directory_works")
+      .select("id,title,unit_code,unit_label,rate_amount,currency_code,price_kind,category,subcategory,code,description,included_operations,excluded_operations,source_name,source_external_row_key,status,version,created_at,updated_at")
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .eq("status", "active")
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(limit * 2)
+
+    if (fallbackError) throw fallbackError
+
+    if (fallbackData) {
+      for (const row of fallbackData) {
+        if (popularWorks.length >= limit) break
+        if (!seenIds.has(row.id)) {
+          popularWorks.push(mapDirectoryWorkRow(row as unknown as DirectoryWorkRpcRow))
+          seenIds.add(row.id)
+        }
+      }
+    }
+  }
+
+  return popularWorks
+}
+
 export async function getDirectoryWorkForWorkspace(
   workspaceOwnerId: string,
   id: string

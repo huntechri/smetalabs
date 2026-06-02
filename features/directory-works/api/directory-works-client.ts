@@ -36,6 +36,9 @@ function buildListUrl(path: string, query: DirectoryWorksListParams = {}) {
   appendParam(params, "limit", query.limit)
   appendParam(params, "cursor", query.cursor)
   appendParam(params, "sort", query.sort)
+  if (query.recommend) {
+    appendParam(params, "recommend", "true")
+  }
 
   const search = params.toString()
   return search ? `${path}?${search}` : path

@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { useProjectEstimateContent } from "@/features/estimates/hooks/use-project-estimate-content"
+import { useProjectEstimateContent } from "@/features/estimates/application/use-project-estimate-content"
 import { ExecutionSectionCard } from "@/features/execution/execution-details/components/execution-section-card"
 import { CreateWorkDialog } from "@/features/execution/execution-details/components/create-work-dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"

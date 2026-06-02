@@ -5,6 +5,8 @@ import type {
   ProjectEstimateOptionsResponse,
 } from "@/types/project-estimate-content"
 import type { EstimateContentOptionsParams } from "./project-estimate-content.schemas"
+import { listPopularDirectoryWorksForWorkspace } from "@/features/directory-works/server/directory-works.repository"
+import { listPopularDirectoryMaterialsForWorkspace } from "@/features/directory-materials/server/directory-materials.repository"
 
 type DirectoryWorkOptionRow = {
   id: string
@@ -89,6 +91,23 @@ export async function listProjectEstimateWorkOptionsForWorkspace(
   _recordId: string,
   params: EstimateContentOptionsParams
 ): Promise<ProjectEstimateOptionsResponse<ProjectEstimateOptionRow>> {
+  if (params.recommend) {
+    const popularWorks = await listPopularDirectoryWorksForWorkspace(
+      workspaceOwnerId,
+      params.limit
+    )
+    const rows = popularWorks.map((work) => ({
+      id: work.id,
+      code: work.code ?? null,
+      title: work.title,
+      unitCode: work.unit,
+      unitLabel: work.unitLabel,
+      price: work.rate,
+      category: work.category ?? "Без категории",
+    }))
+    return buildMeta(rows, params)
+  }
+
   const normalizedQuery = normalizeSearch(params.q)
   if (normalizedQuery.length < ESTIMATE_OPTION_SEARCH_MIN_LENGTH) {
     return buildMeta([], params)
@@ -118,25 +137,42 @@ export async function listProjectEstimateMaterialOptionsForWorkspace(
   _recordId: string,
   params: EstimateContentOptionsParams
 ): Promise<ProjectEstimateOptionsResponse<ProjectEstimateMaterialOptionRow>> {
+  if (params.recommend) {
+    const popularMaterials = await listPopularDirectoryMaterialsForWorkspace(
+      workspaceOwnerId,
+      params.limit
+    )
+    const rows = popularMaterials.map((material) => ({
+      id: material.id,
+      code: material.code ?? null,
+      title: material.name,
+      unitCode: material.unit,
+      unitLabel: material.unitLabel,
+      price: material.price,
+      category: material.category ?? "Без категории",
+      supplierName: material.supplierName ?? null,
+    }))
+    return buildMeta(rows, params)
+  }
+
   const normalizedQuery = normalizeSearch(params.q)
-  const limitWithSentinel = params.limit + 1
 
   if (normalizedQuery.length < ESTIMATE_OPTION_SEARCH_MIN_LENGTH) {
     return buildMeta([], params)
   }
 
-  const { data, error } = await supabase
-    .from("directory_materials")
-    .select(MATERIAL_OPTION_SELECT)
-    .eq("workspace_owner_id", workspaceOwnerId)
-    .eq("status", "active")
-    .is("deleted_at", null)
-    .textSearch("search_fts", normalizedQuery, {
-      type: "websearch",
-      config: "simple",
-    })
-    .order("normalized_name", { ascending: true })
-    .range(params.cursor, params.cursor + limitWithSentinel - 1)
+  const { data, error } = await supabase.rpc("search_directory_materials", {
+    p_workspace_owner_id: workspaceOwnerId,
+    p_q: normalizedQuery,
+    p_category: null,
+    p_subcategory: null,
+    p_supplier: null,
+    p_unit: null,
+    p_status: "active",
+    p_limit: params.limit + 1,
+    p_cursor: params.cursor,
+    p_sort: "relevance",
+  })
 
   if (error) throw error
 

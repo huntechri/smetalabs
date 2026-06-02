@@ -20,6 +20,7 @@ import {
   getDirectoryMaterialCategoriesForWorkspace,
   getDirectoryMaterialForWorkspace,
   listDirectoryMaterialsForWorkspace,
+  listPopularDirectoryMaterialsForWorkspace,
   updateDirectoryMaterialForWorkspace,
 } from "./directory-materials.repository"
 import {
@@ -160,11 +161,27 @@ export async function listDirectoryMaterials(
   })
 
   return unstable_cache(
-    () =>
-      listDirectoryMaterialsForWorkspace(
+    () => {
+      if (normalizedParams.recommend) {
+        return listPopularDirectoryMaterialsForWorkspace(
+          context.workspaceOwnerId,
+          normalizedParams.limit
+        ).then((data) => ({
+          data,
+          meta: {
+            limit: normalizedParams.limit,
+            cursor: 0,
+            nextCursor: null,
+            hasMore: false,
+            total: data.length,
+          },
+        }))
+      }
+      return listDirectoryMaterialsForWorkspace(
         context.workspaceOwnerId,
         normalizedParams
-      ),
+      )
+    },
     ["directory-materials:list", cacheKey],
     {
       revalidate: LIST_CACHE_REVALIDATE_SECONDS,

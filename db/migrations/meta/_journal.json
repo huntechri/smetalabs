@@ -15,6 +15,13 @@
       "when": 1779776082341,
       "tag": "0001_rare_old_lace",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780390965884,
+      "tag": "0002_oval_taskmaster",
+      "breakpoints": true
     }
   ]
 }

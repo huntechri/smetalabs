@@ -1,4 +1,4 @@
-import { EstimateEditorView } from "@/features/estimates/estimate-details/components/estimate-editor-view"
+import { EstimateEditorView } from "@/features/estimates/ui/estimate-editor-view"
 
 export const dynamic = "force-dynamic"
 

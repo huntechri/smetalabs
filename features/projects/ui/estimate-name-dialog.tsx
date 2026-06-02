@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { EstimateDialogState } from "@/features/projects/project-overview/types"
+import type { EstimateDialogState } from "../model/projects-model"
 import type { ProjectEstimateRecordStatus } from "@/types/project-estimate-record"
 
 export function EstimateNameDialog({

@@ -14,7 +14,7 @@ import { FolderSimplePlus } from "@phosphor-icons/react"
 import { CreateProjectDialog } from "./create-project-dialog"
 import { ProjectCard } from "./project-card"
 import { ProjectsToolbar } from "./projects-toolbar"
-import { useProjects } from "@/features/projects/hooks/use-projects"
+import { useProjects } from "../application/use-projects"
 import type { ProjectMutationInput, ProjectRow } from "@/types/project"
 
 export function ProjectsView() {

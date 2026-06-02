@@ -12,12 +12,13 @@ import {
 import { EditableBadge } from "@/components/ui/editable-badge"
 import { Frame } from "@/components/ui/frame"
 import { Separator } from "@/components/ui/separator"
-import { EstimateMaterialCard } from "@/features/estimates/estimate-details/components/estimate-material-card"
-import { EstimateName } from "@/features/estimates/estimate-details/components/estimate-name"
-import { EstimateWorkNumber } from "@/features/estimates/estimate-details/components/estimate-work-number"
-import { useEstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
+import { EstimateMaterialCard } from "./estimate-material-card"
+import { EstimateName } from "./estimate-name"
+import { EstimateWorkNumber } from "./estimate-work-number"
+import { useEstimateEditorContext } from "./estimate-editor-context"
 import { formatMoney } from "@/lib/formatters"
-import { safeNumber } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
+import { safeNumber } from "@/features/estimates/model/estimate-editor-form"
+import type { MaterialChangePayload } from "./types"
 import { cn } from "@/lib/utils"
 import {
   CaretDownIcon,
@@ -53,7 +54,8 @@ export function EstimateWorkCard({
     onAddMaterial,
     onMoveWork,
     onReplaceWork,
-    onSave,
+    onUpdateWork,
+    onUpdateMaterial,
   } = useEstimateEditorContext()
 
   const isDisabled = savingIds.has(work.id)
@@ -69,21 +71,16 @@ export function EstimateWorkCard({
         changedField?: "quantity" | "consumption" | "price"
       }
     ) => {
-      onSave({
-        action: "update_material",
-        payload: { materialId, ...payload },
-      })
+      onUpdateMaterial(materialId, payload)
     },
-    [onSave]
+    [onUpdateMaterial]
   )
 
   const archiveWork = useCallback(
     () =>
       onArchive({
-        input: {
-          action: "archive_work",
-          payload: { workId: work.id },
-        },
+        type: "work",
+        id: work.id,
         title: "Удалить работу?",
         description: "Работа и все её материалы будут убраны из сметы.",
       }),
@@ -94,33 +91,24 @@ export function EstimateWorkCard({
     (value: string) => {
       const num = safeNumber(value)
       if (num === undefined) return
-      onSave({
-        action: "update_work",
-        payload: { workId: work.id, quantity: num },
-      })
+      onUpdateWork(work.id, { quantity: num })
     },
-    [onSave, work.id]
+    [onUpdateWork, work.id]
   )
 
   const handlePriceChange = useCallback(
     (value: string) => {
       const num = safeNumber(value)
       if (num === undefined) return
-      onSave({
-        action: "update_work",
-        payload: { workId: work.id, price: num },
-      })
+      onUpdateWork(work.id, { price: num })
     },
-    [onSave, work.id]
+    [onUpdateWork, work.id]
   )
 
   const handleTitleChange = useCallback(
     (title: string) =>
-      onSave({
-        action: "update_work",
-        payload: { workId: work.id, title },
-      }),
-    [onSave, work.id]
+      onUpdateWork(work.id, { title }),
+    [onUpdateWork, work.id]
   )
 
   const actionButtons = (
@@ -240,15 +228,13 @@ export function EstimateWorkCard({
                     workNumber={work.number}
                     onArchive={() =>
                       onArchive({
-                        input: {
-                          action: "archive_material",
-                          payload: { materialId: material.id },
-                        },
+                        type: "material",
+                        id: material.id,
                         title: "Удалить материал?",
                         description: "Материал будет убран из этой работы.",
                       })
                     }
-                    onChange={(payload) => updateMaterial(material.id, payload)}
+                    onChange={(payload: MaterialChangePayload) => updateMaterial(material.id, payload)}
                   />
                 ))}
               </div>

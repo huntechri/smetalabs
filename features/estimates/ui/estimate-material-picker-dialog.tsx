@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { formatMoney } from "@/lib/formatters"
 import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 import type { ProjectEstimateMaterialOptionRow } from "@/types/project-estimate-content"
-import type { MaterialDialogState } from "@/features/estimates/estimate-details/types"
+import type { MaterialDialogState } from "./types"
 
 const MATERIAL_SEARCH_MIN_LENGTH = 3
 const MATERIAL_SEARCH_DELAY_MS = 250

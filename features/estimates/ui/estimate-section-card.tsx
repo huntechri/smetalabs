@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/collapsible"
 import { Frame } from "@/components/ui/frame"
 import { Separator } from "@/components/ui/separator"
-import { EstimateWorkCard } from "@/features/estimates/estimate-details/components/estimate-work-card"
-import { useEstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
+import { EstimateWorkCard } from "./estimate-work-card"
+import { useEstimateEditorContext } from "./estimate-editor-context"
 import { formatMoney } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import {
@@ -81,10 +81,8 @@ export function EstimateSectionCard({
 
   const archiveSection = useCallback(() => {
     onArchive({
-      input: {
-        action: "archive_section",
-        payload: { sectionId: section.id },
-      },
+      type: "section",
+      id: section.id,
       title: "Удалить раздел?",
       description: "Раздел, его работы и материалы будут убраны из сметы.",
     })

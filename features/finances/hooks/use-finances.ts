@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { useProjectEstimateContent } from "@/features/estimates/hooks/use-project-estimate-content"
+import { useProjectEstimateContent } from "@/features/estimates/application/use-project-estimate-content"
 import {
   fetchEstimatePayments,
   addProjectEstimatePayment,

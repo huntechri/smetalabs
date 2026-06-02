@@ -5,95 +5,18 @@ import type {
   ProjectEstimateContentWork,
 } from "@/types/project-estimate-content"
 import type { EstimateContentChangeInput } from "@/features/estimates/api/project-estimate-content-client"
+import {
+  roundMoney,
+  roundQuantity,
+  resolveMaterialQuantity,
+  recalcSection,
+  recalcSummary,
+  recalcRecordAmount,
+} from "@/features/estimates/model/calculations"
 
 /** Inner data shape of ProjectEstimateContentResponse */
 export type ProjectEstimateContentData = ProjectEstimateContentResponse["data"]
 
-function roundMoney(value: number): number {
-  return Math.round(value * 100) / 100
-}
-
-function roundQuantity(value: number): number {
-  return Math.ceil(value)
-}
-
-function roundConsumption(value: number): number {
-  return Math.round(value * 1000000) / 1000000
-}
-
-function resolveMaterialQuantity(params: {
-  workQuantity: number
-  currentQuantity: number
-  currentConsumption: number | null
-  quantity?: number
-  consumption?: number | null
-  changedField?: "quantity" | "consumption" | "price" | "workQuantity"
-}): { quantity: number; consumption: number | null } {
-  const changedField = params.changedField ?? "quantity"
-  const nextConsumption =
-    params.consumption !== undefined
-      ? params.consumption
-      : params.currentConsumption
-  const inputQuantity =
-    params.quantity !== undefined ? params.quantity : params.currentQuantity
-
-  if (
-    (changedField === "consumption" || changedField === "workQuantity") &&
-    nextConsumption !== null
-  ) {
-    return {
-      quantity: roundQuantity(params.workQuantity * nextConsumption),
-      consumption: nextConsumption,
-    }
-  }
-
-  if (changedField === "quantity") {
-    const resolvedQty = roundQuantity(inputQuantity)
-    return {
-      quantity: resolvedQty,
-      consumption:
-        params.workQuantity > 0
-          ? roundConsumption(resolvedQty / params.workQuantity)
-          : null,
-    }
-  }
-
-  return {
-    quantity: roundQuantity(inputQuantity),
-    consumption: nextConsumption,
-  }
-}
-
-function recalcSection(
-  section: ProjectEstimateContentSection
-): ProjectEstimateContentSection {
-  const worksAmount = roundMoney(
-    section.works.reduce((sum, w) => sum + w.totalAmount, 0)
-  )
-  const materialsAmount = roundMoney(
-    section.works.reduce((sum, w) => sum + w.materialsAmount, 0)
-  )
-  const totalAmount = roundMoney(worksAmount + materialsAmount)
-
-  return { ...section, worksAmount, materialsAmount, totalAmount }
-}
-
-function recalcSummary(
-  sections: ProjectEstimateContentSection[]
-): ProjectEstimateContentData["summary"] {
-  return sections.reduce(
-    (acc, s) => ({
-      worksAmount: roundMoney(acc.worksAmount + s.worksAmount),
-      materialsAmount: roundMoney(acc.materialsAmount + s.materialsAmount),
-      totalAmount: roundMoney(acc.totalAmount + s.totalAmount),
-    }),
-    { worksAmount: 0, materialsAmount: 0, totalAmount: 0 }
-  )
-}
-
-function recalcRecordAmount(sections: ProjectEstimateContentSection[]): number {
-  return roundMoney(sections.reduce((sum, s) => sum + s.totalAmount, 0))
-}
 
 // ─── update_work ────────────────────────────────────────────────
 

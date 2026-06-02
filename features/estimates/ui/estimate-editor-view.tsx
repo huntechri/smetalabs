@@ -20,24 +20,23 @@ import { Button } from "@/components/ui/button"
 import {
   fetchProjectEstimateMaterialOptions,
   fetchProjectEstimateWorkOptions,
-  type EstimateContentChangeInput,
 } from "@/features/estimates/api/project-estimate-content-client"
 import { EstimateWorkCoefficientDialog } from "./estimate-work-coefficient-dialog"
-import { EstimateImportDialog } from "@/features/estimates/components/estimate-import-dialog"
-import { exportEstimateToExcel } from "@/features/estimates/lib/estimate-excel-exporter"
-import { CreateSectionDialog } from "@/features/estimates/estimate-details/components/create-section-dialog"
-import { EstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
-import { EstimateEmptyState } from "@/features/estimates/estimate-details/components/estimate-empty-state"
-import { EstimateMaterialPickerDialog } from "@/features/estimates/estimate-details/components/estimate-material-picker-dialog"
-import { EstimateSectionCard } from "@/features/estimates/estimate-details/components/estimate-section-card"
-import { EstimateWorkPickerDialog } from "@/features/estimates/estimate-details/components/estimate-work-picker-dialog"
-import { parseText } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
+import { EstimateImportDialog } from "./estimate-import-dialog"
+import { exportEstimateToExcel } from "@/features/estimates/application/estimate-excel-exporter"
+import { CreateSectionDialog } from "./create-section-dialog"
+import { EstimateEditorContext } from "./estimate-editor-context"
+import { EstimateEmptyState } from "./estimate-empty-state"
+import { EstimateMaterialPickerDialog } from "./estimate-material-picker-dialog"
+import { EstimateSectionCard } from "./estimate-section-card"
+import { EstimateWorkPickerDialog } from "./estimate-work-picker-dialog"
+import { parseText } from "@/features/estimates/model/estimate-editor-form"
 import type {
   EstimateArchiveRequest,
   MaterialDialogState,
   WorkDialogState,
-} from "@/features/estimates/estimate-details/types"
-import { useProjectEstimateContent } from "@/features/estimates/hooks/use-project-estimate-content"
+} from "./types"
+import { useEstimateEditorScenarios } from "@/features/estimates/application/use-estimate-editor-scenarios"
 import { projectsQueryKeys } from "@/features/projects/api/projects-query-keys"
 import type {
   ProjectEstimateContentSection,
@@ -64,9 +63,7 @@ const EMPTY_SECTIONS: ProjectEstimateContentSection[] = []
 
 const OPTION_SEARCH_MIN_LENGTH = 3
 const WORK_COEFFICIENT_DIALOG_KEY = "work-coefficient"
-const SORT_ORDER_STEP = 1000
 
-type MoveDirection = "up" | "down"
 
 
 function normalizeSearchText(value: unknown) {
@@ -142,27 +139,7 @@ function filterSections(
   })
 }
 
-function moveItem<T extends { id: string }>(
-  items: T[],
-  id: string,
-  direction: MoveDirection
-) {
-  const index = items.findIndex((item) => item.id === id)
-  const targetIndex = direction === "up" ? index - 1 : index + 1
 
-  if (index < 0 || targetIndex < 0 || targetIndex >= items.length) return null
-
-  const next = [...items]
-  ;[next[index], next[targetIndex]] = [next[targetIndex], next[index]]
-  return next
-}
-
-function sortPayload<T extends { id: string }>(items: T[]) {
-  return items.map((item, index) => ({
-    id: item.id,
-    sortOrder: (index + 1) * SORT_ORDER_STEP,
-  }))
-}
 
 export function EstimateEditorView({
   projectId,
@@ -174,6 +151,7 @@ export function EstimateEditorView({
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const scenarios = useEstimateEditorScenarios(projectId, recordId)
   const {
     content,
     loading,
@@ -181,11 +159,9 @@ export function EstimateEditorView({
     mutationError,
     saving,
     savingIds,
-    applyChange,
     applyWorkCoefficient,
     refetch,
-    getSections,
-  } = useProjectEstimateContent(projectId, recordId)
+  } = scenarios
   const [sectionOpen, setSectionOpen] = React.useState(false)
   const [coefficientOpen, setCoefficientOpen] = React.useState(false)
   const [workDialog, setWorkDialog] =
@@ -196,8 +172,6 @@ export function EstimateEditorView({
     React.useState<EstimateArchiveRequest | null>(null)
   const [workSearch, setWorkSearch] = React.useState("")
   const [materialSearch, setMaterialSearch] = React.useState("")
-  const ensuringRef = useRef(false)
-  const ensurePendingRef = useRef<Promise<string | null> | null>(null)
   const coefficientTriggered = useRef(false)
   const workReplacingRef = useRef(false)
   const [importOpen, setImportOpen] = React.useState(false)
@@ -347,15 +321,6 @@ export function EstimateEditorView({
     staleTime: 30_000,
   })
 
-  const save = useCallback(
-    async (input: EstimateContentChangeInput) => {
-      const next = await applyChange(input)
-      if (!next?.sections) return null
-      return next
-    },
-    [applyChange]
-  )
-
   const clearEstimateSearch = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete("q")
@@ -363,71 +328,9 @@ export function EstimateEditorView({
     router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname)
   }, [pathname, router, searchParams])
 
-  const ensureSection = useCallback(async () => {
-    const sections = getSections()
-    const existing = sections?.[0]?.id
-    if (existing) return existing
-
-    if (ensuringRef.current && ensurePendingRef.current) {
-      return ensurePendingRef.current
-    }
-
-    ensuringRef.current = true
-    const promise = save({
-      action: "create_section",
-      payload: { title: "Без раздела" },
-    })
-      .then((next) => {
-        const id = next?.sections?.[0]?.id ?? null
-        ensuringRef.current = false
-        ensurePendingRef.current = null
-        return id
-      })
-      .catch(() => {
-        ensuringRef.current = false
-        ensurePendingRef.current = null
-        return null
-      })
-
-    ensurePendingRef.current = promise
-    return promise
-  }, [getSections, save])
-
-  const moveSection = useCallback(
-    async (sectionId: string, direction: MoveDirection) => {
-      if (!content || searchActive) return
-      const next = moveItem(content.sections, sectionId, direction)
-      if (!next) return
-
-      await save({
-        action: "reorder_sections",
-        payload: { items: sortPayload(next) },
-      })
-    },
-    [content, searchActive, save]
-  )
-
-  const moveWork = useCallback(
-    async (sectionId: string, workId: string, direction: MoveDirection) => {
-      if (!content || searchActive) return
-      const section = content.sections.find(
-        (item: ProjectEstimateContentSection) => item.id === sectionId
-      )
-      if (!section) return
-      const next = moveItem(section.works, workId, direction)
-      if (!next) return
-
-      await save({
-        action: "reorder_works",
-        payload: { sectionId, items: sortPayload(next) },
-      })
-    },
-    [content, searchActive, save]
-  )
-
   const openWorkDialog = useCallback(
     async (sectionId?: string) => {
-      const target = sectionId ?? (await ensureSection())
+      const target = sectionId ?? (await scenarios.ensureSection())
       if (target) {
         setWorkSearch("")
         setWorkDialog({
@@ -439,7 +342,7 @@ export function EstimateEditorView({
         })
       }
     },
-    [ensureSection]
+    [scenarios]
   )
 
   const openReplaceWorkDialog = useCallback(
@@ -462,22 +365,27 @@ export function EstimateEditorView({
 
   const confirmArchive = useCallback(async () => {
     if (!archiveRequest) return
-    await save(archiveRequest.input)
+    const { type, id } = archiveRequest
+    if (type === "section") {
+      await scenarios.archiveSection(id)
+    } else if (type === "work") {
+      await scenarios.archiveWork(id)
+    } else if (type === "material") {
+      await scenarios.archiveMaterial(id)
+    }
     setArchiveRequest(null)
-  }, [archiveRequest, save])
+  }, [archiveRequest, scenarios])
 
   const createSection = useCallback(
     async (data: { name: string }) => {
       const title = parseText(data.name)
       if (!title) return
 
-      await save({ action: "create_section", payload: { title } })
+      await scenarios.createSection(title)
       setSectionOpen(false)
     },
-    [save]
+    [scenarios]
   )
-
-
 
   const addDirectoryWork = useCallback(
     async (
@@ -487,31 +395,16 @@ export function EstimateEditorView({
     ) => {
       if (!workDialog.sectionId) return
 
-      await save({
-        action: "add_work_from_directory",
-        payload: {
-          sectionId: workDialog.sectionId,
-          directoryWorkId: selected.id,
-          quantity,
-          price,
-        },
-      })
+      await scenarios.addDirectoryWork(workDialog.sectionId, selected, quantity, price)
     },
-    [save, workDialog.sectionId]
+    [scenarios, workDialog.sectionId]
   )
 
   const replaceDirectoryWork = useCallback(
     async (selected: ProjectEstimateOptionRow) => {
       if (!workDialog.work) return
       try {
-        await save({
-          action: "update_work",
-          payload: {
-            workId: workDialog.work.id,
-            title: selected.title,
-            price: selected.price,
-          },
-        })
+        await scenarios.replaceDirectoryWork(workDialog.work.id, selected)
         setWorkDialog(EMPTY_WORK_DIALOG)
       } catch (err) {
         console.error("Replace work failed:", err)
@@ -520,7 +413,7 @@ export function EstimateEditorView({
         workReplacingRef.current = false
       }
     },
-    [save, workDialog.work]
+    [scenarios, workDialog.work]
   )
 
   const addDirectoryMaterial = useCallback(
@@ -533,19 +426,16 @@ export function EstimateEditorView({
     ) => {
       if (!materialDialog.work) return
 
-      await save({
-        action: "add_material_from_directory",
-        payload: {
-          workId: materialDialog.work.id,
-          directoryMaterialId: selected.id,
-          quantity,
-          consumption,
-          price,
-          changedField,
-        },
-      })
+      await scenarios.addDirectoryMaterial(
+        materialDialog.work.id,
+        selected,
+        quantity,
+        consumption,
+        price,
+        changedField
+      )
     },
-    [save, materialDialog.work]
+    [scenarios, materialDialog.work]
   )
 
   const handleSectionOpenChange = useCallback((open: boolean) => {
@@ -590,24 +480,26 @@ export function EstimateEditorView({
     () => ({
       savingIds,
       reorderDisabled: searchActive,
-      onSave: save,
       onArchive: setArchiveRequest,
-      onMoveSection: moveSection,
-      onMoveWork: moveWork,
+      onMoveSection: scenarios.moveSection,
+      onMoveWork: scenarios.moveWork,
       onAddSection: () => setSectionOpen(true),
       onAddWork: openWorkDialog,
       onAddMaterial: openMaterialDialog,
       onReplaceWork: openReplaceWorkDialog,
+      onUpdateWork: scenarios.updateWork,
+      onUpdateMaterial: scenarios.updateMaterial,
     }),
     [
       savingIds,
       searchActive,
-      save,
-      moveSection,
-      moveWork,
+      scenarios.moveSection,
+      scenarios.moveWork,
       openWorkDialog,
       openMaterialDialog,
       openReplaceWorkDialog,
+      scenarios.updateWork,
+      scenarios.updateMaterial,
     ]
   )
 

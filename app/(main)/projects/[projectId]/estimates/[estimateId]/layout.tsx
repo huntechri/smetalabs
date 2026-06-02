@@ -1,5 +1,5 @@
-import { EstimateNavigationTabs } from "@/features/estimates/components/estimate-navigation-tabs"
-import { EstimateTabToolbar } from "@/features/estimates/estimate-tabs/components/estimate-tab-toolbar"
+import { EstimateNavigationTabs } from "@/features/estimates/ui/estimate-navigation-tabs"
+import { EstimateTabToolbar } from "@/features/estimates/ui/estimate-tabs/estimate-tab-toolbar"
 
 export default function EstimateDetailsLayout({
   children,

@@ -22,7 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { formatMoney } from "@/lib/formatters"
 import { MagnifyingGlassIcon, PlusIcon } from "@phosphor-icons/react"
 import type { ProjectEstimateOptionRow } from "@/types/project-estimate-content"
-import type { WorkDialogState } from "@/features/estimates/estimate-details/types"
+import type { WorkDialogState } from "./types"
 
 const WORK_SEARCH_MIN_LENGTH = 3
 const WORK_SEARCH_DELAY_MS = 250

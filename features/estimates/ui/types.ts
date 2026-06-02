@@ -1,4 +1,3 @@
-import type { EstimateContentChangeInput } from "@/features/estimates/api/project-estimate-content-client"
 import type {
   ProjectEstimateContentResponse,
   ProjectEstimateContentWork,
@@ -9,7 +8,8 @@ import type {
 export type EstimateContentData = ProjectEstimateContentResponse["data"]
 
 export type EstimateArchiveRequest = {
-  input: EstimateContentChangeInput
+  type: "section" | "work" | "material"
+  id: string
   title: string
   description: string
 }

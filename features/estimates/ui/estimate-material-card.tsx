@@ -5,17 +5,17 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { EditableBadge } from "@/components/ui/editable-badge"
 import { Frame } from "@/components/ui/frame"
-import { EstimateMaterialActions } from "@/features/estimates/estimate-details/components/estimate-material-actions"
-import { EstimateMaterialName } from "@/features/estimates/estimate-details/components/estimate-material-name"
-import { useEstimateEditorContext } from "@/features/estimates/estimate-details/components/estimate-editor-context"
+import { EstimateMaterialActions } from "./estimate-material-actions"
+import { EstimateMaterialName } from "./estimate-material-name"
+import { useEstimateEditorContext } from "./estimate-editor-context"
 import {
   formatConsumption,
   formatMoney,
   parseDecimalInput,
 } from "@/lib/formatters"
-import { safeNumber } from "@/features/estimates/estimate-details/lib/estimate-editor-form"
+import { safeNumber } from "@/features/estimates/model/estimate-editor-form"
 import type { ProjectEstimateContentMaterial } from "@/types/project-estimate-content"
-import type { MaterialChangePayload } from "@/features/estimates/estimate-details/types"
+import type { MaterialChangePayload } from "./types"
 
 export function EstimateMaterialCard({
   index,

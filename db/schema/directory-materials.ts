@@ -10,6 +10,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -427,3 +428,36 @@ export const directoryMaterialImportRows = pgTable(
     ),
   ]
 )
+
+export const directoryMaterialUsageStats = pgTable(
+  "directory_material_usage_stats",
+  {
+    workspaceOwnerId: uuid("workspace_owner_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    materialId: uuid("material_id").notNull(),
+    useCount: integer("use_count").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.workspaceOwnerId, t.materialId] }),
+    foreignKey({
+      name: "fk_directory_material_usage_stats_material_workspace",
+      columns: [t.materialId, t.workspaceOwnerId],
+      foreignColumns: [directoryMaterials.id, directoryMaterials.workspaceOwnerId],
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+    index("idx_directory_material_usage_stats_workspace_use_count").on(
+      t.workspaceOwnerId,
+      t.useCount
+    ),
+    check("chk_directory_material_usage_stats_use_count_non_negative", sql`${t.useCount} >= 0`),
+  ]
+)
+

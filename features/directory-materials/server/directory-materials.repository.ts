@@ -291,6 +291,64 @@ export async function listDirectoryMaterialsForWorkspace(
   }
 }
 
+export async function listPopularDirectoryMaterialsForWorkspace(
+  workspaceOwnerId: string,
+  limit: number
+): Promise<DirectoryMaterial[]> {
+  const { data: popularData, error: popularError } = await supabase
+    .from("directory_material_usage_stats")
+    .select(`
+      material:directory_materials(
+        id,name,unit_code,unit_label,price_amount,currency_code,category,subcategory,code,supplier_name,supplier_id,image_url,description,aliases,keywords,source_name,source_external_row_key,status,version,created_at,updated_at
+      ),
+      use_count
+    `)
+    .eq("workspace_owner_id", workspaceOwnerId)
+    .gt("use_count", 0)
+    .order("use_count", { ascending: false })
+    .limit(limit)
+
+  if (popularError) throw popularError
+
+  const popularMaterials: DirectoryMaterial[] = []
+  const seenIds = new Set<string>()
+
+  if (popularData) {
+    for (const row of popularData) {
+      if (row.material) {
+        const materialRow = row.material as unknown as DirectoryMaterialDbRow
+        popularMaterials.push(mapDirectoryMaterialRow(materialRow))
+        seenIds.add(materialRow.id)
+      }
+    }
+  }
+
+  if (popularMaterials.length < limit) {
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("directory_materials")
+      .select(MATERIAL_SELECT)
+      .eq("workspace_owner_id", workspaceOwnerId)
+      .eq("status", "active")
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(limit * 2)
+
+    if (fallbackError) throw fallbackError
+
+    if (fallbackData) {
+      for (const row of fallbackData) {
+        if (popularMaterials.length >= limit) break
+        if (!seenIds.has(row.id)) {
+          popularMaterials.push(mapDirectoryMaterialRow(row as unknown as DirectoryMaterialDbRow))
+          seenIds.add(row.id)
+        }
+      }
+    }
+  }
+
+  return popularMaterials
+}
+
 export async function getDirectoryMaterialForWorkspace(
   workspaceOwnerId: string,
   id: string

@@ -62,6 +62,7 @@ export const estimateContentOptionsParamsSchema = z.object({
   q: z.string().trim().max(200).optional().default(""),
   limit: z.coerce.number().int().min(1).max(100).optional().default(50),
   cursor: z.coerce.number().int().min(0).optional().default(0),
+  recommend: z.preprocess((val) => val === "true" || val === true, z.boolean().optional()),
 })
 
 export const estimateContentChangeSchema = z.discriminatedUnion("action", [
@@ -228,6 +229,7 @@ export function parseEstimateContentOptionsParams(params: URLSearchParams) {
     q: params.get("q") ?? undefined,
     limit: params.get("limit") ?? undefined,
     cursor: params.get("cursor") ?? undefined,
+    recommend: params.get("recommend") ?? undefined,
   })
 }
 

@@ -36,5 +36,6 @@ export function normalizeDirectoryWorksListParams(
     limit: Math.min(Math.max(params.limit ?? 50, 1), 100),
     cursor: parseDirectoryWorksCursor(params.cursor),
     sort: params.sort ?? "relevance",
+    recommend: params.recommend,
   }
 }

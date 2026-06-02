@@ -112,6 +112,7 @@ export const directoryMaterialsListQuerySchema = z.object({
   limit: directoryMaterialsLimitSchema,
   cursor: directoryMaterialsCursorSchema,
   sort: directoryMaterialsSortSchema,
+  recommend: z.preprocess((val) => val === "true" || val === true, z.boolean().optional()),
 })
 
 export const directoryMaterialsCategoriesQuerySchema = z.object({

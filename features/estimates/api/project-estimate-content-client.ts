@@ -10,6 +10,7 @@ export type EstimateContentOptionsParams = {
   q?: string
   limit?: number
   cursor?: number
+  recommend?: boolean
 }
 
 export type EstimateWorkCoefficientResponse = {
@@ -146,6 +147,9 @@ function buildOptionsUrl(
   appendParam(params, "q", query.q)
   appendParam(params, "limit", query.limit)
   appendParam(params, "cursor", query.cursor)
+  if (query.recommend) {
+    appendParam(params, "recommend", "true")
+  }
 
   const search = params.toString()
   const path = `/api/projects/${projectId}/estimate-records/${recordId}/${type}`

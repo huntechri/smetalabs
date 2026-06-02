@@ -210,11 +210,29 @@ export function EstimateEditorView({
   }, [sectionsForMemo])
 
   const workParams = React.useMemo(
-    () => ({ q: workSearch, limit: 30, cursor: 0 }),
+    () => {
+      const q = workSearch.trim()
+      const isRecommend = q.length < OPTION_SEARCH_MIN_LENGTH
+      return {
+        q: isRecommend ? "" : q,
+        limit: 30,
+        cursor: 0,
+        recommend: isRecommend ? true : undefined,
+      }
+    },
     [workSearch]
   )
   const materialParams = React.useMemo(
-    () => ({ q: materialSearch, limit: 30, cursor: 0 }),
+    () => {
+      const q = materialSearch.trim()
+      const isRecommend = q.length < OPTION_SEARCH_MIN_LENGTH
+      return {
+        q: isRecommend ? "" : q,
+        limit: 30,
+        cursor: 0,
+        recommend: isRecommend ? true : undefined,
+      }
+    },
     [materialSearch]
   )
 
@@ -301,7 +319,7 @@ export function EstimateEditorView({
         recordId,
         params: workParams,
       }),
-    enabled: workDialog.open && canSearchWorks,
+    enabled: workDialog.open,
     staleTime: 30_000,
   })
 
@@ -317,7 +335,7 @@ export function EstimateEditorView({
         recordId,
         params: materialParams,
       }),
-    enabled: materialDialog.open && canSearchMaterials,
+    enabled: materialDialog.open,
     staleTime: 30_000,
   })
 

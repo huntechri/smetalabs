@@ -102,6 +102,7 @@ export const directoryWorksListQuerySchema = z.object({
   limit: directoryWorksLimitSchema,
   cursor: directoryWorksCursorSchema,
   sort: directoryWorksSortSchema,
+  recommend: z.preprocess((val) => val === "true" || val === true, z.boolean().optional()),
 })
 
 export const directoryWorkMutationSchema = z

@@ -68,12 +68,8 @@ export function EstimateMaterialPickerDialog({
 
   const normalizedSearch = searchText.trim().replace(/\s+/g, " ")
   const canSearch = query.trim().length >= MATERIAL_SEARCH_MIN_LENGTH
-  const visibleOptions = useMemo(
-    () => (canSearch ? options : []),
-    [canSearch, options]
-  )
-  const showSearchPrompt = !canSearch
-  const showEmpty = canSearch && !loading && visibleOptions.length === 0
+  const isRecommendations = !canSearch
+  const showEmpty = canSearch && !loading && options.length === 0
 
   const isAdded = (code: string | null) => addedCodes.has(code ?? "")
 
@@ -139,18 +135,13 @@ export function EstimateMaterialPickerDialog({
         </form>
 
         <div className="scrollbar-subtle min-h-0 flex-1 divide-y divide-border overflow-y-auto rounded-md border border-border">
-          {showSearchPrompt ? (
-            <Empty className="h-full min-h-80 border-0">
-              <EmptyHeader>
-                <EmptyTitle>Введите название материала</EmptyTitle>
-                <EmptyDescription>
-                  Поиск начнётся после ввода минимум 3 символов.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+          {isRecommendations && !loading && options.length > 0 ? (
+            <div className="bg-muted/40 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Рекомендуемые материалы
+            </div>
           ) : null}
 
-          {loading && visibleOptions.length === 0 ? (
+          {loading && options.length === 0 ? (
             <div className="flex flex-col gap-2 p-3">
               {Array.from({ length: 8 }).map((_, index) => (
                 <Skeleton key={index} className="h-14 w-full rounded-md" />
@@ -169,7 +160,18 @@ export function EstimateMaterialPickerDialog({
             </Empty>
           ) : null}
 
-          {visibleOptions.map((material) => (
+          {!loading && isRecommendations && options.length === 0 ? (
+            <Empty className="h-full min-h-80 border-0">
+              <EmptyHeader>
+                <EmptyTitle>Справочник пуст</EmptyTitle>
+                <EmptyDescription>
+                  Добавьте материалы в справочник, чтобы они здесь появились.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : null}
+
+          {options.map((material) => (
             <div
               key={material.id}
               className="grid gap-2 p-3 transition-colors hover:bg-muted/50 sm:grid-cols-[minmax(0,1fr)_80px_120px_auto] sm:items-center"
